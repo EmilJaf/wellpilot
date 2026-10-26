@@ -235,6 +235,7 @@ async def test_data_endpoints(settings) -> None:
         image = await client.get("/api/reports/volve_pud/pages/23/image")
         no_doc = await client.get("/api/reports/../pages/23/image")
         no_page = await client.get("/api/reports/volve_pud/pages/99/image")
+        no_backtest = await client.get("/api/backtest")
 
     assert wells["rows"][0][0] == "F-12"
     rate = daily["columns"].index("oil_rate_per_producing_day")
@@ -245,3 +246,4 @@ async def test_data_endpoints(settings) -> None:
     assert image.status_code == 200 and image.headers["content-type"] == "image/png"
     assert no_doc.status_code == 404
     assert no_page.status_code == 404
+    assert no_backtest.status_code == 404

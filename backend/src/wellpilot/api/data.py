@@ -1,11 +1,14 @@
 """Data the dashboard plots and shows next to the agent's evidence."""
 
+import json
 from datetime import date
 
+import pandas as pd
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import FileResponse
 
 from wellpilot.agent.tools import NoArgs, ReportPageArgs, list_wells, read_report_page, table
+from wellpilot.backtest import RESULTS_FILE, SUMMARY_FILE
 from wellpilot.data.store import ProductionStore
 from wellpilot.ingest.reports import REPORTS_BY_ID, page_dir
 
@@ -66,3 +69,15 @@ def report_page_image(doc_id: str, page: int, request: Request) -> FileResponse:
     if not path.is_file():
         raise HTTPException(404, f"{doc_id} has no page {page}")
     return FileResponse(path, media_type="image/png")
+
+
+@router.get("/backtest")
+def backtest(request: Request) -> dict:
+    processed = request.app.state.runs.processed_dir
+    if not (processed / SUMMARY_FILE).exists():
+        raise HTTPException(404, "no backtest yet; run python -m wellpilot.backtest")
+    results = pd.read_parquet(processed / RESULTS_FILE)
+    return {
+        "summary": json.loads((processed / SUMMARY_FILE).read_text()),
+        "results": table(results),
+    }
