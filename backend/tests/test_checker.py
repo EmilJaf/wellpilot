@@ -356,3 +356,14 @@ def test_summary_quotes_must_exist() -> None:
     )
 
     assert problems and "water would never reach" in problems[0]
+
+
+def test_space_grouped_thousands_are_one_number() -> None:
+    log = log_with(EVENTS, {"oil": 1133053})
+    finding = Finding(
+        claim="Plateau rate around 4 050 Sm3/d; 1 133 053 Sm3 oil since.",
+        evidence_ids=["E1", "E2"],
+        confidence="fact",
+    )
+
+    assert check_submission(submit(finding), log) == []

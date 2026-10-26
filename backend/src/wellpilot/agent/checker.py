@@ -29,6 +29,7 @@ from wellpilot.ingest.report_facts import squash
 WELL = re.compile(r"\b(?:15/9-)?F-\d+(?:\s?[A-Z]\b)?")
 DATE = re.compile(r"\b(\d{4}-\d{2}(?:-\d{2})?)\b")
 THOUSANDS = re.compile(r"(?<=\d),(?=\d{3}\b)")
+SPACED_THOUSANDS = re.compile(r"\b\d{1,3}(?:[ \u00a0\u202f]\d{3})+\b")
 # A number may run straight into a unit ("98765Sm3") or end a sentence, but not run into
 # more digits.
 NUMBER = re.compile(
@@ -90,6 +91,8 @@ def _numbers_in_text(text: str, european: bool = False) -> list[tuple[float, int
     european=True reads Norwegian report text: "9.000" is nine thousand, "0,80" is 0.8.
     """
     text = DATE.sub(" ", WELL.sub(" ", text))
+    # "4 050" and "1 133 053": thousands grouped with a space (or a narrow no-break space).
+    text = SPACED_THOUSANDS.sub(lambda m: re.sub(r"\s", "", m.group(0)), text)
     if european:
         text = re.sub(r"(?<=\d)\.(?=\d{3}\b)", "", text)
         text = re.sub(r"(?<=\d),(?=\d{1,2}\b)", ".", text)
