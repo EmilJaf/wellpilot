@@ -1,0 +1,2226 @@
+{
+ "source": {
+  "run": "95600d0cf26d",
+  "submission": 2,
+  "model": "meta-models/muse-spark-open-1026",
+  "question": "Is F-12's missing downhole pressure after October 2010 a reservoir problem or a sensor problem?"
+ },
+ "to_review": false,
+ "note": "",
+ "expected": {
+  "accepted": true,
+  "flagged": []
+ },
+ "submission": {
+  "summary": "F-12's missing downhole pressure after October 2010 is a sensor failure, not a reservoir collapse. The gauge began reading 0 while oil production continued uninterrupted for 2 095 days, producing 1 133 053 Sm3 oil with normal wellhead pressure and choke.",
+  "findings": [
+   {
+    "claim": "F-12's downhole gauge failed on 2010-10-12: last good BHP was 253.85 bar on 2010-10-11, then BHP read 0 and was set to missing for 2 095 days from 2010-10-12 to 2016-09-17.",
+    "evidence_ids": [
+     "E3",
+     "E4",
+     "E6"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "253.85",
+      "value": 253.85,
+      "evidence_id": "E3"
+     },
+     {
+      "text": "0",
+      "value": 0,
+      "evidence_id": "E4"
+     },
+     {
+      "text": "2 095",
+      "value": 2095,
+      "evidence_id": "E3"
+     }
+    ]
+   },
+   {
+    "claim": "The well kept flowing during the missing-BHP period: it flowed on 1 830 days and produced 1 133 053 Sm3 oil, with average wellhead pressure 37.82 bar and average choke 75.87%, proving pressure had not collapsed.",
+    "evidence_ids": [
+     "E3",
+     "E5"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "1 830",
+      "value": 1830,
+      "evidence_id": "E3"
+     },
+     {
+      "text": "1 133 053",
+      "value": 1133053,
+      "evidence_id": "E3"
+     },
+     {
+      "text": "37.82",
+      "value": 37.82,
+      "evidence_id": "E5"
+     },
+     {
+      "text": "75.87%",
+      "value": 75.87,
+      "evidence_id": "E5"
+     }
+    ]
+   },
+   {
+    "claim": "Production was continuous across the failure date: on 2010-10-11 oil was 1 765 Sm3 with WHP 54.27 bar, on 2010-10-12 oil was 1 759 Sm3 with WHP 54.11 bar and BHP missing, showing no rate drop.",
+    "evidence_ids": [
+     "E6"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "1 765",
+      "value": 1765,
+      "evidence_id": "E6"
+     },
+     {
+      "text": "54.27",
+      "value": 54.27,
+      "evidence_id": "E6"
+     },
+     {
+      "text": "1 759",
+      "value": 1759,
+      "evidence_id": "E6"
+     },
+     {
+      "text": "54.11",
+      "value": 54.11,
+      "evidence_id": "E6"
+     }
+    ]
+   },
+   {
+    "claim": "The ingest log confirms a sensor issue, not reservoir depletion: from 2010-10-12 every day is flagged zero_gauge_reading with action set_missing and dp_tubing_without_bhp is also set_missing.",
+    "evidence_ids": [
+     "E4"
+    ],
+    "confidence": "fact",
+    "numbers": []
+   },
+   {
+    "claim": "Missing BHP is therefore a downhole sensor failure, not a reservoir pressure problem; the well produced normally for almost 6 years after, with monthly oil rates around 1 546 Sm3/d in November 2010 and 1 213 Sm3/d in May 2011 and continued production through 2016.",
+    "evidence_ids": [
+     "E2",
+     "E7",
+     "E3"
+    ],
+    "confidence": "inference",
+    "numbers": [
+     {
+      "text": "1 546",
+      "value": 1546,
+      "evidence_id": "E2"
+     },
+     {
+      "text": "1 213",
+      "value": 1213,
+      "evidence_id": "E2"
+     }
+    ]
+   }
+  ],
+  "summary_numbers": [
+   {
+    "text": "0",
+    "value": 0,
+    "evidence_id": "E4"
+   },
+   {
+    "text": "2 095",
+    "value": 2095,
+    "evidence_id": "E3"
+   },
+   {
+    "text": "1 133 053",
+    "value": 1133053,
+    "evidence_id": "E3"
+   }
+  ]
+ },
+ "evidence": [
+  {
+   "id": "E1",
+   "tool": "list_wells",
+   "arguments": {},
+   "result": {
+    "columns": [
+     "well",
+     "well_types",
+     "first_oil",
+     "last_date",
+     "cum_oil_sm3",
+     "cum_water_sm3",
+     "cum_water_injected_sm3",
+     "producing_days"
+    ],
+    "rows": [
+     [
+      "F-1 C",
+      "OP/WI",
+      "2014-04-22",
+      "2016-04-21",
+      177709,
+      207302,
+      null,
+      438
+     ],
+     [
+      "F-11",
+      "OP",
+      "2013-07-24",
+      "2016-09-17",
+      1147849,
+      1090806,
+      null,
+      1122
+     ],
+     [
+      "F-12",
+      "OP",
+      "2008-02-12",
+      "2016-09-17",
+      4579610,
+      6833792,
+      null,
+      2838
+     ],
+     [
+      "F-14",
+      "OP",
+      "2008-07-13",
+      "2016-09-17",
+      3942233,
+      7121310,
+      null,
+      2724
+     ],
+     [
+      "F-15 D",
+      "OP",
+      "2014-01-16",
+      "2016-09-17",
+      148519,
+      52366,
+      null,
+      769
+     ],
+     [
+      "F-4",
+      "WI",
+      null,
+      "2016-12-01",
+      null,
+      null,
+      16240727,
+      0
+     ],
+     [
+      "F-5",
+      "WI/OP",
+      "2016-04-20",
+      "2016-09-18",
+      41161,
+      13533,
+      14089406,
+      129
+     ]
+    ]
+   },
+   "code": "wellpilot.agent.tools.list_wells@e8bcc458fc9d",
+   "created_at": "2026-10-26T23:12:27+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E2",
+   "tool": "production_monthly",
+   "arguments": {
+    "well": "F-12",
+    "start": "2010-08-01",
+    "end": "2011-06-01"
+   },
+   "result": {
+    "columns": [
+     "month",
+     "oil_sm3",
+     "water_sm3",
+     "gas_sm3",
+     "water_injected_sm3",
+     "water_cut",
+     "uptime",
+     "oil_rate_per_producing_day",
+     "bhp_bar",
+     "whp_bar",
+     "choke_pct"
+    ],
+    "rows": [
+     [
+      "2010-08",
+      30117,
+      54788,
+      4346504,
+      null,
+      0.6453,
+      0.6596,
+      1691,
+      296.33,
+      47.21,
+      44.88
+     ],
+     [
+      "2010-09",
+      51313,
+      89429,
+      7750211,
+      null,
+      0.6354,
+      0.8955,
+      1910,
+      280.36,
+      56.36,
+      54.35
+     ],
+     [
+      "2010-10",
+      51431,
+      99543,
+      7741377,
+      null,
+      0.6593,
+      0.9987,
+      1661,
+      273.38,
+      54.57,
+      51.94
+     ],
+     [
+      "2010-11",
+      44468,
+      102236,
+      6747078,
+      null,
+      0.6969,
+      0.9588,
+      1546,
+      null,
+      50.78,
+      52.66
+     ],
+     [
+      "2010-12",
+      45218,
+      111336,
+      6910660,
+      null,
+      0.7112,
+      0.9964,
+      1464,
+      null,
+      52.46,
+      50.75
+     ],
+     [
+      "2011-01",
+      44747,
+      116886,
+      6824001,
+      null,
+      0.7232,
+      0.9993,
+      1444,
+      null,
+      52.88,
+      50.38
+     ],
+     [
+      "2011-02",
+      29157,
+      85274,
+      4519227,
+      null,
+      0.7452,
+      0.9287,
+      1256,
+      null,
+      47.86,
+      52.83
+     ],
+     [
+      "2011-03",
+      37395,
+      113239,
+      5760219,
+      null,
+      0.7517,
+      0.981,
+      1230,
+      null,
+      45.84,
+      59.11
+     ],
+     [
+      "2011-04",
+      37820,
+      116196,
+      5877461,
+      null,
+      0.7544,
+      0.9971,
+      1264,
+      null,
+      40.89,
+      77.31
+     ],
+     [
+      "2011-05",
+      37205,
+      119567,
+      5801740,
+      null,
+      0.7627,
+      0.9893,
+      1213,
+      null,
+      39.55,
+      88.37
+     ],
+     [
+      "2011-06",
+      1207,
+      3887,
+      186316,
+      null,
+      0.7631,
+      1.0,
+      1207,
+      null,
+      39.76,
+      88.22
+     ]
+    ]
+   },
+   "code": "wellpilot.agent.tools.production_monthly@a17b98ebc0ac",
+   "created_at": "2026-10-26T23:12:27+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E3",
+   "tool": "detect_events",
+   "arguments": {
+    "well": "F-12"
+   },
+   "result": [
+    {
+     "kind": "threshold_crossing",
+     "signal": "water_cut",
+     "start": "2009-10-31",
+     "end": null,
+     "summary": "30-day median water_cut first goes above 0.05 on 2009-10-31, 21 months after first oil.",
+     "details": {
+      "threshold": 0.05,
+      "direction": "above",
+      "window_days": 30,
+      "median_at_crossing": 0.05795,
+      "first_oil": "2008-02-12",
+      "months_after_first_oil": 20.6
+     }
+    },
+    {
+     "kind": "regime_change",
+     "signal": "water_cut",
+     "start": "2010-02-14",
+     "end": null,
+     "summary": "water_cut shifts around 2010-02-14: weekly mean 0.029 -> 0.513 (+1673%).",
+     "details": {
+      "before_mean": 0.02896,
+      "after_mean": 0.5134,
+      "relative_change": 16.73,
+      "before_from": "2008-02-17",
+      "after_to": "2010-10-17"
+     }
+    },
+    {
+     "kind": "threshold_crossing",
+     "signal": "water_cut",
+     "start": "2010-06-04",
+     "end": null,
+     "summary": "30-day median water_cut first goes above 0.5 on 2010-06-04, 28 months after first oil.",
+     "details": {
+      "threshold": 0.5,
+      "direction": "above",
+      "window_days": 30,
+      "median_at_crossing": 0.5011,
+      "first_oil": "2008-02-12",
+      "months_after_first_oil": 27.69
+     }
+    },
+    {
+     "kind": "regime_change",
+     "signal": "oil_rate",
+     "start": "2010-07-18",
+     "end": null,
+     "summary": "oil_rate shifts around 2010-07-18: weekly mean 4.05e+03 -> 1.15e+03 (-72%).",
+     "details": {
+      "before_mean": 4050,
+      "after_mean": 1146,
+      "relative_change": -0.7171,
+      "before_from": "2008-02-17",
+      "after_to": "2012-12-02"
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2010-08-20",
+     "end": "2010-08-27",
+     "summary": "Shut in for 8 days from 2010-08-20. Oil rate 1,831 -> 2,000 Sm3/d (+9%) after restart. Same time as F-14.",
+     "details": {
+      "days": 8,
+      "rate_before": 1831,
+      "rate_after": 2000,
+      "relative_change": 0.09274,
+      "field_wide": true,
+      "also_shut_in": [
+       "F-14"
+      ]
+     }
+    },
+    {
+     "kind": "gauge_failure",
+     "signal": "bhp_bar",
+     "start": "2010-10-12",
+     "end": "2016-09-17",
+     "summary": "bhp_bar reads 0 on 2095 days from 2010-10-12 to 2016-09-17 while the well kept flowing on 1830 days (1,133,053 Sm3 oil): a sensor failure, not a pressure collapse. Last good reading: 253.9 on 2010-10-11.",
+     "details": {
+      "zero_days": 2095,
+      "flowing_days": 1830,
+      "oil_sm3_during": 1133053,
+      "last_good_date": "2010-10-11",
+      "last_good_value": 253.85
+     }
+    },
+    {
+     "kind": "regime_change",
+     "signal": "water_cut",
+     "start": "2010-10-24",
+     "end": null,
+     "summary": "water_cut shifts around 2010-10-24: weekly mean 0.513 -> 0.814 (+59%).",
+     "details": {
+      "before_mean": 0.5134,
+      "after_mean": 0.8141,
+      "relative_change": 0.5855,
+      "before_from": "2010-02-14",
+      "after_to": "2016-08-14"
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2011-10-19",
+     "end": "2011-11-04",
+     "summary": "Shut in for 17 days from 2011-10-19. Oil rate 955 -> 1,158 Sm3/d (+21%) after restart. Same time as F-14.",
+     "details": {
+      "days": 17,
+      "rate_before": 954.6,
+      "rate_after": 1158,
+      "relative_change": 0.2126,
+      "field_wide": true,
+      "also_shut_in": [
+       "F-14"
+      ]
+     }
+    },
+    {
+     "kind": "threshold_crossing",
+     "signal": "water_cut",
+     "start": "2012-02-14",
+     "end": null,
+     "summary": "30-day median water_cut first goes above 0.8 on 2012-02-14, 48 months after first oil.",
+     "details": {
+      "threshold": 0.8,
+      "direction": "above",
+      "window_days": 30,
+      "median_at_crossing": 0.8008,
+      "first_oil": "2008-02-12",
+      "months_after_first_oil": 48.06
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2012-08-15",
+     "end": "2012-09-03",
+     "summary": "Shut in for 20 days from 2012-08-15. Oil rate 691 -> 797 Sm3/d (+15%) after restart. Same time as F-14.",
+     "details": {
+      "days": 20,
+      "rate_before": 690.93,
+      "rate_after": 797.32,
+      "relative_change": 0.154,
+      "field_wide": true,
+      "also_shut_in": [
+       "F-14"
+      ]
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2012-09-15",
+     "end": "2012-09-27",
+     "summary": "Shut in for 13 days from 2012-09-15. Same time as F-14.",
+     "details": {
+      "days": 13,
+      "rate_before": null,
+      "rate_after": 728.93,
+      "relative_change": null,
+      "field_wide": true,
+      "also_shut_in": [
+       "F-14"
+      ]
+     }
+    },
+    {
+     "kind": "regime_change",
+     "signal": "oil_rate",
+     "start": "2012-12-09",
+     "end": null,
+     "summary": "oil_rate shifts around 2012-12-09: weekly mean 1.15e+03 -> 384 (-66%).",
+     "details": {
+      "before_mean": 1146,
+      "after_mean": 383.91,
+      "relative_change": -0.6649,
+      "before_from": "2010-07-18",
+      "after_to": "2016-08-14"
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2013-03-13",
+     "end": "2013-03-24",
+     "summary": "Shut in for 12 days from 2013-03-13. Oil rate 531 -> 572 Sm3/d (+8%) after restart.",
+     "details": {
+      "days": 12,
+      "rate_before": 531.09,
+      "rate_after": 571.67,
+      "relative_change": 0.07641,
+      "field_wide": false,
+      "also_shut_in": []
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2014-05-16",
+     "end": "2014-05-24",
+     "summary": "Shut in for 9 days from 2014-05-16. Oil rate 194 -> 193 Sm3/d (-1%) after restart.",
+     "details": {
+      "days": 9,
+      "rate_before": 194.26,
+      "rate_after": 192.67,
+      "relative_change": -0.008185,
+      "field_wide": false,
+      "also_shut_in": []
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2014-11-30",
+     "end": "2014-12-31",
+     "summary": "Shut in for 32 days from 2014-11-30. Oil rate 185 -> 860 Sm3/d (+366%) after restart. Same time as F-1 C, F-15 D.",
+     "details": {
+      "days": 32,
+      "rate_before": 184.54,
+      "rate_after": 859.51,
+      "relative_change": 3.66,
+      "field_wide": true,
+      "also_shut_in": [
+       "F-1 C",
+       "F-15 D"
+      ]
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2016-08-13",
+     "end": "2016-09-17",
+     "summary": "Shut in for 36 days from 2016-08-13. Same time as F-14, F-15 D, F-5.",
+     "details": {
+      "days": 36,
+      "rate_before": 128.63,
+      "rate_after": null,
+      "relative_change": null,
+      "field_wide": true,
+      "also_shut_in": [
+       "F-14",
+       "F-15 D",
+       "F-5"
+      ]
+     }
+    }
+   ],
+   "code": "wellpilot.agent.tools.detect_events@0c5c334ef787",
+   "created_at": "2026-10-26T23:12:28+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E4",
+   "tool": "run_sql",
+   "arguments": {
+    "sql": "SELECT date, well, issue, raw_value, action FROM production_issues WHERE well='F-12' AND date BETWEEN '2010-09-01' AND '2011-12-31' ORDER BY date LIMIT 50"
+   },
+   "result": {
+    "columns": [
+     "date",
+     "well",
+     "issue",
+     "raw_value",
+     "action"
+    ],
+    "rows": [
+     [
+      "2010-10-12",
+      "F-12",
+      "zero_gauge_reading",
+      0.0,
+      "set_missing"
+     ],
+     [
+      "2010-10-12",
+      "F-12",
+      "zero_gauge_reading",
+      0.0,
+      "set_missing"
+     ],
+     [
+      "2010-10-12",
+      "F-12",
+      "dp_tubing_without_bhp",
+      54.11,
+      "set_missing"
+     ],
+     [
+      "2010-10-13",
+      "F-12",
+      "zero_gauge_reading",
+      0.0,
+      "set_missing"
+     ],
+     [
+      "2010-10-13",
+      "F-12",
+      "zero_gauge_reading",
+      0.0,
+      "set_missing"
+     ],
+     [
+      "2010-10-13",
+      "F-12",
+      "dp_tubing_without_bhp",
+      53.97,
+      "set_missing"
+     ],
+     [
+      "2010-10-14",
+      "F-12",
+      "zero_gauge_reading",
+      0.0,
+      "set_missing"
+     ],
+     [
+      "2010-10-14",
+      "F-12",
+      "zero_gauge_reading",
+      0.0,
+      "set_missing"
+     ],
+     [
+      "2010-10-14",
+      "F-12",
+      "dp_tubing_without_bhp",
+      53.84,
+      "set_missing"
+     ],
+     [
+      "2010-10-15",
+      "F-12",
+      "zero_gauge_reading",
+      0.0,
+      "set_missing"
+     ],
+     [
+      "2010-10-15",
+      "F-12",
+      "zero_gauge_reading",
+      0.0,
+      "set_missing"
+     ],
+     [
+      "2010-10-15",
+      "F-12",
+      "dp_tubing_without_bhp",
+      53.69,
+      "set_missing"
+     ],
+     [
+      "2010-10-16",
+      "F-12",
+      "zero_gauge_reading",
+      0.0,
+      "set_missing"
+     ],
+     [
+      "2010-10-16",
+      "F-12",
+      "zero_gauge_reading",
+      0.0,
+      "set_missing"
+     ],
+     [
+      "2010-10-16",
+      "F-12",
+      "dp_tubing_without_bhp",
+      53.47,
+      "set_missing"
+     ],
+     [
+      "2010-10-17",
+      "F-12",
+      "zero_gauge_reading",
+      0.0,
+      "set_missing"
+     ],
+     [
+      "2010-10-17",
+      "F-12",
+      "zero_gauge_reading",
+      0.0,
+      "set_missing"
+     ],
+     [
+      "2010-10-17",
+      "F-12",
+      "dp_tubing_without_bhp",
+      53.64,
+      "set_missing"
+     ],
+     [
+      "2010-10-18",
+      "F-12",
+      "zero_gauge_reading",
+      0.0,
+      "set_missing"
+     ],
+     [
+      "2010-10-18",
+      "F-12",
+      "zero_gauge_reading",
+      0.0,
+      "set_missing"
+     ],
+     [
+      "2010-10-18",
+      "F-12",
+      "dp_tubing_without_bhp",
+      53.38,
+      "set_missing"
+     ],
+     [
+      "2010-10-19",
+      "F-12",
+      "zero_gauge_reading",
+      0.0,
+      "set_missing"
+     ],
+     [
+      "2010-10-19",
+      "F-12",
+      "zero_gauge_reading",
+      0.0,
+      "set_missing"
+     ],
+     [
+      "2010-10-19",
+      "F-12",
+      "dp_tubing_without_bhp",
+      52.9,
+      "set_missing"
+     ],
+     [
+      "2010-10-20",
+      "F-12",
+      "zero_gauge_reading",
+      0.0,
+      "set_missing"
+     ],
+     [
+      "2010-10-20",
+      "F-12",
+      "zero_gauge_reading",
+      0.0,
+      "set_missing"
+     ],
+     [
+      "2010-10-20",
+      "F-12",
+      "dp_tubing_without_bhp",
+      52.62,
+      "set_missing"
+     ],
+     [
+      "2010-10-21",
+      "F-12",
+      "zero_gauge_reading",
+      0.0,
+      "set_missing"
+     ],
+     [
+      "2010-10-21",
+      "F-12",
+      "zero_gauge_reading",
+      0.0,
+      "set_missing"
+     ],
+     [
+      "2010-10-21",
+      "F-12",
+      "dp_tubing_without_bhp",
+      52.48,
+      "set_missing"
+     ],
+     [
+      "2010-10-22",
+      "F-12",
+      "zero_gauge_reading",
+      0.0,
+      "set_missing"
+     ],
+     [
+      "2010-10-22",
+      "F-12",
+      "zero_gauge_reading",
+      0.0,
+      "set_missing"
+     ],
+     [
+      "2010-10-22",
+      "F-12",
+      "dp_tubing_without_bhp",
+      52.35,
+      "set_missing"
+     ],
+     [
+      "2010-10-23",
+      "F-12",
+      "zero_gauge_reading",
+      0.0,
+      "set_missing"
+     ],
+     [
+      "2010-10-23",
+      "F-12",
+      "zero_gauge_reading",
+      0.0,
+      "set_missing"
+     ],
+     [
+      "2010-10-23",
+      "F-12",
+      "dp_tubing_without_bhp",
+      52.36,
+      "set_missing"
+     ],
+     [
+      "2010-10-24",
+      "F-12",
+      "zero_gauge_reading",
+      0.0,
+      "set_missing"
+     ],
+     [
+      "2010-10-24",
+      "F-12",
+      "zero_gauge_reading",
+      0.0,
+      "set_missing"
+     ],
+     [
+      "2010-10-24",
+      "F-12",
+      "dp_tubing_without_bhp",
+      52.41,
+      "set_missing"
+     ],
+     [
+      "2010-10-25",
+      "F-12",
+      "zero_gauge_reading",
+      0.0,
+      "set_missing"
+     ],
+     [
+      "2010-10-25",
+      "F-12",
+      "zero_gauge_reading",
+      0.0,
+      "set_missing"
+     ],
+     [
+      "2010-10-25",
+      "F-12",
+      "dp_tubing_without_bhp",
+      52.77,
+      "set_missing"
+     ],
+     [
+      "2010-10-26",
+      "F-12",
+      "zero_gauge_reading",
+      0.0,
+      "set_missing"
+     ],
+     [
+      "2010-10-26",
+      "F-12",
+      "zero_gauge_reading",
+      0.0,
+      "set_missing"
+     ],
+     [
+      "2010-10-26",
+      "F-12",
+      "dp_tubing_without_bhp",
+      53.7,
+      "set_missing"
+     ],
+     [
+      "2010-10-27",
+      "F-12",
+      "zero_gauge_reading",
+      0.0,
+      "set_missing"
+     ],
+     [
+      "2010-10-27",
+      "F-12",
+      "zero_gauge_reading",
+      0.0,
+      "set_missing"
+     ],
+     [
+      "2010-10-27",
+      "F-12",
+      "dp_tubing_without_bhp",
+      53.84,
+      "set_missing"
+     ],
+     [
+      "2010-10-28",
+      "F-12",
+      "zero_gauge_reading",
+      0.0,
+      "set_missing"
+     ],
+     [
+      "2010-10-28",
+      "F-12",
+      "zero_gauge_reading",
+      0.0,
+      "set_missing"
+     ]
+    ],
+    "row_count": 50,
+    "truncated": false
+   },
+   "code": "wellpilot.agent.tools.run_sql@e2437f12e65f",
+   "created_at": "2026-10-26T23:12:28+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E5",
+   "tool": "run_sql",
+   "arguments": {
+    "sql": "SELECT COUNT(*) as days_zero, SUM(CASE WHEN on_stream_hrs>0 THEN 1 ELSE 0 END) as flowing_days, SUM(oil_sm3) as oil_sm3, AVG(whp_bar) as avg_whp, AVG(choke_pct) as avg_choke FROM production_daily WHERE well='F-12' AND date >= '2010-10-12' AND date <= '2016-09-17'"
+   },
+   "result": {
+    "columns": [
+     "days_zero",
+     "flowing_days",
+     "oil_sm3",
+     "avg_whp",
+     "avg_choke"
+    ],
+    "rows": [
+     [
+      2095,
+      1907,
+      1133053,
+      37.82,
+      75.87
+     ]
+    ],
+    "row_count": 1,
+    "truncated": false
+   },
+   "code": "wellpilot.agent.tools.run_sql@e2437f12e65f",
+   "created_at": "2026-10-26T23:12:31+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E6",
+   "tool": "run_sql",
+   "arguments": {
+    "sql": "SELECT date, oil_sm3, water_sm3, whp_bar, bhp_bar, choke_pct, on_stream_hrs FROM production_daily WHERE well='F-12' AND date BETWEEN '2010-10-10' AND '2010-10-20' ORDER BY date"
+   },
+   "result": {
+    "columns": [
+     "date",
+     "oil_sm3",
+     "water_sm3",
+     "whp_bar",
+     "bhp_bar",
+     "choke_pct",
+     "on_stream_hrs"
+    ],
+    "rows": [
+     [
+      "2010-10-10",
+      1778,
+      3295,
+      54.51,
+      272.76,
+      52.7,
+      24.0
+     ],
+     [
+      "2010-10-11",
+      1765,
+      3487,
+      54.27,
+      253.85,
+      51.6,
+      24.0
+     ],
+     [
+      "2010-10-12",
+      1759,
+      3377,
+      54.11,
+      null,
+      52.88,
+      24.0
+     ],
+     [
+      "2010-10-13",
+      1760,
+      3273,
+      53.97,
+      null,
+      53.02,
+      24.0
+     ],
+     [
+      "2010-10-14",
+      1741,
+      3235,
+      53.84,
+      null,
+      53.13,
+      24.0
+     ],
+     [
+      "2010-10-15",
+      1733,
+      3276,
+      53.69,
+      null,
+      53.18,
+      24.0
+     ],
+     [
+      "2010-10-16",
+      1727,
+      3260,
+      53.47,
+      null,
+      53.29,
+      24.0
+     ],
+     [
+      "2010-10-17",
+      1716,
+      3298,
+      53.64,
+      null,
+      53.33,
+      24.0
+     ],
+     [
+      "2010-10-18",
+      1707,
+      3315,
+      53.38,
+      null,
+      53.42,
+      24.0
+     ],
+     [
+      "2010-10-19",
+      1695,
+      3400,
+      52.9,
+      null,
+      53.56,
+      24.0
+     ],
+     [
+      "2010-10-20",
+      1685,
+      3413,
+      52.62,
+      null,
+      53.78,
+      24.0
+     ]
+    ],
+    "row_count": 11,
+    "truncated": false
+   },
+   "code": "wellpilot.agent.tools.run_sql@e2437f12e65f",
+   "created_at": "2026-10-26T23:12:31+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E7",
+   "tool": "production_monthly",
+   "arguments": {
+    "well": "F-12",
+    "start": "2010-10-01",
+    "end": "2016-10-01"
+   },
+   "result": {
+    "columns": [
+     "month",
+     "oil_sm3",
+     "water_sm3",
+     "gas_sm3",
+     "water_injected_sm3",
+     "water_cut",
+     "uptime",
+     "oil_rate_per_producing_day",
+     "bhp_bar",
+     "whp_bar",
+     "choke_pct"
+    ],
+    "rows": [
+     [
+      "2010-10",
+      51431,
+      99543,
+      7741377,
+      null,
+      0.6593,
+      0.9987,
+      1661,
+      273.38,
+      54.57,
+      51.94
+     ],
+     [
+      "2010-11",
+      44468,
+      102236,
+      6747078,
+      null,
+      0.6969,
+      0.9588,
+      1546,
+      null,
+      50.78,
+      52.66
+     ],
+     [
+      "2010-12",
+      45218,
+      111336,
+      6910660,
+      null,
+      0.7112,
+      0.9964,
+      1464,
+      null,
+      52.46,
+      50.75
+     ],
+     [
+      "2011-01",
+      44747,
+      116886,
+      6824001,
+      null,
+      0.7232,
+      0.9993,
+      1444,
+      null,
+      52.88,
+      50.38
+     ],
+     [
+      "2011-02",
+      29157,
+      85274,
+      4519227,
+      null,
+      0.7452,
+      0.9287,
+      1256,
+      null,
+      47.86,
+      52.83
+     ],
+     [
+      "2011-03",
+      37395,
+      113239,
+      5760219,
+      null,
+      0.7517,
+      0.981,
+      1230,
+      null,
+      45.84,
+      59.11
+     ],
+     [
+      "2011-04",
+      37820,
+      116196,
+      5877461,
+      null,
+      0.7544,
+      0.9971,
+      1264,
+      null,
+      40.89,
+      77.31
+     ],
+     [
+      "2011-05",
+      37205,
+      119567,
+      5801740,
+      null,
+      0.7627,
+      0.9893,
+      1213,
+      null,
+      39.55,
+      88.37
+     ],
+     [
+      "2011-06",
+      22026,
+      74563,
+      3412026,
+      null,
+      0.772,
+      0.8774,
+      1141,
+      null,
+      42.77,
+      88.65
+     ],
+     [
+      "2011-07",
+      12462,
+      31888,
+      1823751,
+      null,
+      0.719,
+      0.365,
+      1220,
+      null,
+      59.72,
+      71.91
+     ],
+     [
+      "2011-08",
+      36380,
+      99005,
+      5446517,
+      null,
+      0.7313,
+      0.8757,
+      1340,
+      null,
+      44.06,
+      88.12
+     ],
+     [
+      "2011-09",
+      29999,
+      110472,
+      4566407,
+      null,
+      0.7864,
+      0.9819,
+      1018,
+      null,
+      38.1,
+      74.06
+     ],
+     [
+      "2011-10",
+      12648,
+      52876,
+      1919664,
+      null,
+      0.807,
+      0.5026,
+      932.07,
+      null,
+      67.34,
+      38.88
+     ],
+     [
+      "2011-11",
+      21789,
+      75773,
+      3242434,
+      null,
+      0.7767,
+      0.7656,
+      1138,
+      null,
+      49.59,
+      60.7
+     ],
+     [
+      "2011-12",
+      18090,
+      64677,
+      2650493,
+      null,
+      0.7814,
+      0.708,
+      1022,
+      null,
+      44.63,
+      48.04
+     ],
+     [
+      "2012-01",
+      18218,
+      63858,
+      2722573,
+      null,
+      0.778,
+      0.8764,
+      1094,
+      null,
+      40.86,
+      63.53
+     ],
+     [
+      "2012-02",
+      27362,
+      133955,
+      4289925,
+      null,
+      0.8304,
+      0.9896,
+      953.45,
+      null,
+      35.22,
+      99.08
+     ],
+     [
+      "2012-03",
+      26680,
+      142184,
+      4276186,
+      null,
+      0.842,
+      0.9952,
+      864.81,
+      null,
+      34.89,
+      97.74
+     ],
+     [
+      "2012-04",
+      24088,
+      138112,
+      3866150,
+      null,
+      0.8515,
+      0.9865,
+      813.92,
+      null,
+      34.39,
+      98.58
+     ],
+     [
+      "2012-05",
+      22415,
+      140203,
+      3630958,
+      null,
+      0.8622,
+      0.9915,
+      729.25,
+      null,
+      33.91,
+      99.23
+     ],
+     [
+      "2012-06",
+      20887,
+      134081,
+      3394646,
+      null,
+      0.8652,
+      0.988,
+      704.73,
+      null,
+      34.37,
+      98.54
+     ],
+     [
+      "2012-07",
+      21207,
+      140165,
+      3444769,
+      null,
+      0.8686,
+      1.0,
+      684.09,
+      null,
+      33.74,
+      99.93
+     ],
+     [
+      "2012-08",
+      8998,
+      55244,
+      1376155,
+      null,
+      0.8599,
+      0.4147,
+      748.23,
+      null,
+      16.71,
+      46.34
+     ],
+     [
+      "2012-09",
+      1014,
+      4513,
+      156920,
+      null,
+      0.8165,
+      0.07029,
+      901.55,
+      null,
+      74.67,
+      8.27
+     ],
+     [
+      "2012-10",
+      19613,
+      121317,
+      3067585,
+      null,
+      0.8608,
+      0.9416,
+      771.43,
+      null,
+      32.69,
+      94.24
+     ],
+     [
+      "2012-11",
+      19019,
+      134909,
+      3086440,
+      null,
+      0.8764,
+      1.0,
+      633.96,
+      null,
+      32.13,
+      98.56
+     ],
+     [
+      "2012-12",
+      16321,
+      131667,
+      2717290,
+      null,
+      0.8897,
+      0.9412,
+      559.37,
+      null,
+      32.06,
+      93.11
+     ],
+     [
+      "2013-01",
+      17409,
+      139784,
+      2881179,
+      null,
+      0.8893,
+      1.0,
+      561.57,
+      null,
+      33.02,
+      98.28
+     ],
+     [
+      "2013-02",
+      15087,
+      126325,
+      2461249,
+      null,
+      0.8933,
+      1.0,
+      538.84,
+      null,
+      33.74,
+      98.98
+     ],
+     [
+      "2013-03",
+      6306,
+      57121,
+      1053666,
+      null,
+      0.9006,
+      0.458,
+      491.73,
+      null,
+      25.57,
+      48.5
+     ],
+     [
+      "2013-04",
+      12351,
+      102945,
+      2055292,
+      null,
+      0.8929,
+      0.8229,
+      577.32,
+      null,
+      30.09,
+      81.35
+     ],
+     [
+      "2013-05",
+      16313,
+      147165,
+      2757755,
+      null,
+      0.9002,
+      0.9839,
+      534.82,
+      null,
+      33.97,
+      97.78
+     ],
+     [
+      "2013-06",
+      11900,
+      112559,
+      2037220,
+      null,
+      0.9044,
+      0.8433,
+      503.97,
+      null,
+      30.13,
+      86.2
+     ],
+     [
+      "2013-07",
+      11862,
+      112173,
+      1919702,
+      null,
+      0.9044,
+      0.7813,
+      489.75,
+      null,
+      34.03,
+      73.17
+     ],
+     [
+      "2013-08",
+      15147,
+      152995,
+      2354241,
+      null,
+      0.9099,
+      0.9247,
+      528.41,
+      null,
+      31.42,
+      91.91
+     ],
+     [
+      "2013-09",
+      9224,
+      104678,
+      1446819,
+      null,
+      0.919,
+      0.8477,
+      375.2,
+      null,
+      35.87,
+      68.04
+     ],
+     [
+      "2013-10",
+      8305,
+      137535,
+      1283584,
+      null,
+      0.9431,
+      0.914,
+      293.12,
+      null,
+      33.03,
+      89.98
+     ],
+     [
+      "2013-11",
+      7171,
+      122993,
+      1102962,
+      null,
+      0.9449,
+      0.9009,
+      265.31,
+      null,
+      34.53,
+      89.83
+     ],
+     [
+      "2013-12",
+      7080,
+      125859,
+      1101389,
+      null,
+      0.9467,
+      0.8513,
+      268.25,
+      null,
+      32.66,
+      86.69
+     ],
+     [
+      "2014-01",
+      4997,
+      87030,
+      766196,
+      null,
+      0.9457,
+      0.6752,
+      246.71,
+      null,
+      35.21,
+      62.87
+     ],
+     [
+      "2014-02",
+      6101,
+      110298,
+      921967,
+      null,
+      0.9476,
+      0.8671,
+      260.6,
+      null,
+      31.95,
+      84.98
+     ],
+     [
+      "2014-03",
+      6836,
+      127351,
+      1036071,
+      null,
+      0.9491,
+      0.8827,
+      249.81,
+      null,
+      33.57,
+      85.87
+     ],
+     [
+      "2014-04",
+      5892,
+      141145,
+      883605,
+      null,
+      0.9599,
+      0.9625,
+      204.05,
+      null,
+      34.73,
+      85.31
+     ],
+     [
+      "2014-05",
+      3238,
+      88748,
+      469664,
+      null,
+      0.9648,
+      0.5744,
+      181.84,
+      null,
+      38.36,
+      56.34
+     ],
+     [
+      "2014-06",
+      5751,
+      152035,
+      846734,
+      null,
+      0.9636,
+      0.9824,
+      195.14,
+      null,
+      32.4,
+      97.02
+     ],
+     [
+      "2014-07",
+      5792,
+      152314,
+      864046,
+      null,
+      0.9634,
+      0.9989,
+      187.04,
+      null,
+      32.62,
+      98.13
+     ],
+     [
+      "2014-08",
+      4448,
+      126629,
+      704538,
+      null,
+      0.9661,
+      0.7975,
+      179.93,
+      null,
+      27.22,
+      79.86
+     ],
+     [
+      "2014-09",
+      5063,
+      149376,
+      803971,
+      null,
+      0.9672,
+      0.9525,
+      177.16,
+      null,
+      32.61,
+      94.19
+     ],
+     [
+      "2014-10",
+      5386,
+      155366,
+      833121,
+      null,
+      0.9665,
+      1.0,
+      173.5,
+      null,
+      32.71,
+      99.16
+     ],
+     [
+      "2014-11",
+      4495,
+      114661,
+      700998,
+      null,
+      0.9623,
+      0.8069,
+      185.7,
+      null,
+      37.09,
+      79.61
+     ],
+     [
+      "2014-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      null,
+      0.0,
+      null,
+      null,
+      135.25,
+      0.9283
+     ],
+     [
+      "2015-01",
+      25713,
+      11588,
+      3780459,
+      null,
+      0.3107,
+      0.9618,
+      862.38,
+      null,
+      72.22,
+      29.6
+     ],
+     [
+      "2015-02",
+      19579,
+      15115,
+      2960674,
+      null,
+      0.4357,
+      0.9268,
+      754.48,
+      null,
+      55.15,
+      33.35
+     ],
+     [
+      "2015-03",
+      19341,
+      19256,
+      2853433,
+      null,
+      0.4989,
+      0.894,
+      697.91,
+      null,
+      55.82,
+      31.03
+     ],
+     [
+      "2015-04",
+      19797,
+      20808,
+      2889395,
+      null,
+      0.5125,
+      1.0,
+      659.89,
+      null,
+      48.19,
+      35.13
+     ],
+     [
+      "2015-05",
+      16996,
+      25201,
+      2479620,
+      null,
+      0.5972,
+      1.0,
+      548.27,
+      null,
+      46.3,
+      35.12
+     ],
+     [
+      "2015-06",
+      19536,
+      32903,
+      2859707,
+      null,
+      0.6274,
+      0.9852,
+      661.02,
+      null,
+      32.22,
+      81.03
+     ],
+     [
+      "2015-07",
+      19157,
+      36481,
+      2846821,
+      null,
+      0.6557,
+      1.0,
+      617.98,
+      null,
+      29.52,
+      99.87
+     ],
+     [
+      "2015-08",
+      13473,
+      31629,
+      2047121,
+      null,
+      0.7013,
+      0.8558,
+      507.88,
+      null,
+      25.84,
+      85.33
+     ],
+     [
+      "2015-09",
+      12495,
+      35065,
+      1888049,
+      null,
+      0.7373,
+      0.9991,
+      416.87,
+      null,
+      29.63,
+      98.82
+     ],
+     [
+      "2015-10",
+      11889,
+      38151,
+      1821328,
+      null,
+      0.7624,
+      0.9928,
+      386.27,
+      null,
+      27.09,
+      98.58
+     ],
+     [
+      "2015-11",
+      11369,
+      37662,
+      1748311,
+      null,
+      0.7681,
+      0.9993,
+      379.25,
+      null,
+      27.41,
+      99.73
+     ],
+     [
+      "2015-12",
+      10856,
+      37288,
+      1662453,
+      null,
+      0.7745,
+      0.983,
+      356.26,
+      null,
+      27.08,
+      98.74
+     ],
+     [
+      "2016-01",
+      9495,
+      38970,
+      1487340,
+      null,
+      0.8041,
+      0.9899,
+      309.41,
+      null,
+      27.71,
+      96.09
+     ],
+     [
+      "2016-02",
+      7644,
+      35253,
+      1205549,
+      null,
+      0.8218,
+      0.9994,
+      263.75,
+      null,
+      27.27,
+      99.42
+     ],
+     [
+      "2016-03",
+      7360,
+      40507,
+      1185894,
+      null,
+      0.8462,
+      0.9987,
+      237.74,
+      null,
+      26.87,
+      100.0
+     ],
+     [
+      "2016-04",
+      6152,
+      37126,
+      1015034,
+      null,
+      0.8578,
+      0.9984,
+      205.41,
+      null,
+      26.55,
+      99.55
+     ],
+     [
+      "2016-05",
+      5865,
+      36148,
+      925514,
+      null,
+      0.8604,
+      0.9953,
+      190.09,
+      null,
+      26.27,
+      99.01
+     ],
+     [
+      "2016-06",
+      5408,
+      34608,
+      870533,
+      null,
+      0.8648,
+      0.9767,
+      184.57,
+      null,
+      26.31,
+      97.22
+     ],
+     [
+      "2016-07",
+      4534,
+      29940,
+      729319,
+      null,
+      0.8685,
+      0.9459,
+      154.62,
+      null,
+      29.12,
+      58.37
+     ],
+     [
+      "2016-08",
+      1442,
+      10937,
+      232558,
+      null,
+      0.8835,
+      0.3843,
+      121.06,
+      null,
+      12.55,
+      12.23
+     ],
+     [
+      "2016-09",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      null,
+      0.0,
+      null,
+      null,
+      0.0,
+      1.06
+     ]
+    ]
+   },
+   "code": "wellpilot.agent.tools.production_monthly@a17b98ebc0ac",
+   "created_at": "2026-10-26T23:12:31+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E8",
+   "tool": "calculate",
+   "arguments": {
+    "expression": "2095-0"
+   },
+   "result": {
+    "expression": "2095-0",
+    "value": 2095
+   },
+   "code": "wellpilot.agent.tools.calculate@669bb70162a4",
+   "created_at": "2026-10-26T23:12:38+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E9",
+   "tool": "calculate",
+   "arguments": {
+    "expression": "54.11-54.27"
+   },
+   "result": {
+    "expression": "54.11-54.27",
+    "value": -0.16
+   },
+   "code": "wellpilot.agent.tools.calculate@669bb70162a4",
+   "created_at": "2026-10-26T23:12:43+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E10",
+   "tool": "calculate",
+   "arguments": {
+    "expression": "1759/1765"
+   },
+   "result": {
+    "expression": "1759/1765",
+    "value": 0.9966
+   },
+   "code": "wellpilot.agent.tools.calculate@669bb70162a4",
+   "created_at": "2026-10-26T23:12:48+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E11",
+   "tool": "calculate",
+   "arguments": {
+    "expression": "1133053/1830"
+   },
+   "result": {
+    "expression": "1133053/1830",
+    "value": 619.15
+   },
+   "code": "wellpilot.agent.tools.calculate@669bb70162a4",
+   "created_at": "2026-10-26T23:12:49+00:00",
+   "warnings": []
+  }
+ ]
+}

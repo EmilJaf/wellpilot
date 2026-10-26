@@ -171,6 +171,25 @@ def test_short_declared_numbers_leave_dates_and_wells_alone(value, style, day, s
 
 
 @settings(max_examples=150, deadline=None)
+@given(
+    value=large,
+    style=st.sampled_from(sorted(LARGE)),
+    label=st.sampled_from(["P10", "P50", "P90", "r2", "Q4", "E7"]),
+)
+def test_a_number_after_a_label_with_digits_is_found(value, style, label) -> None:
+    """ "P50 276,078" and "r2 0.77": the label's digits are not a thousands group."""
+    text, written = LARGE[style](value)
+    finding = Finding(
+        claim=f"The forecast gives {label} {text} in 2012.",
+        evidence_ids=["E1"],
+        confidence="fact",
+        numbers=[DeclaredNumber(text=text, value=written, evidence_id="E1")],
+    )
+
+    assert check_submission(Submission(summary="Done.", findings=[finding]), log_of(value)) == []
+
+
+@settings(max_examples=150, deadline=None)
 @given(value=large, style=st.sampled_from(sorted(LEGACY)))
 def test_legacy_text_reading_accepts_every_format(value, style) -> None:
     """Answers without declared numbers fall back to reading them from the text."""

@@ -294,18 +294,25 @@ def _reads_as(reading: Reading, candidates: Iterable[float]) -> bool:
     )
 
 
-def _standalone(written: str) -> re.Pattern[str]:
-    """Where a declared text stands as a whole number: "2" matches "2 years", not the 2 in
-    "2 100", "12", "0.2" or "Sm3"."""
-    return re.compile(
-        rf"(?<![\w.,])(?<!\d[ \u00a0\u202f]){re.escape(written)}"
-        rf"(?!\d|[.,]\d|[ \u00a0\u202f]\d{{3}}\b)"
-    )
+# A standalone group of 1-3 digits and a space just before: "1 " in "1 146". Not "P50 " or
+# "r2 ", where the digits belong to a label.
+GROUP_BEFORE = re.compile(r"(?:^|[^\w.,])\d{1,3}[ \u00a0\u202f]$")
+# Window lengths in calendar units ("30-day median", "12-month forecast") describe a method,
+# not the data, so they need no declaring. Any other duration ("45-day shut-in") does.
+CALENDAR_WINDOW = re.compile(r"\b(?:12-month|24-hour|30-day|365-day)\b")
+
+
+def _standalone(text: str, written: str) -> list[tuple[int, int]]:
+    """Spans where a declared text stands as a whole number: "2" in "2 years", not the 2 in
+    "2 100", "12", "0.2" or "Sm3"; "276,078" in "P50 276,078"."""
+    pattern = re.compile(rf"(?<![\w.,]){re.escape(written)}(?!\d|[.,]\d|[ \u00a0\u202f]\d{{3}}\b)")
+    return [m.span() for m in pattern.finditer(text) if not GROUP_BEFORE.search(text, 0, m.start())]
 
 
 def _mask(text: str) -> str:
-    """Dates and well names blanked out: their digits are not numbers to declare."""
-    return DATE.sub(" ", WELL.sub(" ", text))
+    """Dates, well names and calendar windows blanked out: their digits are not numbers to
+    declare."""
+    return CALENDAR_WINDOW.sub(" ", DATE.sub(" ", WELL.sub(" ", text)))
 
 
 def _as_written(value: float, decimals: int, suffix: str | None) -> str:
@@ -328,17 +335,17 @@ def _declared(
     """
     problems = []
     masked = _mask(text)
+    # A declaration with no number in the text hides nothing (every written number must be
+    # declared anyway), so it costs no correction round; it is only named as a hint below.
+    unused = [d for d in declared if not _standalone(masked, d.text)]
     for number in declared:
+        if number in unused:
+            continue
         where = number.evidence_id
         item = log.get(where)
         readings = _readings(number.text)
         fits = [r for r in readings if _reads_as(r, [number.value])]
-        if not _standalone(number.text).search(masked):
-            problems.append(
-                f"{label}: '{number.text}' is declared but does not appear in the text as a "
-                "number (dates and well names need no declaring)."
-            )
-        elif not readings:
+        if not readings:
             problems.append(
                 f"{label}: '{number.text}' must be one number exactly as written, e.g. "
                 "'4 050' or '72%'; declare each number separately."
@@ -362,7 +369,8 @@ def _declared(
 
     rest = _mask(QUOTED.sub(" ", text))  # numbers inside a quote are checked with the quote
     for number in sorted(declared, key=lambda d: -len(d.text)):
-        rest = _standalone(number.text).sub(" ", rest)
+        for start, end in reversed(_standalone(rest, number.text)):
+            rest = rest[:start] + " " + rest[end:]
     leftover: list[str] = []
     # Either convention: an undeclared "1.234.567" is a number too.
     for european in (False, True):
@@ -374,9 +382,14 @@ def _declared(
             if written not in leftover:
                 leftover.append(written)
     if leftover:
+        hint = (
+            f" Declared but not written as such: {', '.join(repr(d.text) for d in unused)}."
+            if unused
+            else ""
+        )
         problems.append(
             f"{label}: undeclared number(s) {', '.join(leftover)}. Declare every number you "
-            "write, with its value and evidence id, or remove it."
+            f"write, with its value and evidence id, or remove it.{hint}"
         )
     return problems
 

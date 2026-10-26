@@ -431,7 +431,7 @@ def test_declared_numbers_are_checked_against_their_own_evidence() -> None:
 
     assert "'1160' = 1160 is not in E1" in check_submission(submit(wrong_value), log)[0]
     assert "comes from E2, which it does not cite" in check_submission(submit(wrong_source), log)[0]
-    assert "does not appear in the text" in check_submission(submit(not_in_text), log)[0]
+    assert check_submission(submit(not_in_text), log) == []  # an unused declaration hides nothing
 
 
 def test_every_written_number_must_be_declared() -> None:
@@ -450,6 +450,25 @@ def test_every_written_number_must_be_declared() -> None:
     # (checked as a quote); only 980 is an undeclared number.
     assert any("undeclared number(s) 980." in p for p in problems)
     assert not any("2010" in p for p in problems)
+
+
+def test_calendar_windows_need_no_declaring_but_durations_do() -> None:
+    log = log_with(EVENTS)
+    window = Finding(
+        claim="The 30-day median fell to 1146 Sm3/d; the 12-month forecast follows it.",
+        evidence_ids=["E1"],
+        confidence="fact",
+        numbers=[declared("1146", 1146)],
+    )
+    duration = Finding(
+        claim="After a 45-day shut-in the rate fell to 1146 Sm3/d.",
+        evidence_ids=["E1"],
+        confidence="fact",
+        numbers=[declared("1146", 1146)],
+    )
+
+    assert check_submission(submit(window), log) == []
+    assert "undeclared number(s) 45." in check_submission(submit(duration), log)[0]
 
 
 def test_summary_numbers_are_declared_too() -> None:

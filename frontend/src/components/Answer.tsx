@@ -16,15 +16,20 @@ type Props = {
 // an apostrophe inside a word does not end it (same rule as the backend checker).
 const QUOTED = /(^|[\s(])['"‘“«]([^]{6,}?)['"’”»](?=[\s.,;:)/]|$)/g
 
-// Dates and well names hold digits that are not declared numbers (same as the checker).
-const NOT_NUMBERS = /\b\d{4}-\d{2}(?:-\d{2})?\b|\b(?:15\/9-)?F-\d+(?:\s?[A-Z]\b)?/g
+// Dates, well names and calendar windows ("30-day") hold digits that are not declared
+// numbers (same as the checker).
+const NOT_NUMBERS =
+  /\b\d{4}-\d{2}(?:-\d{2})?\b|\b(?:15\/9-)?F-\d+(?:\s?[A-Z]\b)?|\b(?:12-month|24-hour|30-day|365-day)\b/g
 
-/** Where a declared text first stands as a whole number: "2" in "2 years", not in "2010-07-18" or "2 100". */
+/**
+ * Where a declared text first stands as a whole number: "2" in "2 years", not in
+ * "2010-07-18" or "2 100"; "276,078" in "P50 276,078", where the 50 is part of a label.
+ */
 function standaloneAt(text: string, written: string): number {
   if (!written) return -1
   const escaped = written.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   const pattern = new RegExp(
-    `(?<![\\w.,])(?<!\\d[ \\u00a0\\u202f])${escaped}(?!\\d|[.,]\\d|[ \\u00a0\\u202f]\\d{3}\\b)`,
+    `(?<![\\w.,])(?<!(?:^|[^\\w.,])\\d{1,3}[ \\u00a0\\u202f])${escaped}(?!\\d|[.,]\\d|[ \\u00a0\\u202f]\\d{3}\\b)`,
     'g',
   )
   const masked = [...text.matchAll(NOT_NUMBERS)].map((m) => [m.index, m.index + m[0].length])
