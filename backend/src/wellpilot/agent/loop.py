@@ -10,9 +10,9 @@ import json
 import time
 from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
-from datetime import date
 from typing import Any
 
+import pandas as pd
 from pydantic import ValidationError
 
 from wellpilot.agent.checker import Finding, Submission, check_submission
@@ -27,9 +27,8 @@ PREVIEW_CHARS = 300
 
 SYSTEM_PROMPT = """\
 You are WellPilot, an analysis agent for petroleum engineers working on the Volve oil \
-field (Norwegian North Sea, operated by Equinor, produced 2008-2016). Producers: F-1 C, \
-F-11, F-12, F-14, F-15 D (F-5 produced briefly in 2016). Water injectors: F-4, F-5. \
-Reports are indexed too, such as the February 2005 development plan (PUD, in Norwegian): \
+field (Norwegian North Sea, operated by Equinor). {wells} Reports are indexed too, \
+such as the February 2005 development plan (PUD, in Norwegian): \
 use search_reports to compare what happened with what was planned, and quote the original \
 wording with an English translation. Prefer facts whose quote_check is "exact".
 
@@ -152,9 +151,37 @@ def _reasoning(message: Any) -> str | None:
     return None
 
 
-def system_prompt(as_of: date | None) -> str:
+def describe_wells(store: ProductionStore) -> str:
+    """The wells as the data shows them, so a run with an as-of date learns nothing about
+    later years (not which wells come later, nor when the field stops)."""
+    rows = store.query(
+        """
+        SELECT well,
+               min(date) FILTER (WHERE oil_sm3 > 0) AS first_oil,
+               bool_or(water_inj_sm3 > 0) AS injects,
+               max(date) AS last_date
+        FROM production_daily GROUP BY well ORDER BY well
+        """
+    ).rows
+    if rows.empty:
+        return "No production data is available."
+    producers = [
+        f"{r.well} (first oil {r.first_oil.date().isoformat()})"
+        for r in rows.itertuples()
+        if r.first_oil is not None and not pd.isna(r.first_oil)
+    ]
+    injectors = [r.well for r in rows.itertuples() if r.injects]
+    last = rows["last_date"].max().date().isoformat()
+    return (
+        f"Producers in the data: {', '.join(producers) or 'none yet'}. "
+        f"Water injectors: {', '.join(injectors) or 'none yet'}. The data ends on {last}."
+    )
+
+
+def system_prompt(store: ProductionStore) -> str:
+    as_of = store.as_of
     note = f"\n\nData is available only up to {as_of.isoformat()}." if as_of else ""
-    return SYSTEM_PROMPT.format(as_of_note=note)
+    return SYSTEM_PROMPT.format(wells=describe_wells(store), as_of_note=note)
 
 
 def _parse_arguments(arguments: str) -> dict:
@@ -183,7 +210,7 @@ async def run_agent(
     Pass evidence_log to read evidence while the run is still going.
     """
     messages: list[dict] = [
-        {"role": "system", "content": system_prompt(store.as_of)},
+        {"role": "system", "content": system_prompt(store)},
         {"role": "user", "content": question},
     ]
     tools = [*tool_schemas(), submit_tool_schema()]
@@ -284,4 +311,9 @@ async def run_agent(
             nudged = True
             messages.append({"role": "user", "content": NUDGE})
 
+    # Out of steps: keep the last answer the model submitted, if any, marked unverified.
+    if last_submission:
+        return finish(
+            last_submission.summary, last_submission.findings, verified=False, finished=False
+        )
     return finish(None, [], verified=False, finished=False)

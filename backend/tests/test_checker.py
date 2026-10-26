@@ -262,3 +262,97 @@ def test_a_cause_inside_a_quote_is_the_reports_claim() -> None:
 
     assert check_submission(submit(reported), log) == []
     assert "states a cause ('driving')" in check_submission(submit(asserted), log)[0]
+
+
+def _add(log: EvidenceLog, tool: str, arguments: dict, result, warnings=()) -> None:
+    item = log.add(tool, arguments, result, _tool)
+    if warnings:
+        object.__setattr__(item, "warnings", tuple(warnings))
+
+
+def test_literals_typed_into_sql_are_not_evidence() -> None:
+    log = EvidenceLog()
+    sql = "SELECT 'Vanngjennombrudd ventes etter 7 år' AS q, DATE '2013-05-17' AS d, 4321 AS n"
+    _add(
+        log,
+        "run_sql",
+        {"sql": sql},
+        {
+            "columns": ["q", "d", "n"],
+            "rows": [["Vanngjennombrudd ventes etter 7 år", "2013-05-17", 4321]],
+        },
+    )
+    finding = Finding(
+        claim="The plan said 'Vanngjennombrudd ventes etter 7 år' and 4321 Sm3 by 2013-05-17.",
+        evidence_ids=["E1"],
+        confidence="fact",
+    )
+
+    problems = " ".join(check_submission(submit(finding), log))
+
+    assert "4321" in problems and "2013-05-17" in problems and "quoted text not found" in problems
+
+
+def test_a_calculation_needs_inputs_from_evidence_and_keeps_their_warnings() -> None:
+    log = EvidenceLog()
+    _add(log, "fit_decline", {}, {"best": {"di_per_year": 0.0575}}, warnings=["poor fit"])
+    _add(log, "calculate", {"expression": "0.4321"}, {"expression": "0.4321", "value": 0.4321})
+    _add(
+        log,
+        "calculate",
+        {"expression": "0.0575 * 100"},
+        {"expression": "0.0575 * 100", "value": 5.75},
+    )
+
+    invented = Finding(claim="Decline was 0.4321/yr.", evidence_ids=["E2"], confidence="inference")
+    laundered = Finding(claim="Decline was 5.75% per year.", evidence_ids=["E3"], confidence="fact")
+    honest = laundered.model_copy(update={"confidence": "inference"})
+
+    assert "no evidence contains" in check_submission(submit(invented), log)[0]
+    assert (
+        "rests on evidence with warnings (E3: poor fit)"
+        in check_submission(submit(laundered), log)[0]
+    )
+    assert check_submission(submit(honest), log) == []
+
+
+def test_numbers_must_round_to_the_claim_not_merely_be_close() -> None:
+    log = log_with(EVENTS)  # holds 4049.93 and 1145.72
+
+    close = Finding(claim="Rate fell to 1150 Sm3/d.", evidence_ids=["E1"], confidence="fact")
+    rounded = Finding(
+        claim="Rate fell to 1146 Sm3/d, about 1.1k.", evidence_ids=["E1"], confidence="fact"
+    )
+
+    assert "1150 not found" in check_submission(submit(close), log)[0]
+    assert check_submission(submit(rounded), log) == []
+
+
+def test_day_needs_that_day_and_wellbore_names_are_not_numbers() -> None:
+    log = log_with({"rows": [["2014-02", 5205]]})
+
+    day = Finding(claim="On 2014-02-17 the rate was 5205.", evidence_ids=["E1"], confidence="fact")
+    month = Finding(
+        claim="In 2014-02 well 15/9-F-12 made 5205 Sm3/d.", evidence_ids=["E1"], confidence="fact"
+    )
+
+    assert "2014-02-17" in check_submission(submit(day), log)[0]
+    assert check_submission(submit(month), log) == []
+
+
+def test_numbers_glued_to_units_are_checked() -> None:
+    log = log_with({"value": 4321})
+    finding = Finding(claim="It made 98765Sm3 of oil.", evidence_ids=["E1"], confidence="fact")
+
+    assert "98765 not found" in check_submission(submit(finding), log)[0]
+
+
+def test_summary_quotes_must_exist() -> None:
+    log = log_with(PUD_FACTS)
+    finding = Finding(claim="Water cut limit 0.80.", evidence_ids=["E1"], confidence="fact")
+
+    problems = check_submission(
+        submit(finding, summary="The plan said 'water would never reach the wells at all'."), log
+    )
+
+    assert problems and "water would never reach" in problems[0]

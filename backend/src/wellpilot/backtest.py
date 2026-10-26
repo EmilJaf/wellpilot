@@ -11,8 +11,8 @@ with the actual volume. Methods:
   LLM (spends tokens), so it runs on a subset of cases and is cached per case.
 
 Uncertainty: the decline module's bootstrap bands are far too narrow on real wells. A
-calibrated band is built from each method's own backtest errors, leave one out, and
-both bands' coverage of the actual volume is reported.
+calibrated band is built from each method's own errors on earlier cases (only those
+whose forecast period had ended by the cutoff), and both bands' coverage is reported.
 
 Run: uv run python -m wellpilot.backtest          (free)
      uv run python -m wellpilot.backtest --agent  (spends tokens, cached per case)
@@ -39,6 +39,7 @@ STEP_MONTHS = 6
 FIRST_CUTOFF_MONTHS = 18
 PRODUCERS = ("F-12", "F-14", "F-11", "F-15 D", "F-1 C")
 BAND = (0.1, 0.9)  # calibrated P90-P10: the 80% interval
+MIN_PAST_ERRORS = 5  # errors needed before a calibrated band is given
 RESULTS_FILE = "backtest_results.parquet"
 SUMMARY_FILE = "backtest_summary.json"
 
@@ -78,10 +79,14 @@ def cases(store: ProductionStore) -> list[Case]:
     return found
 
 
-def _decline_row(case: Case, daily: pd.DataFrame, method: str, start) -> dict:
+def _decline_row(
+    case: Case, daily: pd.DataFrame, method: str, start=None, end=None, model: str = "auto"
+) -> dict:
+    """Fit on data up to the cutoff and forecast exactly the 365 days after it, the same
+    days the actual volume covers."""
     history = daily[daily["date"] <= case.cutoff]
-    fit = fit_decline(history, start=start).best
-    fc = forecast(fit, HORIZON_DAYS, n_boot=100)
+    fit = fit_decline(history, start=start, end=end, model=model).best
+    fc = forecast(fit, HORIZON_DAYS, n_boot=100, start=case.cutoff + pd.Timedelta(days=1))
     return {
         "well": case.well,
         "cutoff": case.cutoff,
@@ -95,14 +100,18 @@ def _decline_row(case: Case, daily: pd.DataFrame, method: str, start) -> dict:
     }
 
 
+def _production(store: ProductionStore, well: str) -> pd.DataFrame:
+    daily = store.well_daily(well)
+    return daily[daily["flow_kind"] == "production"]
+
+
 def decline_methods(store: ProductionStore, all_cases: list[Case]) -> list[dict]:
     rows = []
     for case in all_cases:
-        daily = store.well_daily(case.well)
-        daily = daily[daily["flow_kind"] == "production"]
-        rows.append(_decline_row(case, daily, "classic", None))
+        daily = _production(store, case.well)
+        rows.append(_decline_row(case, daily, "classic"))
         recent = case.cutoff - pd.DateOffset(months=12)
-        rows.append(_decline_row(case, daily, "recent_12m", recent))
+        rows.append(_decline_row(case, daily, "recent_12m", start=recent))
     return rows
 
 
@@ -111,17 +120,23 @@ def _agent_cache(processed_dir: Path, case: Case) -> Path:
     return processed_dir / "backtest_agent" / name
 
 
-async def agent_row(llm, processed_dir: Path, case: Case) -> dict | None:
-    """Run the agent with data up to the cutoff and read its forecast from the evidence."""
+async def agent_row(
+    llm, processed_dir: Path, case: Case, store: ProductionStore | None = None
+) -> dict | None:
+    """The agent's forecast for a case: its run is cached, and its chosen window and model
+    are refitted here on data up to the cutoff, so the forecast covers exactly the same
+    365 days as the other methods. With llm=None only cached runs are used."""
     path = _agent_cache(processed_dir, case)
     if path.exists():
         record = json.loads(path.read_text())
+    elif llm is None:
+        return None
     else:
-        store = ProductionStore(processed_dir, as_of=case.cutoff.date())
+        as_of_store = ProductionStore(processed_dir, as_of=case.cutoff.date())
         question = AGENT_QUESTION.format(
             well=case.well, days=HORIZON_DAYS, cutoff=case.cutoff.date().isoformat()
         )
-        run = await run_agent(question, llm, store)
+        run = await run_agent(question, llm, as_of_store)
         forecasts = [
             e
             for e in run.evidence
@@ -137,43 +152,52 @@ async def agent_row(llm, processed_dir: Path, case: Case) -> dict | None:
         }
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(record, ensure_ascii=False, indent=1))
-    if not record["forecast"]:
+    if not record["forecast_evidence"]:
         return None
-    cumulative = record["forecast"]["cumulative_oil_sm3"]
-    return {
-        "well": case.well,
-        "cutoff": case.cutoff,
-        "method": "agent",
-        "window_start": pd.Timestamp(record["forecast"]["fit"]["window_start"]),
-        "p90": cumulative["p90"],
-        "p50": cumulative["p50"],
-        "p10": cumulative["p10"],
-        "actual": case.actual_sm3,
-        "warned": bool(record["forecast"]["warnings"]),
-    }
+    chosen = next(e for e in record["run"]["evidence"] if e["id"] == record["forecast_evidence"])
+    args = chosen["arguments"]
+    store = store or ProductionStore(processed_dir)
+    row = _decline_row(
+        case,
+        _production(store, case.well),
+        "agent",
+        start=args.get("start"),
+        end=args.get("end"),
+        model=args.get("model", "auto"),
+    )
+    return {**row, "verified": bool(record["run"]["verified"])}
 
 
 def calibrate(results: pd.DataFrame) -> pd.DataFrame:
-    """Add errors and leave-one-out calibrated 80% bands per method."""
+    """Add errors and calibrated 80% bands per method.
+
+    A case's band uses only the same method's errors on cases whose forecast period had
+    already ended at its cutoff, the errors a forecaster could have known then. Early
+    cases with fewer than MIN_PAST_ERRORS such errors get no band.
+    """
     results = results.copy()
     results["error"] = (results["p50"] - results["actual"]) / results["actual"]
     results["in_bootstrap_band"] = results["actual"].between(results["p90"], results["p10"])
+    horizon = pd.Timedelta(days=HORIZON_DAYS)
     low, high = [], []
-    for i, row in results.iterrows():
-        others = results[(results["method"] == row["method"]) & (results.index != i)]["error"]
-        if len(others) < 5:
+    for _, row in results.iterrows():
+        known = results[
+            (results["method"] == row["method"]) & (results["cutoff"] + horizon <= row["cutoff"])
+        ]["error"]
+        if len(known) < MIN_PAST_ERRORS:
             low.append(np.nan)
             high.append(np.nan)
             continue
         # error = p50 / actual - 1, so the actual lies in p50 / (1 + error quantiles).
-        q_low, q_high = np.quantile(others, BAND)
+        q_low, q_high = np.quantile(known, BAND)
         low.append(row["p50"] / (1 + q_high))
         high.append(row["p50"] / (1 + q_low))
     results["calibrated_low"] = low
     results["calibrated_high"] = high
-    results["in_calibrated_band"] = results["actual"].between(
-        results["calibrated_low"], results["calibrated_high"]
-    )
+    has_band = results["calibrated_low"].notna()
+    results["in_calibrated_band"] = (
+        results["actual"].between(results["calibrated_low"], results["calibrated_high"])
+    ).where(has_band)
     return results
 
 
@@ -187,7 +211,12 @@ def summarize(results: pd.DataFrame) -> dict:
             "mean_abs_error": float(abs_error.mean()),
             "median_bias": float(rows["error"].median()),
             "bootstrap_band_coverage": float(rows["in_bootstrap_band"].mean()),
-            "calibrated_band_coverage": float(rows["in_calibrated_band"].mean()),
+            "calibrated_band_cases": int(rows["in_calibrated_band"].notna().sum()),
+            "calibrated_band_coverage": float(
+                rows["in_calibrated_band"].dropna().astype(bool).mean()
+            )
+            if rows["in_calibrated_band"].notna().any()
+            else None,
         }
     return summary
 
@@ -205,18 +234,25 @@ async def run(with_agent: bool, agent_limit: int) -> dict:
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")  # curve_fit covariance warnings on flat windows
         rows = decline_methods(store, all_cases)
+    # Cached agent runs always count; --agent adds runs for the cases still missing.
+    llm = None
     if with_agent:
         from wellpilot.llm import make_llm
 
         llm = make_llm(settings)
-        step = max(1, len(all_cases) // agent_limit)
-        for case in all_cases[::step][:agent_limit]:
+    step = max(1, len(all_cases) // agent_limit)
+    chosen = all_cases[::step][:agent_limit] if with_agent else []
+    for case in all_cases:
+        cached = _agent_cache(settings.processed_dir, case).exists()
+        if not cached and case not in chosen:
+            continue
+        if not cached:
             print(f"agent: {case.well} from {case.cutoff.date()}")
-            row = await agent_row(llm, settings.processed_dir, case)
-            if row:
-                rows.append(row)
-            else:
-                print("  no forecast_production evidence in this run")
+        row = await agent_row(llm, settings.processed_dir, case, store)
+        if row:
+            rows.append(row)
+        elif not cached:
+            print("  no forecast_production evidence in this run")
 
     results = calibrate(pd.DataFrame(rows))
     summary = {"all_cases": summarize(results)}
@@ -249,7 +285,8 @@ def main(argv: list[str] | None = None) -> None:
             print(
                 f"{method:12s} {s['cases']:5d} {s['median_abs_error']:12.1%} "
                 f"{s['mean_abs_error']:10.1%} {s['median_bias']:+7.1%} "
-                f"{s['bootstrap_band_coverage']:15.0%} {s['calibrated_band_coverage']:16.0%}"
+                f"{s['bootstrap_band_coverage']:15.0%} "
+                f"{(s['calibrated_band_coverage'] or 0):9.0%} of {s['calibrated_band_cases']:>2d}"
             )
 
 

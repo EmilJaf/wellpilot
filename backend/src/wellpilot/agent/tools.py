@@ -7,12 +7,14 @@ the model re-reads every step) small.
 """
 
 import ast
+import json
 import math
 import operator
 import re
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, timedelta
+from decimal import Decimal
 from typing import Any, Literal
 
 import numpy as np
@@ -33,6 +35,10 @@ from wellpilot.ingest.reports import REPORTS_BY_ID
 from wellpilot.llm import json_schema
 
 SQL_ROW_LIMIT = 200
+MAX_TEXT_CHARS = 2000  # one string value in a tool result
+# A whole tool result, as JSON. Results go back to the model on every later step, so this
+# bounds what one call can add to a run's token bill.
+MAX_RESULT_CHARS = 40_000
 MIN_R2_LOG = 0.7
 MAX_RESIDUAL_TREND = 0.05
 
@@ -68,7 +74,16 @@ def to_jsonable(value: Any) -> Any:
         return int(value)
     if isinstance(value, float | np.floating):
         return _round(float(value)) if math.isfinite(value) else None
-    return value
+    if isinstance(value, Decimal):
+        return to_jsonable(float(value))
+    if isinstance(value, timedelta | pd.Timedelta | np.timedelta64):
+        return to_jsonable(pd.Timedelta(value).total_seconds() / 86400)  # days
+    if isinstance(value, str):
+        return value if len(value) <= MAX_TEXT_CHARS else value[:MAX_TEXT_CHARS] + "…"
+    if isinstance(value, int | float):
+        return value
+    # Anything else DuckDB or pandas may hand back (UUID, bytes, time...) becomes text.
+    return to_jsonable(str(value))
 
 
 def table(frame: pd.DataFrame) -> dict:
@@ -155,7 +170,8 @@ def production_monthly(store: ProductionStore, args: WindowArgs) -> dict:
                sum(gas_sm3) AS gas_sm3,
                sum(water_inj_sm3) AS water_injected_sm3,
                sum(water_sm3) / nullif(sum(oil_sm3) + sum(water_sm3), 0) AS water_cut,
-               sum(on_stream_hrs) / (24 * count(*)) AS uptime,
+               sum(on_stream_hrs) FILTER (WHERE flow_kind = 'production')
+                   / (24 * count(*) FILTER (WHERE flow_kind = 'production')) AS uptime,
                24 * sum(oil_sm3) / nullif(sum(on_stream_hrs), 0) AS oil_rate_per_producing_day,
                avg(bhp_bar) AS bhp_bar,
                avg(whp_bar) AS whp_bar,
@@ -235,9 +251,15 @@ def _fit_summary(fit: DeclineFit) -> dict:
     }
 
 
+def _production(store: ProductionStore, well: str, start=None, end=None) -> pd.DataFrame:
+    """Production days only: an injector's days would distort uptime (F-5 did both)."""
+    daily = store.well_daily(well, start, end)
+    return daily[daily["flow_kind"] == "production"]
+
+
 def fit_decline_tool(store: ProductionStore, args: DeclineArgs) -> dict:
     _check_well(store, args.well)
-    result = fit_decline(store.well_daily(args.well, args.start, args.end), model=args.model)
+    result = fit_decline(_production(store, args.well, args.start, args.end), model=args.model)
     others = [c for c in result.candidates if c is not result.best]
     return to_jsonable(
         {
@@ -252,8 +274,11 @@ def fit_decline_tool(store: ProductionStore, args: DeclineArgs) -> dict:
 
 def forecast_tool(store: ProductionStore, args: ForecastArgs) -> dict:
     _check_well(store, args.well)
-    fit = fit_decline(store.well_daily(args.well, args.start, args.end), model=args.model).best
-    fc = forecast(fit, args.horizon_days)
+    fit = fit_decline(_production(store, args.well, args.start, args.end), model=args.model).best
+    # The forecast covers the future of the data the agent can see, whatever window the
+    # fit used: from the day after the as-of date, or after the well's last day of data.
+    last = pd.Timestamp(store.as_of) if store.as_of else store.well_daily(args.well)["date"].max()
+    fc = forecast(fit, args.horizon_days, start=last + pd.Timedelta(days=1))
     monthly = (
         pd.DataFrame({"p90": fc.p90, "p50": fc.p50, "p10": fc.p10}, index=fc.dates)
         .resample("MS")
@@ -264,6 +289,8 @@ def forecast_tool(store: ProductionStore, args: ForecastArgs) -> dict:
         {
             "fit": _fit_summary(fit),
             "warnings": fit_warnings(fit),
+            "forecast_from": fc.dates[0],
+            "forecast_to": fc.dates[-1],
             "cumulative_oil_sm3": fc.cumulative,
             "monthly_rate_sm3_per_producing_day": table(monthly.rename_axis("month").reset_index()),
             "note": "P90 = low case, P10 = high case. Volumes = rate x historical uptime.",
@@ -300,12 +327,16 @@ def _evaluate(node: ast.AST) -> float:
         and isinstance(node.value, int | float)
         and not isinstance(node.value, bool)
     ):
-        return node.value
+        # Floats only: Python's big integers would let (10**100)**100 run for minutes.
+        return float(node.value)
     if isinstance(node, ast.BinOp) and type(node.op) in _OPERATORS:
         left, right = _evaluate(node.left), _evaluate(node.right)
         if isinstance(node.op, ast.Pow) and abs(right) > 100:
             raise ValueError("exponent too large")
-        return _OPERATORS[type(node.op)](left, right)
+        value = _OPERATORS[type(node.op)](left, right)
+        if isinstance(value, complex) or not math.isfinite(value):
+            raise ValueError("result is not a finite real number")
+        return value
     if isinstance(node, ast.UnaryOp) and type(node.op) in _OPERATORS:
         return _OPERATORS[type(node.op)](_evaluate(node.operand))
     raise ValueError(f"only numbers and + - * / ** ( ) are allowed, got {type(node).__name__}")
@@ -322,6 +353,8 @@ def calculate(_: ProductionStore, args: CalcArgs) -> dict:
         value = _evaluate(tree)
     except ZeroDivisionError as e:
         raise ValueError("division by zero") from e
+    except OverflowError as e:
+        raise ValueError("number too large") from e
     return {"expression": args.expression, "value": to_jsonable(float(value))}
 
 
@@ -385,7 +418,9 @@ def search_reports(store: ProductionStore, args: ReportSearchArgs) -> dict:
     where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
     rows = store.query(
         f"""
-        SELECT doc_id, page, topic, source, statement_en, quote, quote_check, wells
+        SELECT doc_id, page, topic, source, statement_en,
+               CASE WHEN quote_check = 'unverified' THEN NULL ELSE quote END AS quote,
+               quote_check, wells
         FROM (SELECT *, {score or "0"} AS score FROM report_facts) {where}
         ORDER BY score DESC, doc_id, page, fact_no LIMIT {args.limit}
         """,
@@ -420,7 +455,9 @@ def read_report_page(store: ProductionStore, args: ReportPageArgs) -> dict:
     }
     if "report_facts" in store.tables:
         facts = store.query(
-            "SELECT topic, source, statement_en, quote, quote_check, wells FROM report_facts "
+            "SELECT topic, source, statement_en, "
+            "CASE WHEN quote_check = 'unverified' THEN NULL ELSE quote END AS quote, "
+            "quote_check, wells FROM report_facts "
             "WHERE doc_id = ? AND page = ? ORDER BY fact_no",
             [args.doc_id, args.page],
         ).rows
@@ -519,7 +556,8 @@ TOOLS = [
         "breakthrough, facility limits such as maximum water cut. Each fact has an English "
         "statement, the verbatim original quote, and quote_check: 'exact' (the quote is on "
         "the page as written), 'tokens' (all its words and numbers are on the page, e.g. a "
-        "table row) or 'unverified'. Use it to compare what happened with what was planned.",
+        "table row) or 'unverified' (quote withheld: it was not found on the page). Use it to "
+        "compare what happened with what was planned.",
         ReportSearchArgs,
         search_reports,
     ),
@@ -547,6 +585,15 @@ def execute(store: ProductionStore, name: str, arguments: str) -> dict:
     except ValidationError as e:
         return {"error": f"invalid arguments for {name}: {e}"}
     try:
-        return {"result": tool.run(store, args)}
+        result = tool.run(store, args)
     except (ValueError, QueryError) as e:
         return {"error": str(e)}
+    except Exception as e:  # e.g. a fit that does not converge: report it, keep the run
+        return {"error": f"{name} failed: {type(e).__name__}: {e}"}
+    size = len(json.dumps(result, ensure_ascii=False, default=str))
+    if size > MAX_RESULT_CHARS:
+        return {
+            "error": f"{name} returned {size} characters, over the {MAX_RESULT_CHARS} limit. "
+            "Narrow it: fewer rows or columns, a shorter window, or aggregate in SQL."
+        }
+    return {"result": result}

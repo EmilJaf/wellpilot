@@ -19,6 +19,9 @@ def create_app(
         llm_factory or (lambda: make_llm(settings)),
         max_active=settings.max_active_runs,
         default_reasoning=settings.agent_reasoning_effort,
+        runs_per_client_per_hour=settings.runs_per_client_per_hour,
+        daily_token_budget=settings.daily_token_budget,
+        featured=tuple(r.strip() for r in settings.featured_runs.split(",") if r.strip()) or None,
     )
     app.include_router(runs.router)
     app.include_router(data.router)

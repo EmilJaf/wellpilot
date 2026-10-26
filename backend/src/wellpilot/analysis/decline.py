@@ -200,15 +200,18 @@ def forecast(
     n_boot: int = 300,
     block_days: int = 30,
     seed: int = 0,
+    start: pd.Timestamp | None = None,
 ) -> Forecast:
-    """Forecast from the day after the fit window; bands come from a residual bootstrap.
+    """Forecast horizon_days from `start` (default: the day after the fit window); bands
+    come from a residual bootstrap.
 
     The bootstrap resamples the fit's log residuals in blocks of `block_days`, refits the
     same model and takes percentiles of the resulting curves. Daily residuals are strongly
     autocorrelated (choke changes, shut-in periods), and resampling single days would make
     the bands far too narrow.
     """
-    dates = pd.date_range(fit.end + pd.Timedelta(days=1), periods=horizon_days, freq="D")
+    first = pd.Timestamp(start) if start is not None else fit.end + pd.Timedelta(days=1)
+    dates = pd.date_range(first, periods=horizon_days, freq="D")
     t_future = (dates - fit.t0).days.to_numpy().astype(float)
     p50 = arps_rate(t_future, fit.qi, fit.di_per_day, fit.b)
 

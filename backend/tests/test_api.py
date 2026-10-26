@@ -57,7 +57,13 @@ def settings(tmp_path) -> Settings:
     ).to_parquet(processed / PAGES_FILE, index=False)
     (processed / "reports" / "volve_pud").mkdir(parents=True)
     (processed / "reports" / "volve_pud" / "p023.png").write_bytes(b"\x89PNG fake")
-    return Settings(_env_file=None, data_dir=tmp_path, max_active_runs=1)
+    return Settings(
+        _env_file=None,
+        data_dir=tmp_path,
+        max_active_runs=1,
+        runs_per_client_per_hour=100,
+        daily_token_budget=10**9,
+    )
 
 
 def completion(content=None, tool_calls=()) -> ChatCompletion:
@@ -216,7 +222,7 @@ async def test_model_failure_ends_the_run_with_an_error_event(settings) -> None:
         run_id, events = await run_to_end(client)
         run = (await client.get(f"/api/runs/{run_id}")).json()
 
-    assert events[-1]["type"] == "error"
+    assert events[-1]["type"] == "run_error"
     assert "model unavailable" in events[-1]["message"]
     assert run["status"] == "error"
 
@@ -247,3 +253,77 @@ async def test_data_endpoints(settings) -> None:
     assert no_doc.status_code == 404
     assert no_page.status_code == 404
     assert no_backtest.status_code == 404
+
+
+async def test_stream_resumes_after_last_event_id(settings) -> None:
+    async with client_for(create_app(settings, llm_factory=fake_llm)) as client:
+        run_id, events = await run_to_end(client)
+        resumed = await client.get(f"/api/runs/{run_id}/events", headers={"Last-Event-ID": "2"})
+
+    assert [e["seq"] for e in parse_sse(resumed.text)] == [3, 4, 5]
+    assert "event: run_error" not in resumed.text
+
+
+async def test_runs_are_limited_per_client_and_by_the_daily_budget(settings) -> None:
+    limited = settings.model_copy(update={"runs_per_client_per_hour": 1})
+    async with client_for(create_app(limited, llm_factory=fake_llm)) as client:
+        await run_to_end(client)
+        second = await client.post("/api/runs", json={"question": "Which well again?"})
+    assert second.status_code == 429
+    assert "per hour" in second.json()["detail"]
+
+    broke = settings.model_copy(update={"daily_token_budget": 150})
+    async with client_for(create_app(broke, llm_factory=fake_llm)) as client:
+        await run_to_end(client)  # spends 220 tokens
+        third = await client.post("/api/runs", json={"question": "Which well again?"})
+    assert third.status_code == 429
+    assert "budget" in third.json()["detail"]
+
+
+async def test_reasoning_above_high_is_refused(settings) -> None:
+    async with client_for(create_app(settings, llm_factory=fake_llm)) as client:
+        response = await client.post(
+            "/api/runs", json={"question": "Which well?", "reasoning": "max"}
+        )
+    assert response.status_code == 422
+
+
+def test_a_run_saved_mid_flight_loads_as_interrupted(settings) -> None:
+    from wellpilot.api.runs import RunManager, RunRecord
+
+    record = RunRecord("0123456789ab", "Which well?", None)
+    record.emit({"type": "run_started"})
+    manager = RunManager(settings.processed_dir, settings.runs_dir, fake_llm, max_active=1)
+    manager._save(record)
+
+    reloaded = RunManager(settings.processed_dir, settings.runs_dir, fake_llm, max_active=1)
+    loaded = reloaded.get("0123456789ab")
+
+    assert loaded.status == "error"
+    assert loaded.events[-1]["type"] == "run_error"
+    # It does not hold a slot: a new run can still start.
+    assert reloaded._check_limits("someone") is None
+
+
+async def test_featured_runs_hide_other_questions(settings) -> None:
+    async with client_for(create_app(settings, llm_factory=fake_llm)) as client:
+        run_id, _ = await run_to_end(client)
+        await run_to_end(client, "A private question")
+
+    public = settings.model_copy(update={"featured_runs": run_id})
+    async with client_for(create_app(public, llm_factory=fake_llm)) as client:
+        listed = (await client.get("/api/runs")).json()
+    assert [r["id"] for r in listed] == [run_id]
+
+
+async def test_tool_results_with_decimals_do_not_break_a_run(settings) -> None:
+    sql = "SELECT count(*) * 100.0 AS pct, max(date) - min(date) AS span FROM production_daily"
+    script = [
+        completion(tool_calls=[("run_sql", {"sql": sql})]),
+        SCRIPT[1],
+    ]
+    async with client_for(create_app(settings, llm_factory=lambda: fake_llm(script))) as client:
+        _, events = await run_to_end(client)
+
+    assert events[-1]["type"] == "final"
+    assert events[2]["tool_calls"][0]["evidence_id"] == "E1"

@@ -78,14 +78,15 @@ class ProductionStore:
 
     def query(self, sql: str, params: list | None = None) -> QueryResult:
         """Run one read-only SELECT, capped at max_rows rows and timeout_s seconds."""
-        try:
-            statements = self._con.extract_statements(sql)
-        except duckdb.Error as e:
-            raise QueryError(f"SQL does not parse: {e}") from e
-        if len(statements) != 1 or statements[0].type != duckdb.StatementType.SELECT:
-            raise QueryError("only a single SELECT statement is allowed")
-
+        # Everything touching the connection, parsing included, holds the lock: DuckDB
+        # connections are not safe to use from several threads at once.
         with self._lock:
+            try:
+                statements = self._con.extract_statements(sql)
+            except duckdb.Error as e:
+                raise QueryError(f"SQL does not parse: {e}") from e
+            if len(statements) != 1 or statements[0].type != duckdb.StatementType.SELECT:
+                raise QueryError("only a single SELECT statement is allowed")
             timer = threading.Timer(self.timeout_s, self._con.interrupt)
             timer.start()
             try:

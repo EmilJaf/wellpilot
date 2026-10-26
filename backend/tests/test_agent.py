@@ -269,11 +269,16 @@ async def test_agent_stops_at_the_step_limit(store) -> None:
     assert [e.id for e in run.evidence] == ["E1", "E2", "E3"]
 
 
-def test_system_prompt_mentions_the_cutoff() -> None:
+def test_system_prompt_describes_only_the_data_up_to_the_cutoff(store, tmp_path) -> None:
     from datetime import date
 
-    assert "2013-12-31" in system_prompt(date(2013, 12, 31))
-    assert "available only up to" not in system_prompt(None)
+    full = system_prompt(store)
+    cut = system_prompt(ProductionStore(tmp_path, as_of=date(2010, 1, 15)))
+
+    assert "available only up to" not in full
+    assert "F-12 (first oil 2010-01-01)" in full and "data ends on 2010-03-01" in full
+    assert "available only up to 2010-01-15" in cut and "data ends on 2010-01-15" in cut
+    assert "2016" not in cut
 
 
 def test_make_llm_needs_a_key() -> None:

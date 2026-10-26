@@ -61,13 +61,14 @@ def test_cases_roll_every_six_months_and_sum_actual_oil(processed_dir) -> None:
     assert found[0].actual_sm3 == pytest.approx(window["oil_sm3"].sum())
 
 
-def test_calibrated_band_uses_the_other_cases_errors() -> None:
-    errors = [0.1, -0.1, 0.2, -0.2, 0.0, 0.3]
+def test_calibrated_band_uses_only_errors_known_at_the_cutoff() -> None:
+    # Eight yearly cases; each forecast period ends a year after its cutoff.
+    errors = [0.1, -0.1, 0.2, -0.2, 0.0, 0.3, 0.05, 0.6]
     results = pd.DataFrame(
         {
             "method": "classic",
             "well": "F-12",
-            "cutoff": pd.date_range("2010-01-31", periods=6, freq="6ME"),
+            "cutoff": pd.date_range("2009-12-31", periods=8, freq="YE"),
             "actual": 100.0,
             "p50": [100.0 * (1 + e) for e in errors],
             "p90": [100.0 * (1 + e) * 0.99 for e in errors],
@@ -78,13 +79,18 @@ def test_calibrated_band_uses_the_other_cases_errors() -> None:
     calibrated = calibrate(results)
 
     assert calibrated["error"].tolist() == pytest.approx(errors)
-    # A narrow bootstrap band misses unless the forecast is exact; the calibrated band
-    # built from the other five errors (-0.2 to 0.3) covers most cases.
+    # A narrow bootstrap band only holds an exact forecast.
     assert calibrated["in_bootstrap_band"].sum() == 1
-    assert calibrated["in_calibrated_band"].mean() >= 0.5
+    # Case k knows the k earlier errors whose forecast year had ended, so the first five
+    # cases get no band.
+    assert calibrated["calibrated_low"].isna().tolist() == [True] * 5 + [False] * 3
+    # From then on each band is built only from earlier errors: case 7 (0.05) falls
+    # inside, cases 6 (0.3) and 8 (0.6) are worse than anything seen before.
+    assert calibrated["in_calibrated_band"].tolist()[5:] == [False, True, False]
     summary = summarize(calibrated)["classic"]
-    assert summary["cases"] == 6
-    assert summary["median_abs_error"] == pytest.approx(0.15)
+    assert summary["cases"] == 8
+    assert summary["calibrated_band_cases"] == 3
+    assert summary["calibrated_band_coverage"] == pytest.approx(1 / 3)
 
 
 def completion(tool_calls) -> ChatCompletion:
@@ -159,13 +165,17 @@ async def test_agent_forecast_is_read_from_its_evidence_and_cached(processed_dir
     case = Case("F-12", pd.Timestamp("2010-01-31"), 500_000.0)
 
     row = await agent_row(llm, processed_dir, case)
-    again = await agent_row(llm, processed_dir, case)
+    again = await agent_row(None, processed_dir, case)  # no LLM: from the cache
+    uncached = await agent_row(None, processed_dir, Case("F-12", pd.Timestamp("2010-07-31"), 1.0))
 
     assert row["method"] == "agent"
+    assert row["verified"] is True
+    # The agent's chosen window, refitted on data up to the cutoff.
     assert row["window_start"] == pd.Timestamp("2009-01-01")
     assert row["p90"] <= row["p50"] <= row["p10"]
     assert again == row
-    assert len(calls) == 2  # the second call came from the cache
+    assert uncached is None
+    assert len(calls) == 2
     # The agent only ever saw data up to the cutoff.
     system = calls[0]["messages"][0]["content"]
     assert "available only up to 2010-01-31" in system

@@ -33,7 +33,13 @@ class Settings(BaseSettings):
 
     data_dir: Path = REPO_ROOT / "data"
     database_url: str = ""
+    # Public demo limits: every run costs tokens.
     max_active_runs: int = 3
+    runs_per_client_per_hour: int = 6
+    daily_token_budget: int = 3_000_000  # input + output, all runs, per UTC day
+    # Comma-separated run ids listed by GET /api/runs. Empty lists every saved run, which
+    # is for development only: in public it would show every visitor's question.
+    featured_runs: str = ""
 
     @property
     def raw_dir(self) -> Path:
