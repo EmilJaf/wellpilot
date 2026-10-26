@@ -282,10 +282,16 @@ def _readings(text: str) -> list[Reading]:
 
 
 def _reads_as(reading: Reading, candidates: Iterable[float]) -> bool:
-    """Does any candidate round to the shown number, at any scale its suffix allows?"""
+    """Does any candidate round to the shown number, at any scale its suffix allows?
+
+    A tie rounds either way: 253.85 may be written 253.8 or 253.9. The slack absorbs float
+    error there (253.9 - 253.85 is 0.05000000000001137).
+    """
     number, unit, scales = reading
     pool = [abs(c) for c in candidates]
-    return any(abs(c - number * s) <= unit * s for s in scales for c in pool)
+    return any(
+        abs(c - number * s) <= unit * s + 1e-12 * max(number * s, 1.0) for s in scales for c in pool
+    )
 
 
 def _standalone(written: str) -> re.Pattern[str]:

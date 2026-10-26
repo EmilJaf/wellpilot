@@ -5,6 +5,7 @@
   "model": "meta-models/muse-spark-open-1026",
   "question": "Why did well F-12 decline faster after 2010? Compare with the 2005 development plan."
  },
+ "to_review": false,
  "note": "Live checker also rejected '9.000' declared as 9000 (Norwegian thousands from a PUD quote, read only the English way) and 'due to' in Finding 3, which sits in the bracketed translation of a PUD quote: both false, since fixed. The rest is right: Finding 2 says water cut 'drove' the decline as fact and leaves '30' undeclared; Finding 4 invents '~4 000-5 000'; the summary leaves '~21' undeclared.",
  "expected": {
   "accepted": false,

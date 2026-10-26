@@ -98,6 +98,20 @@ def test_declared_fractions_pass_as_percent_or_fraction(value, style) -> None:
     assert check(text, written, value) == []
 
 
+@settings(max_examples=200, deadline=None)
+@given(
+    whole=st.integers(min_value=1, max_value=99_999),
+    decimals=st.integers(min_value=1, max_value=4),
+    up=st.booleans(),
+)
+def test_a_tie_may_round_either_way(whole, decimals, up) -> None:
+    """253.85 written as 253.9 (or 253.8): exactly half a unit off, plus float error."""
+    value = (whole + 0.5) / 10**decimals
+    text = f"{(whole + up) / 10**decimals:.{decimals}f}"
+
+    assert check(text, value, value) == []
+
+
 @settings(max_examples=150, deadline=None)
 @given(value=large, style=st.sampled_from(sorted(LARGE)), off=off)
 def test_declared_numbers_that_are_not_in_the_evidence_fail(value, style, off) -> None:

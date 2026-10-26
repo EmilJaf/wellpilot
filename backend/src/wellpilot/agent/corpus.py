@@ -1,16 +1,21 @@
 """A corpus of real submissions for the claim checker, replayed in CI.
 
 Every submit_findings call a real run made becomes a case: the submission, the evidence
-that existed when it was made, and the verdict a human agrees with. Unit tests cover the
-formats we thought of; the corpus covers what models actually write, so a checker change
-that would wrongly reject (or wrongly pass) a real answer fails the build.
+that existed when it was made, and the expected verdict. Unit tests cover the formats we
+thought of; the corpus covers what models actually write, so a checker change that would
+wrongly reject (or wrongly pass) a real answer fails the build.
 
-    uv run python -m wellpilot.agent.corpus add <run id or path>   # one case per submission
-    uv run python -m wellpilot.agent.corpus check                   # replay all, show diffs
+The agent CLI adds each run it makes. For runs made in the web app:
 
-`add` records the checker's current verdict as expected. Read each case it prints: if the
-checker was wrong (a false rejection like "4 050"), set "expected" to the right verdict
-and say why in "note"; the case then fails until the checker is fixed.
+    uv run python -m wellpilot.agent.corpus add            # every run not in the corpus yet
+    uv run python -m wellpilot.agent.corpus add <run id>   # one run (again)
+    uv run python -m wellpilot.agent.corpus check          # replay all; list cases to review
+
+A new case expects the verdict the checker gives now. A rejection is marked "to_review":
+someone who understands the answer decides whether the checker was right. If it was
+wrong (a false rejection like "4 050"), set "expected" to the right verdict, say why in
+"note", and fix the checker until the case passes. Then set "to_review" to false.
+Acceptances are not queued: a false pass is found by reviewing the rules, not each case.
 """
 
 import argparse
@@ -61,10 +66,8 @@ def model_of(run: dict) -> str:
     return started.get("model", "unknown")
 
 
-def add(source: str, out: Path) -> list[Path]:
-    path = Path(source)
-    if not path.exists():
-        path = get_settings().runs_dir / f"{source}.json"
+def add(path: Path, out: Path = CORPUS_DIR) -> list[Path]:
+    """Add every submission of the saved run at path; return the case files written."""
     run = json.loads(path.read_text())
     out.mkdir(parents=True, exist_ok=True)
     written = []
@@ -76,6 +79,7 @@ def add(source: str, out: Path) -> list[Path]:
                 "model": model_of(run),
                 "question": run["question"],
             },
+            "to_review": False,
             "note": "",
             "expected": {},
             "submission": arguments,
@@ -84,30 +88,52 @@ def add(source: str, out: Path) -> list[Path]:
         try:
             problems = replay(case)
         except ValidationError:
-            print(f"skipped submission {n}: not a valid submission")
-            continue
+            continue  # the model sent an invalid submission; nothing to check
         case["expected"] = verdict(problems)
+        case["to_review"] = bool(problems)
         target = out / f"{run['id']}-{n}.json"
         target.write_text(json.dumps(case, ensure_ascii=False, indent=1) + "\n")
         written.append(target)
-        print(f"\n{target.name}: {'accepted' if not problems else 'rejected'}")
-        for problem in problems:
-            print(f"  - {problem}")
     return written
 
 
-def check(corpus: Path) -> int:
-    failures = 0
-    for path in sorted(corpus.glob("*.json")):
+def add_new(runs_dir: Path, out: Path = CORPUS_DIR) -> list[Path]:
+    """Add every saved run that has no case in the corpus yet."""
+    known = {p.stem.rsplit("-", 1)[0] for p in out.glob("*.json")}
+    written = []
+    for path in sorted(runs_dir.glob("*.json")):
+        if path.stem not in known:
+            written += add(path, out)
+    return written
+
+
+def describe(paths: list[Path]) -> None:
+    for path in paths:
+        case = json.loads(path.read_text())
+        state = "accepted" if case["expected"]["accepted"] else "rejected, to review"
+        print(f"corpus: {path.name} {state}")
+
+
+def check(corpus: Path = CORPUS_DIR) -> int:
+    """Replay every case; print changed verdicts and the cases still to review."""
+    changed, to_review = 0, []
+    cases = sorted(corpus.glob("*.json"))
+    for path in cases:
         case = json.loads(path.read_text())
         problems = replay(case)
         if verdict(problems) != case["expected"]:
-            failures += 1
-            print(f"{path.name}: expected {case['expected']}, got {verdict(problems)}")
+            changed += 1
+            print(f"CHANGED {path.name}: expected {case['expected']}, got {verdict(problems)}")
             for problem in problems:
                 print(f"  - {problem}")
-    print(f"{failures} of {len(list(corpus.glob('*.json')))} cases changed verdict")
-    return failures
+        elif case.get("to_review"):
+            to_review.append((path, problems))
+    for path, problems in to_review:
+        print(f"TO REVIEW {path.name}:")
+        for problem in problems:
+            print(f"  - {problem}")
+    print(f"{len(cases)} cases: {changed} changed verdict, {len(to_review)} to review")
+    return changed
 
 
 def main() -> None:
@@ -116,17 +142,19 @@ def main() -> None:
     common.add_argument("--corpus", type=Path, default=CORPUS_DIR)
     commands = parser.add_subparsers(dest="command", required=True)
     add_parser = commands.add_parser(
-        "add", parents=[common], help="add every submission of a saved run"
+        "add", parents=[common], help="add saved runs (default: every run not added yet)"
     )
-    add_parser.add_argument("run", help="run id (from data/runs) or path to a run file")
-    commands.add_parser(
-        "check", parents=[common], help="replay every case against the current checker"
-    )
+    add_parser.add_argument("run", nargs="?", help="run id (from data/runs) or path to a file")
+    commands.add_parser("check", parents=[common], help="replay every case; list cases to review")
     args = parser.parse_args()
-    if args.command == "add":
-        add(args.run, args.corpus)
-    else:
+    if args.command == "check":
         sys.exit(1 if check(args.corpus) else 0)
+    runs_dir = get_settings().runs_dir
+    if args.run is None:
+        describe(add_new(runs_dir, args.corpus))
+        return
+    path = Path(args.run)
+    describe(add(path if path.exists() else runs_dir / f"{args.run}.json", args.corpus))
 
 
 if __name__ == "__main__":

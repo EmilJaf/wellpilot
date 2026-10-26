@@ -1,0 +1,2849 @@
+{
+ "source": {
+  "run": "6fe2c784147c",
+  "submission": 2,
+  "model": "meta-models/muse-spark-open-1026",
+  "question": "Why did well F-12 decline faster after 2010? Compare with the 2005 development plan."
+ },
+ "to_review": false,
+ "note": "",
+ "expected": {
+  "accepted": true,
+  "flagged": []
+ },
+ "submission": {
+  "summary": "F-12 produced on plateau until early 2010 then declined faster most likely because of water breakthrough. Water cut rose from 0.029 to 0.513 and oil rate fell from 4 050 to 1 146 Sm3/d (-72%) around 2010-07-18, with exponential decline accelerating from 0.05655 to 0.4461 per year (7.89-fold). This is consistent with the 2005 plan prediction that \"Produksjonen avtar grunnet økende vannrate\" and breakthrough after about 2 years, but later water cut 0.8141 exceeded the planned maximum 0.80 design limit.",
+  "findings": [
+   {
+    "claim": "The 2005 PUD predicted injection water breaks through after about 2 years: \"injeksjonsvannet som bryter gjennom i brønnene etter omlag 2 år.\" F-12 first oil was 2008-02-12 and 30-day median water cut first exceeded 0.05 on 2009-10-31, 20.6 months after first oil, and first exceeded 0.5 on 2010-06-04.",
+    "evidence_ids": [
+     "E1",
+     "E3",
+     "E5"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "2",
+      "value": 2,
+      "evidence_id": "E3"
+     },
+     {
+      "text": "30",
+      "value": 30,
+      "evidence_id": "E5"
+     },
+     {
+      "text": "0.05",
+      "value": 0.05,
+      "evidence_id": "E5"
+     },
+     {
+      "text": "20.6",
+      "value": 20.6,
+      "evidence_id": "E5"
+     },
+     {
+      "text": "0.5",
+      "value": 0.5,
+      "evidence_id": "E5"
+     }
+    ]
+   },
+   {
+    "claim": "Water breakthrough is the most likely cause of the 2010 regime change: water cut weekly mean shifted 0.029 to 0.513 around 2010-02-14, 17.73 times higher, then to 0.8141 around 2010-10-24, consistent with the plan statement \"Produksjonen avtar grunnet økende vannrate.\" Oil rate weekly mean shifted 4 050 to 1 146 Sm3/d around 2010-07-18, a drop of 2 904 Sm3/d to 28.3% of prior rate (72% decline).",
+    "evidence_ids": [
+     "E4",
+     "E5",
+     "E12",
+     "E13",
+     "E14",
+     "E16"
+    ],
+    "confidence": "inference",
+    "numbers": [
+     {
+      "text": "0.029",
+      "value": 0.02896,
+      "evidence_id": "E5"
+     },
+     {
+      "text": "0.513",
+      "value": 0.5134,
+      "evidence_id": "E5"
+     },
+     {
+      "text": "17.73",
+      "value": 17.73,
+      "evidence_id": "E14"
+     },
+     {
+      "text": "0.8141",
+      "value": 0.8141,
+      "evidence_id": "E5"
+     },
+     {
+      "text": "4 050",
+      "value": 4050,
+      "evidence_id": "E5"
+     },
+     {
+      "text": "1 146",
+      "value": 1146,
+      "evidence_id": "E5"
+     },
+     {
+      "text": "2 904",
+      "value": 2904,
+      "evidence_id": "E12"
+     },
+     {
+      "text": "28.3%",
+      "value": 0.283,
+      "evidence_id": "E13"
+     },
+     {
+      "text": "72%",
+      "value": 0.7171,
+      "evidence_id": "E5"
+     }
+    ]
+   },
+   {
+    "claim": "Decline rate accelerated sharply after 2010: exponential fit 2008-02-13 to 2010-07-18 gives di 0.05655 per year with r2_log 0.019 (plateau, poor fit), while 2010-07-18 to 2012-12-09 gives di 0.4461 per year with r2_log 0.87, 7.89 times faster.",
+    "evidence_ids": [
+     "E9",
+     "E11",
+     "E15"
+    ],
+    "confidence": "inference",
+    "numbers": [
+     {
+      "text": "0.05655",
+      "value": 0.05655,
+      "evidence_id": "E11"
+     },
+     {
+      "text": "0.019",
+      "value": 0.01942,
+      "evidence_id": "E11"
+     },
+     {
+      "text": "0.4461",
+      "value": 0.4461,
+      "evidence_id": "E9"
+     },
+     {
+      "text": "0.87",
+      "value": 0.8732,
+      "evidence_id": "E9"
+     },
+     {
+      "text": "7.89",
+      "value": 7.89,
+      "evidence_id": "E15"
+     }
+    ]
+   },
+   {
+    "claim": "The plant design limit was exceeded: PUD specifies \"Maksimum vannkutt 0,80\" and \"Maks vanninnhold 80 %\", but F-12 water cut reached weekly mean 0.8141 after 2010-10-24, 1.02 times the 0.80 limit, and later exceeded 0.8 median on 2012-02-14.",
+    "evidence_ids": [
+     "E5",
+     "E7",
+     "E18"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "0,80",
+      "value": 0.8,
+      "evidence_id": "E7"
+     },
+     {
+      "text": "80 %",
+      "value": 80,
+      "evidence_id": "E7"
+     },
+     {
+      "text": "0.8141",
+      "value": 0.8141,
+      "evidence_id": "E5"
+     },
+     {
+      "text": "1.02",
+      "value": 1.02,
+      "evidence_id": "E18"
+     },
+     {
+      "text": "0.80",
+      "value": 0.8,
+      "evidence_id": "E7"
+     },
+     {
+      "text": "0.8",
+      "value": 0.8,
+      "evidence_id": "E5"
+     }
+    ]
+   },
+   {
+    "claim": "Apparent BHP collapse after 2010 is a gauge failure, not reservoir depletion: bhp_bar reads 0 on 2 095 days from 2010-10-12 to 2016-09-17 while the well kept flowing on 1 830 days producing 1 133 053 Sm3 oil; last good reading was 253.85 bar on 2010-10-11.",
+    "evidence_ids": [
+     "E5"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "2 095",
+      "value": 2095,
+      "evidence_id": "E5"
+     },
+     {
+      "text": "1 830",
+      "value": 1830,
+      "evidence_id": "E5"
+     },
+     {
+      "text": "1 133 053",
+      "value": 1133053,
+      "evidence_id": "E5"
+     },
+     {
+      "text": "253.85",
+      "value": 253.85,
+      "evidence_id": "E5"
+     }
+    ]
+   }
+  ],
+  "summary_numbers": [
+   {
+    "text": "0.029",
+    "value": 0.02896,
+    "evidence_id": "E5"
+   },
+   {
+    "text": "0.513",
+    "value": 0.5134,
+    "evidence_id": "E5"
+   },
+   {
+    "text": "4 050",
+    "value": 4050,
+    "evidence_id": "E5"
+   },
+   {
+    "text": "1 146",
+    "value": 1146,
+    "evidence_id": "E5"
+   },
+   {
+    "text": "72%",
+    "value": 0.7171,
+    "evidence_id": "E5"
+   },
+   {
+    "text": "0.05655",
+    "value": 0.05655,
+    "evidence_id": "E11"
+   },
+   {
+    "text": "0.4461",
+    "value": 0.4461,
+    "evidence_id": "E9"
+   },
+   {
+    "text": "7.89",
+    "value": 7.89,
+    "evidence_id": "E15"
+   },
+   {
+    "text": "2",
+    "value": 2,
+    "evidence_id": "E3"
+   },
+   {
+    "text": "0.8141",
+    "value": 0.8141,
+    "evidence_id": "E5"
+   },
+   {
+    "text": "0.80",
+    "value": 0.8,
+    "evidence_id": "E7"
+   }
+  ]
+ },
+ "evidence": [
+  {
+   "id": "E1",
+   "tool": "list_wells",
+   "arguments": {},
+   "result": {
+    "columns": [
+     "well",
+     "well_types",
+     "first_oil",
+     "last_date",
+     "cum_oil_sm3",
+     "cum_water_sm3",
+     "cum_water_injected_sm3",
+     "producing_days"
+    ],
+    "rows": [
+     [
+      "F-1 C",
+      "WI/OP",
+      "2014-04-22",
+      "2016-04-21",
+      177709,
+      207302,
+      null,
+      438
+     ],
+     [
+      "F-11",
+      "OP",
+      "2013-07-24",
+      "2016-09-17",
+      1147849,
+      1090806,
+      null,
+      1122
+     ],
+     [
+      "F-12",
+      "OP",
+      "2008-02-12",
+      "2016-09-17",
+      4579610,
+      6833792,
+      null,
+      2838
+     ],
+     [
+      "F-14",
+      "OP",
+      "2008-07-13",
+      "2016-09-17",
+      3942233,
+      7121310,
+      null,
+      2724
+     ],
+     [
+      "F-15 D",
+      "OP",
+      "2014-01-16",
+      "2016-09-17",
+      148519,
+      52366,
+      null,
+      769
+     ],
+     [
+      "F-4",
+      "WI",
+      null,
+      "2016-12-01",
+      null,
+      null,
+      16240727,
+      0
+     ],
+     [
+      "F-5",
+      "WI/OP",
+      "2016-04-20",
+      "2016-09-18",
+      41161,
+      13533,
+      14089406,
+      129
+     ]
+    ]
+   },
+   "code": "wellpilot.agent.tools.list_wells@e8bcc458fc9d",
+   "created_at": "2026-10-26T23:03:36+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E2",
+   "tool": "search_reports",
+   "arguments": {
+    "query": "F-12 decline production forecast",
+    "well": "F-12",
+    "limit": 10
+   },
+   "result": {
+    "documents": {},
+    "facts": {
+     "columns": [
+      "doc_id",
+      "page",
+      "topic",
+      "source",
+      "statement_en",
+      "quote",
+      "quote_check",
+      "wells"
+     ],
+     "rows": []
+    }
+   },
+   "code": "wellpilot.agent.tools.search_reports@d5ca6fc7427c",
+   "created_at": "2026-10-26T23:03:36+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E3",
+   "tool": "search_reports",
+   "arguments": {
+    "query": "water breakthrough water cut",
+    "topic": "water",
+    "limit": 10
+   },
+   "result": {
+    "documents": {
+     "volve_pud": {
+      "title": "Plan for utbygging og drift av Volve (PUD, plan for development and operation)",
+      "issued": "2005-02-01"
+     }
+    },
+    "facts": {
+     "columns": [
+      "doc_id",
+      "page",
+      "topic",
+      "source",
+      "statement_en",
+      "quote",
+      "quote_check",
+      "wells"
+     ],
+     "rows": [
+      [
+       "volve_pud",
+       23,
+       "water",
+       "text",
+       "Injection water breaks through in the wells after about 2 years.",
+       "injeksjonsvannet som bryter gjennom i brønnene etter omlag 2 år.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       7,
+       "water",
+       "text",
+       "The water saturation in the oil zone is on average 20%.",
+       "Vannmetningen i oljesonen er i snitt 20 %.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       8,
+       "water",
+       "text",
+       "Water from the Utsira formation is produced with electrical pumps ESP and Utsira water is used to avoid deposits in the formation and process equipment.",
+       "sjon av vann fra Utsira-formasjonen ved bruk av elektriske pumper, ESP (Electrical Submer- sible Pumps). Utsira vann benyttes for å unngå avleiringer i formasjonen og prosessutstyret.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       13,
+       "water",
+       "text",
+       "Water saturation in the oil zone averages 20%, giving an average hydrocarbon pore fraction of 15.6%.",
+       "Vannmetningen i oljesonen er i snitt 20 %. Dette gir en gjennomsnittlig hydrokarbonporefraksjon på 15,6%.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       24,
+       "water",
+       "figure",
+       "Figure 4.3 shows produced water rate and water injection rate in Sm3/d by year from 2007 to 2017.",
+       "Figur 4.3 - Produsert vann- og vanninjeksjonsrate",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       26,
+       "water",
+       "text",
+       "Side-track wells will be drilled from wells with high water production rate.",
+       "Boring av sidegreinsbrønner fra brønner med høy vannproduksjonsrate",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       26,
+       "water",
+       "text",
+       "Intervals with high water production rate will be shut off.",
+       "Avstengning av intervaller med høy vannproduksjonsrate",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       28,
+       "water",
+       "text",
+       "Utsira water will be produced by Electrical Submersible Pump (ESP) allowing a water production rate of 8000 Sm³/d per water producer.",
+       "medføre at det kan oppnås en vannproduksjonsrate på 8000 Sm³/d pr. vannprodusent.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       36,
+       "water",
+       "text",
+       "The produced water treatment will consist of dedicated hydrocyclones and degassing tanks for the water streams from each separator.",
+       "Produsert vannbehandlingen vil bestå av dedikerte hydrosykloner og degassing tanker for vannstrømmene fra hver separator.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       36,
+       "water",
+       "text",
+       "After cleaning to specification and gas removal the water can be dumped overboard if the water injection system is down.",
+       "Etter rensing til spesifikasjon og gassfjerning kan vannet dumpes over bord hvis vanninjeksjonssystemet er nede.",
+       "exact",
+       ""
+      ]
+     ]
+    }
+   },
+   "code": "wellpilot.agent.tools.search_reports@d5ca6fc7427c",
+   "created_at": "2026-10-26T23:03:36+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E4",
+   "tool": "search_reports",
+   "arguments": {
+    "query": "production forecast plateau",
+    "topic": "production_forecast",
+    "limit": 10
+   },
+   "result": {
+    "documents": {
+     "volve_pud": {
+      "title": "Plan for utbygging og drift av Volve (PUD, plan for development and operation)",
+      "issued": "2005-02-01"
+     }
+    },
+    "facts": {
+     "columns": [
+      "doc_id",
+      "page",
+      "topic",
+      "source",
+      "statement_en",
+      "quote",
+      "quote_check",
+      "wells"
+     ],
+     "rows": [
+      [
+       "volve_pud",
+       23,
+       "production_forecast",
+       "text",
+       "After a start-up period of ca. 1 year the field will produce at plateau rate.",
+       "etter en oppstartsperiode på ca. 1 år vil feltetprodusere på platårate.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       23,
+       "production_forecast",
+       "text",
+       "The forecast is based on expected average production estimated from the uncertainty study in Chapter 4.6.",
+       "Denne er basert på forventet produksjon (snitt) estimert fra usikkerhetsstudiet, se kapitel 4.6.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       24,
+       "production_forecast",
+       "text",
+       "Maximum gas production at plateau is expected to be 1.2-1.3 MSm3/d.",
+       "Maksimal gassproduksjon forventes på platå å være 1,2-1,3 MSm3/d, se figur 4.4.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       24,
+       "production_forecast",
+       "figure",
+       "Figure 4.4 shows gas production rate in mill Sm3/d by year from 2007 to 2017 with plateau at about 1.2 mill Sm3/d.",
+       "Figur 4.4 - Gassproduksjons rate",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       23,
+       "production_forecast",
+       "text",
+       "A regularity of 94 % is assumed for calculation of the production profiles.",
+       "regularitet på 94 % er lagt til grunn for beregning av produksjonsprofilene.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       23,
+       "production_forecast",
+       "text",
+       "The plateau rate of 9.000 Sm3/d will last about 19 months.",
+       "Platåraten på 9.000 Sm3 /d vil vare om lag 19 måneder.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       23,
+       "production_forecast",
+       "text",
+       "Production declines due to increasing water rate.",
+       "Produksjonen avtar grunnet økende vannrate.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       23,
+       "production_forecast",
+       "figure",
+       "Figure 4.2 shows Volve oil rate in Sm3/d and cumulative oil in mill Sm3 versus year from 2007 to 2017.",
+       "Figur 4.2 - Volve oljerate og kumulativ produksjon",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       24,
+       "production_forecast",
+       "text",
+       "Cumulative rich gas production is estimated at 1.5 GSm3.",
+       "Kumulativ rikgass produksjon er estimert til 1,5 GSm3.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       25,
+       "production_forecast",
+       "text",
+       "Uncertainty analysis of the production profiles is performed with Monte Carlo simulation.",
+       "En usikkerhetsanalyse av produksjonsprofilene er utført med Monte Carlo simulering.",
+       "exact",
+       ""
+      ]
+     ]
+    }
+   },
+   "code": "wellpilot.agent.tools.search_reports@d5ca6fc7427c",
+   "created_at": "2026-10-26T23:03:36+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E5",
+   "tool": "detect_events",
+   "arguments": {
+    "well": "F-12"
+   },
+   "result": [
+    {
+     "kind": "threshold_crossing",
+     "signal": "water_cut",
+     "start": "2009-10-31",
+     "end": null,
+     "summary": "30-day median water_cut first goes above 0.05 on 2009-10-31, 21 months after first oil.",
+     "details": {
+      "threshold": 0.05,
+      "direction": "above",
+      "window_days": 30,
+      "median_at_crossing": 0.05795,
+      "first_oil": "2008-02-12",
+      "months_after_first_oil": 20.6
+     }
+    },
+    {
+     "kind": "regime_change",
+     "signal": "water_cut",
+     "start": "2010-02-14",
+     "end": null,
+     "summary": "water_cut shifts around 2010-02-14: weekly mean 0.029 -> 0.513 (+1673%).",
+     "details": {
+      "before_mean": 0.02896,
+      "after_mean": 0.5134,
+      "relative_change": 16.73,
+      "before_from": "2008-02-17",
+      "after_to": "2010-10-17"
+     }
+    },
+    {
+     "kind": "threshold_crossing",
+     "signal": "water_cut",
+     "start": "2010-06-04",
+     "end": null,
+     "summary": "30-day median water_cut first goes above 0.5 on 2010-06-04, 28 months after first oil.",
+     "details": {
+      "threshold": 0.5,
+      "direction": "above",
+      "window_days": 30,
+      "median_at_crossing": 0.5011,
+      "first_oil": "2008-02-12",
+      "months_after_first_oil": 27.69
+     }
+    },
+    {
+     "kind": "regime_change",
+     "signal": "oil_rate",
+     "start": "2010-07-18",
+     "end": null,
+     "summary": "oil_rate shifts around 2010-07-18: weekly mean 4.05e+03 -> 1.15e+03 (-72%).",
+     "details": {
+      "before_mean": 4050,
+      "after_mean": 1146,
+      "relative_change": -0.7171,
+      "before_from": "2008-02-17",
+      "after_to": "2012-12-02"
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2010-08-20",
+     "end": "2010-08-27",
+     "summary": "Shut in for 8 days from 2010-08-20. Oil rate 1,831 -> 2,000 Sm3/d (+9%) after restart. Same time as F-14.",
+     "details": {
+      "days": 8,
+      "rate_before": 1831,
+      "rate_after": 2000,
+      "relative_change": 0.09274,
+      "field_wide": true,
+      "also_shut_in": [
+       "F-14"
+      ]
+     }
+    },
+    {
+     "kind": "gauge_failure",
+     "signal": "bhp_bar",
+     "start": "2010-10-12",
+     "end": "2016-09-17",
+     "summary": "bhp_bar reads 0 on 2095 days from 2010-10-12 to 2016-09-17 while the well kept flowing on 1830 days (1,133,053 Sm3 oil): a sensor failure, not a pressure collapse. Last good reading: 253.9 on 2010-10-11.",
+     "details": {
+      "zero_days": 2095,
+      "flowing_days": 1830,
+      "oil_sm3_during": 1133053,
+      "last_good_date": "2010-10-11",
+      "last_good_value": 253.85
+     }
+    },
+    {
+     "kind": "regime_change",
+     "signal": "water_cut",
+     "start": "2010-10-24",
+     "end": null,
+     "summary": "water_cut shifts around 2010-10-24: weekly mean 0.513 -> 0.814 (+59%).",
+     "details": {
+      "before_mean": 0.5134,
+      "after_mean": 0.8141,
+      "relative_change": 0.5855,
+      "before_from": "2010-02-14",
+      "after_to": "2016-08-14"
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2011-10-19",
+     "end": "2011-11-04",
+     "summary": "Shut in for 17 days from 2011-10-19. Oil rate 955 -> 1,158 Sm3/d (+21%) after restart. Same time as F-14.",
+     "details": {
+      "days": 17,
+      "rate_before": 954.6,
+      "rate_after": 1158,
+      "relative_change": 0.2126,
+      "field_wide": true,
+      "also_shut_in": [
+       "F-14"
+      ]
+     }
+    },
+    {
+     "kind": "threshold_crossing",
+     "signal": "water_cut",
+     "start": "2012-02-14",
+     "end": null,
+     "summary": "30-day median water_cut first goes above 0.8 on 2012-02-14, 48 months after first oil.",
+     "details": {
+      "threshold": 0.8,
+      "direction": "above",
+      "window_days": 30,
+      "median_at_crossing": 0.8008,
+      "first_oil": "2008-02-12",
+      "months_after_first_oil": 48.06
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2012-08-15",
+     "end": "2012-09-03",
+     "summary": "Shut in for 20 days from 2012-08-15. Oil rate 691 -> 797 Sm3/d (+15%) after restart. Same time as F-14.",
+     "details": {
+      "days": 20,
+      "rate_before": 690.93,
+      "rate_after": 797.32,
+      "relative_change": 0.154,
+      "field_wide": true,
+      "also_shut_in": [
+       "F-14"
+      ]
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2012-09-15",
+     "end": "2012-09-27",
+     "summary": "Shut in for 13 days from 2012-09-15. Same time as F-14.",
+     "details": {
+      "days": 13,
+      "rate_before": null,
+      "rate_after": 728.93,
+      "relative_change": null,
+      "field_wide": true,
+      "also_shut_in": [
+       "F-14"
+      ]
+     }
+    },
+    {
+     "kind": "regime_change",
+     "signal": "oil_rate",
+     "start": "2012-12-09",
+     "end": null,
+     "summary": "oil_rate shifts around 2012-12-09: weekly mean 1.15e+03 -> 384 (-66%).",
+     "details": {
+      "before_mean": 1146,
+      "after_mean": 383.91,
+      "relative_change": -0.6649,
+      "before_from": "2010-07-18",
+      "after_to": "2016-08-14"
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2013-03-13",
+     "end": "2013-03-24",
+     "summary": "Shut in for 12 days from 2013-03-13. Oil rate 531 -> 572 Sm3/d (+8%) after restart.",
+     "details": {
+      "days": 12,
+      "rate_before": 531.09,
+      "rate_after": 571.67,
+      "relative_change": 0.07641,
+      "field_wide": false,
+      "also_shut_in": []
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2014-05-16",
+     "end": "2014-05-24",
+     "summary": "Shut in for 9 days from 2014-05-16. Oil rate 194 -> 193 Sm3/d (-1%) after restart.",
+     "details": {
+      "days": 9,
+      "rate_before": 194.26,
+      "rate_after": 192.67,
+      "relative_change": -0.008185,
+      "field_wide": false,
+      "also_shut_in": []
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2014-11-30",
+     "end": "2014-12-31",
+     "summary": "Shut in for 32 days from 2014-11-30. Oil rate 185 -> 860 Sm3/d (+366%) after restart. Same time as F-1 C, F-15 D.",
+     "details": {
+      "days": 32,
+      "rate_before": 184.54,
+      "rate_after": 859.51,
+      "relative_change": 3.66,
+      "field_wide": true,
+      "also_shut_in": [
+       "F-1 C",
+       "F-15 D"
+      ]
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2016-08-13",
+     "end": "2016-09-17",
+     "summary": "Shut in for 36 days from 2016-08-13. Same time as F-14, F-15 D, F-5.",
+     "details": {
+      "days": 36,
+      "rate_before": 128.63,
+      "rate_after": null,
+      "relative_change": null,
+      "field_wide": true,
+      "also_shut_in": [
+       "F-14",
+       "F-15 D",
+       "F-5"
+      ]
+     }
+    }
+   ],
+   "code": "wellpilot.agent.tools.detect_events@0c5c334ef787",
+   "created_at": "2026-10-26T23:03:38+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E6",
+   "tool": "production_monthly",
+   "arguments": {
+    "well": "F-12"
+   },
+   "result": {
+    "columns": [
+     "month",
+     "oil_sm3",
+     "water_sm3",
+     "gas_sm3",
+     "water_injected_sm3",
+     "water_cut",
+     "uptime",
+     "oil_rate_per_producing_day",
+     "bhp_bar",
+     "whp_bar",
+     "choke_pct"
+    ],
+    "rows": [
+     [
+      "2008-02",
+      49091,
+      412.61,
+      7068009,
+      null,
+      0.008335,
+      0.9413,
+      2897,
+      293.86,
+      112.89,
+      28.96
+     ],
+     [
+      "2008-03",
+      83361,
+      27.42,
+      12191171,
+      null,
+      0.0003288,
+      0.8805,
+      3054,
+      278.62,
+      99.25,
+      30.89
+     ],
+     [
+      "2008-04",
+      74532,
+      496.24,
+      11506441,
+      null,
+      0.006614,
+      0.8817,
+      2915,
+      264.3,
+      93.01,
+      31.1
+     ],
+     [
+      "2008-05",
+      125479,
+      16280,
+      19091872,
+      null,
+      0.1148,
+      0.9626,
+      4205,
+      263.45,
+      82.86,
+      37.24
+     ],
+     [
+      "2008-06",
+      143787,
+      474.37,
+      21512334,
+      null,
+      0.003288,
+      0.9388,
+      5105,
+      258.79,
+      77.53,
+      42.04
+     ],
+     [
+      "2008-07",
+      114995,
+      290.02,
+      17116442,
+      null,
+      0.002516,
+      0.9553,
+      3883,
+      264.46,
+      89.05,
+      41.66
+     ],
+     [
+      "2008-08",
+      97822,
+      354.18,
+      14143008,
+      null,
+      0.003608,
+      0.9345,
+      3489,
+      261.12,
+      88.17,
+      43.09
+     ],
+     [
+      "2008-09",
+      77667,
+      188.39,
+      11185944,
+      null,
+      0.00242,
+      0.7889,
+      3282,
+      255.34,
+      86.46,
+      41.36
+     ],
+     [
+      "2008-10",
+      94357,
+      624.05,
+      13430834,
+      null,
+      0.00657,
+      0.9913,
+      3071,
+      237.28,
+      74.35,
+      43.34
+     ],
+     [
+      "2008-11",
+      145916,
+      2390,
+      20837122,
+      null,
+      0.01612,
+      0.9898,
+      4914,
+      225.07,
+      57.84,
+      65.55
+     ],
+     [
+      "2008-12",
+      166440,
+      1003,
+      24106362,
+      null,
+      0.005992,
+      1.0,
+      5369,
+      237.61,
+      64.33,
+      63.82
+     ],
+     [
+      "2009-01",
+      153677,
+      389.76,
+      22255224,
+      null,
+      0.00253,
+      0.9957,
+      4979,
+      261.52,
+      79.97,
+      54.99
+     ],
+     [
+      "2009-02",
+      121905,
+      0.0,
+      17427052,
+      null,
+      0.0,
+      0.9766,
+      4458,
+      274.49,
+      90.54,
+      49.7
+     ],
+     [
+      "2009-03",
+      92959,
+      0.0,
+      13123547,
+      null,
+      0.0,
+      0.6806,
+      4406,
+      273.67,
+      79.86,
+      47.69
+     ],
+     [
+      "2009-04",
+      150956,
+      1246,
+      20931108,
+      null,
+      0.008188,
+      0.9988,
+      5038,
+      235.31,
+      61.39,
+      65.42
+     ],
+     [
+      "2009-05",
+      141039,
+      3106,
+      19366853,
+      null,
+      0.02155,
+      0.9655,
+      4869,
+      232.04,
+      60.54,
+      62.77
+     ],
+     [
+      "2009-06",
+      132430,
+      2659,
+      17787476,
+      null,
+      0.01968,
+      0.9935,
+      4443,
+      230.55,
+      59.56,
+      64.93
+     ],
+     [
+      "2009-07",
+      106105,
+      3289,
+      14721967,
+      null,
+      0.03007,
+      0.9975,
+      3431,
+      236.14,
+      68.26,
+      50.46
+     ],
+     [
+      "2009-08",
+      112414,
+      5024,
+      15676350,
+      null,
+      0.04278,
+      0.8182,
+      4580,
+      245.46,
+      63.71,
+      61.4
+     ],
+     [
+      "2009-09",
+      90099,
+      2235,
+      12553422,
+      null,
+      0.02421,
+      0.7087,
+      4384,
+      256.24,
+      71.83,
+      54.08
+     ],
+     [
+      "2009-10",
+      126940,
+      6813,
+      17819694,
+      null,
+      0.05094,
+      0.919,
+      4456,
+      257.91,
+      74.3,
+      54.58
+     ],
+     [
+      "2009-11",
+      136016,
+      11287,
+      19181584,
+      null,
+      0.07662,
+      0.9802,
+      4625,
+      255.77,
+      68.59,
+      61.73
+     ],
+     [
+      "2009-12",
+      158002,
+      17321,
+      22160862,
+      null,
+      0.0988,
+      0.9792,
+      5205,
+      251.3,
+      61.02,
+      70.93
+     ],
+     [
+      "2010-01",
+      149659,
+      30230,
+      21044604,
+      null,
+      0.168,
+      0.9975,
+      4840,
+      248.07,
+      56.16,
+      74.86
+     ],
+     [
+      "2010-02",
+      103026,
+      43216,
+      14520590,
+      null,
+      0.2955,
+      0.9394,
+      4062,
+      255.06,
+      56.27,
+      71.78
+     ],
+     [
+      "2010-03",
+      101572,
+      53999,
+      14278519,
+      null,
+      0.3471,
+      0.9306,
+      3764,
+      251.94,
+      55.46,
+      75.96
+     ],
+     [
+      "2010-04",
+      86254,
+      67996,
+      12161146,
+      null,
+      0.4408,
+      0.9806,
+      2932,
+      254.72,
+      51.53,
+      75.43
+     ],
+     [
+      "2010-05",
+      77114,
+      74438,
+      10970381,
+      null,
+      0.4912,
+      0.9854,
+      2524,
+      267.31,
+      57.18,
+      56.44
+     ],
+     [
+      "2010-06",
+      69617,
+      83268,
+      9944534,
+      null,
+      0.5446,
+      0.9961,
+      2330,
+      280.74,
+      63.02,
+      50.97
+     ],
+     [
+      "2010-07",
+      64040,
+      95054,
+      9283377,
+      null,
+      0.5975,
+      0.9978,
+      2070,
+      279.52,
+      56.08,
+      58.56
+     ],
+     [
+      "2010-08",
+      30117,
+      54788,
+      4346504,
+      null,
+      0.6453,
+      0.6596,
+      1691,
+      296.33,
+      47.21,
+      44.88
+     ],
+     [
+      "2010-09",
+      51313,
+      89429,
+      7750211,
+      null,
+      0.6354,
+      0.8955,
+      1910,
+      280.36,
+      56.36,
+      54.35
+     ],
+     [
+      "2010-10",
+      51431,
+      99543,
+      7741377,
+      null,
+      0.6593,
+      0.9987,
+      1661,
+      273.38,
+      54.57,
+      51.94
+     ],
+     [
+      "2010-11",
+      44468,
+      102236,
+      6747078,
+      null,
+      0.6969,
+      0.9588,
+      1546,
+      null,
+      50.78,
+      52.66
+     ],
+     [
+      "2010-12",
+      45218,
+      111336,
+      6910660,
+      null,
+      0.7112,
+      0.9964,
+      1464,
+      null,
+      52.46,
+      50.75
+     ],
+     [
+      "2011-01",
+      44747,
+      116886,
+      6824001,
+      null,
+      0.7232,
+      0.9993,
+      1444,
+      null,
+      52.88,
+      50.38
+     ],
+     [
+      "2011-02",
+      29157,
+      85274,
+      4519227,
+      null,
+      0.7452,
+      0.9287,
+      1256,
+      null,
+      47.86,
+      52.83
+     ],
+     [
+      "2011-03",
+      37395,
+      113239,
+      5760219,
+      null,
+      0.7517,
+      0.981,
+      1230,
+      null,
+      45.84,
+      59.11
+     ],
+     [
+      "2011-04",
+      37820,
+      116196,
+      5877461,
+      null,
+      0.7544,
+      0.9971,
+      1264,
+      null,
+      40.89,
+      77.31
+     ],
+     [
+      "2011-05",
+      37205,
+      119567,
+      5801740,
+      null,
+      0.7627,
+      0.9893,
+      1213,
+      null,
+      39.55,
+      88.37
+     ],
+     [
+      "2011-06",
+      22026,
+      74563,
+      3412026,
+      null,
+      0.772,
+      0.8774,
+      1141,
+      null,
+      42.77,
+      88.65
+     ],
+     [
+      "2011-07",
+      12462,
+      31888,
+      1823751,
+      null,
+      0.719,
+      0.365,
+      1220,
+      null,
+      59.72,
+      71.91
+     ],
+     [
+      "2011-08",
+      36380,
+      99005,
+      5446517,
+      null,
+      0.7313,
+      0.8757,
+      1340,
+      null,
+      44.06,
+      88.12
+     ],
+     [
+      "2011-09",
+      29999,
+      110472,
+      4566407,
+      null,
+      0.7864,
+      0.9819,
+      1018,
+      null,
+      38.1,
+      74.06
+     ],
+     [
+      "2011-10",
+      12648,
+      52876,
+      1919664,
+      null,
+      0.807,
+      0.5026,
+      932.07,
+      null,
+      67.34,
+      38.88
+     ],
+     [
+      "2011-11",
+      21789,
+      75773,
+      3242434,
+      null,
+      0.7767,
+      0.7656,
+      1138,
+      null,
+      49.59,
+      60.7
+     ],
+     [
+      "2011-12",
+      18090,
+      64677,
+      2650493,
+      null,
+      0.7814,
+      0.708,
+      1022,
+      null,
+      44.63,
+      48.04
+     ],
+     [
+      "2012-01",
+      18218,
+      63858,
+      2722573,
+      null,
+      0.778,
+      0.8764,
+      1094,
+      null,
+      40.86,
+      63.53
+     ],
+     [
+      "2012-02",
+      27362,
+      133955,
+      4289925,
+      null,
+      0.8304,
+      0.9896,
+      953.45,
+      null,
+      35.22,
+      99.08
+     ],
+     [
+      "2012-03",
+      26680,
+      142184,
+      4276186,
+      null,
+      0.842,
+      0.9952,
+      864.81,
+      null,
+      34.89,
+      97.74
+     ],
+     [
+      "2012-04",
+      24088,
+      138112,
+      3866150,
+      null,
+      0.8515,
+      0.9865,
+      813.92,
+      null,
+      34.39,
+      98.58
+     ],
+     [
+      "2012-05",
+      22415,
+      140203,
+      3630958,
+      null,
+      0.8622,
+      0.9915,
+      729.25,
+      null,
+      33.91,
+      99.23
+     ],
+     [
+      "2012-06",
+      20887,
+      134081,
+      3394646,
+      null,
+      0.8652,
+      0.988,
+      704.73,
+      null,
+      34.37,
+      98.54
+     ],
+     [
+      "2012-07",
+      21207,
+      140165,
+      3444769,
+      null,
+      0.8686,
+      1.0,
+      684.09,
+      null,
+      33.74,
+      99.93
+     ],
+     [
+      "2012-08",
+      8998,
+      55244,
+      1376155,
+      null,
+      0.8599,
+      0.4147,
+      748.23,
+      null,
+      16.71,
+      46.34
+     ],
+     [
+      "2012-09",
+      1014,
+      4513,
+      156920,
+      null,
+      0.8165,
+      0.07029,
+      901.55,
+      null,
+      74.67,
+      8.27
+     ],
+     [
+      "2012-10",
+      19613,
+      121317,
+      3067585,
+      null,
+      0.8608,
+      0.9416,
+      771.43,
+      null,
+      32.69,
+      94.24
+     ],
+     [
+      "2012-11",
+      19019,
+      134909,
+      3086440,
+      null,
+      0.8764,
+      1.0,
+      633.96,
+      null,
+      32.13,
+      98.56
+     ],
+     [
+      "2012-12",
+      16321,
+      131667,
+      2717290,
+      null,
+      0.8897,
+      0.9412,
+      559.37,
+      null,
+      32.06,
+      93.11
+     ],
+     [
+      "2013-01",
+      17409,
+      139784,
+      2881179,
+      null,
+      0.8893,
+      1.0,
+      561.57,
+      null,
+      33.02,
+      98.28
+     ],
+     [
+      "2013-02",
+      15087,
+      126325,
+      2461249,
+      null,
+      0.8933,
+      1.0,
+      538.84,
+      null,
+      33.74,
+      98.98
+     ],
+     [
+      "2013-03",
+      6306,
+      57121,
+      1053666,
+      null,
+      0.9006,
+      0.458,
+      491.73,
+      null,
+      25.57,
+      48.5
+     ],
+     [
+      "2013-04",
+      12351,
+      102945,
+      2055292,
+      null,
+      0.8929,
+      0.8229,
+      577.32,
+      null,
+      30.09,
+      81.35
+     ],
+     [
+      "2013-05",
+      16313,
+      147165,
+      2757755,
+      null,
+      0.9002,
+      0.9839,
+      534.82,
+      null,
+      33.97,
+      97.78
+     ],
+     [
+      "2013-06",
+      11900,
+      112559,
+      2037220,
+      null,
+      0.9044,
+      0.8433,
+      503.97,
+      null,
+      30.13,
+      86.2
+     ],
+     [
+      "2013-07",
+      11862,
+      112173,
+      1919702,
+      null,
+      0.9044,
+      0.7813,
+      489.75,
+      null,
+      34.03,
+      73.17
+     ],
+     [
+      "2013-08",
+      15147,
+      152995,
+      2354241,
+      null,
+      0.9099,
+      0.9247,
+      528.41,
+      null,
+      31.42,
+      91.91
+     ],
+     [
+      "2013-09",
+      9224,
+      104678,
+      1446819,
+      null,
+      0.919,
+      0.8477,
+      375.2,
+      null,
+      35.87,
+      68.04
+     ],
+     [
+      "2013-10",
+      8305,
+      137535,
+      1283584,
+      null,
+      0.9431,
+      0.914,
+      293.12,
+      null,
+      33.03,
+      89.98
+     ],
+     [
+      "2013-11",
+      7171,
+      122993,
+      1102962,
+      null,
+      0.9449,
+      0.9009,
+      265.31,
+      null,
+      34.53,
+      89.83
+     ],
+     [
+      "2013-12",
+      7080,
+      125859,
+      1101389,
+      null,
+      0.9467,
+      0.8513,
+      268.25,
+      null,
+      32.66,
+      86.69
+     ],
+     [
+      "2014-01",
+      4997,
+      87030,
+      766196,
+      null,
+      0.9457,
+      0.6752,
+      246.71,
+      null,
+      35.21,
+      62.87
+     ],
+     [
+      "2014-02",
+      6101,
+      110298,
+      921967,
+      null,
+      0.9476,
+      0.8671,
+      260.6,
+      null,
+      31.95,
+      84.98
+     ],
+     [
+      "2014-03",
+      6836,
+      127351,
+      1036071,
+      null,
+      0.9491,
+      0.8827,
+      249.81,
+      null,
+      33.57,
+      85.87
+     ],
+     [
+      "2014-04",
+      5892,
+      141145,
+      883605,
+      null,
+      0.9599,
+      0.9625,
+      204.05,
+      null,
+      34.73,
+      85.31
+     ],
+     [
+      "2014-05",
+      3238,
+      88748,
+      469664,
+      null,
+      0.9648,
+      0.5744,
+      181.84,
+      null,
+      38.36,
+      56.34
+     ],
+     [
+      "2014-06",
+      5751,
+      152035,
+      846734,
+      null,
+      0.9636,
+      0.9824,
+      195.14,
+      null,
+      32.4,
+      97.02
+     ],
+     [
+      "2014-07",
+      5792,
+      152314,
+      864046,
+      null,
+      0.9634,
+      0.9989,
+      187.04,
+      null,
+      32.62,
+      98.13
+     ],
+     [
+      "2014-08",
+      4448,
+      126629,
+      704538,
+      null,
+      0.9661,
+      0.7975,
+      179.93,
+      null,
+      27.22,
+      79.86
+     ],
+     [
+      "2014-09",
+      5063,
+      149376,
+      803971,
+      null,
+      0.9672,
+      0.9525,
+      177.16,
+      null,
+      32.61,
+      94.19
+     ],
+     [
+      "2014-10",
+      5386,
+      155366,
+      833121,
+      null,
+      0.9665,
+      1.0,
+      173.5,
+      null,
+      32.71,
+      99.16
+     ],
+     [
+      "2014-11",
+      4495,
+      114661,
+      700998,
+      null,
+      0.9623,
+      0.8069,
+      185.7,
+      null,
+      37.09,
+      79.61
+     ],
+     [
+      "2014-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      null,
+      0.0,
+      null,
+      null,
+      135.25,
+      0.9283
+     ],
+     [
+      "2015-01",
+      25713,
+      11588,
+      3780459,
+      null,
+      0.3107,
+      0.9618,
+      862.38,
+      null,
+      72.22,
+      29.6
+     ],
+     [
+      "2015-02",
+      19579,
+      15115,
+      2960674,
+      null,
+      0.4357,
+      0.9268,
+      754.48,
+      null,
+      55.15,
+      33.35
+     ],
+     [
+      "2015-03",
+      19341,
+      19256,
+      2853433,
+      null,
+      0.4989,
+      0.894,
+      697.91,
+      null,
+      55.82,
+      31.03
+     ],
+     [
+      "2015-04",
+      19797,
+      20808,
+      2889395,
+      null,
+      0.5125,
+      1.0,
+      659.89,
+      null,
+      48.19,
+      35.13
+     ],
+     [
+      "2015-05",
+      16996,
+      25201,
+      2479620,
+      null,
+      0.5972,
+      1.0,
+      548.27,
+      null,
+      46.3,
+      35.12
+     ],
+     [
+      "2015-06",
+      19536,
+      32903,
+      2859707,
+      null,
+      0.6274,
+      0.9852,
+      661.02,
+      null,
+      32.22,
+      81.03
+     ],
+     [
+      "2015-07",
+      19157,
+      36481,
+      2846821,
+      null,
+      0.6557,
+      1.0,
+      617.98,
+      null,
+      29.52,
+      99.87
+     ],
+     [
+      "2015-08",
+      13473,
+      31629,
+      2047121,
+      null,
+      0.7013,
+      0.8558,
+      507.88,
+      null,
+      25.84,
+      85.33
+     ],
+     [
+      "2015-09",
+      12495,
+      35065,
+      1888049,
+      null,
+      0.7373,
+      0.9991,
+      416.87,
+      null,
+      29.63,
+      98.82
+     ],
+     [
+      "2015-10",
+      11889,
+      38151,
+      1821328,
+      null,
+      0.7624,
+      0.9928,
+      386.27,
+      null,
+      27.09,
+      98.58
+     ],
+     [
+      "2015-11",
+      11369,
+      37662,
+      1748311,
+      null,
+      0.7681,
+      0.9993,
+      379.25,
+      null,
+      27.41,
+      99.73
+     ],
+     [
+      "2015-12",
+      10856,
+      37288,
+      1662453,
+      null,
+      0.7745,
+      0.983,
+      356.26,
+      null,
+      27.08,
+      98.74
+     ],
+     [
+      "2016-01",
+      9495,
+      38970,
+      1487340,
+      null,
+      0.8041,
+      0.9899,
+      309.41,
+      null,
+      27.71,
+      96.09
+     ],
+     [
+      "2016-02",
+      7644,
+      35253,
+      1205549,
+      null,
+      0.8218,
+      0.9994,
+      263.75,
+      null,
+      27.27,
+      99.42
+     ],
+     [
+      "2016-03",
+      7360,
+      40507,
+      1185894,
+      null,
+      0.8462,
+      0.9987,
+      237.74,
+      null,
+      26.87,
+      100.0
+     ],
+     [
+      "2016-04",
+      6152,
+      37126,
+      1015034,
+      null,
+      0.8578,
+      0.9984,
+      205.41,
+      null,
+      26.55,
+      99.55
+     ],
+     [
+      "2016-05",
+      5865,
+      36148,
+      925514,
+      null,
+      0.8604,
+      0.9953,
+      190.09,
+      null,
+      26.27,
+      99.01
+     ],
+     [
+      "2016-06",
+      5408,
+      34608,
+      870533,
+      null,
+      0.8648,
+      0.9767,
+      184.57,
+      null,
+      26.31,
+      97.22
+     ],
+     [
+      "2016-07",
+      4534,
+      29940,
+      729319,
+      null,
+      0.8685,
+      0.9459,
+      154.62,
+      null,
+      29.12,
+      58.37
+     ],
+     [
+      "2016-08",
+      1442,
+      10937,
+      232558,
+      null,
+      0.8835,
+      0.3843,
+      121.06,
+      null,
+      12.55,
+      12.23
+     ],
+     [
+      "2016-09",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      null,
+      0.0,
+      null,
+      null,
+      0.0,
+      1.06
+     ]
+    ]
+   },
+   "code": "wellpilot.agent.tools.production_monthly@a17b98ebc0ac",
+   "created_at": "2026-10-26T23:03:38+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E7",
+   "tool": "search_reports",
+   "arguments": {
+    "query": "facility limits water cut",
+    "topic": "facility_limits",
+    "limit": 10
+   },
+   "result": {
+    "documents": {
+     "volve_pud": {
+      "title": "Plan for utbygging og drift av Volve (PUD, plan for development and operation)",
+      "issued": "2005-02-01"
+     }
+    },
+    "facts": {
+     "columns": [
+      "doc_id",
+      "page",
+      "topic",
+      "source",
+      "statement_en",
+      "quote",
+      "quote_check",
+      "wells"
+     ],
+     "rows": [
+      [
+       "volve_pud",
+       23,
+       "facility_limits",
+       "table",
+       "Maximum water cut is 0,80.",
+       "Maksimum vannkutt 0,80",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       8,
+       "facility_limits",
+       "table",
+       "The process plant is designed for water treatment capacity of 10.400 m3/d.",
+       "Vannbehandling 10.400 m3 /d",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       8,
+       "facility_limits",
+       "table",
+       "The process plant is designed for water injection capacity of 16.000 m3/d.",
+       "Vanninjeksjon 16.000 m3/d",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       9,
+       "facility_limits",
+       "text",
+       "Gas is transferred in a 7.4” pipeline via subsea template D on the Sleipner Øst field and further into the SLA facilities.",
+       "Gassen overføres i en 7.4” rørledning via havbunnsramme D på Sleipner Øst feltet og videre inn til SLA anleggene.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       23,
+       "facility_limits",
+       "table",
+       "Field water injection capacity is 16000 Sm3/d.",
+       "Vanninjeksjons kapasitet 16000 Sm3 /d",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       35,
+       "facility_limits",
+       "table",
+       "The platform maximum water content design capacity is 80 %.",
+       "Maks vanninnhold 80 %",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       36,
+       "facility_limits",
+       "text",
+       "A minimum residence time of 5 minutes is required for the oil due to strong oil/water emulsions.",
+       "Det er satt et krav på 5 minutter minimum oppholdstid for oljen på grunn av sterke olje/vann emulsjoner.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       36,
+       "facility_limits",
+       "text",
+       "Power generation is in two 50% dual-fuel gas turbine generators where each generator has capacity to supply all process consumers except the ESP and water injection pumps.",
+       "Kraftgenerering skjer i to 50% “dual” brensel gassturbingeneratorer. Hver generator har kapasitet til å forsyne alle prosesskonsumenter utenom ESP- og vanninjeksjonspumpene.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       36,
+       "facility_limits",
+       "figure",
+       "Figure 7.2 shows the process plant flow diagram with test separator, 1st stage and 2nd stage separators, coalescer, gas export compression and produced/Utsira water injection.",
+       "Figur 7.2 - Prosessanlegget",
+       "exact",
+       ""
+      ]
+     ]
+    }
+   },
+   "code": "wellpilot.agent.tools.search_reports@d5ca6fc7427c",
+   "created_at": "2026-10-26T23:03:38+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E8",
+   "tool": "search_reports",
+   "arguments": {
+    "query": "reserves oil",
+    "topic": "reserves",
+    "limit": 10
+   },
+   "result": {
+    "documents": {
+     "volve_pud": {
+      "title": "Plan for utbygging og drift av Volve (PUD, plan for development and operation)",
+      "issued": "2005-02-01"
+     }
+    },
+    "facts": {
+     "columns": [
+      "doc_id",
+      "page",
+      "topic",
+      "source",
+      "statement_en",
+      "quote",
+      "quote_check",
+      "wells"
+     ],
+     "rows": [
+      [
+       "volve_pud",
+       11,
+       "reserves",
+       "table",
+       "Well 15/9-19SR in the Volve discovery has 11,4 MSm3 of condensate/NGL/oil reserves and 1,5 GSm3 of gas reserves.",
+       "15/9-19SR 1993 Volve 11,4 1,5",
+       "exact",
+       "15/9-19SR"
+      ],
+      [
+       "volve_pud",
+       7,
+       "reserves",
+       "text",
+       "The Volve field is a 2x3 km fault-bounded structure with an expected 27.5 million Sm3 of oil in place.",
+       "Volve feltet er en 2x3 km, forkastningsavgrenset struktur hvor det i alt er forventet påvist 27,5 millioner Sm3 tilstedværende olje.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       8,
+       "reserves",
+       "text",
+       "Total expected production is about 11.4 mill Sm3 of oil and 1.5 mrd Sm3 of rich gas for export to the Sleipner A platform.",
+       "Det forventes å produsere i alt ca 11,4 mill Sm3 olje og 1,5 mrd Sm3 rikgass for eksport til Sleipner A plattformen.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       13,
+       "reserves",
+       "text",
+       "No contacts have been penetrated on the field, with the most likely oil-water contact assessed at 3120 m below sea level.",
+       "Ingen kontakter har blitt penetrert på feltet hvilket gir muligheter for en olje- vannkontakt betydelig dypere enn det som nå vurderes som mest sannsynlig (OVK på 3120 m under havnivå).",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       19,
+       "reserves",
+       "text",
+       "No wells have encountered a contact, so there is large uncertainty in the level of the oil/water contact, with discrete possible OWCs at 3105 m (24%), 3120 m (21%), 3135 m (28%), 3170 m (14%), 3260 m (7%) and 3330 m (6%).",
+       "Siden ingen brønner har påtruffet en kontakt er det stor usikkerhet i nivået på olje/vann kontakten.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       23,
+       "reserves",
+       "text",
+       "Cumulative oil production until minimum economic rate of 2.100 Sm3/d at Volve oil price of 18,7 USD/fat is reached is 11,4 MSm3.",
+       "Kumulativ oljeproduksjon inntil minimum økonomisk rate på 2.100 Sm3 /d (gitt Volve oljepris på 18,7 USD/fat) nås er 11,4 MSm3 .",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       25,
+       "reserves",
+       "table",
+       "Reserves are 11,40 MSm3 for Snitt, 9,0 MSm3 for p90, 11,35 MSm3 for p50 and 15,31 MSm3 for p10.",
+       "Reserver (MSm3 ) 11,40 9,0 11,35 15,31",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       26,
+       "reserves",
+       "text",
+       "Expected oil recovery from the field is around 43 %.",
+       "Forventet olje utvinning fra feltet utgjør rundt 43 %.",
+       "exact",
+       ""
+      ]
+     ]
+    }
+   },
+   "code": "wellpilot.agent.tools.search_reports@d5ca6fc7427c",
+   "created_at": "2026-10-26T23:03:38+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E9",
+   "tool": "fit_decline",
+   "arguments": {
+    "well": "F-12",
+    "start": "2010-07-18",
+    "end": "2012-12-09"
+   },
+   "result": {
+    "best": {
+     "model": "exponential",
+     "qi_sm3_per_producing_day": 1798,
+     "di_per_year": 0.4461,
+     "b": 0.0,
+     "window_start": "2010-07-18",
+     "window_end": "2012-12-09",
+     "n_points": 710,
+     "r2_log": 0.8732,
+     "rmse_log": 0.1184,
+     "aic": -3026,
+     "residual_trend": -0.02013,
+     "uptime": 0.8702
+    },
+    "warnings": [],
+    "other_models": [
+     {
+      "model": "hyperbolic",
+      "aic": -3024,
+      "r2_log": 0.8732,
+      "b": 0.0609
+     },
+     {
+      "model": "harmonic",
+      "aic": -2962,
+      "r2_log": 0.8613,
+      "b": 1.0
+     }
+    ]
+   },
+   "code": "wellpilot.agent.tools.fit_decline_tool@24dd92b35623",
+   "created_at": "2026-10-26T23:03:41+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E10",
+   "tool": "fit_decline",
+   "arguments": {
+    "well": "F-12",
+    "start": "2012-12-09"
+   },
+   "result": {
+    "best": {
+     "model": "hyperbolic",
+     "qi_sm3_per_producing_day": 469.82,
+     "di_per_year": 0.2737,
+     "b": 2.0,
+     "window_start": "2012-12-09",
+     "window_end": "2016-08-12",
+     "n_points": 1191,
+     "r2_log": 0.07775,
+     "rmse_log": 0.4996,
+     "aic": -1647,
+     "residual_trend": 0.07081,
+     "uptime": 0.8934
+    },
+    "warnings": [
+     "poor fit: r2_log 0.078 < 0.7. The window may span a plateau or a regime change; refit after the last regime change, or treat any decline rate from this fit as an inference.",
+     "residual_trend +0.071: by the end of the window the well declines slower than the fitted curve."
+    ],
+    "other_models": [
+     {
+      "model": "exponential",
+      "aic": -1643,
+      "r2_log": 0.07314,
+      "b": 0.0
+     },
+     {
+      "model": "harmonic",
+      "aic": -1644,
+      "r2_log": 0.07383,
+      "b": 1.0
+     }
+    ]
+   },
+   "code": "wellpilot.agent.tools.fit_decline_tool@24dd92b35623",
+   "created_at": "2026-10-26T23:03:41+00:00",
+   "warnings": [
+    "poor fit: r2_log 0.078 < 0.7. The window may span a plateau or a regime change; refit after the last regime change, or treat any decline rate from this fit as an inference.",
+    "residual_trend +0.071: by the end of the window the well declines slower than the fitted curve."
+   ]
+  },
+  {
+   "id": "E11",
+   "tool": "fit_decline",
+   "arguments": {
+    "well": "F-12",
+    "start": "2008-02-12",
+    "end": "2010-07-18"
+   },
+   "result": {
+    "best": {
+     "model": "exponential",
+     "qi_sm3_per_producing_day": 4173,
+     "di_per_year": 0.05655,
+     "b": 0.0,
+     "window_start": "2008-02-13",
+     "window_end": "2010-07-18",
+     "n_points": 829,
+     "r2_log": 0.01942,
+     "rmse_log": 0.2837,
+     "aic": -2085,
+     "residual_trend": -0.0374,
+     "uptime": 0.9367
+    },
+    "warnings": [
+     "poor fit: r2_log 0.019 < 0.7. The window may span a plateau or a regime change; refit after the last regime change, or treat any decline rate from this fit as an inference."
+    ],
+    "other_models": [
+     {
+      "model": "hyperbolic",
+      "aic": -2083,
+      "r2_log": 0.01942,
+      "b": 0.001
+     },
+     {
+      "model": "harmonic",
+      "aic": -2083,
+      "r2_log": 0.01678,
+      "b": 1.0
+     }
+    ]
+   },
+   "code": "wellpilot.agent.tools.fit_decline_tool@24dd92b35623",
+   "created_at": "2026-10-26T23:03:41+00:00",
+   "warnings": [
+    "poor fit: r2_log 0.019 < 0.7. The window may span a plateau or a regime change; refit after the last regime change, or treat any decline rate from this fit as an inference."
+   ]
+  },
+  {
+   "id": "E12",
+   "tool": "calculate",
+   "arguments": {
+    "expression": "4050 - 1146"
+   },
+   "result": {
+    "expression": "4050 - 1146",
+    "value": 2904
+   },
+   "code": "wellpilot.agent.tools.calculate@669bb70162a4",
+   "created_at": "2026-10-26T23:03:44+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E13",
+   "tool": "calculate",
+   "arguments": {
+    "expression": "1146/4050"
+   },
+   "result": {
+    "expression": "1146/4050",
+    "value": 0.283
+   },
+   "code": "wellpilot.agent.tools.calculate@669bb70162a4",
+   "created_at": "2026-10-26T23:03:44+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E14",
+   "tool": "calculate",
+   "arguments": {
+    "expression": "0.5134/0.02896"
+   },
+   "result": {
+    "expression": "0.5134/0.02896",
+    "value": 17.73
+   },
+   "code": "wellpilot.agent.tools.calculate@669bb70162a4",
+   "created_at": "2026-10-26T23:03:44+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E15",
+   "tool": "calculate",
+   "arguments": {
+    "expression": "0.4461/0.05655"
+   },
+   "result": {
+    "expression": "0.4461/0.05655",
+    "value": 7.89
+   },
+   "code": "wellpilot.agent.tools.calculate@669bb70162a4",
+   "created_at": "2026-10-26T23:03:44+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E16",
+   "tool": "calculate",
+   "arguments": {
+    "expression": "0.8141-0.5134"
+   },
+   "result": {
+    "expression": "0.8141-0.5134",
+    "value": 0.3007
+   },
+   "code": "wellpilot.agent.tools.calculate@669bb70162a4",
+   "created_at": "2026-10-26T23:03:44+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E17",
+   "tool": "run_sql",
+   "arguments": {
+    "sql": "SELECT date_trunc('month', date) AS m, avg(water_cut) AS wc, avg(oil_sm3) AS oil FROM production_daily WHERE well='F-12' AND date BETWEEN '2010-01-01' AND '2010-12-31' GROUP BY m ORDER BY m LIMIT 12"
+   },
+   "result": {
+    "columns": [
+     "m",
+     "wc",
+     "oil"
+    ],
+    "rows": [
+     [
+      "2010-01-01",
+      0.1678,
+      4828
+     ],
+     [
+      "2010-02-01",
+      0.2953,
+      3816
+     ],
+     [
+      "2010-03-01",
+      0.3436,
+      3502
+     ],
+     [
+      "2010-04-01",
+      0.4421,
+      2875
+     ],
+     [
+      "2010-05-01",
+      0.4902,
+      2488
+     ],
+     [
+      "2010-06-01",
+      0.5428,
+      2321
+     ],
+     [
+      "2010-07-01",
+      0.5973,
+      2066
+     ],
+     [
+      "2010-08-01",
+      0.6426,
+      1115
+     ],
+     [
+      "2010-09-01",
+      0.6409,
+      1710
+     ],
+     [
+      "2010-10-01",
+      0.6583,
+      1659
+     ],
+     [
+      "2010-11-01",
+      0.6979,
+      1482
+     ],
+     [
+      "2010-12-01",
+      0.7114,
+      1459
+     ]
+    ],
+    "row_count": 12,
+    "truncated": false
+   },
+   "code": "wellpilot.agent.tools.run_sql@e2437f12e65f",
+   "created_at": "2026-10-26T23:03:51+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E18",
+   "tool": "calculate",
+   "arguments": {
+    "expression": "0.8141/0.80"
+   },
+   "result": {
+    "expression": "0.8141/0.80",
+    "value": 1.02
+   },
+   "code": "wellpilot.agent.tools.calculate@669bb70162a4",
+   "created_at": "2026-10-26T23:04:08+00:00",
+   "warnings": []
+  }
+ ]
+}

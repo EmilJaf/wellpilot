@@ -5,6 +5,7 @@
   "model": "muse-spark-1.3",
   "question": "Why did well F-12 decline faster after 2010? Compare with the 2005 development plan."
  },
+ "to_review": false,
  "note": "Live checker rejected Findings 1-2 for '9.000' and '0,80' (Norwegian number formats in PUD quotes: false rejections, since fixed) and 'due to' inside a quote (the report's claim, not the finding's). Only the summary's unhedged cause ('driving') is a real problem.",
  "expected": {
   "accepted": false,

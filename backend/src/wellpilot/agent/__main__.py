@@ -2,8 +2,8 @@
 
 Run: uv run python -m wellpilot.agent "Why did F-12 decline faster after 2010?"
 This calls the LLM in .env (LLM_PROVIDER) and spends tokens. The run is saved to
-data/runs/ like one from the web app, so it can be replayed there or added to the checker
-corpus (python -m wellpilot.agent.corpus add <run id>).
+data/runs/ like one from the web app, so it can be replayed there, and added to the checker
+corpus (tests/corpus) as test cases.
 """
 
 import argparse
@@ -12,6 +12,8 @@ import json
 import textwrap
 from datetime import date
 
+from wellpilot.agent import corpus
+from wellpilot.agent.corpus import CORPUS_DIR
 from wellpilot.agent.loop import SUBMIT, AgentRun, Step, run_agent
 from wellpilot.api.runs import RunRecord, new_run_id
 from wellpilot.config import get_settings
@@ -120,6 +122,8 @@ async def main() -> None:
     record.complete(run)
     path = record.save(settings.runs_dir)
     print(f"\nsaved {path} (replay: /?run={record.id}&replay=1)")
+    if CORPUS_DIR.parent.is_dir():  # a source checkout: keep the run as checker test cases
+        corpus.describe(corpus.add(path))
 
 
 if __name__ == "__main__":

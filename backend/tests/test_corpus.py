@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from wellpilot.agent.corpus import CORPUS_DIR, replay, verdict
+from wellpilot.agent.corpus import CORPUS_DIR, add, add_new, replay, verdict
 
 CASES = sorted(CORPUS_DIR.glob("*.json"))
 
@@ -27,3 +27,56 @@ def test_real_submission_keeps_its_verdict(path: Path) -> None:
     assert verdict(problems) == case["expected"], (
         f"{case['note'] or 'no note'}\nproblems now:\n" + "\n".join(problems)
     )
+
+
+def _run_file(directory: Path, run_id: str) -> Path:
+    def submission(rate: str) -> dict:
+        claim = f"Rate fell to {rate} Sm3/d."
+        number = {"text": rate, "value": float(rate), "evidence_id": "E1"}
+        return {
+            "summary": "Rate fell.",
+            "summary_numbers": [],
+            "findings": [
+                {"claim": claim, "evidence_ids": ["E1"], "confidence": "fact", "numbers": [number]}
+            ],
+        }
+
+    run = {
+        "id": run_id,
+        "question": "Why?",
+        "events": [
+            {"type": "run_started", "model": "test-model"},
+            {
+                "type": "step",
+                "tool_calls": [
+                    {"name": "production_monthly", "evidence_id": "E1"},
+                    {"name": "submit_findings", "arguments": submission("1500")},
+                    {"name": "submit_findings", "arguments": submission("1146")},
+                ],
+            },
+        ],
+        "evidence": {
+            "E1": {"id": "E1", "tool": "production_monthly", "arguments": {}, "result": [1146]}
+        },
+    }
+    path = directory / f"{run_id}.json"
+    path.write_text(json.dumps(run))
+    return path
+
+
+def test_rejections_are_queued_for_review_and_runs_are_added_once(tmp_path: Path) -> None:
+    runs, corpus = tmp_path / "runs", tmp_path / "corpus"
+    runs.mkdir()
+    _run_file(runs, "0123456789ab")
+
+    first = add_new(runs, corpus)
+    again = add_new(runs, corpus)
+
+    cases = [json.loads(p.read_text()) for p in first]
+    assert [(c["expected"]["accepted"], c["to_review"]) for c in cases] == [
+        (False, True),
+        (True, False),
+    ]
+    assert cases[1]["source"]["model"] == "test-model"
+    assert again == []
+    assert len(add(runs / "0123456789ab.json", corpus)) == 2  # an explicit add redoes a run
