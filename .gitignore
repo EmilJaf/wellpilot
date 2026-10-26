@@ -1,0 +1,31 @@
+# Secrets and private context
+.env
+.env.*
+!.env.example
+CLAUDE.local.md
+.claude/settings.local.json
+
+# Data: raw Volve files are large, derived files are rebuilt by the ingest scripts
+data/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Node
+node_modules/
+frontend/dist/
+
+# SQLite
+*.db
+*.db-wal
+*.db-shm
+
+# OS and editors
+.DS_Store
+.idea/
+.vscode/
