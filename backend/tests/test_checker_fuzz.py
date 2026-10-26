@@ -7,6 +7,7 @@ one, add it here first and let the tests say whether the checker copes.
 
 import math
 from collections.abc import Callable
+from datetime import date
 
 from hypothesis import assume, given, settings
 from hypothesis import strategies as st
@@ -19,9 +20,9 @@ def _tool() -> None:
     """Stands in for a tool function."""
 
 
-def log_of(*values: float) -> EvidenceLog:
+def log_of(*values: float, day: str = "2012-06-01") -> EvidenceLog:
     log = EvidenceLog()
-    log.add("tool", {}, {"date": "2012-06-01", "values": list(values)}, _tool)
+    log.add("tool", {}, {"date": day, "values": list(values)}, _tool)
     return log
 
 
@@ -39,7 +40,10 @@ LARGE: dict[str, Format] = {
     "million": lambda v: (f"{v / 1e6:.2f} million", round(v / 1e6, 2) * 1e6),
     "scientific": lambda v: (f"{v:.3e}", float(f"{v:.3e}")),
     "glued unit": lambda v: (f"{round(v)}Sm3", round(v)),
+    "norwegian": lambda v: (f"{round(v):,}".replace(",", "."), round(v)),
 }
+# Answers from before declared numbers were read in English only.
+LEGACY = {k: v for k, v in LARGE.items() if k != "norwegian"}
 FRACTION: dict[str, Format] = {
     "percent": lambda f: (f"{f * 100:.1f}%", round(f * 100, 1)),
     "fraction": lambda f: (f"{f:.3f}", round(f, 3)),
@@ -128,9 +132,34 @@ def test_an_undeclared_number_is_caught_in_every_format(value, style) -> None:
 
 
 @settings(max_examples=150, deadline=None)
-@given(value=large, style=st.sampled_from(sorted(LARGE)))
+@given(
+    value=large,
+    style=st.sampled_from(sorted(LARGE)),
+    day=st.dates(date(2008, 1, 1), date(2016, 12, 31)),
+    small=st.integers(min_value=1, max_value=99),
+)
+def test_short_declared_numbers_leave_dates_and_wells_alone(value, style, day, small) -> None:
+    """A declared "2" or "18" must not match inside 2010-07-18, F-12 or 2 100."""
+    text, written = LARGE[style](value)
+    claim = f"F-{small} made {text} by {day.isoformat()}, {small} months after first oil."
+    finding = Finding(
+        claim=claim,
+        evidence_ids=["E1"],
+        confidence="fact",
+        numbers=[
+            DeclaredNumber(text=text, value=written, evidence_id="E1"),
+            DeclaredNumber(text=str(small), value=small, evidence_id="E1"),
+        ],
+    )
+    log = log_of(value, small, day=day.isoformat())
+
+    assert check_submission(Submission(summary="Done.", findings=[finding]), log) == []
+
+
+@settings(max_examples=150, deadline=None)
+@given(value=large, style=st.sampled_from(sorted(LEGACY)))
 def test_legacy_text_reading_accepts_every_format(value, style) -> None:
     """Answers without declared numbers fall back to reading them from the text."""
-    text, written = LARGE[style](value)
+    text, written = LEGACY[style](value)
 
     assert check(text, written, value, numbers=None) == []

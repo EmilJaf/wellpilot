@@ -264,6 +264,23 @@ def test_a_cause_inside_a_quote_is_the_reports_claim() -> None:
     assert "states a cause ('driving')" in check_submission(submit(asserted), log)[0]
 
 
+def test_a_bracketed_translation_of_a_quote_is_the_reports_claim_too() -> None:
+    log = log_with(PUD_FACTS)
+    translated = Finding(
+        claim="The plan states “Produksjonen avtar grunnet økende vannrate.” [Production "
+        "declines due to increasing water rate.]",
+        evidence_ids=["E1"],
+        confidence="fact",
+        numbers=[],
+    )
+    own_brackets = Finding(
+        claim="F-12 fell [due to water].", evidence_ids=["E1"], confidence="fact", numbers=[]
+    )
+
+    assert check_submission(submit(translated), log) == []
+    assert "states a cause ('due to')" in check_submission(submit(own_brackets), log)[0]
+
+
 def _add(log: EvidenceLog, tool: str, arguments: dict, result, warnings=()) -> None:
     item = log.add(tool, arguments, result, _tool)
     if warnings:

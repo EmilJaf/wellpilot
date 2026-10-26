@@ -56,6 +56,9 @@ CAUSAL = re.compile(
 # A quoted passage: opened after a space or "(", closed before a space or punctuation, so
 # apostrophes inside words ("oil's") do not end it.
 QUOTED = re.compile(r"""(?:(?<=[\s(])|^)['"‘“«](.{15,}?)['"’”»](?=[\s.,;:)/]|$)""")
+# A quote with its translation in brackets: “Produksjonen avtar...” [Production declines
+# due to...]. Both report the document's claim, so causal words there are not the finding's.
+QUOTED_CLAIM = re.compile(QUOTED.pattern + r"(?:\s*\[[^\]]*\])?")
 MIN_QUOTE_CHARS = 12  # letters and digits; shorter quotes are phrases, not citations
 HEDGE = re.compile(
     r"\b(likely|probabl[ey]|possibly|consistent with|suggests?|appears?|may|might|"
@@ -237,7 +240,7 @@ def _unsupported(text: str, pool: _Pool) -> tuple[list[str], list[str]]:
         elif decimals == 0 and not suffix and value <= SMALL_INTEGER:
             continue
         elif not pool.has_number(value, decimals, suffix):
-            numbers.append(f"{value:g}{suffix or ''}")
+            numbers.append(_as_written(value, decimals, suffix))
     dates = [d for d in DATE.findall(text) if not pool.has_date(d)]
     return numbers, dates
 
@@ -254,24 +257,53 @@ def _precision(value: float) -> float:
     return 0.5 * 10.0 ** int(exponent) + 1e-9
 
 
-def _shown(text: str) -> tuple[float, float, tuple[float, ...]] | None:
-    """What a declared number's text shows: the number, half a unit in its last digit, and
+Reading = tuple[float, float, tuple[float, ...]]  # number, half a unit, allowed scales
+
+
+def _readings(text: str) -> list[Reading]:
+    """What a declared number's text can show: the number, half a unit in its last digit, and
     the scales its suffix allows ("72%" is 72 or 0.72, "1.13 million" is 1.13 or 1 130 000).
-    Trailing zeros of a whole number count as rounding: "4 050" is good to 5, "1150" to 5.
-    None unless the text holds exactly one number."""
-    found = _numbers_in_text(text)
-    if len(found) != 1:
-        return None
-    shown, decimals, suffix = found[0]
-    unit = 0.5 * 10.0**-decimals if decimals else _precision(shown)
-    return shown, unit, (1.0, *SCALES.get(suffix or "", ()))
+
+    Both conventions are tried, since answers quote Norwegian reports: "9.000" is 9 or 9000,
+    "0,80" is 0.8. Trailing zeros of a whole number count as rounding: "4 050" is good to 5,
+    "1150" to 5. Empty unless the text holds exactly one number.
+    """
+    readings: list[Reading] = []
+    for european in (False, True):
+        found = _numbers_in_text(text, european)
+        if len(found) != 1:
+            continue
+        shown, decimals, suffix = found[0]
+        unit = 0.5 * 10.0**-decimals if decimals else _precision(shown)
+        reading = (shown, unit, (1.0, *SCALES.get(suffix or "", ())))
+        if reading not in readings:
+            readings.append(reading)
+    return readings
 
 
-def _reads_as(shown: tuple[float, float, tuple[float, ...]], candidates: Iterable[float]) -> bool:
+def _reads_as(reading: Reading, candidates: Iterable[float]) -> bool:
     """Does any candidate round to the shown number, at any scale its suffix allows?"""
-    number, unit, scales = shown
+    number, unit, scales = reading
     pool = [abs(c) for c in candidates]
     return any(abs(c - number * s) <= unit * s for s in scales for c in pool)
+
+
+def _standalone(written: str) -> re.Pattern[str]:
+    """Where a declared text stands as a whole number: "2" matches "2 years", not the 2 in
+    "2 100", "12", "0.2" or "Sm3"."""
+    return re.compile(
+        rf"(?<![\w.,])(?<!\d[ \u00a0\u202f]){re.escape(written)}"
+        rf"(?!\d|[.,]\d|[ \u00a0\u202f]\d{{3}}\b)"
+    )
+
+
+def _mask(text: str) -> str:
+    """Dates and well names blanked out: their digits are not numbers to declare."""
+    return DATE.sub(" ", WELL.sub(" ", text))
+
+
+def _as_written(value: float, decimals: int, suffix: str | None) -> str:
+    return f"{value:.{max(decimals, 0)}f}{suffix or ''}"
 
 
 def _declared(
@@ -289,20 +321,23 @@ def _declared(
     where it comes from; the only parsing left is spotting digits nobody declared.
     """
     problems = []
+    masked = _mask(text)
     for number in declared:
         where = number.evidence_id
         item = log.get(where)
-        shown = _shown(number.text)
-        if number.text not in text:
+        readings = _readings(number.text)
+        fits = [r for r in readings if _reads_as(r, [number.value])]
+        if not _standalone(number.text).search(masked):
             problems.append(
-                f"{label}: '{number.text}' is declared but does not appear in the text."
+                f"{label}: '{number.text}' is declared but does not appear in the text as a "
+                "number (dates and well names need no declaring)."
             )
-        elif shown is None:
+        elif not readings:
             problems.append(
                 f"{label}: '{number.text}' must be one number exactly as written, e.g. "
                 "'4 050' or '72%'; declare each number separately."
             )
-        elif not _reads_as(shown, [number.value]):
+        elif not fits:
             problems.append(
                 f"{label}: '{number.text}' does not show its declared value "
                 f"{number.value:g}; write the number the evidence has."
@@ -316,18 +351,22 @@ def _declared(
                 f"{label}: '{number.text}' comes from {where}, which calculates from "
                 f"{', '.join(calcs[where].unsupported)}; no evidence contains those."
             )
-        elif not _reads_as(shown, _Pool([item]).numbers):
+        elif not any(_reads_as(r, _Pool([item]).numbers) for r in fits):
             problems.append(f"{label}: '{number.text}' = {number.value:g} is not in {where}.")
 
-    rest = QUOTED.sub(" ", text)  # numbers inside a quote are checked with the quote
+    rest = _mask(QUOTED.sub(" ", text))  # numbers inside a quote are checked with the quote
     for number in sorted(declared, key=lambda d: -len(d.text)):
-        rest = rest.replace(number.text, " ")
-    leftover = []
-    for value, decimals, suffix in _numbers_in_text(rest):
-        bare = decimals == 0 and not suffix and value.is_integer()
-        if bare and (value <= SMALL_INTEGER or str(int(value)) in years):
-            continue
-        leftover.append(f"{value:g}{suffix or ''}")
+        rest = _standalone(number.text).sub(" ", rest)
+    leftover: list[str] = []
+    # Either convention: an undeclared "1.234.567" is a number too.
+    for european in (False, True):
+        for value, decimals, suffix in _numbers_in_text(rest, european):
+            bare = decimals == 0 and not suffix and value.is_integer()
+            if bare and (value <= SMALL_INTEGER or str(int(value)) in years):
+                continue
+            written = _as_written(value, decimals, suffix)
+            if written not in leftover:
+                leftover.append(written)
     if leftover:
         problems.append(
             f"{label}: undeclared number(s) {', '.join(leftover)}. Declare every number you "
@@ -385,7 +424,7 @@ def check_submission(submission: Submission, log: EvidenceLog) -> list[str]:
                 "word for word (the original quote or its statement_en) or drop the quotes."
             )
         # A cause inside a quote is the report's claim, which the finding only reports.
-        cause = CAUSAL.search(QUOTED.sub(" ", finding.claim))
+        cause = CAUSAL.search(QUOTED_CLAIM.sub(" ", finding.claim))
         if finding.confidence == "fact" and cause:
             problems.append(
                 f"Finding {n} states a cause ('{cause.group(0)}') but is marked fact. The data "
@@ -420,7 +459,7 @@ def check_submission(submission: Submission, log: EvidenceLog) -> list[str]:
     )
     if missing:
         problems.append(f"Summary: {', '.join(missing)} not found in any evidence.")
-    cause = CAUSAL.search(QUOTED.sub(" ", submission.summary))
+    cause = CAUSAL.search(QUOTED_CLAIM.sub(" ", submission.summary))
     if cause and not HEDGE.search(submission.summary):
         problems.append(
             f"Summary states a cause as certain ('{cause.group(0)}'). The data shows timing "

@@ -16,6 +16,26 @@ type Props = {
 // an apostrophe inside a word does not end it (same rule as the backend checker).
 const QUOTED = /(^|[\s(])['"‘“«]([^]{6,}?)['"’”»](?=[\s.,;:)/]|$)/g
 
+// Dates and well names hold digits that are not declared numbers (same as the checker).
+const NOT_NUMBERS = /\b\d{4}-\d{2}(?:-\d{2})?\b|\b(?:15\/9-)?F-\d+(?:\s?[A-Z]\b)?/g
+
+/** Where a declared text first stands as a whole number: "2" in "2 years", not in "2010-07-18" or "2 100". */
+function standaloneAt(text: string, written: string): number {
+  if (!written) return -1
+  const escaped = written.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const pattern = new RegExp(
+    `(?<![\\w.,])(?<!\\d[ \\u00a0\\u202f])${escaped}(?!\\d|[.,]\\d|[ \\u00a0\\u202f]\\d{3}\\b)`,
+    'g',
+  )
+  const masked = [...text.matchAll(NOT_NUMBERS)].map((m) => [m.index, m.index + m[0].length])
+  for (const match of text.matchAll(pattern)) {
+    if (!masked.some(([from, to]) => match.index < to && match.index + written.length > from)) {
+      return match.index
+    }
+  }
+  return -1
+}
+
 /**
  * The text with each declared number as a button to the evidence it came from, and
  * quoted passages set as quotes.
@@ -23,8 +43,8 @@ const QUOTED = /(^|[\s(])['"‘“«]([^]{6,}?)['"’”»](?=[\s.,;:)/]|$)/g
 function withMarks(text: string, numbers: DeclaredNumber[] | null | undefined, open: (id: string) => void): ReactNode[] {
   // Earliest occurrence first; a longer number wins when two start at the same place.
   const spans = (numbers ?? [])
-    .map((n) => ({ n, at: text.indexOf(n.text) }))
-    .filter((s) => s.at >= 0 && s.n.text.length > 0)
+    .map((n) => ({ n, at: standaloneAt(text, n.text) }))
+    .filter((s) => s.at >= 0)
     .sort((a, b) => a.at - b.at || b.n.text.length - a.n.text.length)
   const parts: ReactNode[] = []
   let last = 0
