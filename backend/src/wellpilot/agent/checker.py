@@ -17,9 +17,17 @@ from wellpilot.agent.evidence import Evidence, EvidenceLog
 WELL = re.compile(r"\bF-\d+(?:\s?[A-Z]\b)?")
 DATE = re.compile(r"\b(\d{4}-\d{2}(?:-\d{2})?)\b")
 THOUSANDS = re.compile(r"(?<=\d),(?=\d{3}\b)")
-NUMBER = re.compile(r"(?<![\w.])(\d+(?:\.\d+)?)(?:\s*(%|x\b|×|million\b|k\b))?(?!\w)")
+NUMBER = re.compile(
+    r"(?<![\w.])(\d+(?:\.\d+)?(?:[eE][-+]?\d+)?)(?:\s*(%|x\b|×|million\b|k\b))?(?!\w)"
+)
 SCALES = {"%": (0.01, 1.0), "million": (1e6,), "k": (1e3,)}
 SMALL_INTEGER = 10  # "3 wells", "2 years": too generic to demand evidence for
+# Causes are interpretations: the data shows timing and size, not why.
+CAUSAL = re.compile(
+    r"\b(because|caus(?:e|ed|es|ing)|dr(?:ove|ives?|iven)|due to|led to|leads? to|"
+    r"result(?:s|ed)? (?:from|in)|responsible for)\b",
+    re.IGNORECASE,
+)
 
 
 class Finding(BaseModel):
@@ -56,7 +64,8 @@ def _numbers_in_text(text: str) -> list[tuple[float, int, str | None]]:
     found = []
     for match in NUMBER.finditer(text):
         digits, suffix = match.group(1), match.group(2)
-        decimals = len(digits.split(".")[1]) if "." in digits else 0
+        mantissa = re.split(r"[eE]", digits)[0]
+        decimals = len(mantissa.split(".")[1]) if "." in mantissa else 0
         found.append((float(digits), decimals, suffix))
     return found
 
@@ -93,9 +102,10 @@ class _Pool:
 def _unsupported(text: str, pool: _Pool) -> tuple[list[str], list[str]]:
     numbers = []
     for value, decimals, suffix in _numbers_in_text(text):
-        is_year = decimals == 0 and not suffix and 1900 <= value <= 2100
-        if is_year:
-            if str(int(value)) not in pool.years:
+        bare_integer = decimals == 0 and not suffix and value.is_integer()
+        if bare_integer and 1900 <= value <= 2100:
+            # A year, or a plain number such as 2095 days or 2000 Sm3/d.
+            if str(int(value)) not in pool.years and not pool.has_number(value, 0, None):
                 numbers.append(str(int(value)))
         elif decimals == 0 and not suffix and value <= SMALL_INTEGER:
             continue
@@ -126,6 +136,12 @@ def check_submission(submission: Submission, log: EvidenceLog) -> list[str]:
             )
         if dates:
             problems.append(f"Finding {n}: date(s) {', '.join(dates)} not found in {ids}.")
+        cause = CAUSAL.search(finding.claim)
+        if finding.confidence == "fact" and cause:
+            problems.append(
+                f"Finding {n} states a cause ('{cause.group(0)}') but is marked fact. The data "
+                "shows timing and size, not causes: mark it inference."
+            )
         flagged = [e for e in cited if e.warnings]
         if finding.confidence == "fact" and flagged:
             reasons = "; ".join(f"{e.id}: {w}" for e in flagged for w in e.warnings)

@@ -133,6 +133,7 @@ def test_to_jsonable() -> None:
         "big": np.float64(4579609.55),
         "x": np.float64(1.234567),
         "small": 0.016462,
+        "noise": 9.798e-17,
         "flag": np.bool_(True),
         "nat": pd.NaT,
     }
@@ -144,6 +145,7 @@ def test_to_jsonable() -> None:
         "big": 4579610,
         "x": 1.23,
         "small": 0.01646,
+        "noise": 0.0,
         "flag": True,
         "nat": None,
     }

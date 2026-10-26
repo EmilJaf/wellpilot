@@ -123,3 +123,39 @@ def test_code_ref_hashes_the_source() -> None:
 
     assert ref.startswith("tests.test_checker._tool@") or ref.startswith("test_checker._tool@")
     assert len(ref.rsplit("@", 1)[1]) == 12
+
+
+def test_scientific_notation_is_one_number() -> None:
+    log = log_with({"best": {"di_per_year": 9.798e-17, "r2_log": -2.22e-16}, "warnings": []})
+    finding = Finding(
+        claim="Plateau Di was 9.798e-17/yr with r2_log -2.22e-16.",
+        evidence_ids=["E1"],
+        confidence="fact",
+    )
+
+    assert check_submission(submit(finding), log) == []
+
+
+def test_year_like_numbers_pass_when_they_are_evidence_values() -> None:
+    log = log_with({"details": {"zero_days": 2095, "rate_after": 2000.0}, "start": "2010-10-12"})
+    finding = Finding(
+        claim="The gauge read 0 on 2095 days from 2010; the rate after restart was 2000.",
+        evidence_ids=["E1"],
+        confidence="fact",
+    )
+
+    assert check_submission(submit(finding), log) == []
+
+
+def test_causal_claim_marked_fact_is_rejected() -> None:
+    log = log_with(EVENTS)
+    as_fact = Finding(
+        claim="Water breakthrough drove the 72% drop.", evidence_ids=["E1"], confidence="fact"
+    )
+    as_inference = as_fact.model_copy(update={"confidence": "inference"})
+
+    problems = check_submission(submit(as_fact), log)
+
+    assert len(problems) == 1
+    assert "states a cause ('drove')" in problems[0]
+    assert check_submission(submit(as_inference), log) == []

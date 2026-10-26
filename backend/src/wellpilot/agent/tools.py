@@ -34,12 +34,15 @@ MAX_RESIDUAL_TREND = 0.05
 
 
 def _round(x: float) -> float | int:
-    """Whole numbers from 1000 up, 2 decimals from 1 up, 4 significant digits below."""
+    """Whole numbers from 1000 up, 2 decimals from 1 up, 4 significant digits below, and
+    float noise such as 9.8e-17 (a fitted decline of zero) as plain 0."""
     magnitude = abs(x)
     if magnitude >= 1000:
         return round(x)
     if magnitude >= 1:
         return round(x, 2)
+    if magnitude < 1e-6:
+        return 0.0
     return float(f"{x:.4g}")
 
 
