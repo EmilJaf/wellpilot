@@ -33,6 +33,7 @@ class Settings(BaseSettings):
 
     data_dir: Path = REPO_ROOT / "data"
     database_url: str = ""
+    max_active_runs: int = 3
 
     @property
     def raw_dir(self) -> Path:
@@ -41,6 +42,10 @@ class Settings(BaseSettings):
     @property
     def processed_dir(self) -> Path:
         return self.data_dir / "processed"
+
+    @property
+    def runs_dir(self) -> Path:
+        return self.data_dir / "runs"
 
     @property
     def resolved_database_url(self) -> str:

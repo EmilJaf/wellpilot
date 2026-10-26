@@ -5,10 +5,11 @@ calling submit_findings; the checker verifies each finding's numbers and dates a
 the evidence it cites, and rejected submissions go back to the model to fix.
 """
 
+import asyncio
 import json
 import time
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from datetime import date
 from typing import Any
 
@@ -22,6 +23,7 @@ from wellpilot.llm import LLM, json_schema
 
 SUBMIT = "submit_findings"
 MAX_CHECK_ROUNDS = 3
+PREVIEW_CHARS = 300
 
 SYSTEM_PROMPT = """\
 You are WellPilot, an analysis agent for petroleum engineers working on the Volve oil \
@@ -76,6 +78,34 @@ class Step:
     completion_tokens: int = 0
     seconds: float = 0.0
 
+    def to_event(self) -> dict:
+        """A compact, JSON-ready view for streaming: results become short previews; full
+        results stay in the evidence log."""
+        calls = []
+        for call in self.tool_calls:
+            result = call["result"]
+            view: dict = {"name": call["name"], "arguments": _parse_arguments(call["arguments"])}
+            if call["name"] == SUBMIT:
+                view["accepted"] = result.get("accepted", False)
+                view["problems"] = result.get("problems", [])
+            elif "error" in result:
+                view["error"] = result["error"]
+            else:
+                inner = result.get("result")
+                text = json.dumps(inner, ensure_ascii=False)
+                view["evidence_id"] = call.get("evidence_id")
+                view["warnings"] = inner.get("warnings", []) if isinstance(inner, dict) else []
+                view["preview"] = text[:PREVIEW_CHARS] + ("…" if len(text) > PREVIEW_CHARS else "")
+            calls.append(view)
+        return {
+            "index": self.index,
+            "content": self.content,
+            "tool_calls": calls,
+            "prompt_tokens": self.prompt_tokens,
+            "completion_tokens": self.completion_tokens,
+            "seconds": round(self.seconds, 1),
+        }
+
 
 @dataclass
 class AgentRun:
@@ -94,6 +124,23 @@ class AgentRun:
             sum(s.prompt_tokens for s in self.steps),
             sum(s.completion_tokens for s in self.steps),
         )
+
+    def to_dict(self) -> dict:
+        """The answer and an index of its evidence (results are served separately)."""
+        tokens_in, tokens_out = self.total_tokens
+        return {
+            "question": self.question,
+            "summary": self.summary,
+            "findings": [f.model_dump() for f in self.findings],
+            "verified": self.verified,
+            "finished": self.finished,
+            "check_rounds": self.check_rounds,
+            "steps": len(self.steps),
+            "tokens": {"input": tokens_in, "output": tokens_out},
+            "evidence": [
+                {k: v for k, v in asdict(e).items() if k != "result"} for e in self.evidence
+            ],
+        }
 
 
 def _reasoning(message: Any) -> str | None:
@@ -126,13 +173,21 @@ async def run_agent(
     max_steps: int = 12,
     reasoning_effort: str = "",
     on_step: Callable[[Step], None] | None = None,
+    on_event: Callable[[dict], None] | None = None,
+    evidence_log: EvidenceLog | None = None,
 ) -> AgentRun:
+    """Run the agent on one question.
+
+    on_step gets each finished Step; on_event gets JSON-ready events for streaming:
+    {"type": "llm_call", "step": n} before each model call, {"type": "step", ...} after.
+    Pass evidence_log to read evidence while the run is still going.
+    """
     messages: list[dict] = [
         {"role": "system", "content": system_prompt(store.as_of)},
         {"role": "user", "content": question},
     ]
     tools = [*tool_schemas(), submit_tool_schema()]
-    log = EvidenceLog()
+    log = evidence_log if evidence_log is not None else EvidenceLog()
     steps: list[Step] = []
     check_rounds: list[list[str]] = []
     last_submission: Submission | None = None
@@ -143,7 +198,12 @@ async def run_agent(
             question, summary, findings, list(log), check_rounds, verified, finished, steps
         )
 
+    def emit(event: dict) -> None:
+        if on_event:
+            on_event(event)
+
     for index in range(1, max_steps + 1):
+        emit({"type": "llm_call", "step": index})
         started = time.monotonic()
         response = await llm.client.chat.completions.create(
             model=llm.model,
@@ -191,7 +251,8 @@ async def run_agent(
                     if not problems:
                         accepted = submission
             else:
-                payload = execute(store, name, arguments)
+                # Tools are synchronous (DuckDB, scipy); keep the event loop free for streams.
+                payload = await asyncio.to_thread(execute, store, name, arguments)
                 if "result" in payload:
                     evidence = log.add(
                         name,
@@ -210,6 +271,7 @@ async def run_agent(
         steps.append(step)
         if on_step:
             on_step(step)
+        emit({"type": "step", **step.to_event()})
 
         if accepted:
             return finish(accepted.summary, accepted.findings, verified=True)
