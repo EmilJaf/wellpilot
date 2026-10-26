@@ -99,6 +99,6 @@ class ProductionStore:
 
     def well_issues(self, well: str) -> pd.DataFrame:
         """Every ingest issue logged for one well, ordered by date (no row cap)."""
-        sql = 'SELECT * FROM production_issues WHERE well = ? ORDER BY date, field'
+        sql = "SELECT * FROM production_issues WHERE well = ? ORDER BY date, field"
         with self._lock:
             return self._con.execute(sql, [well]).df()
