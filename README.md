@@ -35,6 +35,12 @@ pnpm install
 pnpm dev                                     # UI on :5173, proxies /api to :8000
 ```
 
+Data: download `Production_data/Volve production data.xlsx` from the Volve dataset into `data/raw/production/`, then build the cleaned Parquet files:
+
+```bash
+cd backend && uv run python -m wellpilot.ingest.production   # writes data/processed/
+```
+
 Tests and lint:
 
 ```bash
