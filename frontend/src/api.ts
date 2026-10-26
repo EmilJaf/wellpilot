@@ -24,10 +24,13 @@ export type StepEvent = {
   seconds: number
 }
 
+export type DeclaredNumber = { text: string; value: number; evidence_id: string }
+
 export type Finding = {
   claim: string
   evidence_ids: string[]
   confidence: 'fact' | 'inference'
+  numbers?: DeclaredNumber[] | null
 }
 
 export type EvidenceMeta = {
@@ -45,6 +48,7 @@ export type FinalEvent = {
   type: 'final'
   question: string
   summary: string | null
+  summary_numbers?: DeclaredNumber[]
   findings: Finding[]
   verified: boolean
   finished: boolean

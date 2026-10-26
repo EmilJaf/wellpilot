@@ -13,12 +13,19 @@ Before an answer is accepted:
   cause only with a hedge ("likely", "consistent with").
 Problems go back to the model as plain sentences so it can fix them and resubmit.
 
+Numbers are declared, not parsed: each finding lists every number it writes with its
+value and evidence id (DeclaredNumber); the written number must show that value and be
+found in that evidence at the precision it was written, and any digits left in the text
+undeclared are rejected. Answers from before declared
+numbers (numbers=None) fall back to reading numbers out of the text.
+
 Known limit: the sign of a change is not checked ("rose 45%" passes against -0.45).
 """
 
 import re
 from collections.abc import Iterable
 from dataclasses import dataclass
+from decimal import Decimal
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
@@ -57,6 +64,18 @@ HEDGE = re.compile(
 )
 
 
+class DeclaredNumber(BaseModel):
+    text: str = Field(
+        description="The number exactly as written in the text, e.g. '4 050', '72%', '0.4461', "
+        "'1.13 million'."
+    )
+    value: float = Field(
+        description="Its full value as the evidence has it: 4050 for '4 050' or '4.05k', "
+        "1133053 for '1.13 million', 0.72 or 72 for '72%'."
+    )
+    evidence_id: str = Field(description="The evidence id (E1, E2, ...) that contains the value.")
+
+
 class Finding(BaseModel):
     claim: str = Field(description="One finding in one or two sentences, with its numbers.")
     evidence_ids: list[str] = Field(
@@ -67,11 +86,20 @@ class Finding(BaseModel):
         description="'fact' if the cited evidence shows it directly; 'inference' for "
         "interpretations such as likely causes."
     )
+    # None only for answers from before numbers were declared; the agent must declare them.
+    numbers: list[DeclaredNumber] | None = Field(
+        None,
+        description="Every number written in the claim (not dates, years or well names), "
+        "with its value and the cited evidence it comes from. Empty if there are none.",
+    )
 
 
 class Submission(BaseModel):
     summary: str = Field(description="Two or three sentences answering the question.")
     findings: list[Finding] = Field(min_length=1)
+    summary_numbers: list[DeclaredNumber] | None = Field(
+        None, description="Every number written in the summary, declared the same way."
+    )
 
 
 def _flatten(value: Any) -> Iterable[Any]:
@@ -100,8 +128,9 @@ def _numbers_in_text(text: str, european: bool = False) -> list[tuple[float, int
     found = []
     for match in NUMBER.finditer(text):
         digits, suffix = match.group(1), match.group(2)
-        mantissa = re.split(r"[eE]", digits)[0]
-        decimals = len(mantissa.split(".")[1]) if "." in mantissa else 0
+        mantissa, _, exponent = digits.lower().partition("e")
+        # Decimals of the value as written: "1.200e+04" is good to tens, so -1.
+        decimals = len(mantissa.partition(".")[2]) - int(exponent or 0)
         found.append((float(digits), decimals, suffix))
     return found
 
@@ -218,6 +247,95 @@ def _missing_quotes(text: str, pool: _Pool) -> list[str]:
     return [q for q in quotes if squash(q) not in pool.text]
 
 
+def _precision(value: float) -> float:
+    """Half a unit in the last significant digit of value as written: 4050 -> 5, 0.72 ->
+    0.005, 1146 -> 0.5."""
+    exponent = Decimal(repr(float(value))).normalize().as_tuple().exponent
+    return 0.5 * 10.0 ** int(exponent) + 1e-9
+
+
+def _shown(text: str) -> tuple[float, float, tuple[float, ...]] | None:
+    """What a declared number's text shows: the number, half a unit in its last digit, and
+    the scales its suffix allows ("72%" is 72 or 0.72, "1.13 million" is 1.13 or 1 130 000).
+    Trailing zeros of a whole number count as rounding: "4 050" is good to 5, "1150" to 5.
+    None unless the text holds exactly one number."""
+    found = _numbers_in_text(text)
+    if len(found) != 1:
+        return None
+    shown, decimals, suffix = found[0]
+    unit = 0.5 * 10.0**-decimals if decimals else _precision(shown)
+    return shown, unit, (1.0, *SCALES.get(suffix or "", ()))
+
+
+def _reads_as(shown: tuple[float, float, tuple[float, ...]], candidates: Iterable[float]) -> bool:
+    """Does any candidate round to the shown number, at any scale its suffix allows?"""
+    number, unit, scales = shown
+    pool = [abs(c) for c in candidates]
+    return any(abs(c - number * s) <= unit * s for s in scales for c in pool)
+
+
+def _declared(
+    label: str,
+    text: str,
+    declared: list[DeclaredNumber],
+    log: EvidenceLog,
+    calcs: dict[str, _Calc],
+    citable: set[str] | None,
+    years: set[str],
+) -> list[str]:
+    """Check declared numbers, then that the text holds no number left undeclared.
+
+    No number is parsed out of prose: the model says what each written number is worth and
+    where it comes from; the only parsing left is spotting digits nobody declared.
+    """
+    problems = []
+    for number in declared:
+        where = number.evidence_id
+        item = log.get(where)
+        shown = _shown(number.text)
+        if number.text not in text:
+            problems.append(
+                f"{label}: '{number.text}' is declared but does not appear in the text."
+            )
+        elif shown is None:
+            problems.append(
+                f"{label}: '{number.text}' must be one number exactly as written, e.g. "
+                "'4 050' or '72%'; declare each number separately."
+            )
+        elif not _reads_as(shown, [number.value]):
+            problems.append(
+                f"{label}: '{number.text}' does not show its declared value "
+                f"{number.value:g}; write the number the evidence has."
+            )
+        elif citable is not None and where not in citable:
+            problems.append(f"{label}: '{number.text}' comes from {where}, which it does not cite.")
+        elif item is None:
+            problems.append(f"{label}: '{number.text}' comes from unknown evidence {where}.")
+        elif where in calcs and calcs[where].unsupported:
+            problems.append(
+                f"{label}: '{number.text}' comes from {where}, which calculates from "
+                f"{', '.join(calcs[where].unsupported)}; no evidence contains those."
+            )
+        elif not _reads_as(shown, _Pool([item]).numbers):
+            problems.append(f"{label}: '{number.text}' = {number.value:g} is not in {where}.")
+
+    rest = QUOTED.sub(" ", text)  # numbers inside a quote are checked with the quote
+    for number in sorted(declared, key=lambda d: -len(d.text)):
+        rest = rest.replace(number.text, " ")
+    leftover = []
+    for value, decimals, suffix in _numbers_in_text(rest):
+        bare = decimals == 0 and not suffix and value.is_integer()
+        if bare and (value <= SMALL_INTEGER or str(int(value)) in years):
+            continue
+        leftover.append(f"{value:g}{suffix or ''}")
+    if leftover:
+        problems.append(
+            f"{label}: undeclared number(s) {', '.join(leftover)}. Declare every number you "
+            "write, with its value and evidence id, or remove it."
+        )
+    return problems
+
+
 def check_submission(submission: Submission, log: EvidenceLog) -> list[str]:
     """Return problems as sentences for the model; an empty list means accepted."""
     calcs = _calculations(log)
@@ -242,7 +360,17 @@ def check_submission(submission: Submission, log: EvidenceLog) -> list[str]:
                 )
         pool = _Pool(e for e in cited if not (e.id in calcs and calcs[e.id].unsupported))
         numbers, dates = _unsupported(finding.claim, pool)
-        if numbers:
+        if finding.numbers is not None:
+            problems += _declared(
+                f"Finding {n}",
+                finding.claim,
+                finding.numbers,
+                log,
+                calcs,
+                set(finding.evidence_ids),
+                pool.years,
+            )
+        elif numbers:  # an answer from before declared numbers: read them from the text
             problems.append(
                 f"Finding {n}: {', '.join(numbers)} not found in {ids}. Cite the evidence it "
                 "comes from; compute derived numbers with calculate; or remove them."
@@ -276,6 +404,17 @@ def check_submission(submission: Submission, log: EvidenceLog) -> list[str]:
 
     everything = _Pool(sound)
     numbers, dates = _unsupported(submission.summary, everything)
+    if submission.summary_numbers is not None:
+        problems += _declared(
+            "Summary",
+            submission.summary,
+            submission.summary_numbers,
+            log,
+            calcs,
+            None,
+            everything.years,
+        )
+        numbers = []
     missing = (
         numbers + dates + [f"'{q[:80]}'" for q in _missing_quotes(submission.summary, everything)]
     )

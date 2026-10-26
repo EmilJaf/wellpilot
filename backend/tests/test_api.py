@@ -293,8 +293,7 @@ def test_a_run_saved_mid_flight_loads_as_interrupted(settings) -> None:
 
     record = RunRecord("0123456789ab", "Which well?", None)
     record.emit({"type": "run_started"})
-    manager = RunManager(settings.processed_dir, settings.runs_dir, fake_llm, max_active=1)
-    manager._save(record)
+    record.save(settings.runs_dir)
 
     reloaded = RunManager(settings.processed_dir, settings.runs_dir, fake_llm, max_active=1)
     loaded = reloaded.get("0123456789ab")

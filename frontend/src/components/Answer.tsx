@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { AlarmIcon, CheckIcon } from '../icons'
+import type { DeclaredNumber } from '../api'
 import { compact } from '../labels'
 import type { RunState } from '../useRun'
 
@@ -14,6 +15,38 @@ type Props = {
 // A quoted passage opens after a space or "(" and closes before a space or punctuation, so
 // an apostrophe inside a word does not end it (same rule as the backend checker).
 const QUOTED = /(^|[\s(])['"‘“«]([^]{6,}?)['"’”»](?=[\s.,;:)/]|$)/g
+
+/**
+ * The text with each declared number as a button to the evidence it came from, and
+ * quoted passages set as quotes.
+ */
+function withMarks(text: string, numbers: DeclaredNumber[] | null | undefined, open: (id: string) => void): ReactNode[] {
+  // Earliest occurrence first; a longer number wins when two start at the same place.
+  const spans = (numbers ?? [])
+    .map((n) => ({ n, at: text.indexOf(n.text) }))
+    .filter((s) => s.at >= 0 && s.n.text.length > 0)
+    .sort((a, b) => a.at - b.at || b.n.text.length - a.n.text.length)
+  const parts: ReactNode[] = []
+  let last = 0
+  for (const { n, at } of spans) {
+    if (at < last) continue
+    parts.push(...withQuotes(text.slice(last, at)))
+    parts.push(
+      <button
+        key={`n${at}`}
+        type="button"
+        className="num"
+        title={`${n.value} from ${n.evidence_id}`}
+        onClick={() => open(n.evidence_id)}
+      >
+        {n.text}
+      </button>,
+    )
+    last = at + n.text.length
+  }
+  parts.push(...withQuotes(text.slice(last)))
+  return parts
+}
 
 function withQuotes(text: string): ReactNode[] {
   const parts: ReactNode[] = []
@@ -51,7 +84,9 @@ export function Answer({ state, selectedFinding, selectedEvidence, onSelectFindi
         )}
         {final && (
           <>
-            {final.summary && <p className="summary">{withQuotes(final.summary)}</p>}
+            {final.summary && (
+              <p className="summary">{withMarks(final.summary, final.summary_numbers, onSelectEvidence)}</p>
+            )}
             {final.verified ? (
               <div className="verdict">
                 <CheckIcon />
@@ -74,20 +109,25 @@ export function Answer({ state, selectedFinding, selectedEvidence, onSelectFindi
             <ul className="findings">
               {final.findings.map((finding, i) => (
                 <li key={i} className={`finding${selectedFinding === i ? ' is-selected' : ''}`}>
-                  <span
+                  {/* The marker selects the finding (keyboard); the claim does too on click.
+                      The claim cannot be a button: its numbers are buttons to evidence. */}
+                  <button
+                    type="button"
                     className={`marker ${finding.confidence === 'fact' ? 'marker-fact' : ''}`}
-                    role="img"
-                    aria-label={finding.confidence === 'fact' ? 'Fact' : 'Inference'}
+                    aria-pressed={selectedFinding === i}
+                    aria-label={`${finding.confidence === 'fact' ? 'Fact' : 'Inference'} ${i + 1}: show its dates on the charts`}
+                    onClick={() => onSelectFinding(selectedFinding === i ? null : i)}
                   />
                   <span>
-                    <button
-                      type="button"
+                    <p
                       className="claim"
-                      aria-pressed={selectedFinding === i}
-                      onClick={() => onSelectFinding(selectedFinding === i ? null : i)}
+                      onClick={(e) => {
+                        if ((e.target as HTMLElement).closest('button')) return
+                        onSelectFinding(selectedFinding === i ? null : i)
+                      }}
                     >
-                      {withQuotes(finding.claim)}
-                    </button>
+                      {withMarks(finding.claim, finding.numbers, onSelectEvidence)}
+                    </p>
                     <span className="chips">
                       {finding.evidence_ids.map((id) => (
                         <button

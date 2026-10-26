@@ -1,7 +1,9 @@
 """Ask the agent a question from the terminal and watch every step.
 
 Run: uv run python -m wellpilot.agent "Why did F-12 decline faster after 2010?"
-This calls the LLM in .env (LLM_PROVIDER) and spends tokens.
+This calls the LLM in .env (LLM_PROVIDER) and spends tokens. The run is saved to
+data/runs/ like one from the web app, so it can be replayed there or added to the checker
+corpus (python -m wellpilot.agent.corpus add <run id>).
 """
 
 import argparse
@@ -11,6 +13,7 @@ import textwrap
 from datetime import date
 
 from wellpilot.agent.loop import SUBMIT, AgentRun, Step, run_agent
+from wellpilot.api.runs import RunRecord, new_run_id
 from wellpilot.config import get_settings
 from wellpilot.data.store import ProductionStore
 from wellpilot.llm import make_llm
@@ -101,6 +104,8 @@ async def main() -> None:
     print(f"provider: {llm.provider}, model: {llm.model}, data as of: {args.as_of or 'all'}")
     print(f"question: {args.question}")
 
+    record = RunRecord(new_run_id(), args.question, args.as_of)
+    record.start(llm)
     run = await run_agent(
         args.question,
         llm,
@@ -108,8 +113,13 @@ async def main() -> None:
         max_steps=args.max_steps,
         reasoning_effort=args.reasoning or settings.agent_reasoning_effort,
         on_step=print_step,
+        on_event=record.emit,
+        evidence_log=record.log,
     )
     print_run(run)
+    record.complete(run)
+    path = record.save(settings.runs_dir)
+    print(f"\nsaved {path} (replay: /?run={record.id}&replay=1)")
 
 
 if __name__ == "__main__":

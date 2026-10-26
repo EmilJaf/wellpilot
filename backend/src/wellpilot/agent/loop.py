@@ -15,7 +15,7 @@ from typing import Any
 import pandas as pd
 from pydantic import ValidationError
 
-from wellpilot.agent.checker import Finding, Submission, check_submission
+from wellpilot.agent.checker import DeclaredNumber, Finding, Submission, check_submission
 from wellpilot.agent.evidence import Evidence, EvidenceLog
 from wellpilot.agent.tools import TOOLS_BY_NAME, execute, tool_schemas
 from wellpilot.data.store import ProductionStore
@@ -47,8 +47,13 @@ tool, so it has evidence too.
 evidence ids its numbers and dates come from and is marked "fact" (shown directly by the \
 evidence) or "inference" (an interpretation, such as a likely cause). A finding that \
 rests on evidence with warnings must be an inference.
-- A checker verifies every number and date in each finding against the evidence it \
-cites. If it rejects your submission, fix the listed problems and submit again.{as_of_note}"""
+- Declare every number you write: in each finding's "numbers" (and the summary's \
+"summary_numbers") list it with its text exactly as written, its full value, and the \
+evidence id it comes from, e.g. {{"text": "4 050", "value": 4050, "evidence_id": "E3"}} \
+or {{"text": "72%", "value": 0.72, "evidence_id": "E9"}}. Dates, years and well names need \
+no declaration.
+- A checker verifies every declared number, date and quote against the evidence. If it \
+rejects your submission, fix the listed problems and submit again.{as_of_note}"""
 
 NUDGE = (
     "Submit your answer with the submit_findings tool, citing the evidence ids of the tool "
@@ -57,13 +62,20 @@ NUDGE = (
 
 
 def submit_tool_schema() -> dict:
+    parameters = json_schema(Submission)
+    # Declared numbers are optional in the model only so old answers still load; the agent
+    # must always send them.
+    parameters["required"] = [*parameters["required"], "summary_numbers"]
+    finding = parameters["properties"]["findings"]["items"]
+    finding["required"] = [*finding["required"], "numbers"]
     return {
         "type": "function",
         "function": {
             "name": SUBMIT,
             "description": "Submit the final answer: a summary and findings that cite "
-            "evidence ids. A checker verifies them; fix any problems it returns.",
-            "parameters": json_schema(Submission),
+            "evidence ids, with every number declared. A checker verifies them; fix any "
+            "problems it returns.",
+            "parameters": parameters,
         },
     }
 
@@ -121,6 +133,7 @@ class AgentRun:
     verified: bool
     finished: bool
     steps: list[Step]
+    summary_numbers: list[DeclaredNumber] = field(default_factory=list)
 
     @property
     def total_tokens(self) -> tuple[int, int]:
@@ -136,6 +149,7 @@ class AgentRun:
             "question": self.question,
             "summary": self.summary,
             "findings": [f.model_dump() for f in self.findings],
+            "summary_numbers": [n.model_dump() for n in self.summary_numbers],
             "verified": self.verified,
             "finished": self.finished,
             "check_rounds": self.check_rounds,
@@ -225,9 +239,18 @@ async def run_agent(
     last_submission: Submission | None = None
     nudged = False
 
-    def finish(summary, findings, verified, finished=True) -> AgentRun:
+    def finish(summary, findings, verified, finished=True, submission=None) -> AgentRun:
+        numbers = (submission.summary_numbers or []) if submission else []
         return AgentRun(
-            question, summary, findings, list(log), check_rounds, verified, finished, steps
+            question,
+            summary,
+            findings,
+            list(log),
+            check_rounds,
+            verified,
+            finished,
+            steps,
+            numbers,
         )
 
     def emit(event: dict) -> None:
@@ -308,10 +331,15 @@ async def run_agent(
         emit({"type": "step", **step.to_event()})
 
         if accepted:
-            return finish(accepted.summary, accepted.findings, verified=True)
+            return finish(accepted.summary, accepted.findings, True, submission=accepted)
         if last_submission and len(check_rounds) >= MAX_CHECK_ROUNDS:
             # Out of correction rounds: return the last answer, marked unverified.
-            return finish(last_submission.summary, last_submission.findings, verified=False)
+            return finish(
+                last_submission.summary,
+                last_submission.findings,
+                False,
+                submission=last_submission,
+            )
         if not message.tool_calls:
             if nudged:
                 return finish(message.content, [], verified=False)
@@ -321,6 +349,10 @@ async def run_agent(
     # Out of steps: keep the last answer the model submitted, if any, marked unverified.
     if last_submission:
         return finish(
-            last_submission.summary, last_submission.findings, verified=False, finished=False
+            last_submission.summary,
+            last_submission.findings,
+            False,
+            finished=False,
+            submission=last_submission,
         )
     return finish(None, [], verified=False, finished=False)

@@ -1,4 +1,4 @@
-from wellpilot.agent.checker import Finding, Submission, check_submission
+from wellpilot.agent.checker import DeclaredNumber, Finding, Submission, check_submission
 from wellpilot.agent.evidence import EvidenceLog, code_ref
 
 
@@ -367,3 +367,92 @@ def test_space_grouped_thousands_are_one_number() -> None:
     )
 
     assert check_submission(submit(finding), log) == []
+
+
+def declared(text: str, value: float, evidence_id: str = "E1") -> DeclaredNumber:
+    return DeclaredNumber(text=text, value=value, evidence_id=evidence_id)
+
+
+def test_declared_numbers_in_any_format_pass() -> None:
+    log = log_with(EVENTS, {"oil": 1133053})
+    finding = Finding(
+        claim="Rate fell from around 4 050 to 1146 Sm3/d (-72%), with 1.13 million Sm3 since 2010.",
+        evidence_ids=["E1", "E2"],
+        confidence="fact",
+        numbers=[
+            declared("4 050", 4050),
+            declared("1146", 1146),
+            declared("72%", 72),
+            declared("1.13 million", 1.13, "E2"),
+        ],
+    )
+
+    assert check_submission(submit(finding), log) == []
+
+
+def test_declared_numbers_are_checked_against_their_own_evidence() -> None:
+    log = log_with(EVENTS, {"oil": 1133053})
+    # 1150 would be a fair rounding of 1145.72 to tens; 1160 is not.
+    wrong_value = Finding(
+        claim="Rate fell to 1160 Sm3/d.",
+        evidence_ids=["E1"],
+        confidence="fact",
+        numbers=[declared("1160", 1160)],
+    )
+    wrong_source = Finding(
+        claim="Oil since: 1133053 Sm3.",
+        evidence_ids=["E1"],
+        confidence="fact",
+        numbers=[declared("1133053", 1133053, "E2")],
+    )
+    not_in_text = Finding(
+        claim="Rate fell sharply.",
+        evidence_ids=["E1"],
+        confidence="fact",
+        numbers=[declared("1146", 1146)],
+    )
+
+    assert "'1160' = 1160 is not in E1" in check_submission(submit(wrong_value), log)[0]
+    assert "comes from E2, which it does not cite" in check_submission(submit(wrong_source), log)[0]
+    assert "does not appear in the text" in check_submission(submit(not_in_text), log)[0]
+
+
+def test_every_written_number_must_be_declared() -> None:
+    log = log_with(EVENTS)
+    finding = Finding(
+        claim="In 2010 rate fell to 1146 Sm3/d, then to 980, across 3 wells; plan said "
+        "'Maksimum vannkutt 0,80 for alle brønner'.",
+        evidence_ids=["E1"],
+        confidence="fact",
+        numbers=[declared("1146", 1146)],
+    )
+
+    problems = check_submission(submit(finding), log)
+
+    # 2010 is a year in the evidence, 3 is a small count, 0,80 sits inside a quote
+    # (checked as a quote); only 980 is an undeclared number.
+    assert any("undeclared number(s) 980." in p for p in problems)
+    assert not any("2010" in p for p in problems)
+
+
+def test_summary_numbers_are_declared_too() -> None:
+    log = log_with(EVENTS)
+    finding = Finding(claim="Rate fell.", evidence_ids=["E1"], confidence="fact", numbers=[])
+
+    good = check_submission(
+        Submission(
+            summary="Oil fell 72%.", findings=[finding], summary_numbers=[declared("72%", 0.72)]
+        ),
+        log,
+    )
+    bad = check_submission(
+        Submission(
+            summary="Oil fell 72%, then 55%.",
+            findings=[finding],
+            summary_numbers=[declared("72%", 0.72)],
+        ),
+        log,
+    )
+
+    assert good == []
+    assert "Summary: undeclared number(s) 55%" in bad[0]

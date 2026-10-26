@@ -7,7 +7,7 @@ that produced it.
 
 import hashlib
 import inspect
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from functools import cache
@@ -49,6 +49,22 @@ class EvidenceLog:
         )
         self._items[evidence.id] = evidence
         return evidence
+
+    @classmethod
+    def restore(cls, items: Iterable[dict]) -> "EvidenceLog":
+        """A log rebuilt from saved evidence: a run file or a checker corpus case."""
+        log = cls()
+        for item in items:
+            log._items[item["id"]] = Evidence(
+                id=item["id"],
+                tool=item["tool"],
+                arguments=item["arguments"],
+                result=item["result"],
+                code=item.get("code", ""),
+                created_at=item.get("created_at", ""),
+                warnings=tuple(item.get("warnings", ())),
+            )
+        return log
 
     def get(self, evidence_id: str) -> Evidence | None:
         return self._items.get(evidence_id)

@@ -47,6 +47,10 @@ class RunRequest(BaseModel):
     reasoning: Literal["minimal", "low", "medium", "high"] | None = None
 
 
+def new_run_id() -> str:
+    return uuid.uuid4().hex[:12]
+
+
 class RunRecord:
     def __init__(self, run_id: str, question: str, as_of: date | None) -> None:
         self.id = run_id
@@ -99,6 +103,32 @@ class RunRecord:
             "result": self.result,
             "evidence": self.evidence,
         }
+
+    def start(self, llm: LLM) -> None:
+        self.emit(
+            {
+                "type": "run_started",
+                "id": self.id,
+                "question": self.question,
+                "as_of": self.as_of,
+                "model": llm.model,
+                "provider": llm.provider,
+            }
+        )
+
+    def complete(self, run: AgentRun) -> None:
+        self.evidence = {e.id: to_jsonable(asdict(e)) for e in run.evidence}
+        self.result = to_jsonable(run.to_dict())
+        self.status = "done"
+        self.emit({"type": "final", **self.result})
+
+    def save(self, runs_dir: Path) -> Path:
+        runs_dir.mkdir(parents=True, exist_ok=True)
+        path = runs_dir / f"{self.id}.json"
+        partial = path.with_suffix(".json.partial")
+        partial.write_text(json.dumps(self.to_file(), ensure_ascii=False))
+        os.replace(partial, path)  # atomic: readers never see a half-written file
+        return path
 
     @classmethod
     def from_file(cls, data: dict) -> "RunRecord":
@@ -186,7 +216,7 @@ class RunManager:
     def start(self, request: RunRequest, client: str = "local") -> RunRecord:
         self._check_limits(client)
         llm = self.llm_factory()  # raises RuntimeError when no API key is configured
-        record = RunRecord(uuid.uuid4().hex[:12], request.question.strip(), request.as_of)
+        record = RunRecord(new_run_id(), request.question.strip(), request.as_of)
         self.runs[record.id] = record
         effort = request.reasoning or self.default_reasoning
         task = asyncio.create_task(self._run(record, llm, effort))
@@ -195,16 +225,7 @@ class RunManager:
         return record
 
     async def _run(self, record: RunRecord, llm: LLM, reasoning_effort: str) -> None:
-        record.emit(
-            {
-                "type": "run_started",
-                "id": record.id,
-                "question": record.question,
-                "as_of": record.as_of,
-                "model": llm.model,
-                "provider": llm.provider,
-            }
-        )
+        record.start(llm)
         try:
             store = await asyncio.to_thread(self.store, record.as_of)
             run: AgentRun = await run_agent(
@@ -215,10 +236,7 @@ class RunManager:
                 on_event=record.emit,
                 evidence_log=record.log,
             )
-            record.evidence = {e.id: to_jsonable(asdict(e)) for e in run.evidence}
-            record.result = to_jsonable(run.to_dict())
-            record.status = "done"
-            record.emit({"type": "final", **record.result})
+            record.complete(run)
         except asyncio.CancelledError:
             # Shutdown or redeploy: record the run as stopped, not as running forever.
             record.status = "error"
@@ -235,17 +253,10 @@ class RunManager:
         day, spent = self._spent
         today = datetime.now(UTC).date()
         self._spent = (today, (spent if day == today else 0) + record.tokens())
-        self._save(record)
+        record.save(self.runs_dir)
         finished = [r for r in self.runs.values() if r.done]
         for old in finished[:-FINISHED_IN_MEMORY]:
             self.runs.pop(old.id, None)
-
-    def _save(self, record: RunRecord) -> None:
-        self.runs_dir.mkdir(parents=True, exist_ok=True)
-        path = self.runs_dir / f"{record.id}.json"
-        partial = path.with_suffix(".json.partial")
-        partial.write_text(json.dumps(record.to_file(), ensure_ascii=False))
-        os.replace(partial, path)  # atomic: readers never see a half-written file
 
     def get(self, run_id: str) -> RunRecord:
         if not RUN_ID.match(run_id):

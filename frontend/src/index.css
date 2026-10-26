@@ -571,14 +571,34 @@ button.evidence-chip[aria-pressed="true"] {
 }
 
 .claim {
-  display: block;
-  width: 100%;
   margin: 0 0 6px;
-  padding: 0;
-  border: 0;
-  background: none;
-  text-align: left;
   line-height: 1.45;
+  cursor: pointer;
+}
+
+/* a declared number: links to the evidence it came from */
+.num {
+  padding: 0 1px;
+  border: 0;
+  border-bottom: 1px dotted var(--ink-2);
+  background: none;
+  font-variant-numeric: tabular-nums;
+  line-height: inherit;
+}
+
+.num:hover {
+  background: var(--canvas);
+  border-bottom-style: solid;
+}
+
+button.marker {
+  padding: 0;
+  background: none;
+  cursor: pointer;
+}
+
+button.marker.marker-fact {
+  background: var(--ink);
 }
 
 .claim q {
