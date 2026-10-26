@@ -87,6 +87,11 @@ async def main() -> None:
     parser.add_argument(
         "--as-of", type=date.fromisoformat, help="hide data after this day (YYYY-MM-DD)"
     )
+    parser.add_argument(
+        "--reasoning",
+        choices=["minimal", "low", "medium", "high", "xhigh", "max"],
+        help="reasoning effort (default: the model's own)",
+    )
     args = parser.parse_args()
 
     settings = get_settings()
@@ -95,7 +100,14 @@ async def main() -> None:
     print(f"provider: {llm.provider}, model: {llm.model}, data as of: {args.as_of or 'all'}")
     print(f"question: {args.question}")
 
-    run = await run_agent(args.question, llm, store, max_steps=args.max_steps, on_step=print_step)
+    run = await run_agent(
+        args.question,
+        llm,
+        store,
+        max_steps=args.max_steps,
+        reasoning_effort=args.reasoning or settings.agent_reasoning_effort,
+        on_step=print_step,
+    )
     print_run(run)
 
 

@@ -127,6 +127,9 @@ def test_quote_check_tolerates_spacing_but_not_other_numbers() -> None:
     assert quote_in_text("Maksimum  vannkutt 0,80", PAGE_23)
     assert not quote_in_text("Maksimum vannkutt 0,90", PAGE_23)
     assert not quote_in_text("2 år", PAGE_23)  # too short to mean anything
+    assert quote_in_text("8000 Sm³/d pr. vannprodusent", "rate på 8000 Sm/d pr. vannprodusent")
+    assert quote_in_text("13000 Sm3/d", "Væskekapasitet 13000 Sm 3 /d")
+    assert quote_in_text("2013 - - - 0,88", "2012 0,40 - 0,40 1,25 2013 - - - 0,88")
 
 
 def test_parse_pages() -> None:
@@ -140,9 +143,11 @@ async def test_extract_page_sends_image_and_text_and_retries_bad_json(processed_
     llm, requests = fake_llm(["not json", json.dumps(EXTRACTION)])
     page = pd.read_parquet(processed_dir / PAGES_FILE).iloc[1]
 
-    record = await extract_page(llm, "volve_pud", page, processed_dir)
+    record = await extract_page(llm, "volve_pud", page, processed_dir, reasoning_effort="low")
 
     assert len(requests) == 2
+    assert requests[0]["reasoning_effort"] == "low"
+    assert record["reasoning_effort"] == "low"
     content = requests[0]["messages"][1]["content"]
     assert "Page 23 of 53" in content[0]["text"]
     assert "Maksimum vannkutt" in content[0]["text"]

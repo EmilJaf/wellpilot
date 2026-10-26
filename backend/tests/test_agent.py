@@ -248,6 +248,16 @@ async def test_plain_text_answer_is_nudged_then_returned_unverified(store) -> No
     assert nudge["role"] == "user" and SUBMIT in nudge["content"]
 
 
+async def test_reasoning_effort_is_sent_only_when_set(store) -> None:
+    llm, completions = fake_llm([completion(tool_calls=[(SUBMIT, submission("x"))])])
+
+    await run_agent("Hi", llm, store, max_steps=1, reasoning_effort="low")
+    await run_agent("Hi", llm, store, max_steps=1)
+
+    assert completions.requests[0]["reasoning_effort"] == "low"
+    assert "reasoning_effort" not in completions.requests[1]
+
+
 async def test_agent_stops_at_the_step_limit(store) -> None:
     llm, completions = fake_llm([completion(tool_calls=[("list_wells", {})])])
 

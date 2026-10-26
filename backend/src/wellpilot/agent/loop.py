@@ -124,6 +124,7 @@ async def run_agent(
     store: ProductionStore,
     *,
     max_steps: int = 12,
+    reasoning_effort: str = "",
     on_step: Callable[[Step], None] | None = None,
 ) -> AgentRun:
     messages: list[dict] = [
@@ -145,7 +146,10 @@ async def run_agent(
     for index in range(1, max_steps + 1):
         started = time.monotonic()
         response = await llm.client.chat.completions.create(
-            model=llm.model, messages=messages, tools=tools
+            model=llm.model,
+            messages=messages,
+            tools=tools,
+            **({"reasoning_effort": reasoning_effort} if reasoning_effort else {}),
         )
         message = response.choices[0].message
         usage = response.usage

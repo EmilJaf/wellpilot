@@ -94,20 +94,33 @@ def parse_pages(spec: str, total: int) -> list[int]:
 
 
 def _squash(text: str) -> str:
-    """Lowercase and drop everything but letters and digits, for spacing-proof matching."""
-    return re.sub(r"\W+", "", normalize_text(text).casefold())
+    """Lowercase and drop everything but letters and digits, for spacing-proof matching.
+
+    The superscript in "Sm³" comes out of the text layer as "Sm3", "Sm 3" or nothing at
+    all, so it is dropped on both sides.
+    """
+    text = re.sub(r"(?i)(?<=sm)\s*[3³]", "", normalize_text(text)).replace("³", "")
+    return re.sub(r"\W+", "", text.casefold())
 
 
 def quote_in_text(quote: str, page_text: str) -> bool:
+    """True if the quote appears in the page text; quotes under 6 letters or digits (such
+    as "2 år") are too short to prove anything."""
     squashed = _squash(quote)
-    return len(squashed) >= 8 and squashed in _squash(page_text)
+    return len(squashed) >= 6 and squashed in _squash(page_text)
 
 
 def cache_path(processed_dir: Path, doc_id: str, page: int) -> Path:
     return page_dir(processed_dir, doc_id) / "facts" / f"p{page:03d}.json"
 
 
-async def extract_page(llm: LLM, doc_id: str, page: pd.Series, processed_dir: Path) -> dict:
+async def extract_page(
+    llm: LLM,
+    doc_id: str,
+    page: pd.Series,
+    processed_dir: Path,
+    reasoning_effort: str = "",
+) -> dict:
     """Ask the model for one page's facts; return the cache record (not yet written)."""
     report = REPORTS_BY_ID[doc_id]
     image = base64.b64encode((processed_dir / page["image"]).read_bytes()).decode()
@@ -134,9 +147,13 @@ async def extract_page(llm: LLM, doc_id: str, page: pd.Series, processed_dir: Pa
     errors = []
     for _ in range(2):  # one retry if the JSON does not validate
         response = await llm.client.chat.completions.create(
-            model=llm.model, messages=messages, response_format=response_format
+            model=llm.model,
+            messages=messages,
+            response_format=response_format,
+            **({"reasoning_effort": reasoning_effort} if reasoning_effort else {}),
         )
         usage = response.usage
+        details = getattr(usage, "completion_tokens_details", None)
         try:
             extraction = PageExtraction.model_validate_json(
                 response.choices[0].message.content or ""
@@ -150,6 +167,8 @@ async def extract_page(llm: LLM, doc_id: str, page: pd.Series, processed_dir: Pa
             "model": llm.model,
             "prompt_tokens": usage.prompt_tokens if usage else 0,
             "completion_tokens": usage.completion_tokens if usage else 0,
+            "reasoning_tokens": (details.reasoning_tokens or 0) if details else 0,
+            "reasoning_effort": reasoning_effort or "default",
             "seconds": round(time.monotonic() - started, 1),
             "extraction": extraction.model_dump(),
         }
@@ -202,16 +221,17 @@ async def run(doc_id: str, page_numbers: list[int], force: bool) -> None:
 
     if todo:
         llm = make_llm(settings)
-        print(f"provider: {llm.provider}, model: {llm.model}")
+        effort = settings.extract_reasoning_effort
+        print(f"provider: {llm.provider}, model: {llm.model}, reasoning: {effort or 'default'}")
         semaphore = asyncio.Semaphore(CONCURRENCY)
-        totals = [0, 0]
+        totals = [0, 0, 0]
 
         async def one(number: int) -> None:
             async with semaphore:
                 row = pages.loc[number].copy()
                 row["page"] = number
                 try:
-                    record = await extract_page(llm, doc_id, row, processed)
+                    record = await extract_page(llm, doc_id, row, processed, effort)
                 except Exception as e:  # report and keep going with other pages
                     print(f"  p{number}: FAILED {e}")
                     return
@@ -220,14 +240,16 @@ async def run(doc_id: str, page_numbers: list[int], force: bool) -> None:
                 path.write_text(json.dumps(record, ensure_ascii=False, indent=2))
                 totals[0] += record["prompt_tokens"]
                 totals[1] += record["completion_tokens"]
+                totals[2] += record["reasoning_tokens"]
                 n = len(record["extraction"]["facts"])
                 print(
                     f"  p{number}: {n} facts, {record['prompt_tokens']} in / "
-                    f"{record['completion_tokens']} out tokens, {record['seconds']}s"
+                    f"{record['completion_tokens']} out tokens "
+                    f"({record['reasoning_tokens']} reasoning), {record['seconds']}s"
                 )
 
         await asyncio.gather(*(one(p) for p in todo))
-        print(f"tokens: {totals[0]} input + {totals[1]} output")
+        print(f"tokens: {totals[0]} input + {totals[1]} output (of which {totals[2]} reasoning)")
 
     facts, summaries = combine(processed)
     facts.to_parquet(processed / FACTS_FILE, index=False)

@@ -25,6 +25,12 @@ class Settings(BaseSettings):
     meta_base_url: str = "https://api.meta.ai/v1"
     meta_model: str = "muse-spark-1.3"
 
+    # Reasoning tokens are billed as output. Page extraction is transcription, so "low"
+    # saves most of its output tokens; the agent keeps the model's default unless set.
+    # Muse Spark accepts minimal|low|medium|high|xhigh|max (not "none"). Empty = default.
+    extract_reasoning_effort: str = "low"
+    agent_reasoning_effort: str = ""
+
     data_dir: Path = REPO_ROOT / "data"
     database_url: str = ""
 
