@@ -217,3 +217,48 @@ def test_summary_causes_need_a_hedge() -> None:
 
     assert "Summary states a cause as certain ('because')" in certain[0]
     assert hedged == []
+
+
+PUD_FACTS = {
+    "facts": {
+        "columns": ["statement_en", "quote"],
+        "rows": [
+            [
+                "The plateau rate of 9.000 Sm3/d will last about 19 months.",
+                "Platåraten på 9.000 Sm3 /d vil vare om lag 19 måneder.",
+            ],
+            ["Maximum water cut is 0,80.", "Maksimum vannkutt 0,80"],
+            [
+                "Production declines due to increasing water rate.",
+                "Produksjonen avtar grunnet økende vannrate.",
+            ],
+        ],
+    }
+}
+
+
+def test_norwegian_number_formats_in_evidence() -> None:
+    log = log_with(PUD_FACTS)
+    finding = Finding(
+        claim="The plan's plateau was 9,000 Sm3/d for 19 months and the water cut limit 0.80; "
+        "the quote reads 'Maksimum vannkutt 0,80'.",
+        evidence_ids=["E1"],
+        confidence="fact",
+    )
+
+    assert check_submission(submit(finding), log) == []
+
+
+def test_a_cause_inside_a_quote_is_the_reports_claim() -> None:
+    log = log_with(PUD_FACTS)
+    reported = Finding(
+        claim="The plan states 'Production declines due to increasing water rate.'",
+        evidence_ids=["E1"],
+        confidence="fact",
+    )
+    asserted = Finding(
+        claim="F-12 declined, driving the drop below plan.", evidence_ids=["E1"], confidence="fact"
+    )
+
+    assert check_submission(submit(reported), log) == []
+    assert "states a cause ('driving')" in check_submission(submit(asserted), log)[0]

@@ -29,7 +29,7 @@ SCALES = {"%": (0.01, 1.0), "million": (1e6,), "k": (1e3,)}
 SMALL_INTEGER = 10  # "3 wells", "2 years": too generic to demand evidence for
 # Causes are interpretations: the data shows timing and size, not why.
 CAUSAL = re.compile(
-    r"\b(because|caus(?:e|ed|es|ing)|dr(?:ove|ives?|iven)|due to|led to|leads? to|"
+    r"\b(because|caus(?:e|ed|es|ing)|dr(?:ove|ives?|iven|iving)|due to|led to|leads? to|"
     r"result(?:s|ed)? (?:from|in)|responsible for)\b",
     re.IGNORECASE,
 )
@@ -74,9 +74,16 @@ def _flatten(value: Any) -> Iterable[Any]:
         yield value
 
 
-def _numbers_in_text(text: str) -> list[tuple[float, int, str | None]]:
-    """(value, decimals, suffix) for each number, ignoring well names and ISO dates."""
-    text = THOUSANDS.sub("", DATE.sub(" ", WELL.sub(" ", text)))
+def _numbers_in_text(text: str, european: bool = False) -> list[tuple[float, int, str | None]]:
+    """(value, decimals, suffix) for each number, ignoring well names and ISO dates.
+
+    european=True reads Norwegian report text: "9.000" is nine thousand, "0,80" is 0.8.
+    """
+    text = DATE.sub(" ", WELL.sub(" ", text))
+    if european:
+        text = re.sub(r"(?<=\d)\.(?=\d{3}\b)", "", text)
+        text = re.sub(r"(?<=\d),(?=\d{1,2}\b)", ".", text)
+    text = THOUSANDS.sub("", text)
     found = []
     for match in NUMBER.finditer(text):
         digits, suffix = match.group(1), match.group(2)
@@ -102,7 +109,9 @@ class _Pool:
                 elif isinstance(leaf, str):
                     texts.append(squash(leaf))
                     self.dates.update(DATE.findall(leaf))
-                    self.numbers.extend(v for v, _, _ in _numbers_in_text(leaf))
+                    # Report text may use either convention, so keep both readings.
+                    for european in (False, True):
+                        self.numbers.extend(v for v, _, _ in _numbers_in_text(leaf, european))
         self.years = {d[:4] for d in self.dates}
         self.text = "|".join(texts)
 
@@ -164,7 +173,8 @@ def check_submission(submission: Submission, log: EvidenceLog) -> list[str]:
                 f"Finding {n}: quoted text not found in {ids}: {listed}. Quote the evidence "
                 "word for word (the original quote or its statement_en) or drop the quotes."
             )
-        cause = CAUSAL.search(finding.claim)
+        # A cause inside a quote is the report's claim, which the finding only reports.
+        cause = CAUSAL.search(QUOTED.sub(" ", finding.claim))
         if finding.confidence == "fact" and cause:
             problems.append(
                 f"Finding {n} states a cause ('{cause.group(0)}') but is marked fact. The data "
