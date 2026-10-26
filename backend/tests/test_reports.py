@@ -20,6 +20,7 @@ from wellpilot.ingest.report_facts import (
     combine,
     extract_page,
     parse_pages,
+    quote_check,
     quote_in_text,
 )
 from wellpilot.ingest.reports import PAGES_FILE, REPORTS_BY_ID, normalize_text, render_report
@@ -132,6 +133,17 @@ def test_quote_check_tolerates_spacing_but_not_other_numbers() -> None:
     assert quote_in_text("2013 - - - 0,88", "2012 0,40 - 0,40 1,25 2013 - - - 0,88")
 
 
+def test_quote_check_levels() -> None:
+    page = (
+        "Boringen er planlagt med oljebasert slam i 8 og 12 seksjonene. 3 produksjonsbrønner "
+        "3 injeksjonsbrønner Borevæske 5673 4485 Kaks 1137 2115"
+    )
+
+    assert quote_check('oljebasert slam i 8 ½" og 12 ¼" seksjonene', page) == "exact"
+    assert quote_check("3 injeksjonsbrønner Borevæske 4485 Kaks 2115", page) == "tokens"
+    assert quote_check("3 injeksjonsbrønner Borevæske 9999", page) == "unverified"
+
+
 def test_parse_pages() -> None:
     assert parse_pages("23,25-27", 53) == [23, 25, 26, 27]
     assert parse_pages("all", 3) == [1, 2, 3]
@@ -166,6 +178,7 @@ def test_combine_verifies_quotes_against_the_page(processed_dir) -> None:
 
     facts, summaries = combine(processed_dir)
 
+    assert facts["quote_check"].tolist() == ["exact", "exact", "unverified"]
     assert facts["quote_verified"].tolist() == [True, True, False]
     assert facts.loc[2, "wells"] == "F-12"
     assert summaries.loc[0, "facts"] == 3

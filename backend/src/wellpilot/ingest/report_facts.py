@@ -93,14 +93,24 @@ def parse_pages(spec: str, total: int) -> list[int]:
     return sorted(pages)
 
 
-def _squash(text: str) -> str:
-    """Lowercase and drop everything but letters and digits, for spacing-proof matching.
+QuoteCheck = Literal["exact", "tokens", "unverified"]
+# Glyphs the PDF text layer drops: vulgar fractions (8 ½", 10 ¾") and the ³ in Sm³.
+DROPPED_GLYPHS = re.compile(r"[¼-¾⅐-⅞³]")
+
+
+def _clean(text: str) -> str:
+    """Normalized, lowercase text without the glyphs the text layer loses.
 
     The superscript in "Sm³" comes out of the text layer as "Sm3", "Sm 3" or nothing at
     all, so it is dropped on both sides.
     """
-    text = re.sub(r"(?i)(?<=sm)\s*[3³]", "", normalize_text(text)).replace("³", "")
-    return re.sub(r"\W+", "", text.casefold())
+    text = re.sub(r"(?i)(?<=sm)\s*3", "", normalize_text(text))
+    return DROPPED_GLYPHS.sub("", text).casefold()
+
+
+def _squash(text: str) -> str:
+    """Only letters and digits, for spacing-proof matching."""
+    return re.sub(r"\W+", "", _clean(text))
 
 
 def quote_in_text(quote: str, page_text: str) -> bool:
@@ -108,6 +118,18 @@ def quote_in_text(quote: str, page_text: str) -> bool:
     as "2 år") are too short to prove anything."""
     squashed = _squash(quote)
     return len(squashed) >= 6 and squashed in _squash(page_text)
+
+
+def quote_check(quote: str, page_text: str) -> QuoteCheck:
+    """'exact': the quote is on the page as written. 'tokens': every word and number of
+    the quote is on the page, but not in that order, as when a table row is read across
+    columns. 'unverified': neither, e.g. text inside a figure or a misquote."""
+    if quote_in_text(quote, page_text):
+        return "exact"
+    words = set(re.findall(r"\w+", _clean(quote)))
+    if len(words) >= 3 and words <= set(re.findall(r"\w+", _clean(page_text))):
+        return "tokens"
+    return "unverified"
 
 
 def cache_path(processed_dir: Path, doc_id: str, page: int) -> Path:
@@ -203,7 +225,8 @@ def combine(processed_dir: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
                     "topic": fact["topic"],
                     "statement_en": fact["statement_en"],
                     "quote": fact["quote"],
-                    "quote_verified": quote_in_text(fact["quote"], text),
+                    "quote_check": (check := quote_check(fact["quote"], text)),
+                    "quote_verified": check != "unverified",
                     "source": fact["source"],
                     "wells": ", ".join(fact["wells"]),
                 }
@@ -254,10 +277,11 @@ async def run(doc_id: str, page_numbers: list[int], force: bool) -> None:
     facts, summaries = combine(processed)
     facts.to_parquet(processed / FACTS_FILE, index=False)
     summaries.to_parquet(processed / SUMMARIES_FILE, index=False)
-    verified = int(facts["quote_verified"].sum()) if len(facts) else 0
+    checks = facts["quote_check"].value_counts().to_dict() if len(facts) else {}
     print(
-        f"wrote {len(facts)} facts from {len(summaries)} pages "
-        f"({verified} quotes verified against the text layer)"
+        f"wrote {len(facts)} facts from {len(summaries)} pages; quotes against the text "
+        f"layer: {checks.get('exact', 0)} exact, {checks.get('tokens', 0)} tokens, "
+        f"{checks.get('unverified', 0)} unverified"
     )
 
 

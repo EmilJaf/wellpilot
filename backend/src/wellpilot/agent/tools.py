@@ -353,7 +353,10 @@ def _documents(doc_ids) -> dict:
 
 def search_reports(store: ProductionStore, args: ReportSearchArgs) -> dict:
     _require_reports(store)
-    terms = [t for t in re.findall(r"\w+", (args.query or "").casefold()) if len(t) >= 3][:8]
+    # Match on 5-letter prefixes: "breakthrough" finds "breaks through", "injection" finds
+    # "injected", "vanngjennombrudd" finds itself in any inflection.
+    words = [t for t in re.findall(r"\w+", (args.query or "").casefold()) if len(t) >= 3]
+    terms = list(dict.fromkeys(t[:5] for t in words))[:8]
 
     if "report_facts" not in store.tables:
         # Facts not extracted yet: fall back to keyword hits in the page text.
@@ -382,7 +385,7 @@ def search_reports(store: ProductionStore, args: ReportSearchArgs) -> dict:
     where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
     rows = store.query(
         f"""
-        SELECT doc_id, page, topic, source, statement_en, quote, quote_verified, wells
+        SELECT doc_id, page, topic, source, statement_en, quote, quote_check, wells
         FROM (SELECT *, {score or "0"} AS score FROM report_facts) {where}
         ORDER BY score DESC, doc_id, page, fact_no LIMIT {args.limit}
         """,
@@ -417,7 +420,7 @@ def read_report_page(store: ProductionStore, args: ReportPageArgs) -> dict:
     }
     if "report_facts" in store.tables:
         facts = store.query(
-            "SELECT topic, source, statement_en, quote, quote_verified, wells FROM report_facts "
+            "SELECT topic, source, statement_en, quote, quote_check, wells FROM report_facts "
             "WHERE doc_id = ? AND page = ? ORDER BY fact_no",
             [args.doc_id, args.page],
         ).rows
@@ -514,8 +517,9 @@ TOOLS = [
         "Search facts extracted from the field's reports, such as the February 2005 "
         "development plan (PUD, in Norwegian): planned plateau rates, expected water "
         "breakthrough, facility limits such as maximum water cut. Each fact has an English "
-        "statement, the verbatim original quote, and quote_verified (the quote was found in "
-        "the page's text). Use it to compare what happened with what was planned.",
+        "statement, the verbatim original quote, and quote_check: 'exact' (the quote is on "
+        "the page as written), 'tokens' (all its words and numbers are on the page, e.g. a "
+        "table row) or 'unverified'. Use it to compare what happened with what was planned.",
         ReportSearchArgs,
         search_reports,
     ),
