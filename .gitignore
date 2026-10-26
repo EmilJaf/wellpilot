@@ -5,8 +5,9 @@
 CLAUDE.local.md
 .claude/settings.local.json
 
-# Data: raw Volve files are large, derived files are rebuilt by the ingest scripts
-data/
+# Data: raw Volve files are large, derived files are rebuilt by the ingest scripts.
+# Anchored to the repo root: a bare "data/" also hid the wellpilot.data package.
+/data/
 
 # Python
 __pycache__/
