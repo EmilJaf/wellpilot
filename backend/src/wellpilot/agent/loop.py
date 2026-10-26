@@ -16,9 +16,9 @@ from pydantic import ValidationError
 
 from wellpilot.agent.checker import Finding, Submission, check_submission
 from wellpilot.agent.evidence import Evidence, EvidenceLog
-from wellpilot.agent.tools import TOOLS_BY_NAME, execute, parameters_schema, tool_schemas
+from wellpilot.agent.tools import TOOLS_BY_NAME, execute, tool_schemas
 from wellpilot.data.store import ProductionStore
-from wellpilot.llm import LLM
+from wellpilot.llm import LLM, json_schema
 
 SUBMIT = "submit_findings"
 MAX_CHECK_ROUNDS = 3
@@ -26,7 +26,10 @@ MAX_CHECK_ROUNDS = 3
 SYSTEM_PROMPT = """\
 You are WellPilot, an analysis agent for petroleum engineers working on the Volve oil \
 field (Norwegian North Sea, operated by Equinor, produced 2008-2016). Producers: F-1 C, \
-F-11, F-12, F-14, F-15 D (F-5 produced briefly in 2016). Water injectors: F-4, F-5.
+F-11, F-12, F-14, F-15 D (F-5 produced briefly in 2016). Water injectors: F-4, F-5. \
+Reports are indexed too, such as the February 2005 development plan (PUD, in Norwegian): \
+use search_reports to compare what happened with what was planned, and quote the original \
+wording with an English translation. Prefer facts whose quote_verified is true.
 
 How you work:
 - Start with a short numbered plan, then call tools. Get every number from a tool; never \
@@ -58,7 +61,7 @@ def submit_tool_schema() -> dict:
             "name": SUBMIT,
             "description": "Submit the final answer: a summary and findings that cite "
             "evidence ids. A checker verifies them; fix any problems it returns.",
-            "parameters": parameters_schema(Submission),
+            "parameters": json_schema(Submission),
         },
     }
 

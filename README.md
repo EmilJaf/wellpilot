@@ -35,10 +35,17 @@ pnpm install
 pnpm dev                                     # UI on :5173, proxies /api to :8000
 ```
 
-Data: download `Production_data/Volve production data.xlsx` from the Volve dataset into `data/raw/production/`, then build the cleaned Parquet files:
+Data: download these files from the Volve dataset:
+- `Production_data/Volve production data.xlsx` into `data/raw/production/`;
+- `Reports/Volve PUD .pdf` into `data/raw/reports/Volve_PUD.pdf`.
+
+Then build the processed data:
 
 ```bash
-cd backend && uv run python -m wellpilot.ingest.production   # writes data/processed/
+cd backend
+uv run python -m wellpilot.ingest.production     # cleaned production Parquet
+uv run python -m wellpilot.ingest.reports        # report pages as PNG + text
+uv run python -m wellpilot.ingest.report_facts   # facts read by Muse Spark (calls the LLM)
 ```
 
 Tests and lint:

@@ -1,9 +1,9 @@
-"""Read-only access to the processed production data.
+"""Read-only access to the processed field data: production and report facts.
 
 The Parquet files are loaded into an in-memory DuckDB database; then file access is
 switched off and the configuration locked. Agent-written SQL therefore sees only these
-tables, can run only a single SELECT, and never sees rows after the store's `as_of` date,
-which is what keeps backtests honest.
+tables, can run only a single SELECT, and never sees rows after the store's `as_of` date
+(nor reports issued after it), which is what keeps backtests honest.
 """
 
 import threading
@@ -15,8 +15,16 @@ import duckdb
 import pandas as pd
 
 from wellpilot.ingest.production import DAILY_FILE, ISSUES_FILE
+from wellpilot.ingest.report_facts import FACTS_FILE, SUMMARIES_FILE
+from wellpilot.ingest.reports import PAGES_FILE, REPORTS_BY_ID
 
 TABLES = {"production_daily": DAILY_FILE, "production_issues": ISSUES_FILE}
+# Present once the report ingest has run.
+REPORT_TABLES = {
+    "report_pages": PAGES_FILE,
+    "report_facts": FACTS_FILE,
+    "report_summaries": SUMMARIES_FILE,
+}
 
 
 class QueryError(ValueError):
@@ -43,17 +51,30 @@ class ProductionStore:
         self.timeout_s = timeout_s
         self._lock = threading.Lock()
         self._con = duckdb.connect(":memory:")
+        self.tables: set[str] = set()
         for table, file in TABLES.items():
             frame = pd.read_parquet(processed_dir / file)
             if as_of is not None:
                 frame = frame[frame["date"] <= pd.Timestamp(as_of)]
-            self._con.register("_frame", frame)
-            self._con.execute(f"CREATE TABLE {table} AS SELECT * FROM _frame")
-            self._con.unregister("_frame")
+            self._load(table, frame)
+        for table, file in REPORT_TABLES.items():
+            if not (processed_dir / file).exists():
+                continue
+            frame = pd.read_parquet(processed_dir / file)
+            if as_of is not None:
+                issued = frame["doc_id"].map(lambda d: REPORTS_BY_ID[d].doc_date)
+                frame = frame[issued <= as_of.isoformat()]
+            self._load(table, frame)
         self._con.execute("SET enable_external_access = false")
         self._con.execute("SET memory_limit = '512MB'")
         self._con.execute("SET threads = 2")
         self._con.execute("SET lock_configuration = true")
+
+    def _load(self, table: str, frame: pd.DataFrame) -> None:
+        self._con.register("_frame", frame)
+        self._con.execute(f"CREATE TABLE {table} AS SELECT * FROM _frame")
+        self._con.unregister("_frame")
+        self.tables.add(table)
 
     def query(self, sql: str, params: list | None = None) -> QueryResult:
         """Run one read-only SELECT, capped at max_rows rows and timeout_s seconds."""

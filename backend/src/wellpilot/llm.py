@@ -1,4 +1,4 @@
-"""One OpenAI-compatible client for both providers.
+"""One OpenAI-compatible client for both providers, plus JSON-schema helpers.
 
 Baseten (Muse Spark Open) and the Meta Model API (Muse Spark) both speak Chat Completions;
 only the base URL, key and model differ. Chat Completions is used for both so the agent
@@ -7,8 +7,10 @@ another value.
 """
 
 from dataclasses import dataclass
+from typing import Any
 
 from openai import AsyncOpenAI
+from pydantic import BaseModel
 
 from wellpilot.config import Settings
 
@@ -31,3 +33,38 @@ def make_llm(settings: Settings) -> LLM:
         raise RuntimeError(f"{key_name} is not set; add it to .env (see .env.example)")
     client = AsyncOpenAI(api_key=key, base_url=base_url, timeout=120.0, max_retries=2)
     return LLM(client=client, model=model, provider=settings.llm_provider)
+
+
+def json_schema(model: type[BaseModel]) -> dict:
+    """A model's JSON schema with $refs inlined and clean_schema applied, for tool
+    parameters and structured output."""
+    schema = model.model_json_schema()
+    defs = schema.pop("$defs", {})
+
+    def inline(node: Any) -> Any:
+        if isinstance(node, list):
+            return [inline(n) for n in node]
+        if not isinstance(node, dict):
+            return node
+        if "$ref" in node:
+            return inline(defs[node["$ref"].rsplit("/", 1)[-1]])
+        return {k: inline(v) for k, v in node.items()}
+
+    return clean_schema(inline(schema))
+
+
+def clean_schema(node: Any) -> Any:
+    """Drop Pydantic titles and turn `X | None` into plain optional X: providers vary in
+    how well they handle anyOf with null."""
+    if isinstance(node, list):
+        return [clean_schema(n) for n in node]
+    if not isinstance(node, dict):
+        return node
+    node = {k: v for k, v in node.items() if k != "title"}
+    any_of = node.get("anyOf")
+    if any_of and len(any_of) == 2 and {"type": "null"} in any_of:
+        other = next(o for o in any_of if o != {"type": "null"})
+        node = {**{k: v for k, v in node.items() if k != "anyOf"}, **other}
+        if node.get("default", ...) is None:
+            del node["default"]
+    return {k: clean_schema(v) for k, v in node.items()}

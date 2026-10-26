@@ -9,6 +9,7 @@ the model re-reads every step) small.
 import ast
 import math
 import operator
+import re
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date
@@ -27,6 +28,9 @@ from wellpilot.analysis.anomalies import (
 )
 from wellpilot.analysis.decline import DeclineFit, fit_decline, forecast
 from wellpilot.data.store import ProductionStore, QueryError
+from wellpilot.ingest.report_facts import Topic
+from wellpilot.ingest.reports import REPORTS_BY_ID
+from wellpilot.llm import json_schema
 
 SQL_ROW_LIMIT = 200
 MIN_R2_LOG = 0.7
@@ -321,6 +325,111 @@ def calculate(_: ProductionStore, args: CalcArgs) -> dict:
     return {"expression": args.expression, "value": to_jsonable(float(value))}
 
 
+class ReportSearchArgs(BaseModel):
+    query: str | None = Field(
+        None, description="Keywords in English or Norwegian, e.g. 'water breakthrough'."
+    )
+    topic: Topic | None = Field(None, description="Only facts with this topic.")
+    well: str | None = Field(None, description="Only facts about this well, e.g. 'F-12'.")
+    limit: int = Field(8, ge=1, le=30)
+
+
+class ReportPageArgs(BaseModel):
+    doc_id: str = Field(description="Document id from search_reports, e.g. 'volve_pud'.")
+    page: int = Field(ge=1)
+
+
+def _require_reports(store: ProductionStore) -> None:
+    if "report_pages" not in store.tables:
+        raise ValueError("no reports ingested; run python -m wellpilot.ingest.reports")
+
+
+def _documents(doc_ids) -> dict:
+    return {
+        d: {"title": REPORTS_BY_ID[d].title, "issued": REPORTS_BY_ID[d].doc_date}
+        for d in sorted(set(doc_ids))
+    }
+
+
+def search_reports(store: ProductionStore, args: ReportSearchArgs) -> dict:
+    _require_reports(store)
+    terms = [t for t in re.findall(r"\w+", (args.query or "").casefold()) if len(t) >= 3][:8]
+
+    if "report_facts" not in store.tables:
+        # Facts not extracted yet: fall back to keyword hits in the page text.
+        if not terms:
+            raise ValueError("report facts are not extracted yet; pass a query to search text")
+        hits = " + ".join("CASE WHEN lower(text) LIKE ? THEN 1 ELSE 0 END" for _ in terms)
+        rows = store.query(
+            f"SELECT doc_id, page, {hits} AS score, text FROM report_pages "
+            f"WHERE score > 0 ORDER BY score DESC, page LIMIT {args.limit}",
+            [f"%{t}%" for t in terms],
+        ).rows
+        rows["snippet"] = [_snippet(text, terms) for text in rows.pop("text")]
+        return {"documents": _documents(rows["doc_id"]), "pages": table(rows)}
+
+    score = " + ".join(
+        "CASE WHEN lower(statement_en || ' ' || quote) LIKE ? THEN 1 ELSE 0 END" for _ in terms
+    )
+    params: list = [f"%{t}%" for t in terms]
+    conditions = ["score > 0"] if terms else []
+    if args.topic:
+        conditions.append("topic = ?")
+        params.append(args.topic)
+    if args.well:
+        conditions.append("list_contains(string_split(wells, ', '), ?)")
+        params.append(args.well)
+    where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
+    rows = store.query(
+        f"""
+        SELECT doc_id, page, topic, source, statement_en, quote, quote_verified, wells
+        FROM (SELECT *, {score or "0"} AS score FROM report_facts) {where}
+        ORDER BY score DESC, doc_id, page, fact_no LIMIT {args.limit}
+        """,
+        params,
+    ).rows
+    return {"documents": _documents(rows["doc_id"]), "facts": table(rows)}
+
+
+def _snippet(text: str, terms: list[str], width: int = 300) -> str:
+    lower = text.casefold()
+    at = min((i for t in terms if (i := lower.find(t)) >= 0), default=0)
+    start = max(0, at - width // 3)
+    return text[start : start + width]
+
+
+def read_report_page(store: ProductionStore, args: ReportPageArgs) -> dict:
+    _require_reports(store)
+    if args.doc_id not in REPORTS_BY_ID:
+        raise ValueError(f"unknown document {args.doc_id!r}; known: {', '.join(REPORTS_BY_ID)}")
+    page = store.query(
+        "SELECT page, pages, text, image FROM report_pages WHERE doc_id = ? AND page = ?",
+        [args.doc_id, args.page],
+    ).rows
+    if page.empty:
+        raise ValueError(f"{args.doc_id} has no page {args.page}")
+    result = {
+        "document": _documents([args.doc_id])[args.doc_id],
+        "page": args.page,
+        "pages": int(page.loc[0, "pages"]),
+        "text": page.loc[0, "text"][:3000],
+        "image": page.loc[0, "image"],
+    }
+    if "report_facts" in store.tables:
+        facts = store.query(
+            "SELECT topic, source, statement_en, quote, quote_verified, wells FROM report_facts "
+            "WHERE doc_id = ? AND page = ? ORDER BY fact_no",
+            [args.doc_id, args.page],
+        ).rows
+        summary = store.query(
+            "SELECT page_summary_en FROM report_summaries WHERE doc_id = ? AND page = ?",
+            [args.doc_id, args.page],
+        ).rows
+        result["summary_en"] = summary.iloc[0, 0] if len(summary) else None
+        result["facts"] = table(facts)
+    return to_jsonable(result)
+
+
 @dataclass(frozen=True)
 class Tool:
     name: str
@@ -334,43 +443,9 @@ class Tool:
             "function": {
                 "name": self.name,
                 "description": self.description,
-                "parameters": parameters_schema(self.args),
+                "parameters": json_schema(self.args),
             },
         }
-
-
-def parameters_schema(model: type[BaseModel]) -> dict:
-    """JSON schema for a tool's parameters, with $refs inlined and clean_schema applied."""
-    schema = model.model_json_schema()
-    defs = schema.pop("$defs", {})
-
-    def inline(node: Any) -> Any:
-        if isinstance(node, list):
-            return [inline(n) for n in node]
-        if not isinstance(node, dict):
-            return node
-        if "$ref" in node:
-            return inline(defs[node["$ref"].rsplit("/", 1)[-1]])
-        return {k: inline(v) for k, v in node.items()}
-
-    return clean_schema(inline(schema))
-
-
-def clean_schema(node: Any) -> Any:
-    """Drop Pydantic titles and turn `X | None` into plain optional X: providers vary in
-    how well they handle anyOf with null."""
-    if isinstance(node, list):
-        return [clean_schema(n) for n in node]
-    if not isinstance(node, dict):
-        return node
-    node = {k: v for k, v in node.items() if k != "title"}
-    any_of = node.get("anyOf")
-    if any_of and len(any_of) == 2 and {"type": "null"} in any_of:
-        other = next(o for o in any_of if o != {"type": "null"})
-        node = {**{k: v for k, v in node.items() if k != "anyOf"}, **other}
-        if node.get("default", ...) is None:
-            del node["default"]
-    return {k: clean_schema(v) for k, v in node.items()}
 
 
 DAILY_COLUMNS = (
@@ -433,6 +508,22 @@ TOOLS = [
         "Use it for every derived number you state, so the number has evidence.",
         CalcArgs,
         calculate,
+    ),
+    Tool(
+        "search_reports",
+        "Search facts extracted from the field's reports, such as the February 2005 "
+        "development plan (PUD, in Norwegian): planned plateau rates, expected water "
+        "breakthrough, facility limits such as maximum water cut. Each fact has an English "
+        "statement, the verbatim original quote, and quote_verified (the quote was found in "
+        "the page's text). Use it to compare what happened with what was planned.",
+        ReportSearchArgs,
+        search_reports,
+    ),
+    Tool(
+        "read_report_page",
+        "Read one report page: its text (original language), English summary and facts.",
+        ReportPageArgs,
+        read_report_page,
     ),
 ]
 TOOLS_BY_NAME = {t.name: t for t in TOOLS}
