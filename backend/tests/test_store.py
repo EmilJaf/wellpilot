@@ -117,3 +117,13 @@ def test_well_daily_filters_and_orders(processed_dir) -> None:
 
     assert rows["date"].dt.day.tolist() == [3, 4, 5, 6]
     assert set(rows["well"]) == {"F-14"}
+
+
+def test_well_issues_returns_one_wells_issues_uncapped(processed_dir) -> None:
+    store = ProductionStore(processed_dir, max_rows=1)
+
+    issues = store.well_issues("F-12")
+
+    assert len(issues) == 2
+    assert issues["date"].is_monotonic_increasing
+    assert store.well_issues("F-14").empty

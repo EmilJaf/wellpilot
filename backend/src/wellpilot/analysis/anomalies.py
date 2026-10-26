@@ -1,0 +1,312 @@
+"""Event and anomaly detection on one well's daily production.
+
+Every detector returns Events with the numbers behind them and a one-line, deterministic
+summary, so the agent quotes measured facts instead of paraphrasing a chart.
+"""
+
+from dataclasses import dataclass, replace
+from typing import Literal
+
+import numpy as np
+import pandas as pd
+import ruptures as rpt
+
+from wellpilot.analysis.decline import producing_day_rate
+
+EventKind = Literal["regime_change", "threshold_crossing", "gauge_failure", "shut_in"]
+SIGNALS = (
+    "oil_rate",
+    "water_cut",
+    "gor_sm3_sm3",
+    "bhp_bar",
+    "whp_bar",
+    "choke_pct",
+    "dp_choke_bar",
+)
+MIN_FLOWING_HOURS = 12.0
+
+
+@dataclass(frozen=True)
+class Event:
+    kind: EventKind
+    well: str
+    signal: str
+    start: pd.Timestamp
+    end: pd.Timestamp | None
+    details: dict
+    summary: str
+
+
+def _production(daily: pd.DataFrame) -> pd.DataFrame:
+    return daily[daily["flow_kind"] == "production"].sort_values("date")
+
+
+def _well(daily: pd.DataFrame) -> str:
+    return str(daily["well"].iloc[0]) if len(daily) else ""
+
+
+def weekly_signal(daily: pd.DataFrame, signal: str) -> pd.Series:
+    """Weekly mean of a signal over days on stream at least 12 h (oil_rate: producing-day)."""
+    if signal not in SIGNALS:
+        raise ValueError(f"unknown signal {signal!r}; use one of {SIGNALS}")
+    prod = _production(daily)
+    if signal == "oil_rate":
+        series = producing_day_rate(prod, "oil_sm3", MIN_FLOWING_HOURS)
+    else:
+        flowing = prod[prod["on_stream_hrs"] >= MIN_FLOWING_HOURS]
+        series = flowing.set_index("date")[signal]
+    return series.resample("W").mean().dropna()
+
+
+def regime_changes(
+    daily: pd.DataFrame, signal: str, penalty: float = 15.0, min_weeks: int = 8
+) -> list[Event]:
+    """Change points (PELT, L2 cost) on the standardized weekly signal.
+
+    Oil rate is segmented on its log, so a 30% drop counts the same at any rate level.
+    Lower penalty finds more, smaller changes.
+    """
+    weekly = weekly_signal(daily, signal)
+    values = weekly.to_numpy()
+    if len(values) < 2 * min_weeks:
+        return []
+    x = np.log(values) if signal == "oil_rate" else values
+    std = x.std()
+    if std == 0:
+        return []
+    z = (x - x.mean()) / std
+    breaks = rpt.Pelt(model="l2", min_size=min_weeks, jump=1).fit(z).predict(pen=penalty)[:-1]
+
+    events, bounds = [], [0, *breaks, len(values)]
+    for i, b in enumerate(breaks):
+        before = float(values[bounds[i] : b].mean())
+        after = float(values[b : bounds[i + 2]].mean())
+        change = (after - before) / abs(before) if before else float("nan")
+        start = weekly.index[b]
+        events.append(
+            Event(
+                kind="regime_change",
+                well=_well(daily),
+                signal=signal,
+                start=start,
+                end=None,
+                details={
+                    "before_mean": before,
+                    "after_mean": after,
+                    "relative_change": change,
+                    "before_from": weekly.index[bounds[i]],
+                    "after_to": weekly.index[bounds[i + 2] - 1],
+                },
+                summary=(
+                    f"{signal} shifts around {start.date()}: weekly mean {before:.3g} -> "
+                    f"{after:.3g} ({change:+.0%})."
+                ),
+            )
+        )
+    return events
+
+
+def threshold_crossing(
+    daily: pd.DataFrame,
+    signal: str,
+    threshold: float,
+    window_days: int = 30,
+    direction: Literal["above", "below"] = "above",
+) -> Event | None:
+    """First day the rolling median over flowing days crosses the threshold, i.e. a
+    sustained crossing rather than a single noisy day."""
+    prod = _production(daily)
+    flowing = prod[prod["on_stream_hrs"] >= MIN_FLOWING_HOURS].set_index("date")
+    if signal == "oil_rate":
+        series = producing_day_rate(prod, "oil_sm3", MIN_FLOWING_HOURS)
+    else:
+        series = flowing[signal].dropna()
+    median = series.rolling(f"{window_days}D", min_periods=window_days // 2).median()
+    hits = median[median >= threshold] if direction == "above" else median[median <= threshold]
+    if hits.empty:
+        return None
+
+    day = hits.index[0]
+    first_oil = prod.loc[prod["oil_sm3"] > 0, "date"].min()
+    months = (day - first_oil).days / 30.44 if pd.notna(first_oil) else float("nan")
+    return Event(
+        kind="threshold_crossing",
+        well=_well(daily),
+        signal=signal,
+        start=day,
+        end=None,
+        details={
+            "threshold": threshold,
+            "direction": direction,
+            "window_days": window_days,
+            "median_at_crossing": float(hits.iloc[0]),
+            "first_oil": first_oil,
+            "months_after_first_oil": months,
+        },
+        summary=(
+            f"{window_days}-day median {signal} first goes {direction} {threshold:g} on "
+            f"{day.date()}, {months:.0f} months after first oil."
+        ),
+    )
+
+
+def _runs(dates: pd.Series, max_gap_days: int) -> list[tuple[pd.Timestamp, pd.Timestamp]]:
+    """Group sorted dates into runs whose consecutive gaps are at most max_gap_days."""
+    if dates.empty:
+        return []
+    dates = dates.sort_values().reset_index(drop=True)
+    new_run = dates.diff().dt.days.fillna(max_gap_days + 1) > max_gap_days
+    groups = new_run.cumsum()
+    return [(g.iloc[0], g.iloc[-1]) for _, g in dates.groupby(groups)]
+
+
+def _dead_runs(
+    zero_dates: pd.Series, good_dates: pd.Series
+) -> list[tuple[pd.Timestamp, pd.Timestamp]]:
+    """Group zero-reading dates into runs that no valid reading interrupts.
+
+    Days without any reading (e.g. shut-ins) do not end a run; a real reading does.
+    """
+    zero = np.sort(zero_dates.to_numpy())
+    if len(zero) == 0:
+        return []
+    good = np.sort(good_dates.to_numpy())
+    # Number of valid readings strictly between each pair of consecutive zero days.
+    between = np.searchsorted(good, zero[1:], side="left") - np.searchsorted(
+        good, zero[:-1], side="right"
+    )
+    starts = np.concatenate([[0], np.flatnonzero(between > 0) + 1])
+    ends = np.concatenate([starts[1:] - 1, [len(zero) - 1]])
+    return [
+        (pd.Timestamp(zero[s]), pd.Timestamp(zero[e])) for s, e in zip(starts, ends, strict=True)
+    ]
+
+
+def gauge_failures(
+    daily: pd.DataFrame,
+    issues: pd.DataFrame,
+    columns: tuple[str, ...] = ("bhp_bar", "whp_bar"),
+    min_days: int = 7,
+) -> list[Event]:
+    """Runs of zero gauge readings from the ingest issue log, checked against production.
+
+    A gauge stuck at 0 while oil keeps flowing is a dead sensor, not a pressure collapse.
+    """
+    well = _well(daily)
+    prod = _production(daily).set_index("date")
+    zero = issues[
+        (issues["well"] == well)
+        & issues["column"].isin(columns)
+        & issues["issue"].isin(["zero_gauge_reading", "zero_whp_while_flowing"])
+    ]
+    events = []
+    for column, rows in zero.groupby("column"):
+        good_dates = prod.index[prod[column].notna()].to_series()
+        for start, end in _dead_runs(rows["date"], good_dates):
+            days = rows[(rows["date"] >= start) & (rows["date"] <= end)]
+            if len(days) < min_days:
+                continue
+            span = prod.loc[start:end]
+            flowing_days = int((span["on_stream_hrs"] >= MIN_FLOWING_HOURS).sum())
+            oil = float(span["oil_sm3"].sum())
+            good = prod.loc[: start - pd.Timedelta(days=1), column].dropna()
+            last_good = (good.index[-1], float(good.iloc[-1])) if len(good) else (None, None)
+            if flowing_days:
+                verdict = (
+                    f"while the well kept flowing on {flowing_days} days ({oil:,.0f} Sm3 oil): "
+                    "a sensor failure, not a pressure collapse"
+                )
+            else:
+                verdict = "while the well was shut in; the gauge may just be switched off"
+            last = (
+                f" Last good reading: {last_good[1]:.1f} on {last_good[0].date()}."
+                if last_good[0] is not None
+                else ""
+            )
+            events.append(
+                Event(
+                    kind="gauge_failure",
+                    well=well,
+                    signal=str(column),
+                    start=start,
+                    end=end,
+                    details={
+                        "zero_days": len(days),
+                        "flowing_days": flowing_days,
+                        "oil_sm3_during": oil,
+                        "last_good_date": last_good[0],
+                        "last_good_value": last_good[1],
+                    },
+                    summary=(
+                        f"{column} reads 0 on {len(days)} days from {start.date()} to "
+                        f"{end.date()} {verdict}.{last}"
+                    ),
+                )
+            )
+    return events
+
+
+def shut_ins(daily: pd.DataFrame, min_days: int = 3, compare_days: int = 30) -> list[Event]:
+    """Runs of zero on-stream hours after first oil, with the rate before and after."""
+    prod = _production(daily)
+    first_oil = prod.loc[prod["oil_sm3"] > 0, "date"].min()
+    if pd.isna(first_oil):
+        return []
+    prod = prod[prod["date"] >= first_oil]
+    rate = producing_day_rate(prod, "oil_sm3", MIN_FLOWING_HOURS)
+    off = prod.loc[prod["on_stream_hrs"].fillna(0) == 0, "date"]
+    window = pd.Timedelta(days=compare_days)
+
+    events = []
+    # The sheet skips the odd calendar day, so a one-day hole does not end a shut-in.
+    for start, end in _runs(off, max_gap_days=2):
+        n_days = (end - start).days + 1
+        if n_days < min_days:
+            continue
+        before = rate[start - window : start - pd.Timedelta(days=1)].median()
+        after = rate[end + pd.Timedelta(days=1) : end + window].median()
+        change = (after - before) / before if before and pd.notna(after) else float("nan")
+        restart = (
+            f" Oil rate {before:,.0f} -> {after:,.0f} Sm3/d ({change:+.0%}) after restart."
+            if pd.notna(change)
+            else ""
+        )
+        events.append(
+            Event(
+                kind="shut_in",
+                well=_well(daily),
+                signal="on_stream_hrs",
+                start=start,
+                end=end,
+                details={
+                    "days": n_days,
+                    "rate_before": float(before) if pd.notna(before) else None,
+                    "rate_after": float(after) if pd.notna(after) else None,
+                    "relative_change": change,
+                },
+                summary=f"Shut in for {n_days} days from {start.date()}.{restart}",
+            )
+        )
+    return events
+
+
+def mark_field_wide(events: list[Event], tolerance_days: int = 2) -> list[Event]:
+    """Mark shut-ins that overlap a shut-in of another well: platform-wide, not well-specific."""
+    shut = [e for e in events if e.kind == "shut_in"]
+    tol = pd.Timedelta(days=tolerance_days)
+    marked = []
+    for e in events:
+        if e.kind != "shut_in":
+            marked.append(e)
+            continue
+        others = sorted(
+            {
+                o.well
+                for o in shut
+                if o.well != e.well and o.start <= e.end + tol and e.start <= o.end + tol
+            }
+        )
+        details = {**e.details, "field_wide": bool(others), "also_shut_in": others}
+        summary = e.summary + (f" Same time as {', '.join(others)}." if others else "")
+        marked.append(replace(e, details=details, summary=summary))
+    return marked
