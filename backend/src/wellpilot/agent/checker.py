@@ -1,9 +1,13 @@
 """Deterministic claim checker for the agent's final findings.
 
-Before an answer is accepted, every number and ISO date in each finding must be found in
-the evidence that finding cites, and a finding marked "fact" may not rest on evidence
-that carries warnings (e.g. a poor decline fit). Problems go back to the model as plain
-sentences so it can fix them and resubmit.
+Before an answer is accepted:
+- every number, ISO date and quoted passage in a finding must be found in the evidence
+  that finding cites, so a quote from a report traces back through the evidence to the
+  page it was read from;
+- a finding marked "fact" may not state a cause, nor rest on evidence that carries
+  warnings (e.g. a poor decline fit);
+- the summary may name a cause only with a hedge ("likely", "consistent with").
+Problems go back to the model as plain sentences so it can fix them and resubmit.
 """
 
 import re
@@ -13,6 +17,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field
 
 from wellpilot.agent.evidence import Evidence, EvidenceLog
+from wellpilot.ingest.report_facts import squash
 
 WELL = re.compile(r"\bF-\d+(?:\s?[A-Z]\b)?")
 DATE = re.compile(r"\b(\d{4}-\d{2}(?:-\d{2})?)\b")
@@ -26,6 +31,17 @@ SMALL_INTEGER = 10  # "3 wells", "2 years": too generic to demand evidence for
 CAUSAL = re.compile(
     r"\b(because|caus(?:e|ed|es|ing)|dr(?:ove|ives?|iven)|due to|led to|leads? to|"
     r"result(?:s|ed)? (?:from|in)|responsible for)\b",
+    re.IGNORECASE,
+)
+
+
+# A quoted passage: opened after a space or "(", closed before a space or punctuation, so
+# apostrophes inside words ("oil's") do not end it.
+QUOTED = re.compile(r"""(?:(?<=[\s(])|^)['"‘“«](.{15,}?)['"’”»](?=[\s.,;:)/]|$)""")
+MIN_QUOTE_CHARS = 12  # letters and digits; shorter quotes are phrases, not citations
+HEDGE = re.compile(
+    r"\b(likely|probabl[ey]|possibly|consistent with|suggests?|appears?|may|might|"
+    r"hypothes\w*|indicat\w*)\b",
     re.IGNORECASE,
 )
 
@@ -76,6 +92,7 @@ class _Pool:
     def __init__(self, evidence: Iterable[Evidence]) -> None:
         self.numbers: list[float] = []
         self.dates: set[str] = set()
+        texts: list[str] = []
         for item in evidence:
             for leaf in _flatten([item.result, item.arguments]):
                 if isinstance(leaf, bool) or leaf is None:
@@ -83,9 +100,11 @@ class _Pool:
                 if isinstance(leaf, int | float):
                     self.numbers.append(abs(float(leaf)))
                 elif isinstance(leaf, str):
+                    texts.append(squash(leaf))
                     self.dates.update(DATE.findall(leaf))
                     self.numbers.extend(v for v, _, _ in _numbers_in_text(leaf))
         self.years = {d[:4] for d in self.dates}
+        self.text = "|".join(texts)
 
     def has_number(self, value: float, decimals: int, suffix: str | None) -> bool:
         for scale in SCALES.get(suffix or "", (1.0,)):
@@ -127,7 +146,8 @@ def check_submission(submission: Submission, log: EvidenceLog) -> list[str]:
             problems.append(f"Finding {n} cites unknown evidence {', '.join(unknown)}.")
             continue
         cited = [log.get(e) for e in finding.evidence_ids]
-        numbers, dates = _unsupported(finding.claim, _Pool(cited))
+        pool = _Pool(cited)
+        numbers, dates = _unsupported(finding.claim, pool)
         ids = ", ".join(finding.evidence_ids)
         if numbers:
             problems.append(
@@ -136,6 +156,14 @@ def check_submission(submission: Submission, log: EvidenceLog) -> list[str]:
             )
         if dates:
             problems.append(f"Finding {n}: date(s) {', '.join(dates)} not found in {ids}.")
+        quotes = [q for q in QUOTED.findall(finding.claim) if len(squash(q)) >= MIN_QUOTE_CHARS]
+        missing_quotes = [q for q in quotes if squash(q) not in pool.text]
+        if missing_quotes:
+            listed = "; ".join(f"'{q[:80]}'" for q in missing_quotes)
+            problems.append(
+                f"Finding {n}: quoted text not found in {ids}: {listed}. Quote the evidence "
+                "word for word (the original quote or its statement_en) or drop the quotes."
+            )
         cause = CAUSAL.search(finding.claim)
         if finding.confidence == "fact" and cause:
             problems.append(
@@ -154,4 +182,10 @@ def check_submission(submission: Submission, log: EvidenceLog) -> list[str]:
     if numbers or dates:
         missing = ", ".join(numbers + dates)
         problems.append(f"Summary: {missing} not found in any evidence.")
+    cause = CAUSAL.search(submission.summary)
+    if cause and not HEDGE.search(submission.summary):
+        problems.append(
+            f"Summary states a cause as certain ('{cause.group(0)}'). The data shows timing "
+            "and size, not causes: hedge it, e.g. 'most likely because' or 'consistent with'."
+        )
     return problems

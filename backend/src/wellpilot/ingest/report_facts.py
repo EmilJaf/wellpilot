@@ -108,7 +108,7 @@ def _clean(text: str) -> str:
     return DROPPED_GLYPHS.sub("", text).casefold()
 
 
-def _squash(text: str) -> str:
+def squash(text: str) -> str:
     """Only letters and digits, for spacing-proof matching."""
     return re.sub(r"\W+", "", _clean(text))
 
@@ -116,8 +116,8 @@ def _squash(text: str) -> str:
 def quote_in_text(quote: str, page_text: str) -> bool:
     """True if the quote appears in the page text; quotes under 6 letters or digits (such
     as "2 år") are too short to prove anything."""
-    squashed = _squash(quote)
-    return len(squashed) >= 6 and squashed in _squash(page_text)
+    squashed = squash(quote)
+    return len(squashed) >= 6 and squashed in squash(page_text)
 
 
 def quote_check(quote: str, page_text: str) -> QuoteCheck:

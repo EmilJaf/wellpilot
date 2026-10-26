@@ -159,3 +159,61 @@ def test_causal_claim_marked_fact_is_rejected() -> None:
     assert len(problems) == 1
     assert "states a cause ('drove')" in problems[0]
     assert check_submission(submit(as_inference), log) == []
+
+
+REPORT = {
+    "facts": {
+        "columns": ["page", "statement_en", "quote"],
+        "rows": [
+            [
+                23,
+                "Injection water breaks through in the wells after about 2 years.",
+                "injeksjonsvannet som bryter gjennom i brønnene etter omlag 2 år.",
+            ]
+        ],
+    }
+}
+
+
+def test_quoted_text_must_come_from_the_cited_evidence() -> None:
+    log = log_with(REPORT, EVENTS)
+    quoted = Finding(
+        claim="The plan expected 'injeksjonsvannet som bryter gjennom i brønnene etter omlag "
+        '2 år\' / "Injection water breaks through in the wells after about 2 years."',
+        evidence_ids=["E1"],
+        confidence="fact",
+    )
+    invented = quoted.model_copy(
+        update={"claim": "The plan said 'water will never reach the producing wells'."}
+    )
+    wrong_source = quoted.model_copy(update={"evidence_ids": ["E2"]})
+
+    assert check_submission(submit(quoted), log) == []
+    assert "quoted text not found in E1" in check_submission(submit(invented), log)[0]
+    assert "quoted text not found in E2" in check_submission(submit(wrong_source), log)[0]
+
+
+def test_apostrophes_and_short_quotes_are_not_citations() -> None:
+    log = log_with(REPORT)
+    finding = Finding(
+        claim="The oil's 'plateau' and the operator's plan agree on 2 years.",
+        evidence_ids=["E1"],
+        confidence="inference",
+    )
+
+    assert check_submission(submit(finding), log) == []
+
+
+def test_summary_causes_need_a_hedge() -> None:
+    log = log_with(EVENTS)
+    finding = Finding(claim="Oil fell 72%.", evidence_ids=["E1"], confidence="fact")
+
+    certain = check_submission(
+        submit(finding, summary="Oil fell because water broke through."), log
+    )
+    hedged = check_submission(
+        submit(finding, summary="Oil fell, most likely because water broke through."), log
+    )
+
+    assert "Summary states a cause as certain ('because')" in certain[0]
+    assert hedged == []
