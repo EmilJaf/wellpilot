@@ -1,0 +1,33 @@
+// Small status icons. Status always pairs an icon with text, never colour alone.
+
+const base = {
+  width: 16,
+  height: 16,
+  viewBox: '0 0 16 16',
+  fill: 'none',
+  stroke: 'currentColor',
+  strokeWidth: 1.6,
+  strokeLinecap: 'round' as const,
+  strokeLinejoin: 'round' as const,
+  'aria-hidden': true,
+}
+
+export const CheckIcon = () => (
+  <svg {...base}>
+    <path d="M3 8.5 6.5 12 13 4.5" />
+  </svg>
+)
+
+export const CautionIcon = () => (
+  <svg {...base}>
+    <path d="M8 2.2 14.5 13.5H1.5Z" />
+    <path d="M8 6.5v3.2M8 11.6v.1" />
+  </svg>
+)
+
+export const AlarmIcon = () => (
+  <svg {...base}>
+    <path d="M5.2 1.8h5.6l4 4v5.6l-4 4H5.2l-4-4V5.8Z" />
+    <path d="M5.8 5.8l4.4 4.4M10.2 5.8l-4.4 4.4" />
+  </svg>
+)
