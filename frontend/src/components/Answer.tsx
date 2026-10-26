@@ -41,7 +41,7 @@ export function Answer({ state, selectedFinding, selectedEvidence, onSelectFindi
           </span>
         )}
       </div>
-      <div className="panel-body">
+      <div className="panel-body" aria-live="polite">
         {!final && (
           <p className="empty">
             {state.status === 'running'

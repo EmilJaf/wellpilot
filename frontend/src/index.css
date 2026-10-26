@@ -15,9 +15,10 @@
   --sheet: #ffffff;
   --ink: #232b33;
   --ink-2: #55606b;
-  --ink-3: #85909a;
+  --ink-3: #666f7a; /* 4.7:1 on the panel: small labels stay readable */
   --rule: #d3d8dc;
   --rule-strong: #b4bcc3;
+  --shut-wash: #e3e6e9;
 
   --oil: #008300;
   --water: #2a78d6;
@@ -168,7 +169,7 @@ button {
     height: auto;
   }
   .console {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .console > section,
   .console > section.center,
@@ -405,6 +406,11 @@ button {
 
 .evidence-chip {
   align-self: start;
+  min-width: 24px;
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-size: 11px;
   font-weight: 650;
   font-stretch: var(--narrow);
@@ -812,4 +818,53 @@ code,
 .calc {
   font-size: 18px;
   font-variant-numeric: tabular-nums;
+}
+
+/* key under the charts: what each overlay mark means */
+.chart-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 16px;
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: var(--ink-2);
+}
+
+.chart-key span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.key-line,
+.key-rule {
+  display: inline-block;
+  width: 1px;
+  height: 12px;
+  background: var(--ink-2);
+}
+
+.key-rule {
+  width: 2px;
+  background: var(--ink);
+}
+
+.key-band {
+  display: inline-block;
+  width: 14px;
+  height: 10px;
+}
+
+.key-shut {
+  background: var(--shut-wash);
+}
+
+.key-gauge {
+  background: var(--caution-wash);
+  box-shadow: inset 2px 0 0 var(--caution);
+}
+
+.ask input[type="text"],
+.as-of input {
+  border-color: #8f99a3; /* 3:1 against the sheet, a visible control edge */
 }

@@ -5,7 +5,7 @@ import { column, type Table } from '../api'
 export type Marker = {
   at: string // ISO date
   until?: string // ISO date, for a band
-  kind: 'regime' | 'crossing' | 'gauge'
+  kind: 'regime' | 'crossing' | 'gauge' | 'shut_in'
   track: TrackKey | 'all'
   label?: string
 }
@@ -33,11 +33,20 @@ const TRACKS: Track[] = [
 
 const toSeconds = (iso: string) => Date.parse(iso.length === 7 ? `${iso}-01` : iso) / 1000
 
+// Data dates are UTC days; show them as such whatever the viewer's time zone.
+const utc = (ts: number) => uPlot.tzDate(new Date(ts * 1e3), 'Etc/UTC')
+
+// Shorter charts on shorter screens, so the evidence below them keeps room.
+function heightFor(track: Track): number {
+  const scale = Math.min(1, Math.max(0.6, (window.innerHeight - 300) / 700))
+  return Math.round(track.height * scale)
+}
+
 const css = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim()
 
-type Props = { table: Table | null; markers: Marker[]; highlights: string[] }
+type Props = { table: Table | null; error?: string; markers: Marker[]; highlights: string[] }
 
-export function WellCharts({ table, markers, highlights }: Props) {
+export function WellCharts({ table, error, markers, highlights }: Props) {
   const data = useMemo(() => {
     if (!table) return null
     const kind = column(table, 'flow_kind')
@@ -59,6 +68,7 @@ export function WellCharts({ table, markers, highlights }: Props) {
   const syncing = useRef(false)
   const plots = useRef<uPlot[]>([])
 
+  if (error) return <p className="empty charts">Production data could not be loaded: {error}</p>
   if (!data) return <p className="empty charts">Loading production data</p>
   if (data.x.length === 0) return <p className="empty charts">This well has no production rows to plot.</p>
 
@@ -84,6 +94,12 @@ export function WellCharts({ table, markers, highlights }: Props) {
           }}
         />
       ))}
+      <p className="chart-key">
+        <span><i className="key-line" /> regime change or threshold</span>
+        <span><i className="key-band key-shut" /> shut in</span>
+        <span><i className="key-band key-gauge" /> gauge reads 0, readings removed</span>
+        <span><i className="key-rule" /> date in the selected finding</span>
+      </p>
     </div>
   )
 }
@@ -124,9 +140,11 @@ function ChartTrack({
       grid: { stroke: rule, width: 1 },
       ticks: { stroke: rule, width: 1, size: 4 },
     }
+    const height = heightFor(track)
     const opts: uPlot.Options = {
       width: el.clientWidth,
-      height: track.height,
+      height,
+      tzDate: utc,
       cursor: { sync: { key: 'well' }, drag: { x: true, y: false } },
       legend: { show: true, live: true },
       scales: {
@@ -134,7 +152,8 @@ function ChartTrack({
         y: track.log ? { distr: 3 } : track.range ? { range: track.range } : {},
       },
       axes: [
-        showTime ? { ...axis, size: 26 } : { ...axis, size: 4, values: () => [] },
+        // 40px leaves room for uPlot's second label line (the year) when zoomed in.
+        showTime ? { ...axis, size: 40 } : { ...axis, size: 4, values: () => [] },
         {
           ...axis,
           size: 46,
@@ -170,7 +189,7 @@ function ChartTrack({
     const instance = new uPlot(opts, [x, y], el)
     plot.current = instance
     register(instance)
-    const resize = new ResizeObserver(() => instance.setSize({ width: el.clientWidth, height: track.height }))
+    const resize = new ResizeObserver(() => instance.setSize({ width: el.clientWidth, height }))
     resize.observe(el)
     return () => {
       resize.disconnect()
@@ -215,16 +234,24 @@ function drawOverlay(u: uPlot, key: TrackKey, markers: Marker[], highlights: str
     const x0 = xAt(m.at)
     if (m.until) {
       const x1 = xAt(m.until)
-      ctx.fillStyle = css('--caution-wash')
+      const gauge = m.kind === 'gauge'
+      ctx.fillStyle = css(gauge ? '--caution-wash' : '--shut-wash')
       ctx.fillRect(x0, top, Math.max(x1 - x0, ratio), height)
-      ctx.fillStyle = css('--caution')
-      ctx.fillRect(x0, top, 2 * ratio, height)
-      if (m.label) {
-        ctx.fillStyle = css('--caution-ink')
-        ctx.fillText(m.label, x0 + 6 * ratio, top + 4 * ratio)
+      if (gauge) {
+        ctx.fillStyle = css('--caution')
+        ctx.fillRect(x0, top, 2 * ratio, height)
       }
+      if (m.label && x1 > left) {
+        // Keep the label in view when zoomed inside the band.
+        ctx.fillStyle = css('--caution-ink')
+        ctx.fillText(m.label, Math.max(x0, left) + 6 * ratio, top + 4 * ratio)
+      }
+    } else if (m.kind === 'crossing') {
+      // A threshold crossing: a short tick down from the top edge.
+      ctx.fillStyle = css('--ink-2')
+      ctx.fillRect(Math.round(x0), top, ratio, 10 * ratio)
     } else {
-      ctx.strokeStyle = css('--rule-strong')
+      ctx.strokeStyle = css('--ink-2')
       ctx.lineWidth = ratio
       ctx.beginPath()
       ctx.moveTo(Math.round(x0) + 0.5, top)
@@ -233,18 +260,23 @@ function drawOverlay(u: uPlot, key: TrackKey, markers: Marker[], highlights: str
     }
   }
 
-  // Dates named in the selected finding: a solid ink rule across every track.
+  // Dates named in the selected finding: a solid ink rule across every track. Labels
+  // only where they do not collide with the previous one.
   ctx.strokeStyle = css('--ink')
   ctx.fillStyle = css('--ink')
   ctx.lineWidth = 2 * ratio
-  for (const iso of highlights) {
+  let lastLabelEnd = -Infinity
+  for (const iso of [...highlights].sort()) {
     const x0 = xAt(iso)
     if (x0 < left || x0 > left + width) continue
     ctx.beginPath()
     ctx.moveTo(x0, top)
     ctx.lineTo(x0, top + height)
     ctx.stroke()
-    if (key === 'oil') ctx.fillText(iso, x0 + 4 * ratio, top + 4 * ratio)
+    if (key === 'oil' && x0 + 4 * ratio > lastLabelEnd) {
+      ctx.fillText(iso, x0 + 4 * ratio, top + 4 * ratio)
+      lastLabelEnd = x0 + 4 * ratio + ctx.measureText(iso).width + 8 * ratio
+    }
   }
   ctx.restore()
 }

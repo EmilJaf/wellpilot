@@ -37,7 +37,7 @@ export function AgentLog({ state, selectedEvidence, onSelectEvidence }: Props) {
         )}
         {state.question && <p className="question">{state.question}</p>}
         {state.asOf && <p className="narration">Data after {state.asOf} is hidden from the agent.</p>}
-        <ol className="track">
+        <ol className="track" aria-live="polite" aria-label="Agent steps">
           {state.steps.map((step, i) => (
             <Step
               key={step.index}
@@ -63,7 +63,13 @@ export function AgentLog({ state, selectedEvidence, onSelectEvidence }: Props) {
         {state.error && (
           <div className="flag flag-alarm" role="alert">
             <AlarmIcon />
-            <span>The run stopped: {state.error}</span>
+            <span>
+              {!state.id
+                ? `The run could not start: ${state.error}`
+                : state.model
+                  ? `The run stopped: ${state.error}`
+                  : state.error}
+            </span>
           </div>
         )}
       </div>

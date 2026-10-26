@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { api, type RunSummary, type Table } from './api'
 import { AgentLog } from './components/AgentLog'
 import { Answer } from './components/Answer'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { EvidenceView } from './components/EvidenceView'
 import { type Marker, WellCharts } from './components/WellCharts'
 import { datesIn } from './labels'
@@ -15,6 +16,8 @@ const EXAMPLES = [
 
 type EventRow = { kind: string; signal: string; start: string; end: string | null; details: Record<string, unknown> }
 
+const NO_MARKERS: Marker[] = []
+
 function toMarkers(events: EventRow[]): Marker[] {
   return events.flatMap((e): Marker[] => {
     if (e.kind === 'gauge_failure' && e.end) {
@@ -24,6 +27,7 @@ function toMarkers(events: EventRow[]): Marker[] {
       return [{ at: e.start, kind: 'regime', track: e.signal === 'oil_rate' ? 'oil' : 'water' }]
     }
     if (e.kind === 'threshold_crossing') return [{ at: e.start, kind: 'crossing', track: 'water' }]
+    if (e.kind === 'shut_in' && e.end) return [{ at: e.start, until: e.end, kind: 'shut_in', track: 'oil' }]
     return []
   })
 }
@@ -32,11 +36,16 @@ export default function App() {
   const { state, ask, open } = useRun()
   const [question, setQuestion] = useState(EXAMPLES[0])
   const [asOf, setAsOf] = useState('')
-  const [selectedEvidence, setSelectedEvidence] = useState<string | null>(null)
+  const [selectedEvidence, setSelected] = useState<string | null>(null)
+  const [evidenceAttempt, setEvidenceAttempt] = useState(0)
+  const setSelectedEvidence = (id: string | null) => {
+    setSelected(id)
+    setEvidenceAttempt((n) => n + 1)
+  }
   const [selectedFinding, setSelectedFinding] = useState<number | null>(null)
   const [pickedWell, setPickedWell] = useState<string | null>(null)
   const [wells, setWells] = useState<string[]>([])
-  const [daily, setDaily] = useState<{ well: string; table: Table } | null>(null)
+  const [daily, setDaily] = useState<{ well: string; table: Table | null; error?: string } | null>(null)
   const [markers, setMarkers] = useState<{ key: string; list: Marker[] }>({ key: '', list: [] })
   const [recorded, setRecorded] = useState<RunSummary | null>(null)
 
@@ -46,7 +55,8 @@ export default function App() {
   const agentWell = useMemo(() => {
     for (const step of state.steps) {
       for (const call of step.tool_calls) {
-        if (typeof call.arguments.well === 'string') return call.arguments.well
+        // Only calls that succeeded: a typo like "F12" must not blank the charts.
+        if (call.evidence_id && typeof call.arguments.well === 'string') return call.arguments.well
       }
     }
     return null
@@ -78,7 +88,7 @@ export default function App() {
     api
       .daily(well)
       .then((table) => current && setDaily({ well, table }))
-      .catch(() => current && setDaily(null))
+      .catch((e: Error) => current && setDaily({ well, table: null, error: e.message }))
     return () => {
       current = false
     }
@@ -110,8 +120,13 @@ export default function App() {
   }, [state.id, eventsEvidence])
 
   const finding = selectedFinding !== null ? state.final?.findings[selectedFinding] : undefined
-  const highlights = finding ? datesIn(finding.claim) : []
-  const chartMarkers = eventsEvidence && markers.key === `${state.id}/${eventsEvidence}` ? markers.list : []
+  // Stable arrays, so the charts redraw only when a selection or the markers change.
+  const highlights = useMemo(() => (finding ? datesIn(finding.claim) : []), [finding])
+  const markersKey = eventsEvidence ? `${state.id}/${eventsEvidence}` : ''
+  const chartMarkers = useMemo(
+    () => (markersKey && markers.key === markersKey ? markers.list : NO_MARKERS),
+    [markersKey, markers],
+  )
 
   const reset = () => {
     setSelectedEvidence(null)
@@ -178,6 +193,7 @@ export default function App() {
         </form>
       </header>
 
+      <ErrorBoundary>
       <main className="console">
         <AgentLog state={state} selectedEvidence={selectedEvidence} onSelectEvidence={setSelectedEvidence} />
 
@@ -197,9 +213,14 @@ export default function App() {
               ))}
             </select>
           </div>
-          <WellCharts table={daily?.well === well ? daily.table : null} markers={chartMarkers} highlights={highlights} />
+          <WellCharts
+            table={daily?.well === well ? daily.table : null}
+            error={daily?.well === well ? daily.error : undefined}
+            markers={chartMarkers}
+            highlights={highlights}
+          />
           <div className="evidence-scroll">
-            <EvidenceView runId={state.id} evidenceId={selectedEvidence} />
+            <EvidenceView runId={state.id} evidenceId={selectedEvidence} attempt={evidenceAttempt} />
           </div>
         </section>
 
@@ -215,6 +236,7 @@ export default function App() {
           onSelectEvidence={setSelectedEvidence}
         />
       </main>
+      </ErrorBoundary>
     </div>
   )
 }

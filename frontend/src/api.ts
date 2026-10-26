@@ -53,12 +53,13 @@ export type FinalEvent = {
   evidence: EvidenceMeta[]
 }
 
-export type RunEvent =
+export type RunEvent = { seq: number } & (
   | { type: 'run_started'; id: string; question: string; as_of: string | null; model: string; provider: string }
   | { type: 'llm_call'; step: number }
   | StepEvent
   | FinalEvent
-  | { type: 'error'; message: string }
+  | { type: 'run_error'; message: string }
+)
 
 export type RunSummary = {
   id: string
@@ -74,7 +75,9 @@ async function json<T>(response: Response): Promise<T> {
     let detail = `${response.status} ${response.statusText}`
     try {
       const body = await response.json()
-      if (body?.detail) detail = typeof body.detail === 'string' ? body.detail : JSON.stringify(body.detail)
+      if (typeof body?.detail === 'string') detail = body.detail
+      // FastAPI validation errors are a list; say what to fix instead of dumping it.
+      else if (response.status === 422) detail = 'Ask a question of at least 5 characters.'
     } catch {
       // keep the status line
     }
@@ -97,25 +100,37 @@ export const api = {
   pageImageUrl: (docId: string, page: number) => `/api/reports/${docId}/pages/${page}/image`,
 }
 
-/** Follow a run's event stream. Returns a function that closes it. */
-export function followRun(runId: string, onEvent: (event: RunEvent) => void, onClose: () => void): () => void {
+/**
+ * Follow a run's event stream. Returns a function that closes it.
+ *
+ * A dropped connection reconnects on its own and the server resumes after the last event
+ * id it sent, so nothing is repeated. onFail fires only when the stream is closed for good
+ * before the run ended (unknown run, server gone).
+ */
+export function followRun(runId: string, onEvent: (event: RunEvent) => void, onFail: (message: string) => void): () => void {
   const source = new EventSource(`/api/runs/${runId}/events`)
-  const types: RunEvent['type'][] = ['run_started', 'llm_call', 'step', 'final', 'error']
+  let ended = false
+  const types: RunEvent['type'][] = ['run_started', 'llm_call', 'step', 'final', 'run_error']
   for (const type of types) {
     source.addEventListener(type, (message) => {
-      const event = JSON.parse((message as MessageEvent).data) as RunEvent
+      if (!(message instanceof MessageEvent)) return
+      const event = JSON.parse(message.data) as RunEvent
       onEvent(event)
-      if (type === 'final' || type === 'error') {
+      if (type === 'final' || type === 'run_error') {
+        ended = true
         source.close()
-        onClose()
       }
     })
   }
   source.onerror = () => {
-    // The server ends the stream after the final event; anything else is a dropped link.
-    if (source.readyState === EventSource.CLOSED) onClose()
+    if (!ended && source.readyState === EventSource.CLOSED) {
+      onFail('The run could not be loaded: it does not exist, or the server is unreachable.')
+    }
   }
-  return () => source.close()
+  return () => {
+    ended = true
+    source.close()
+  }
 }
 
 /** Column index helper for column-wise tables. */

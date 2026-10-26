@@ -3,24 +3,31 @@ import { api, type Evidence, type Table } from '../api'
 import { CautionIcon } from '../icons'
 import { describeArgs, toolName } from '../labels'
 
-type Props = { runId: string | null; evidenceId: string | null }
+type Props = { runId: string | null; evidenceId: string | null; attempt: number }
+
+type Loaded = { key: string; evidence?: Evidence; error?: string }
 
 /** One piece of evidence: what ran, on which arguments, and exactly what it returned. */
-export function EvidenceView({ runId, evidenceId }: Props) {
-  const [evidence, setEvidence] = useState<Evidence | null>(null)
-  const [error, setError] = useState<string | null>(null)
+export function EvidenceView({ runId, evidenceId, attempt }: Props) {
+  // Results are keyed by what was asked for, so a stale result or error never shows under
+  // another id, and selecting the same id again retries.
+  const key = `${runId}/${evidenceId}/${attempt}`
+  const [loaded, setLoaded] = useState<Loaded | null>(null)
 
   useEffect(() => {
     if (!runId || !evidenceId) return
     let current = true
     api
       .evidence(runId, evidenceId)
-      .then((e) => current && (setEvidence(e), setError(null)))
-      .catch((e: Error) => current && setError(e.message))
+      .then((evidence) => current && setLoaded({ key, evidence }))
+      .catch((e: Error) => current && setLoaded({ key, error: e.message }))
     return () => {
       current = false
     }
-  }, [runId, evidenceId])
+  }, [runId, evidenceId, key])
+
+  const evidence = loaded?.key === key ? loaded.evidence : undefined
+  const error = loaded?.key === key ? loaded.error : undefined
 
   if (!evidenceId) {
     return (
@@ -33,7 +40,7 @@ export function EvidenceView({ runId, evidenceId }: Props) {
     )
   }
   if (error) return <div className="panel-body evidence"><p className="empty">Evidence {evidenceId}: {error}</p></div>
-  if (!evidence || evidence.id !== evidenceId) return <div className="panel-body evidence"><p className="empty">Loading {evidenceId}</p></div>
+  if (!evidence) return <div className="panel-body evidence"><p className="empty">Loading {evidenceId}</p></div>
 
   return (
     <div className="panel-body evidence">

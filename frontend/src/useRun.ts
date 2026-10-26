@@ -30,12 +30,26 @@ type Action =
   | { type: 'event'; event: RunEvent }
   | { type: 'failed'; message: string }
 
-function reducer(state: RunState, action: Action): RunState {
+type State = RunState & { lastSeq: number }
+
+function reducer(state: State, action: Action): State {
   if (action.type === 'reset') {
-    return { ...initial, id: action.id, question: action.question, status: action.id ? 'running' : 'starting' }
+    return {
+      ...initial,
+      lastSeq: -1,
+      id: action.id,
+      question: action.question,
+      status: action.id ? 'running' : 'starting',
+    }
   }
   if (action.type === 'failed') return { ...state, status: 'error', thinking: null, error: action.message }
-  const event = action.event
+  // Events carry a sequence number; never apply one twice.
+  if (action.event.seq <= state.lastSeq) return state
+  const next = applyEvent(state, action.event)
+  return { ...next, lastSeq: action.event.seq }
+}
+
+function applyEvent(state: State, event: RunEvent): State {
   switch (event.type) {
     case 'run_started':
       return { ...state, id: event.id, question: event.question, model: event.model, asOf: event.as_of, status: 'running' }
@@ -45,8 +59,14 @@ function reducer(state: RunState, action: Action): RunState {
       return { ...state, thinking: null, steps: [...state.steps, event] }
     case 'final':
       return { ...state, thinking: null, final: event, status: 'done' }
-    case 'error':
+    case 'run_error':
       return { ...state, thinking: null, status: 'error', error: event.message }
+    default: {
+      // Runs saved before the rename call a failure "error".
+      const legacy = event as { type: string; message?: string }
+      if (legacy.type === 'error') return { ...state, thinking: null, status: 'error', error: legacy.message ?? 'failed' }
+      return state
+    }
   }
 }
 
@@ -56,11 +76,11 @@ const REPLAY_PAUSE_MS: Record<RunEvent['type'], number> = {
   llm_call: 1100,
   step: 500,
   final: 0,
-  error: 0,
+  run_error: 0,
 }
 
 export function useRun() {
-  const [state, dispatch] = useReducer(reducer, initial)
+  const [state, dispatch] = useReducer(reducer, { ...initial, lastSeq: -1 })
   const stop = useRef<() => void>(() => {})
 
   const follow = useCallback((runId: string, replay: boolean) => {
@@ -86,7 +106,7 @@ export function useRun() {
         queue.push(event)
         if (timer === undefined) drain()
       },
-      () => {},
+      (message) => dispatch({ type: 'failed', message }),
     )
     stop.current = () => {
       closed = true
