@@ -196,11 +196,11 @@ def gauge_failures(
     prod = _production(daily).set_index("date")
     zero = issues[
         (issues["well"] == well)
-        & issues["column"].isin(columns)
+        & issues["field"].isin(columns)
         & issues["issue"].isin(["zero_gauge_reading", "zero_whp_while_flowing"])
     ]
     events = []
-    for column, rows in zero.groupby("column"):
+    for column, rows in zero.groupby("field"):
         good_dates = prod.index[prod[column].notna()].to_series()
         for start, end in _dead_runs(rows["date"], good_dates):
             days = rows[(rows["date"] >= start) & (rows["date"] <= end)]

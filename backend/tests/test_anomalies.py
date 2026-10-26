@@ -42,7 +42,7 @@ def zero_issues(daily: pd.DataFrame, mask: np.ndarray, column: str = "bhp_bar") 
         {
             "date": rows["date"],
             "well": rows["well"],
-            "column": column,
+            "field": column,
             "issue": "zero_gauge_reading",
             "raw_value": 0.0,
             "action": "set_missing",

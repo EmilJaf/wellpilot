@@ -9,7 +9,7 @@ import pandas as pd
 import pytest
 from openai.types.chat import ChatCompletion
 
-from wellpilot.agent.loop import run_agent, system_prompt
+from wellpilot.agent.loop import SUBMIT, run_agent, submit_tool_schema, system_prompt
 from wellpilot.agent.tools import TOOLS, execute, to_jsonable, tool_schemas
 from wellpilot.config import Settings
 from wellpilot.data.store import ProductionStore
@@ -89,13 +89,33 @@ def fake_llm(responses: list[ChatCompletion]) -> tuple[LLM, FakeCompletions]:
     return LLM(client=client, model="fake", provider="fake"), completions
 
 
+def submission(claim: str, evidence_ids=("E1",), confidence="fact") -> dict:
+    return {
+        "summary": "F-12 is the only producer here.",
+        "findings": [
+            {"claim": claim, "evidence_ids": list(evidence_ids), "confidence": confidence}
+        ],
+    }
+
+
 def test_tool_schemas_are_plain_json_schema() -> None:
-    schemas = json.dumps(tool_schemas())
+    schemas = json.dumps([*tool_schemas(), submit_tool_schema()])
 
     assert "anyOf" not in schemas
+    assert "$ref" not in schemas
     assert '"title"' not in schemas
-    for tool in TOOLS:
+    for tool in [*TOOLS, SimpleNamespace(name=SUBMIT)]:
         assert re.fullmatch(r"[a-zA-Z0-9_-]+", tool.name)
+
+
+def test_calculate_is_safe_arithmetic(store) -> None:
+    assert execute(store, "calculate", '{"expression": "0.7532 / 0.0575"}')["result"] == {
+        "expression": "0.7532 / 0.0575",
+        "value": 13.1,
+    }
+    assert "error" in execute(store, "calculate", '{"expression": "__import__(\\"os\\")"}')
+    assert "division by zero" in execute(store, "calculate", '{"expression": "1/0"}')["error"]
+    assert "too large" in execute(store, "calculate", '{"expression": "9**999"}')["error"]
 
 
 def test_execute_reports_errors_instead_of_raising(store) -> None:
@@ -110,7 +130,9 @@ def test_to_jsonable() -> None:
         "when": pd.Timestamp("2010-10-12"),
         "missing": float("nan"),
         "n": np.int64(3),
+        "big": np.float64(4579609.55),
         "x": np.float64(1.234567),
+        "small": 0.016462,
         "flag": np.bool_(True),
         "nat": pd.NaT,
     }
@@ -119,39 +141,109 @@ def test_to_jsonable() -> None:
         "when": "2010-10-12",
         "missing": None,
         "n": 3,
-        "x": 1.2346,
+        "big": 4579610,
+        "x": 1.23,
+        "small": 0.01646,
         "flag": True,
         "nat": None,
     }
 
 
-async def test_agent_runs_tools_and_returns_the_answer(store) -> None:
+async def test_verified_run_cites_evidence(store) -> None:
     llm, completions = fake_llm(
         [
             completion("1. List wells.", tool_calls=[("list_wells", {})]),
-            completion("F-12 produced the most oil."),
+            completion(tool_calls=[(SUBMIT, submission("F-12 produced on 60 days."))]),
         ]
     )
     steps = []
 
     run = await run_agent("Which well produced most?", llm, store, on_step=steps.append)
 
-    assert run.finished
-    assert run.answer == "F-12 produced the most oil."
+    assert run.finished and run.verified
+    assert run.summary == "F-12 is the only producer here."
+    assert run.findings[0].evidence_ids == ["E1"]
+    assert [e.id for e in run.evidence] == ["E1"]
+    assert run.evidence[0].code.startswith("wellpilot.agent.tools.list_wells@")
+    assert run.check_rounds == [[]]
     assert run.total_tokens == (200, 20)
     assert steps == run.steps
-    first_call = run.steps[0].tool_calls[0]
-    assert first_call["name"] == "list_wells"
-    assert first_call["result"]["result"][0]["well"] == "F-12"
 
     first, second = completions.requests
     assert "tool_choice" not in first
-    assert {t["function"]["name"] for t in first["tools"]} >= {"list_wells", "run_sql"}
+    names = {t["function"]["name"] for t in first["tools"]}
+    assert names >= {"list_wells", "run_sql", "calculate", SUBMIT}
     assert second["messages"][2]["tool_calls"][0]["id"] == "call_0"
     tool_message = second["messages"][3]
     assert tool_message["role"] == "tool"
     assert tool_message["tool_call_id"] == "call_0"
-    assert "F-12" in tool_message["content"]
+    assert json.loads(tool_message["content"])["evidence_id"] == "E1"
+
+
+async def test_rejected_submission_is_fixed_and_resubmitted(store) -> None:
+    llm, completions = fake_llm(
+        [
+            completion(tool_calls=[("list_wells", {})]),
+            completion(tool_calls=[(SUBMIT, submission("F-12 produced on 61 days."))]),
+            completion(tool_calls=[(SUBMIT, submission("F-12 produced on 60 days."))]),
+        ]
+    )
+
+    run = await run_agent("Days?", llm, store)
+
+    assert run.verified
+    assert len(run.check_rounds) == 2
+    assert "61 not found in E1" in run.check_rounds[0][0]
+    assert run.check_rounds[1] == []
+    rejection = json.loads(completions.requests[2]["messages"][-1]["content"])
+    assert rejection["accepted"] is False
+
+
+async def test_out_of_check_rounds_returns_an_unverified_answer(store) -> None:
+    llm, completions = fake_llm(
+        [
+            completion(tool_calls=[("list_wells", {})]),
+            completion(tool_calls=[(SUBMIT, submission("F-12 produced on 61 days."))]),
+        ]
+    )
+
+    run = await run_agent("Days?", llm, store)
+
+    assert run.finished and not run.verified
+    assert len(run.check_rounds) == 3
+    assert run.findings[0].claim == "F-12 produced on 61 days."
+    assert len(completions.requests) == 4
+
+
+async def test_failed_tool_calls_get_no_evidence_id(store) -> None:
+    llm, _ = fake_llm(
+        [
+            completion(tool_calls=[("fit_decline", {"well": "F-99"})]),
+            completion(tool_calls=[(SUBMIT, submission("No such well.", evidence_ids=["E1"]))]),
+        ]
+    )
+
+    run = await run_agent("F-99?", llm, store, max_steps=2)
+
+    call = run.steps[0].tool_calls[0]
+    assert "evidence_id" not in call
+    assert "unknown well" in call["result"]["error"]
+    assert run.evidence == []
+    assert "unknown evidence E1" in run.check_rounds[0][0]
+
+
+async def test_plain_text_answer_is_nudged_then_returned_unverified(store) -> None:
+    llm, completions = fake_llm(
+        [completion("F-12 is fine.", reasoning_content="Thinking about F-12.")]
+    )
+
+    run = await run_agent("Hi", llm, store)
+
+    assert run.finished and not run.verified
+    assert run.summary == "F-12 is fine."
+    assert run.steps[0].reasoning == "Thinking about F-12."
+    nudge = completions.requests[1]["messages"][-1]
+    assert nudge["role"] == "user" and SUBMIT in nudge["content"]
 
 
 async def test_agent_stops_at_the_step_limit(store) -> None:
@@ -160,16 +252,9 @@ async def test_agent_stops_at_the_step_limit(store) -> None:
     run = await run_agent("Loop forever", llm, store, max_steps=3)
 
     assert not run.finished
-    assert run.answer is None
+    assert run.summary is None
     assert len(completions.requests) == 3
-
-
-async def test_reasoning_is_captured_when_the_provider_sends_it(store) -> None:
-    llm, _ = fake_llm([completion("Done.", reasoning_content="Thinking about F-12.")])
-
-    run = await run_agent("Hi", llm, store)
-
-    assert run.steps[0].reasoning == "Thinking about F-12."
+    assert [e.id for e in run.evidence] == ["E1", "E2", "E3"]
 
 
 def test_system_prompt_mentions_the_cutoff() -> None:

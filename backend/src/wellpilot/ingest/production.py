@@ -47,7 +47,7 @@ RAW_COLUMNS = {
     "DP_CHOKE_SIZE": "dp_choke_bar",
 }
 VOLUME_COLUMNS = ("oil_sm3", "gas_sm3", "water_sm3", "water_inj_sm3")
-ISSUE_COLUMNS = ["date", "well", "column", "issue", "raw_value", "action"]
+ISSUE_COLUMNS = ["date", "well", "field", "issue", "raw_value", "action"]
 
 
 @dataclass(frozen=True)
@@ -77,7 +77,7 @@ class _IssueLog:
                 {
                     "date": hits["date"],
                     "well": hits["well"],
-                    "column": column,
+                    "field": column,
                     "issue": issue,
                     "raw_value": hits[column].astype(float),
                     "action": action,
@@ -89,7 +89,7 @@ class _IssueLog:
         if not self._records:
             return pd.DataFrame(columns=ISSUE_COLUMNS)
         issues = pd.concat(self._records, ignore_index=True)
-        return issues.sort_values(["well", "date", "column"]).reset_index(drop=True)
+        return issues.sort_values(["well", "date", "field"]).reset_index(drop=True)
 
 
 def clean_daily(raw: pd.DataFrame) -> CleanResult:

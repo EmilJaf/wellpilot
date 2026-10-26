@@ -1,10 +1,14 @@
 """Tools the agent can call, with JSON schemas generated from Pydantic argument models.
 
 Tools never raise into the loop: bad arguments, unknown wells and failed fits come back
-as {"error": ...} so the model can read the message and correct itself.
+as {"error": ...} so the model can read the message and correct itself. Tables are
+returned column-wise and numbers rounded, which keeps tool results (and so the prompt
+the model re-reads every step) small.
 """
 
+import ast
 import math
+import operator
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date
@@ -21,10 +25,22 @@ from wellpilot.analysis.anomalies import (
     shut_ins,
     threshold_crossing,
 )
-from wellpilot.analysis.decline import fit_decline, forecast
+from wellpilot.analysis.decline import DeclineFit, fit_decline, forecast
 from wellpilot.data.store import ProductionStore, QueryError
 
 SQL_ROW_LIMIT = 200
+MIN_R2_LOG = 0.7
+MAX_RESIDUAL_TREND = 0.05
+
+
+def _round(x: float) -> float | int:
+    """Whole numbers from 1000 up, 2 decimals from 1 up, 4 significant digits below."""
+    magnitude = abs(x)
+    if magnitude >= 1000:
+        return round(x)
+    if magnitude >= 1:
+        return round(x, 2)
+    return float(f"{x:.4g}")
 
 
 def to_jsonable(value: Any) -> Any:
@@ -39,17 +55,21 @@ def to_jsonable(value: Any) -> Any:
         return value.date().isoformat()
     if isinstance(value, date):
         return value.isoformat()
-    if isinstance(value, np.bool_):
+    if isinstance(value, bool | np.bool_):
         return bool(value)
-    if isinstance(value, np.integer):
+    if isinstance(value, int | np.integer):
         return int(value)
     if isinstance(value, float | np.floating):
-        return round(float(value), 4) if math.isfinite(value) else None
+        return _round(float(value)) if math.isfinite(value) else None
     return value
 
 
-def _records(frame: pd.DataFrame) -> list[dict]:
-    return to_jsonable(frame.to_dict("records"))
+def table(frame: pd.DataFrame) -> dict:
+    """Column-wise table: column names once, then one list per row."""
+    return {
+        "columns": [str(c) for c in frame.columns],
+        "rows": to_jsonable(frame.to_numpy(dtype=object).tolist()),
+    }
 
 
 class NoArgs(BaseModel):
@@ -79,6 +99,13 @@ class SqlArgs(BaseModel):
     sql: str = Field(description="One DuckDB SELECT statement.")
 
 
+class CalcArgs(BaseModel):
+    expression: str = Field(
+        description="Arithmetic on numbers taken from evidence, e.g. '0.7532 / 0.0575'. "
+        "Operators: + - * / ** and parentheses."
+    )
+
+
 def _check_well(store: ProductionStore, well: str) -> None:
     known = store.query("SELECT DISTINCT well FROM production_daily ORDER BY well").rows
     names = known["well"].tolist()
@@ -86,7 +113,7 @@ def _check_well(store: ProductionStore, well: str) -> None:
         raise ValueError(f"unknown well {well!r}; known wells: {', '.join(names)}")
 
 
-def list_wells(store: ProductionStore, _: NoArgs) -> list[dict]:
+def list_wells(store: ProductionStore, _: NoArgs) -> dict:
     rows = store.query(
         """
         SELECT well,
@@ -101,10 +128,10 @@ def list_wells(store: ProductionStore, _: NoArgs) -> list[dict]:
         FROM production_daily GROUP BY well ORDER BY well
         """
     ).rows
-    return _records(rows)
+    return table(rows)
 
 
-def production_monthly(store: ProductionStore, args: WindowArgs) -> list[dict]:
+def production_monthly(store: ProductionStore, args: WindowArgs) -> dict:
     _check_well(store, args.well)
     conditions, params = ["well = ?"], [args.well]
     if args.start:
@@ -115,7 +142,7 @@ def production_monthly(store: ProductionStore, args: WindowArgs) -> list[dict]:
         params.append(pd.Timestamp(args.end))
     rows = store.query(
         f"""
-        SELECT date_trunc('month', date) AS month,
+        SELECT strftime(date_trunc('month', date), '%Y-%m') AS month,
                sum(oil_sm3) AS oil_sm3,
                sum(water_sm3) AS water_sm3,
                sum(gas_sm3) AS gas_sm3,
@@ -131,7 +158,7 @@ def production_monthly(store: ProductionStore, args: WindowArgs) -> list[dict]:
         """,
         params,
     ).rows
-    return _records(rows)
+    return table(rows)
 
 
 def detect_events(store: ProductionStore, args: WellArgs) -> list[dict]:
@@ -167,7 +194,24 @@ def detect_events(store: ProductionStore, args: WellArgs) -> list[dict]:
     ]
 
 
-def _fit_summary(fit) -> dict:
+def fit_warnings(fit: DeclineFit) -> list[str]:
+    warnings = []
+    if fit.r2_log < MIN_R2_LOG:
+        warnings.append(
+            f"poor fit: r2_log {fit.r2_log:.3f} < {MIN_R2_LOG}. The window may span a plateau "
+            "or a regime change; refit after the last regime change, or treat any decline "
+            "rate from this fit as an inference."
+        )
+    if abs(fit.residual_trend) > MAX_RESIDUAL_TREND:
+        direction = "faster" if fit.residual_trend < 0 else "slower"
+        warnings.append(
+            f"residual_trend {fit.residual_trend:+.3f}: by the end of the window the well "
+            f"declines {direction} than the fitted curve."
+        )
+    return warnings
+
+
+def _fit_summary(fit: DeclineFit) -> dict:
     return {
         "model": fit.model,
         "qi_sm3_per_producing_day": fit.qi,
@@ -187,10 +231,14 @@ def _fit_summary(fit) -> dict:
 def fit_decline_tool(store: ProductionStore, args: DeclineArgs) -> dict:
     _check_well(store, args.well)
     result = fit_decline(store.well_daily(args.well, args.start, args.end), model=args.model)
+    others = [c for c in result.candidates if c is not result.best]
     return to_jsonable(
         {
             "best": _fit_summary(result.best),
-            "candidates": [_fit_summary(c) for c in result.candidates],
+            "warnings": fit_warnings(result.best),
+            "other_models": [
+                {"model": c.model, "aic": c.aic, "r2_log": c.r2_log, "b": c.b} for c in others
+            ],
         }
     )
 
@@ -203,14 +251,14 @@ def forecast_tool(store: ProductionStore, args: ForecastArgs) -> dict:
         pd.DataFrame({"p90": fc.p90, "p50": fc.p50, "p10": fc.p10}, index=fc.dates)
         .resample("MS")
         .mean()
-        .rename_axis("month")
-        .reset_index()
     )
+    monthly.index = monthly.index.strftime("%Y-%m")
     return to_jsonable(
         {
             "fit": _fit_summary(fit),
+            "warnings": fit_warnings(fit),
             "cumulative_oil_sm3": fc.cumulative,
-            "monthly_rate_sm3_per_producing_day": monthly.to_dict("records"),
+            "monthly_rate_sm3_per_producing_day": table(monthly.rename_axis("month").reset_index()),
             "note": "P90 = low case, P10 = high case. Volumes = rate x historical uptime.",
         }
     )
@@ -220,10 +268,54 @@ def run_sql(store: ProductionStore, args: SqlArgs) -> dict:
     result = store.query(args.sql)
     rows = result.rows
     return {
-        "rows": _records(rows.head(SQL_ROW_LIMIT)),
+        **table(rows.head(SQL_ROW_LIMIT)),
         "row_count": len(rows),
         "truncated": result.truncated or len(rows) > SQL_ROW_LIMIT,
     }
+
+
+_OPERATORS: dict[type, Callable] = {
+    ast.Add: operator.add,
+    ast.Sub: operator.sub,
+    ast.Mult: operator.mul,
+    ast.Div: operator.truediv,
+    ast.Pow: operator.pow,
+    ast.USub: operator.neg,
+    ast.UAdd: operator.pos,
+}
+
+
+def _evaluate(node: ast.AST) -> float:
+    if isinstance(node, ast.Expression):
+        return _evaluate(node.body)
+    if (
+        isinstance(node, ast.Constant)
+        and isinstance(node.value, int | float)
+        and not isinstance(node.value, bool)
+    ):
+        return node.value
+    if isinstance(node, ast.BinOp) and type(node.op) in _OPERATORS:
+        left, right = _evaluate(node.left), _evaluate(node.right)
+        if isinstance(node.op, ast.Pow) and abs(right) > 100:
+            raise ValueError("exponent too large")
+        return _OPERATORS[type(node.op)](left, right)
+    if isinstance(node, ast.UnaryOp) and type(node.op) in _OPERATORS:
+        return _OPERATORS[type(node.op)](_evaluate(node.operand))
+    raise ValueError(f"only numbers and + - * / ** ( ) are allowed, got {type(node).__name__}")
+
+
+def calculate(_: ProductionStore, args: CalcArgs) -> dict:
+    if len(args.expression) > 200:
+        raise ValueError("expression longer than 200 characters")
+    try:
+        tree = ast.parse(args.expression.replace(",", ""), mode="eval")
+    except SyntaxError as e:
+        raise ValueError(f"cannot parse expression: {e.msg}") from e
+    try:
+        value = _evaluate(tree)
+    except ZeroDivisionError as e:
+        raise ValueError("division by zero") from e
+    return {"expression": args.expression, "value": to_jsonable(float(value))}
 
 
 @dataclass(frozen=True)
@@ -239,16 +331,33 @@ class Tool:
             "function": {
                 "name": self.name,
                 "description": self.description,
-                "parameters": _clean_schema(self.args.model_json_schema()),
+                "parameters": parameters_schema(self.args),
             },
         }
 
 
-def _clean_schema(node: Any) -> Any:
+def parameters_schema(model: type[BaseModel]) -> dict:
+    """JSON schema for a tool's parameters, with $refs inlined and clean_schema applied."""
+    schema = model.model_json_schema()
+    defs = schema.pop("$defs", {})
+
+    def inline(node: Any) -> Any:
+        if isinstance(node, list):
+            return [inline(n) for n in node]
+        if not isinstance(node, dict):
+            return node
+        if "$ref" in node:
+            return inline(defs[node["$ref"].rsplit("/", 1)[-1]])
+        return {k: inline(v) for k, v in node.items()}
+
+    return clean_schema(inline(schema))
+
+
+def clean_schema(node: Any) -> Any:
     """Drop Pydantic titles and turn `X | None` into plain optional X: providers vary in
     how well they handle anyOf with null."""
     if isinstance(node, list):
-        return [_clean_schema(n) for n in node]
+        return [clean_schema(n) for n in node]
     if not isinstance(node, dict):
         return node
     node = {k: v for k, v in node.items() if k != "title"}
@@ -258,7 +367,7 @@ def _clean_schema(node: Any) -> Any:
         node = {**{k: v for k, v in node.items() if k != "anyOf"}, **other}
         if node.get("default", ...) is None:
             del node["default"]
-    return {k: _clean_schema(v) for k, v in node.items()}
+    return {k: clean_schema(v) for k, v in node.items()}
 
 
 DAILY_COLUMNS = (
@@ -278,7 +387,8 @@ TOOLS = [
     Tool(
         "production_monthly",
         "Monthly production for one well: volumes, water cut, uptime, oil rate per producing "
-        "day, average BHP/WHP/choke. Missing gauge readings are null, not zero.",
+        "day, average BHP/WHP/choke. Missing gauge readings are null, not zero. Pass start "
+        "and end to keep the result small.",
         WindowArgs,
         production_monthly,
     ),
@@ -293,8 +403,8 @@ TOOLS = [
     Tool(
         "fit_decline",
         "Fit Arps decline curves to one well's oil rate per producing day within a window. "
-        "Returns parameters, r2_log and residual_trend (< 0: falling faster than the curve "
-        "at the end of the window). Choose the window after the last regime change.",
+        "Returns parameters, r2_log, residual_trend and warnings when the fit is not "
+        "trustworthy. Choose the window after the last regime change.",
         DeclineArgs,
         fit_decline_tool,
     ),
@@ -308,11 +418,18 @@ TOOLS = [
         "run_sql",
         "Run one read-only DuckDB SELECT. Tables: production_daily("
         + DAILY_COLUMNS
-        + "); production_issues(date, well, column, issue, raw_value, action) logs every "
+        + "); production_issues(date, well, field, issue, raw_value, action) logs every "
         "raw value the ingest set to missing or flagged. Returns at most "
         f"{SQL_ROW_LIMIT} rows; aggregate instead of selecting raw daily rows.",
         SqlArgs,
         run_sql,
+    ),
+    Tool(
+        "calculate",
+        "Evaluate arithmetic on numbers from evidence (ratios, differences, percentages). "
+        "Use it for every derived number you state, so the number has evidence.",
+        CalcArgs,
+        calculate,
     ),
 ]
 TOOLS_BY_NAME = {t.name: t for t in TOOLS}

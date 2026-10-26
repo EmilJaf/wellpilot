@@ -21,7 +21,7 @@ def processed_dir(tmp_path):
         {
             "date": [dates[2], dates[8]],
             "well": ["F-12", "F-12"],
-            "column": ["bhp_bar", "bhp_bar"],
+            "field": ["bhp_bar", "bhp_bar"],
             "issue": ["zero_gauge_reading"] * 2,
             "raw_value": [0.0, 0.0],
             "action": ["set_missing"] * 2,

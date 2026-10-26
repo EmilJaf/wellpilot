@@ -75,7 +75,7 @@ def test_zero_downhole_gauge_is_missing_and_logged() -> None:
     assert math.isnan(row["dp_tubing_bar"])
     assert row["whp_bar"] == 55.0
     zero = issues_for(result, "zero_gauge_reading")
-    assert set(zero["column"]) == {"bhp_bar", "bht_c"}
+    assert set(zero["field"]) == {"bhp_bar", "bht_c"}
     assert (zero["raw_value"] == 0.0).all()
     assert (zero["action"] == "set_missing").all()
     echo = issues_for(result, "dp_tubing_without_bhp")
