@@ -17,6 +17,7 @@ export type StepEvent = {
   type: 'step'
   index: number
   content: string | null
+  reasoning?: string | null // Muse Spark Open's visible reasoning (Baseten); hidden on Meta's API
   tool_calls: ToolCallView[]
   prompt_tokens: number
   completion_tokens: number

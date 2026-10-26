@@ -96,6 +96,12 @@ function Step({
           Step {step.index}
           <span className="chart-note"> {step.seconds.toFixed(1)}s</span>
         </p>
+        {step.reasoning && (
+          <details className="reasoning">
+            <summary>Model reasoning</summary>
+            <p>{step.reasoning}</p>
+          </details>
+        )}
         {step.content && <p className="narration">{step.content}</p>}
         <ul className="calls">
           {step.tool_calls.map((call, i) => (

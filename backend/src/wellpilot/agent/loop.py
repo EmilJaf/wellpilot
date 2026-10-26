@@ -24,6 +24,7 @@ from wellpilot.llm import LLM, json_schema
 SUBMIT = "submit_findings"
 MAX_CHECK_ROUNDS = 3
 PREVIEW_CHARS = 300
+MAX_REASONING_CHARS = 6000  # Muse Spark Open's visible reasoning, per step, in the stream
 
 SYSTEM_PROMPT = """\
 You are WellPilot, an analysis agent for petroleum engineers working on the Volve oil \
@@ -96,9 +97,13 @@ class Step:
                 view["warnings"] = inner.get("warnings", []) if isinstance(inner, dict) else []
                 view["preview"] = text[:PREVIEW_CHARS] + ("…" if len(text) > PREVIEW_CHARS else "")
             calls.append(view)
+        reasoning = self.reasoning or None
+        if reasoning and len(reasoning) > MAX_REASONING_CHARS:
+            reasoning = reasoning[:MAX_REASONING_CHARS] + "…"
         return {
             "index": self.index,
             "content": self.content,
+            "reasoning": reasoning,
             "tool_calls": calls,
             "prompt_tokens": self.prompt_tokens,
             "completion_tokens": self.completion_tokens,
@@ -229,6 +234,8 @@ async def run_agent(
         if on_event:
             on_event(event)
 
+    effort = reasoning_effort or llm.default_reasoning
+
     for index in range(1, max_steps + 1):
         emit({"type": "llm_call", "step": index})
         started = time.monotonic()
@@ -236,7 +243,7 @@ async def run_agent(
             model=llm.model,
             messages=messages,
             tools=tools,
-            **({"reasoning_effort": reasoning_effort} if reasoning_effort else {}),
+            **({"reasoning_effort": effort} if effort else {}),
         )
         message = response.choices[0].message
         usage = response.usage

@@ -51,8 +51,9 @@ def print_step(step: Step) -> None:
         f"{step.prompt_tokens} in / {step.completion_tokens} out tokens)"
     )
     if step.reasoning:
+        text = step.reasoning.strip()
         print("  reasoning:")
-        print(_indent(step.reasoning))
+        print(_indent(text if len(text) <= 1200 else text[:1200] + f"... [{len(text)} chars]"))
     if step.content:
         print("  model:")
         print(_indent(step.content))
@@ -90,7 +91,7 @@ async def main() -> None:
     parser.add_argument(
         "--reasoning",
         choices=["minimal", "low", "medium", "high", "xhigh", "max"],
-        help="reasoning effort (default: the model's own)",
+        help="reasoning effort (default: medium on Baseten, the model's own on Meta)",
     )
     args = parser.parse_args()
 

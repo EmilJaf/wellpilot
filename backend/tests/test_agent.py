@@ -290,3 +290,17 @@ def test_make_llm_needs_a_key() -> None:
     llm = make_llm(Settings(_env_file=None, llm_provider="meta", model_api_key="test-key"))
     assert llm.model == "muse-spark-1.3"
     assert str(llm.client.base_url).startswith("https://api.meta.ai/v1")
+
+
+async def test_provider_default_reasoning_and_visible_reasoning_in_events(store) -> None:
+    llm, completions = fake_llm(
+        [completion("Done.", reasoning_content="I compare F-12 with the plan.")]
+    )
+    llm = LLM(llm.client, "fake", "baseten", default_reasoning="medium")
+    events = []
+
+    await run_agent("Hi", llm, store, max_steps=1, on_event=events.append)
+
+    assert completions.requests[0]["reasoning_effort"] == "medium"
+    step = next(e for e in events if e["type"] == "step")
+    assert step["reasoning"] == "I compare F-12 with the plan."

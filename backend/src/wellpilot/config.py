@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     # Muse Spark accepts minimal|low|medium|high|xhigh|max (not "none"). Empty = default.
     extract_reasoning_effort: str = "low"
     agent_reasoning_effort: str = ""
+    # Muse Spark Open always reasons and Baseten defaults it to xhigh: slow and costly for
+    # an interactive agent, so the agent asks for medium there unless told otherwise.
+    baseten_reasoning_effort: str = "medium"
 
     data_dir: Path = REPO_ROOT / "data"
     database_url: str = ""

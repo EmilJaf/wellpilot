@@ -20,19 +20,23 @@ class LLM:
     client: AsyncOpenAI
     model: str
     provider: str
+    default_reasoning: str = ""  # used when a caller asks for no particular effort
 
 
 def make_llm(settings: Settings) -> LLM:
     if settings.llm_provider == "meta":
         key, key_name = settings.model_api_key, "MODEL_API_KEY"
-        base_url, model = settings.meta_base_url, settings.meta_model
+        base_url, model, reasoning = settings.meta_base_url, settings.meta_model, ""
     else:
         key, key_name = settings.baseten_api_key, "BASETEN_API_KEY"
         base_url, model = settings.baseten_base_url, settings.baseten_model
+        reasoning = settings.baseten_reasoning_effort
     if not key:
         raise RuntimeError(f"{key_name} is not set; add it to .env (see .env.example)")
     client = AsyncOpenAI(api_key=key, base_url=base_url, timeout=120.0, max_retries=2)
-    return LLM(client=client, model=model, provider=settings.llm_provider)
+    return LLM(
+        client=client, model=model, provider=settings.llm_provider, default_reasoning=reasoning
+    )
 
 
 def json_schema(model: type[BaseModel]) -> dict:

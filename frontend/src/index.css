@@ -868,3 +868,26 @@ code,
 .as-of input {
   border-color: #8f99a3; /* 3:1 against the sheet, a visible control edge */
 }
+
+/* Muse Spark Open's own reasoning for a step, folded away by default */
+.reasoning {
+  margin: 0 0 6px;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.reasoning summary {
+  cursor: pointer;
+  font-stretch: var(--narrow);
+  font-weight: 600;
+}
+
+.reasoning p {
+  margin: 4px 0 0;
+  padding: 6px 8px;
+  max-height: 220px;
+  overflow: auto;
+  white-space: pre-wrap;
+  background: var(--sheet);
+  border-left: 2px solid var(--rule-strong);
+}
