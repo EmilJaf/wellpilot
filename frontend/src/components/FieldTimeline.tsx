@@ -22,8 +22,6 @@ const time = (iso: string) => Date.parse(iso.length === 7 ? `${iso}-15T00:00:00Z
  */
 export function FieldTimeline({ asOf, onOpenWell }: { asOf: string | null; onOpenWell: (well: string) => void }) {
   const [loaded, setLoaded] = useState<{ value?: Timeline; error?: string } | null>(null)
-  const [host, width] = useWidth(560)
-  const [hover, setHover] = useState<string | null>(null)
 
   useEffect(() => {
     api
@@ -34,7 +32,13 @@ export function FieldTimeline({ asOf, onOpenWell }: { asOf: string | null; onOpe
 
   if (!loaded) return <p className="empty field-view">Loading the field&rsquo;s history</p>
   if (!loaded.value) return <p className="empty field-view">The history could not load: {loaded.error}</p>
-  const t = loaded.value
+  // The plot mounts with the data, so its width is measured on an element that exists.
+  return <TimelinePlot t={loaded.value} asOf={asOf} onOpenWell={onOpenWell} />
+}
+
+function TimelinePlot({ t, asOf, onOpenWell }: { t: Timeline; asOf: string | null; onOpenWell: (well: string) => void }) {
+  const [host, width] = useWidth(560)
+  const [hover, setHover] = useState<string | null>(null)
 
   const pad = { left: 62, right: 10, top: 22, bottom: 24 }
   const row = 70
@@ -72,7 +76,7 @@ export function FieldTimeline({ asOf, onOpenWell }: { asOf: string | null; onOpe
   })
 
   return (
-    <div className="timeline field-view" ref={host}>
+    <div className="timeline field-view">
       <h3 className="accuracy-title">The field&rsquo;s history, as the screen would have told it</h3>
       <p className="accuracy-lead">
         The well screen run at every month end from {t.months[0]} to {t.months[1]}, each time with only the data up
@@ -80,6 +84,8 @@ export function FieldTimeline({ asOf, onOpenWell }: { asOf: string | null; onOpe
         daily reports. Hover to read; click a well to open it.
       </p>
       <p className="readout timeline-readout">{hover ? readouts[hover] : 'Hover an issue or a job.'}</p>
+      {/* Measured without the panel's padding, so the plot never runs past its edge. */}
+      <div ref={host}>
       <svg width={width} height={height} role="img" aria-label="Each well's oil rate, issues and work on one time axis">
         {years.map((y) => (
           <g key={y}>
@@ -153,6 +159,7 @@ export function FieldTimeline({ asOf, onOpenWell }: { asOf: string | null; onOpe
           </g>
         )}
       </svg>
+      </div>
       <p className="chart-key">
         <span><i className="case-key case-key-actual" /> oil rate per producing day, monthly, log scale</span>
         <span><i className="timeline-key is-alarm" /> alarm</span>
