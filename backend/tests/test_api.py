@@ -563,3 +563,22 @@ async def test_hindsight_only_for_a_run_with_an_as_of_date(settings) -> None:
     (f12,) = body["wells"]
     assert f12["well"] == "F-12" and f12["oil_year_after_sm3"] > 0  # the days after the cut
     assert everything.status_code == 404
+
+
+async def test_a_run_is_saved_with_the_models_numbers_exact(settings) -> None:
+    """A declared value is kept as the model sent it: run c81ba8340854 declared 3126.2 for
+    "3126.2" and was saved as 3126 (rounded like a tool table), so its replay failed."""
+    submission = json.loads(SCRIPT[-1].choices[0].message.tool_calls[0].function.arguments)
+    submission["findings"][0]["numbers"][0]["value"] = 60.0001
+    script = [*SCRIPT[:-1], completion(tool_calls=[(SUBMIT, submission)])]
+    async with client_for(create_app(settings, llm_factory=lambda: fake_llm(script))) as client:
+        run_id, events = await run_to_end(client)
+    restarted = create_app(settings, llm_factory=fake_llm)
+    async with client_for(restarted) as client:
+        saved = (await client.get(f"/api/runs/{run_id}")).json()
+
+    submitted = next(
+        c for e in events if e["type"] == "step" for c in e["tool_calls"] if c["name"] == SUBMIT
+    )
+    assert submitted["arguments"]["findings"][0]["numbers"][0]["value"] == 60.0001
+    assert saved["result"]["findings"][0]["numbers"][0]["value"] == 60.0001

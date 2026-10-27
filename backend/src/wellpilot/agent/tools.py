@@ -75,13 +75,14 @@ def _cut(text: str, max_text: int | None) -> str:
     return (cut[:space] if space > max_text // 2 else cut) + "…"
 
 
-def to_jsonable(value: Any, max_text: int | None = MAX_TEXT_CHARS) -> Any:
-    """Dates to ISO strings, numpy scalars to Python, NaN to None, floats rounded, strings
+def to_jsonable(value: Any, max_text: int | None = MAX_TEXT_CHARS, rounded: bool = True) -> Any:
+    """Dates to ISO strings, numpy scalars to Python, NaN to None, floats rounded (unless
+    `rounded` is false: a record of what the model sent keeps its numbers exact), strings
     cut at max_text characters (None keeps them whole)."""
     if isinstance(value, dict):
-        return {str(k): to_jsonable(v, max_text) for k, v in value.items()}
+        return {str(k): to_jsonable(v, max_text, rounded) for k, v in value.items()}
     if isinstance(value, list | tuple):
-        return [to_jsonable(v, max_text) for v in value]
+        return [to_jsonable(v, max_text, rounded) for v in value]
     if value is None or value is pd.NaT:
         return None
     if isinstance(value, pd.Timestamp):
@@ -93,11 +94,13 @@ def to_jsonable(value: Any, max_text: int | None = MAX_TEXT_CHARS) -> Any:
     if isinstance(value, int | np.integer):
         return int(value)
     if isinstance(value, float | np.floating):
-        return _round(float(value)) if math.isfinite(value) else None
+        if not math.isfinite(value):
+            return None
+        return _round(float(value)) if rounded else float(value)
     if isinstance(value, Decimal):
-        return to_jsonable(float(value))
+        return to_jsonable(float(value), max_text, rounded)
     if isinstance(value, timedelta | pd.Timedelta | np.timedelta64):
-        return to_jsonable(pd.Timedelta(value).total_seconds() / 86400)  # days
+        return to_jsonable(pd.Timedelta(value).total_seconds() / 86400, max_text, rounded)  # days
     if isinstance(value, str):
         return _cut(value, max_text)
     if isinstance(value, int | float):

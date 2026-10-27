@@ -65,6 +65,13 @@ class CheckRequest(BaseModel):
     summary: str | None = Field(None, max_length=3000)
 
 
+def _record_of(value: dict) -> dict:
+    """A run as it happened, made JSON-safe: nothing rounded or cut. The tools round and cut
+    their own results already; what the model sent is kept exactly, so a replay feeds back
+    the same submission and the checker on a saved run sees what it saw live."""
+    return to_jsonable(value, max_text=None, rounded=False)
+
+
 def new_run_id() -> str:
     return uuid.uuid4().hex[:12]
 
@@ -87,8 +94,9 @@ class RunRecord:
         return self.status != "running"
 
     def emit(self, event: dict) -> None:
-        # Whole strings: step events already bound reasoning (6000) and previews (300).
-        self.events.append({"seq": len(self.events), **to_jsonable(event, max_text=None)})
+        # Whole strings: step events already bound reasoning (6000) and previews (300). The
+        # model's numbers as it sent them: a submission declaring 3126.2 must replay as 3126.2.
+        self.events.append({"seq": len(self.events), **_record_of(event)})
         changed, self._changed = self._changed, asyncio.Event()
         changed.set()
 
@@ -137,14 +145,14 @@ class RunRecord:
         )
 
     def complete(self, run: AgentRun) -> None:
-        self.evidence = {e.id: to_jsonable(asdict(e)) for e in run.evidence}
-        self.result = to_jsonable(run.to_dict())
+        self.evidence = {e.id: _record_of(asdict(e)) for e in run.evidence}
+        self.result = _record_of(run.to_dict())
         self.status = "done"
         self.emit({"type": "final", **self.result})
 
     def fail(self, message: str) -> None:
         """End the run with an error, keeping the evidence gathered so far."""
-        self.evidence = {e.id: to_jsonable(asdict(e)) for e in self.log}
+        self.evidence = {e.id: _record_of(asdict(e)) for e in self.log}
         self.status = "error"
         self.emit({"type": "run_error", "message": message})
 
@@ -559,4 +567,4 @@ async def get_evidence(run_id: str, evidence_id: str, request: Request) -> dict:
     live = record.log.get(evidence_id)
     if live is None:
         raise HTTPException(404, f"run {run_id} has no evidence {evidence_id}")
-    return to_jsonable(asdict(live))
+    return _record_of(asdict(live))
