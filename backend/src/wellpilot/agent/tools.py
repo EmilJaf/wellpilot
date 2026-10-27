@@ -834,9 +834,13 @@ TOOLS = [
         "detect_events",
         "Detect events for one well: gauge failures, shut-ins (marked field-wide when other "
         "wells were shut in too), regime changes in oil rate and water cut, and water cut "
-        "crossing 5%, 50%, 80%. Each event has a summary and the numbers behind it. A "
-        "regime change's date is where the data seen so far splits best: with data cut at "
-        "an earlier date it can move by weeks, so name it as 'around' that date.",
+        "crossing 5%, 50%, 80%. Each event has a summary and the numbers behind it. An oil "
+        "regime change gives the mean of the periods before and after it (relative_change) "
+        "and the change across it, 4 weeks each side (change_across): call it a step only "
+        "when the change across is large; a large change between periods with a small one "
+        "across is a gradual shift (water taking over, depletion), not a step. A regime "
+        "change's date is where the data seen so far splits best: with data cut at an "
+        "earlier date it can move by weeks, so name it as 'around' that date.",
         WellArgs,
         detect_events,
     ),

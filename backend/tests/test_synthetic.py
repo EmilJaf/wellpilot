@@ -84,12 +84,27 @@ def test_depletion_shows_no_water_and_falling_pressure(field) -> None:
     assert monthly["wc"] < 0.03 and monthly["high"] - monthly["low"] > 100
 
 
-@pytest.mark.xfail(strict=True, reason="regime changes are found on smooth declines too")
 def test_a_smooth_decline_has_no_regime_change(field) -> None:
-    """P-3 and P-4 follow a smooth Arps decline: nothing happened to them. The detector
-    segments a decline into steps (P-3: -50% and -46%, P-4: -31%), and the screen flags P-4
-    for a step down."""
+    """P-3 and P-4 follow a smooth Arps decline: nothing happened to them. A mean-shift
+    segmentation cut them into steps (P-3: -50% and -46%, P-4: -31%) and the screen flagged
+    P-4 for a step down; a change point must now leave the smooth curve around it."""
     store, _ = field
     for well in ("P-3", "P-4"):
         oil = [e for e in events(store, well) if e["kind"] == "regime_change"]
         assert oil == [], well
+
+
+def test_a_step_is_measured_across_the_change(field) -> None:
+    """P-2's choke cut takes 40% off its rate. Between the period means it reads -65% (the
+    decline before the cut is in the mean); across the change itself it reads the step."""
+    store, truth = field
+    planted = next(e for e in truth["events"] if e["kind"] == "step_down")
+    step = next(
+        e
+        for e in events(store, "P-2")
+        if e["kind"] == "regime_change" and e["signal"] == "oil_rate" and e["start"] >= "2018-11"
+    )
+
+    assert step["details"]["change_across"] == pytest.approx(planted["oil_change"], abs=0.05)
+    assert step["details"]["relative_change"] < -0.6
+    assert "across the change itself" in step["summary"]

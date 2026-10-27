@@ -8,7 +8,7 @@ as of the end of the data (or the as-of date the store is cut at), and ranks the
   water cut at or above 0.90;
 - caution: a water cut at or above 0.80 (the platform's design limit, PUD p.23), an oil
   rate down 30% or more over the last 90 days against the 90 before, 30 or more shut-in
-  days in the last 180, a step down in oil rate in the last year;
+  days in the last 180, a step down or a shift to a lower regime in oil rate in the last year;
 - note: a well that has stopped producing, an injector that stopped injecting.
 
 No model is involved; every number comes from the data and every issue says how it was
@@ -25,6 +25,7 @@ from wellpilot.analysis.decline import producing_day_rate
 from wellpilot.data.store import ProductionStore
 
 WINDOW = pd.Timedelta(days=90)
+STEP = 0.25  # a drop of this much across a change point, 4 weeks each side, is a step
 LEVELS = {"alarm": 3, "caution": 1, "note": 0}
 
 
@@ -120,17 +121,32 @@ def _issues(store: ProductionStore, well: str, end: pd.Timestamp) -> tuple[dict,
         issues.append(
             Issue("caution", "shut_in", None, f"{len(shut)} days shut in over the last 180")
         )
-    for step in regime_changes(daily, "oil_rate"):
-        d = step.details
-        relative = d.get("relative_change")
-        if step.start > end - pd.Timedelta(days=365) and relative is not None and relative < -0.3:
+    for change in regime_changes(daily, "oil_rate"):
+        d = change.details
+        relative, across = d.get("relative_change"), d.get("change_across")
+        if change.start <= end - pd.Timedelta(days=365) or relative is None:
+            continue
+        if across is not None and across <= -STEP:
+            # Abrupt: an operation or a restart, worth a look at what was done that week.
             issues.append(
                 Issue(
                     "caution",
                     "step_down",
-                    str(step.start.date()),
-                    f"oil rate stepped down {-relative:.0%}, weekly mean "
-                    f"{d['before_mean']:,.0f} -> {d['after_mean']:,.0f} Sm3/d",
+                    str(change.start.date()),
+                    f"oil rate dropped {-across:.0%} across the change (4 weeks each side, "
+                    f"{d['across_before']:,.0f} -> {d['across_after']:,.0f} Sm3/d)",
+                )
+            )
+        elif relative < -0.3:
+            # Gradual: the rate moved to a lower regime (water taking over, depletion).
+            issues.append(
+                Issue(
+                    "caution",
+                    "shift_down",
+                    str(change.start.date()),
+                    f"oil rate {-relative:.0%} lower in the period after than before "
+                    f"(weekly mean {d['before_mean']:,.0f} -> {d['after_mean']:,.0f} Sm3/d), "
+                    f"a gradual change: {-(across or 0):.0%} across it",
                 )
             )
     return state, issues

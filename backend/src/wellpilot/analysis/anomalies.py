@@ -10,6 +10,7 @@ from typing import Literal
 import numpy as np
 import pandas as pd
 import ruptures as rpt
+from scipy.optimize import curve_fit
 
 from wellpilot.analysis.decline import producing_day_rate
 
@@ -59,6 +60,40 @@ def weekly_signal(daily: pd.DataFrame, signal: str) -> pd.Series:
 
 
 SHARES = {"water_cut"}  # signals that are fractions of a whole
+# An oil-rate change point must lift the log rate this far off the smooth Arps curve of the
+# periods around it (about 10%): on a synthetic field, smooth declines gave at most 0.04,
+# a choke cut 0.48; every Volve change point gives 0.11 or more.
+SMOOTH_SHIFT = 0.1
+SMOOTH_WEEKS = 8
+ACROSS_WEEKS = 4  # the change across a change point: medians of 4 weeks each side
+
+
+def _hyperbolic_log(t: np.ndarray, log_qi: float, di: float, b: float) -> np.ndarray:
+    return log_qi - np.log1p(b * di * t) / b
+
+
+def _beyond_smooth(x: np.ndarray, lo: int, at: int, hi: int) -> float:
+    """How far the log rate jumps off one smooth Arps (hyperbolic) curve fitted on the two
+    periods around a change point: the mean residual of the 8 weeks after it minus the 8
+    weeks before. Near 0, the change point only cuts a smooth decline in two."""
+    span = x[lo:hi]
+    t = np.arange(len(span), dtype=float)
+    try:
+        params, _ = curve_fit(
+            _hyperbolic_log,
+            t,
+            span,
+            p0=[span[0], 0.01, 0.5],
+            bounds=([-np.inf, 0.0, 1e-3], [np.inf, 1.0, 1.0]),
+            maxfev=20_000,
+        )
+    except (RuntimeError, ValueError):
+        return float("inf")  # no smooth curve fits: keep the change
+    residual = span - _hyperbolic_log(t, *params)
+    k = at - lo
+    return float(
+        residual[k : k + SMOOTH_WEEKS].mean() - residual[max(0, k - SMOOTH_WEEKS) : k].mean()
+    )
 
 
 def regime_changes(
@@ -66,8 +101,13 @@ def regime_changes(
 ) -> list[Event]:
     """Change points (PELT, L2 cost) on the standardized weekly signal.
 
-    Oil rate is segmented on its log, so a 30% drop counts the same at any rate level.
-    Lower penalty finds more, smaller changes.
+    Oil rate is segmented on its log, so a 30% drop counts the same at any rate level. A
+    mean-shift segmentation also cuts a smooth decline into steps, so an oil-rate change
+    point is kept only when the rate leaves the smooth Arps curve of the periods around it
+    (by at least SMOOTH_SHIFT in log rate). Each change gives the mean of the periods on
+    either side and the change across it, 4 weeks each side: a large change across is a
+    step (an operation, a restart); a small one under a large change of periods is gradual
+    (water taking over, depletion). Lower penalty finds more, smaller changes.
     """
     weekly = weekly_signal(daily, signal)
     values = weekly.to_numpy()
@@ -79,20 +119,40 @@ def regime_changes(
         return []
     z = (x - x.mean()) / std
     breaks = rpt.Pelt(model="l2", min_size=min_weeks, jump=1).fit(z).predict(pen=penalty)[:-1]
+    if signal == "oil_rate":
+        cuts = [0, *breaks, len(values)]
+        breaks = [
+            b
+            for i, b in enumerate(breaks)
+            if abs(_beyond_smooth(x, cuts[i], b, cuts[i + 2])) >= SMOOTH_SHIFT
+        ]
 
     events, bounds = [], [0, *breaks, len(values)]
     for i, b in enumerate(breaks):
         before = float(values[bounds[i] : b].mean())
         after = float(values[b : bounds[i + 2]].mean())
         start = weekly.index[b]
+        across_before = float(np.median(values[max(0, b - ACROSS_WEEKS) : b]))
+        across_after = float(np.median(values[b : b + ACROSS_WEEKS]))
         # A share (water cut) changes by points: 0.034 -> 0.57 is +0.54, not "+1581%".
         if signal in SHARES:
             change = {"change": after - before}
             shift = f"{after - before:+.2f}"
+            across = ""
         else:
             relative = (after - before) / abs(before) if before else float("nan")
-            change = {"relative_change": relative}
+            step = across_after / across_before - 1 if across_before else float("nan")
+            change = {
+                "relative_change": relative,
+                "across_before": across_before,
+                "across_after": across_after,
+                "change_across": step,
+            }
             shift = f"{relative:+.0%}"
+            across = (
+                f"; across the change itself, {ACROSS_WEEKS} weeks each side, "
+                f"{_fmt(across_before)} -> {_fmt(across_after)} ({step:+.0%})"
+            )
         events.append(
             Event(
                 kind="regime_change",
@@ -109,7 +169,8 @@ def regime_changes(
                 },
                 summary=(
                     f"{signal} shifts around {start.date()}: weekly mean {_fmt(before)} -> "
-                    f"{_fmt(after)} ({shift})."
+                    f"{_fmt(after)} ({shift}) from the period before to the period after"
+                    f"{across}."
                 ),
             )
         )

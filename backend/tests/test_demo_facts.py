@@ -138,7 +138,7 @@ def test_table_rows_parse_with_cells_written_apart_by_bars() -> None:
 
 def test_the_field_screen_flags_f12_at_the_end_of_2010() -> None:
     """As of 2010-12-31 the screen puts F-12 first: its downhole gauge has been dead since
-    2010-10-12 while it kept producing, and its rate stepped down in May 2010."""
+    2010-10-12 while it kept producing, and its rate moved to a lower regime in May 2010."""
     from datetime import date
 
     from wellpilot.analysis.screen import screen
@@ -151,7 +151,9 @@ def test_the_field_screen_flags_f12_at_the_end_of_2010() -> None:
     assert first["well"] == "F-12" and first["level"] == "alarm"
     assert kinds["dead_gauge"]["since"] == "2010-10-12"
     assert "123,258 Sm3" in kinds["dead_gauge"]["text"]
-    assert kinds["step_down"]["since"] == "2010-05-02"
+    # A gradual shift (water taking over), not a step: 55% between the periods, about 20%
+    # across the change itself.
+    assert kinds["shift_down"]["since"] == "2010-05-02" and "gradual" in kinds["shift_down"]["text"]
 
 
 def test_the_field_screen_ends_on_the_last_day_of_oil(store) -> None:
