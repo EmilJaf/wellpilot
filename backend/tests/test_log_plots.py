@@ -18,6 +18,7 @@ from wellpilot.ingest.log_plots import (
     WATER_2010,
     calibrate,
     colour_hits,
+    crop,
     read,
 )
 
@@ -64,15 +65,17 @@ def plot_2009() -> Image.Image:
     return Image.fromarray(img)
 
 
-def sam_output(hit: np.ndarray, origin_row: int) -> str:
-    """What SAM 3.1 returns for an area on the crop it was shown (the track over the plot's
-    rows of data): a box and its box-local mask at half resolution."""
-    crop = hit[origin_row:]
-    rows, cols = np.nonzero(crop)
+def sam_output(hit: np.ndarray, image: Image.Image, cal) -> str:
+    """What SAM 3.1 returns for an area on the crop it was shown: a box and its box-local mask
+    at half resolution."""
+    shown, (_, top) = crop(image, cal)
+    hit = hit[top : top + shown.height]
+    crop_ = hit
+    rows, cols = np.nonzero(crop_)
     x1, y1, x2, y2 = cols.min(), rows.min(), cols.max(), rows.max()
-    small = crop[y1 : y2 + 1, x1 : x2 + 1][::2, ::2]
+    small = crop_[y1 : y2 + 1, x1 : x2 + 1][::2, ::2]
     payload = _encode_raster(small.astype(int).ravel().tolist(), small.shape[1], small.shape[0])
-    h, w = crop.shape
+    h, w = crop_.shape
     return (
         f"<0f>0<|box;x1={x1};y1={y1};x2={x2};y2={y2};w={w};h={h};c=0.95|>"
         f"<|mask;x=0;y=0;data={small.shape[0]},{small.shape[1]},{payload};c=0.93|>\n"
@@ -107,7 +110,7 @@ def test_sams_mask_of_a_2009_plot_reads_the_same_rates() -> None:
     image = plot_2009()
     rgb = np.asarray(image).astype(int)
     cal = calibrate(rgb, PLOT_2009)
-    output = sam_output(colour_hits(rgb, cal, OIL_2009), cal.body[0])
+    output = sam_output(colour_hits(rgb, cal, OIL_2009), image, cal)
 
     result, overlay = read(image, PLOT_2009, {"oil": output})
 
@@ -116,7 +119,7 @@ def test_sams_mask_of_a_2009_plot_reads_the_same_rates() -> None:
     assert oil["objects_found"] == 1 and oil["confidence"] == pytest.approx(0.93)
     assert oil["agreement_with_colour"]["median_share_gap"] <= 0.01
     assert result["checks"]["upper_two_zones_share"] == pytest.approx(0.84, abs=0.02)
-    assert overlay.size == (RIGHT - LEFT - 1, cal.body[1] - cal.body[0])
+    assert overlay.size == crop(image, cal)[0].size
 
 
 def test_no_mask_is_an_error() -> None:
@@ -124,10 +127,10 @@ def test_no_mask_is_an_error() -> None:
         read(plot_2009(), PLOT_2009, {"oil": "<0f>\n"})
 
 
-# 2010 style: a grid every 5 m from 3100 to 3500 m, 10 px apart; water from zero in cyan
+# 2010 style: a grid every 5 m from 3100 to 3500 m, 40 px apart (as dense as the real one); water from zero in cyan
 # with a dark blue line along it; the oil beside it in black, with a 3 px black line where
 # there is none. The grid shows whole in a track with no fill.
-GRID_TOP, STEP = 100, 10.0
+GRID_TOP, STEP = 250, 40.0
 TRACK, CLEAR = (200, 400), (40, 160)
 
 
@@ -136,13 +139,14 @@ def depth_2010(y: float) -> float:
 
 
 def plot_2010() -> Image.Image:
-    img = np.full((1000, 460, 3), 255, dtype=np.uint8)
+    img = np.full((GRID_TOP + int(80 * STEP) + 100, 460, 3), 255, dtype=np.uint8)
     for k in range(81):
         img[GRID_TOP + int(k * STEP), CLEAR[0] : TRACK[1]] = 0
-    img[GRID_TOP - 60, CLEAR[0] : TRACK[1]] = 0  # the header box, farther up
-    img[GRID_TOP : GRID_TOP + 801, [TRACK[0], TRACK[1]]] = 0
+    img[GRID_TOP - 5 * int(STEP), CLEAR[0] : TRACK[1]] = 0  # the header box, farther up
+    bottom = GRID_TOP + int(80 * STEP)
+    img[GRID_TOP : bottom + 1, [TRACK[0], TRACK[1]]] = 0
     unit = (TRACK[1] - TRACK[0]) / 5000
-    for y in range(GRID_TOP + 1, GRID_TOP + 800):
+    for y in range(GRID_TOP + 1, bottom):
         d = depth_2010(y)
         water = 2000.0 if d < 3165 else (1000.0 if d < 3230 else 0.0)
         oil = 1200.0 if d < 3132 else (1200 * (3165 - d) / 33 if d < 3165 else 0.0)
@@ -168,12 +172,12 @@ def test_a_2010_plot_reads_water_and_the_oil_beside_it() -> None:
 
     by_colour, _ = read(image, PLOT_2010, None)
     outputs = {
-        "water": sam_output(colour_hits(rgb, cal, WATER_2010), cal.body[0]),
-        "oil": sam_output(colour_hits(rgb, cal, OIL_2010), cal.body[0]),
+        "water": sam_output(colour_hits(rgb, cal, WATER_2010), image, cal),
+        "oil": sam_output(colour_hits(rgb, cal, OIL_2010), image, cal),
     }
     by_sam, _ = read(image, PLOT_2010, outputs)
 
-    assert cal.rows == (GRID_TOP, GRID_TOP + 800)
+    assert cal.rows == (GRID_TOP, GRID_TOP + 80 * STEP)
     for result in (by_colour, by_sam):
         water, oil = result["phases"]["water"]["rate"], result["phases"]["oil"]["rate"]
         assert water[3120.0] == pytest.approx(2000 + 2 * 25, abs=60)  # the blue line is water's

@@ -282,10 +282,19 @@ def colour_hits(rgb: np.ndarray, cal: Calibration, layer: Layer) -> np.ndarray:
     return layer.colour(rgb[:, cal.left + 1 : cal.right])
 
 
+CROP_MARGIN_M = 10.0
+
+
 def crop(image: Image.Image, cal: Calibration) -> tuple[Image.Image, tuple[int, int]]:
-    """The rate track alone, as SAM is shown it, over the plot's rows of data; and its
-    top-left corner in the page image."""
-    box = (cal.left + 1, cal.body[0], cal.right, cal.body[1])
+    """The rate track alone, as SAM is shown it: over the rows its first area (the one drawn
+    from zero) covers, and a margin, within the plot's rows of data; and its top-left corner
+    in the page image."""
+    hit = colour_hits(np.asarray(image).astype(int), cal, cal.plot.layers[0])
+    rows = np.nonzero(hit[cal.body[0] : cal.body[1]].any(axis=1))[0] + cal.body[0]
+    margin = CROP_MARGIN_M * abs(cal.row(1) - cal.row(0))
+    top = max(cal.body[0], int(rows.min() - margin)) if len(rows) else cal.body[0]
+    bottom = min(cal.body[1], int(rows.max() + margin)) if len(rows) else cal.body[1]
+    box = (cal.left + 1, top, cal.right, bottom)
     return image.crop(box), (box[0], box[1])
 
 
