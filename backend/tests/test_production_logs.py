@@ -13,7 +13,7 @@ from wellpilot.agent.checker import DeclaredNumber, Finding, Submission, check_s
 from wellpilot.agent.evidence import EvidenceLog
 from wellpilot.agent.tools import execute
 from wellpilot.data.store import ProductionStore
-from wellpilot.ingest.production_logs import ingest, read_las
+from wellpilot.ingest.production_logs import PLOTS_FILE, ingest, read_las
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -31,8 +31,10 @@ def test_a_las_file_gives_its_curves_by_name() -> None:
 def processed(tmp_path) -> Path:
     out = tmp_path / "processed"
     shutil.copytree(FIXTURES / "processed", out)
+    # The 2009 survey, read off its report's plots (wellpilot.ingest.log_plots).
+    shutil.copy(FIXTURES / "plt" / PLOTS_FILE, out / PLOTS_FILE)
     counts = ingest(FIXTURES, out)
-    assert counts["surveys"] == ["PLT 2010-09"]
+    assert counts["surveys"] == ["PLT 2009-03", "PLT 2010-09"]
     return out
 
 
@@ -40,10 +42,14 @@ def call(processed: Path, as_of: date | None = None, **args) -> dict:
     return execute(ProductionStore(processed, as_of=as_of), "production_log", json.dumps(args))
 
 
-def test_the_log_shows_oil_from_the_top_zone_and_water_from_below(processed) -> None:
-    result = call(processed, well="F-12", below_m=[3150, 3210])["result"]
+def survey(result: dict, name: str) -> dict:
+    return next(s for s in result["surveys"] if s["survey"] == name)
 
-    assert result["date"] == "2010-09-22"
+
+def test_the_log_shows_oil_from_the_top_zone_and_water_from_below(processed) -> None:
+    result = survey(call(processed, well="F-12", below_m=[3150, 3210])["result"], "PLT 2010-09")
+
+    assert result["date"] == "2010-09-22" and result["read_from"].startswith("LAS files")
     passes = {p["pass"]: p for p in result["passes"]}
     assert set(passes) == {"low rate", "medium rate"}
     for p in passes.values():
@@ -63,19 +69,47 @@ def test_the_log_shows_oil_from_the_top_zone_and_water_from_below(processed) -> 
     assert all(abs(p["water_cut_at_top"] - produced) < 0.05 for p in passes.values())
 
 
+def test_in_2009_the_lower_zones_gave_oil_and_by_2010_water(processed) -> None:
+    """The 2009 survey exists only as its report's plots, read as pictures: then, the oil came
+    from all five zones, about a sixth of it from below 3200 m, with no water. In 2010 almost
+    no oil came from there, and about a third of the water did."""
+    result = call(processed, well="F-12", below_m=[3200])["result"]
+    before, after = survey(result, "PLT 2009-03"), survey(result, "PLT 2010-09")
+
+    assert "pictures" in before["read_from"] and before["rate_unit"] == "m3/d downhole"
+    assert before["production_30_days_before"]["water_cut"] == 0
+    for p in before["passes"]:
+        assert "water_comes_in" not in p
+        assert 0.08 <= p["below"][0]["oil_share"] <= 0.2
+    # The plots' reading agrees with the report's conclusion, "~83% ... the upper 2".
+    check = before["check"]
+    assert check["report_says"]["share"] == 0.83
+    assert all(abs(v - 0.83) <= 0.08 for v in check["upper_two_zones_share"].values())
+    assert len(check["perforated_zones_m"]) == 5
+    for p in after["passes"]:
+        assert p["below"][0]["oil_share"] <= 0.03 and p["below"][0]["water_share"] >= 0.25
+    # The 2010 plot, read the same way, against the files.
+    gaps = after["check"]["plot_against_files_median_share_gap"]
+    assert all(g <= 0.03 for pass_ in gaps.values() for g in pass_.values())
+
+
 def test_wells_without_a_log_and_dates_before_it_are_refused(processed) -> None:
     other = call(processed, well="F-14")
-    early = call(processed, as_of=date(2010, 9, 1), well="F-12")
+    early = call(processed, as_of=date(2009, 3, 1), well="F-12")
+    between = call(processed, as_of=date(2010, 9, 1), well="F-12")["result"]
 
     assert "logs exist for: F-12" in other["error"]
     assert "logs exist for: none" in early["error"]
+    assert [s["survey"] for s in between["surveys"]] == ["PLT 2009-03"]
 
 
 def test_a_share_from_the_log_passes_the_checker(processed) -> None:
     log = EvidenceLog()
     payload = call(processed, well="F-12", below_m=[3210])
     eid = log.add("production_log", {"well": "F-12"}, payload["result"], lambda: None).id
-    medium = next(p for p in payload["result"]["passes"] if p["pass"] == "medium rate")
+    medium = next(
+        p for p in survey(payload["result"], "PLT 2010-09")["passes"] if p["pass"] == "medium rate"
+    )
     share = medium["below"][0]["water_share"]
     written = f"{round(share * 100)}%"
 

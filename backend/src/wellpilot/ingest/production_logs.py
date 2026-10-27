@@ -25,6 +25,7 @@ import pandas as pd
 from wellpilot.config import get_settings
 
 LOGS_FILE = "production_logs.parquet"
+PLOTS_FILE = "production_log_plots.json"  # surveys read off their plots (ingest.log_plots)
 
 
 @dataclass(frozen=True)
@@ -85,39 +86,61 @@ def read_las(path: Path) -> pd.DataFrame:
 
 
 def ingest(raw_dir: Path, out_dir: Path) -> dict:
+    """Every survey into one table: the LAS files' passes, and the passes of surveys kept only
+    as pictures, as the plot reading wrote them (wellpilot.ingest.log_plots, run first)."""
     frames = []
     for survey in SURVEYS:
         for name, file in survey.passes.items():
             frame = read_las(raw_dir / survey.directory / file)
+            frame.insert(0, "read_by", "LAS")
             frame.insert(0, "pass", name)
             frame.insert(0, "date", pd.Timestamp(survey.date))
             frame.insert(0, "survey", survey.survey)
             frame.insert(0, "well", survey.well)
             frames.append(frame)
+    digital = {s.survey for s in SURVEYS}
+    plots = out_dir / PLOTS_FILE
+    for plot in json.loads(plots.read_text()) if plots.exists() else []:
+        if plot["survey"] in digital:  # read from its files; its plot is only the check
+            continue
+        rates = {p: {float(d): v for d, v in r["rate"].items()} for p, r in plot["phases"].items()}
+        depths = sorted(set().union(*rates.values()))
+        frame = pd.DataFrame({"depth_m": depths})
+        for phase in PHASES:
+            frame[phase] = [rates.get(phase, {}).get(d, np.nan) for d in depths]
+        frame.insert(0, "read_by", next(iter(plot["phases"].values()))["read_by"])
+        frame.insert(0, "pass", plot["pass"])
+        frame.insert(0, "date", pd.Timestamp(plot["date"]))
+        frame.insert(0, "survey", plot["survey"])
+        frame.insert(0, "well", plot["well"])
+        frames.append(frame)
     logs = pd.concat(frames, ignore_index=True)
     out_dir.mkdir(parents=True, exist_ok=True)
     logs.to_parquet(out_dir / LOGS_FILE, index=False)
-    return {"rows": len(logs), "surveys": [s.survey for s in SURVEYS]}
+    return {"rows": len(logs), "surveys": sorted(logs["survey"].unique().tolist())}
 
 
 REFERENCE_M = 30.0  # the top of the log, above every zone: the well's whole flow
 SMOOTH_M = 3.0  # a running median over this many metres takes out the tool's noise
+PHASES = ("oil", "water")
 
 
 def shares(log: pd.DataFrame) -> pd.DataFrame:
     """A flowing pass as shares: at each logged depth, the part of the pass's oil and of its
-    water that comes from below it (the flow passing the depth over the flow at the top)."""
-    flowing = log.dropna(subset=["oil", "water"]).sort_values("depth_m").reset_index(drop=True)
+    water that comes from below it (the flow passing the depth over the flow at the top). A
+    phase the log does not give (the 2009 plots were read for oil only) is left out."""
+    present = [p for p in PHASES if p in log and log[p].notna().any()]
+    flowing = log.dropna(subset=present).sort_values("depth_m").reset_index(drop=True)
     depth = flowing["depth_m"]
     top = flowing[depth <= depth.iloc[0] + REFERENCE_M]
     points = max(1, round(SMOOTH_M / float(depth.diff().median())))
     out = flowing[["depth_m"]].copy()
-    for phase in ("oil", "water"):
+    for phase in present:
         smooth = flowing[phase].rolling(points, center=True, min_periods=1).median()
         out[phase] = (smooth / top[phase].median()).clip(0, 1)
-    out.attrs["water_cut_at_top"] = float(
-        top["water"].median() / (top["water"].median() + top["oil"].median())
-    )
+    if len(present) == 2:
+        oil, water = top["oil"].median(), top["water"].median()
+        out.attrs["water_cut_at_top"] = float(water / (water + oil))
     return out
 
 
@@ -125,6 +148,7 @@ def inflow(log: pd.DataFrame, step_m: float = 5.0) -> dict:
     """Where each phase comes in (above the deepest depth with 95% of it from below, below the
     shallowest with 5%, half of it below half_below_m) and the shares every step_m."""
     s = shares(log)
+    present = [p for p in PHASES if p in s]
     depths = np.arange(np.ceil(s["depth_m"].min() / step_m) * step_m, s["depth_m"].max(), step_m)
     index = [int(np.abs(s["depth_m"].to_numpy() - d).argmin()) for d in depths]
 
@@ -136,23 +160,19 @@ def inflow(log: pd.DataFrame, step_m: float = 5.0) -> dict:
             "half_below_m": round(float(d[share >= 0.5].max()), 1),
         }
 
-    return {
-        "top_depth_m": round(float(s["depth_m"].iloc[0]), 1),
-        "water_cut_at_top": round(s.attrs["water_cut_at_top"], 3),
-        "oil_comes_in": band(s["oil"]),
-        "water_comes_in": band(s["water"]),
-        "from_below": {
-            "columns": ["depth_m", "oil_share", "water_share"],
-            "rows": [
-                [
-                    round(float(d), 1),
-                    round(float(s["oil"].iloc[i]), 3),
-                    round(float(s["water"].iloc[i]), 3),
-                ]
-                for d, i in zip(depths, index, strict=True)
-            ],
-        },
+    result: dict = {"top_depth_m": round(float(s["depth_m"].iloc[0]), 1)}
+    if "water_cut_at_top" in s.attrs:
+        result["water_cut_at_top"] = round(s.attrs["water_cut_at_top"], 3)
+    for phase in present:
+        result[f"{phase}_comes_in"] = band(s[phase])
+    result["from_below"] = {
+        "columns": ["depth_m", *[f"{p}_share" for p in present]],
+        "rows": [
+            [round(float(d), 1), *[round(float(s[p].iloc[i]), 3) for p in present]]
+            for d, i in zip(depths, index, strict=True)
+        ],
     }
+    return result
 
 
 def inflow_below(log: pd.DataFrame, depth_m: float) -> dict | None:
@@ -163,7 +183,7 @@ def inflow_below(log: pd.DataFrame, depth_m: float) -> dict | None:
     if not d[0] <= depth_m <= d[-1]:
         return None
     at = s.iloc[int(np.abs(d - depth_m).argmin())]
-    return {"oil_share": round(float(at["oil"]), 3), "water_share": round(float(at["water"]), 3)}
+    return {f"{p}_share": round(float(at[p]), 3) for p in PHASES if p in s}
 
 
 def main() -> None:
