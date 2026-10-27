@@ -4,7 +4,7 @@
 #   docker build -t wellpilot:smoke . && scripts/smoke_image.sh
 set -eu
 IMAGE=${1:-wellpilot:smoke}
-RUN=${FEATURED_RUN:-c8b6cbb62280}
+RUN=${FEATURED_RUN:-cc62fd10242e}
 NAME=wellpilot-smoke
 PORT=18080
 URL="http://localhost:$PORT"

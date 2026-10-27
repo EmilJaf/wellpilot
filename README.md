@@ -15,7 +15,7 @@ Built for the Meta Global AI Developer Hackathon (Oct 26 - Nov 4, 2026), Indie t
 
 A production engineer reviewing a well asks questions like: why did output fall, is that a reservoir problem or a dead gauge, what will the well make next year, and how does it compare with the development plan? Answering one today means hours across a production database, PDF reports (here a 53-page plan in Norwegian), scripts and spreadsheets, and the result is hard to audit.
 
-WellPilot turns that into one question, answered in about a minute for roughly $0.15 of model time, where every figure links to the exact tool result, the data behind it and the Python that produced it. The decisions it supports are the everyday ones: next year's forecast for a budget, which wells need a gauge or a workover, and whether the field is running against the limits it was designed for.
+WellPilot turns that into one question, answered in under a minute (a median of 36 s and $0.15 of model time over the 12 eval questions; $0.06-0.48), where every figure links to the exact tool result, the data behind it and the Python that produced it. The decisions it supports are the everyday ones: next year's forecast for a budget, which wells need a gauge or a workover, and whether the field is running against the limits it was designed for.
 
 ## What it does
 
@@ -35,7 +35,7 @@ From the recorded runs and the data tabs (all reproducible with the tools in thi
 - **Water, not pressure.** From 2010 to 2014 F-12's liquid rate held near 5,000 Sm3/d while its choke opened from about 53% to 100% and water cut rose from 0.57 to 0.96: the oil fell because water took the well's capacity. Injection replaced what was produced at reservoir conditions (a ratio of 1.0-1.1 every year with the plan's oil formation volume factor, 1.385), so pressure support held. With data to the end of 2012, the WOR trend left 165k Sm3 before a 0.90 water cut and 560k before 0.95; the well went on to make about 444k.
 - **A report only a picture can answer.** F-11 B's completion report (filed under F-12 in the Volve data) keeps its survey tables and the completion's time-depth chart as images: the chart ends the job on 23.07.2013, and the production data shows F-11's first oil the next day.
 - **The field outlived its plan.** The plan's P50 forecast was 11.34 million Sm3 by 2012. The field produced 10.04 million Sm3 by 2016, 2.48 million of it after the plan's last year, from wells drilled later (F-11, F-15 D, F-1 C) and an injector turned producer (F-5). The plan assumed first oil in March 2007 and the field started in February 2008, so year by year from each start: ahead in the first year (1.76 against 1.53 million Sm3), behind from the second.
-- **What the agent would have said at the end of 2010.** With data cut at 2010-12-31 it ranked F-12 first and forecast its 2011 oil; F-12 then made 340k Sm3. The textbook whole-history decline fit, made the same day, said 685k (+102%): it averages the plateau years in. The gauge never came back.
+- **What the agent would have said at the end of 2010.** With data cut at 2010-12-31 it ranked F-12 first (dead gauge, 55% step down) and forecast 359k Sm3 of oil for 2011, with a range of 324k-470k from its past errors. F-12 then made 340k (+6%, inside the range). The textbook whole-history decline fit, made the same day, said 685k (+102%): it averages the plateau years in. The gauge never came back.
 
 ## How accurate are its forecasts?
 
@@ -79,8 +79,8 @@ flowchart LR
 - **Checker** (`backend/src/wellpilot/agent/checker.py`): numbers are declared by the model (`{text, value, evidence_id}`) rather than parsed from prose; English and Norwegian number formats, unit scales and dates written in words are handled. It is tested with property-based fuzzing over 10 number formats, a corpus of real submissions replayed in CI, and a table of probes for false rejections and false passes.
 - A number the text ties to a date ("0.85 in 2009-06", "55% on 2010-05-02") must stand in that date's row or event. A number found in its evidence must not be held there only for another well, as another quantity, or with the opposite sign; a "from X to Y" must run the way the evidence's change does.
 - **What the checker does not check:** meaning. "Pressure collapsed to 0" would pass when the evidence says the gauge reads 0; whether the reasoning holds is for the reader, and that is why every number is one click from its source.
-- **Quality gates:** `python -m wellpilot.ingest.facts_gate` (free) checks the report facts: the plan's table rows, the design limits, the key quotes verbatim, no unverified quote, quotes located on their pages. `python -m wellpilot.eval` runs real questions through the agent and checks each answer: verified, the right tools called, the facts any correct answer contains, a step and cost budget.
-- **Backend:** Python 3.13, FastAPI, Server-Sent Events, DuckDB, pandas, scipy, ruptures, pypdfium2. Runs are background tasks saved as JSON and replayable. 275 tests.
+- **Quality gates:** `python -m wellpilot.ingest.facts_gate` (free) checks the report facts: the plan's table rows, the design limits, the key quotes verbatim, no unverified quote, quotes located on their pages. `python -m wellpilot.eval` runs 12 real questions through the agent and checks each answer: verified, the right tools called, the facts any correct answer contains, claims in plain words, a step and cost budget. Latest runs (Oct 27, Muse Spark Open): all 12 answers verified; 6 pass every check, the others go over a step or cost budget or write a claim with more than four numbers.
+- **Backend:** Python 3.13, FastAPI, Server-Sent Events, DuckDB, pandas, scipy, ruptures, pypdfium2. Runs are background tasks saved as JSON and replayable. 430 tests, including three featured runs replayed in CI.
 - **Frontend:** React, TypeScript, Vite, uPlot, hand-written SVG charts. A control-room palette after ISA-101: grey by default, colour only for meaning (oil green, water blue, amber caution, red alarm).
 
 ## Running it on another field
@@ -166,7 +166,7 @@ fly auth login
 fly launch --copy-config --no-deploy        # creates the app; it may pick another name
 fly secrets set BASETEN_API_KEY=...          # the model key, never committed
 fly secrets set OPERATOR_KEY=$(openssl rand -hex 24)   # lifts the public limits for you
-fly secrets set FEATURED_RUNS=c8b6cbb62280   # the runs the public site lists and replays
+fly secrets set FEATURED_RUNS=cc62fd10242e,44f49414e399,3fc72959335a   # the runs the public site lists and replays
 fly deploy
 ```
 
