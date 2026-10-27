@@ -127,9 +127,9 @@ def test_no_mask_is_an_error() -> None:
         read(plot_2009(), PLOT_2009, {"oil": "<0f>\n"})
 
 
-# 2010 style: a grid every 5 m from 3100 to 3500 m, 40 px apart (as dense as the real one); water from zero in cyan
-# with a dark blue line along it; the oil beside it in black, with a 3 px black line where
-# there is none. The grid shows whole in a track with no fill.
+# 2010 style: a grid every 5 m from 3100 to 3500 m, 40 px apart (as dense as the real one);
+# water from zero in cyan with a dark blue line along it; the oil beside it in black, with a
+# 3 px black line where there is none. The grid shows whole in a track with no fill.
 GRID_TOP, STEP = 250, 40.0
 TRACK, CLEAR = (200, 400), (40, 160)
 

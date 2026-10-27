@@ -24,10 +24,12 @@ from wellpilot.agent.tools import (
     well_operations,
 )
 from wellpilot.agent.vision import VISION_TOOL
+from wellpilot.analysis.inside import inside_well
 from wellpilot.analysis.timeline import TIMELINE_FILE
 from wellpilot.backtest import RESULTS_FILE, SUMMARY_FILE, case_detail, film
 from wellpilot.data.store import ProductionStore
 from wellpilot.ingest.figure import CURVE_FILE, OVERLAY_FILE
+from wellpilot.ingest.log_plots import PLOTS_BY_ID, PLOTS_DIR
 from wellpilot.ingest.reports import REPORTS_BY_ID, page_dir
 
 router = APIRouter(prefix="/api", tags=["data"])
@@ -191,6 +193,32 @@ def well_operation_jobs(well: str, request: Request, end: date | None = None) ->
         return well_operations(store, OperationsArgs(well=well))
     except ValueError as e:
         raise HTTPException(404, str(e)) from None
+
+
+@router.get("/wells/{well}/inside")
+def well_inside(well: str, request: Request, end: date | None = None) -> dict:
+    """The well along its depth: its production logs, perforated zones and the work done on
+    it with what it produced before and after (analysis.inside); `end` hides later ones."""
+    store = request.app.state.runs.store(end)
+    if "production_logs" not in store.tables:
+        raise HTTPException(404, "no production logs are loaded")
+    try:
+        return inside_well(store, well)
+    except ValueError as e:
+        raise HTTPException(404, str(e)) from None
+
+
+@router.get("/log-plots/{plot_id}/image")
+def log_plot_image(plot_id: str, request: Request) -> FileResponse:
+    """A production-log plot's rate track with the edges read off it drawn in red."""
+    if plot_id not in PLOTS_BY_ID:
+        raise HTTPException(404, f"no plot {plot_id!r}")
+    path = request.app.state.runs.processed_dir / PLOTS_DIR / f"{plot_id}.png"
+    if not path.exists():
+        raise HTTPException(
+            404, "the plot has not been read; run python -m wellpilot.ingest.log_plots"
+        )
+    return FileResponse(path, media_type="image/png")
 
 
 @router.get("/reports/{doc_id}/pages/{page}")

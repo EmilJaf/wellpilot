@@ -3,6 +3,7 @@ import { api, type OperationJob, type RunSummary, type Table } from './api'
 import { AgentLog } from './components/AgentLog'
 import { PlanFigure } from './components/PlanFigure'
 import { FieldTimeline } from './components/FieldTimeline'
+import { InsideWell } from './components/InsideWell'
 import { AccuracyView } from './components/AccuracyView'
 import { DesignChart, type DesignResult } from './components/DesignChart'
 import { FieldScreen } from './components/FieldScreen'
@@ -69,7 +70,7 @@ export default function App() {
   // The data column shows one well's daily data, the field against its 2005 plan, or how
   // close past forecasts came.
   // A first visit opens on the field screen; a shared run opens on its well.
-  const [view, setView] = useState<'screen' | 'history' | 'well' | 'plan' | 'accuracy' | 'hindsight'>(() =>
+  const [view, setView] = useState<'screen' | 'history' | 'well' | 'inside' | 'plan' | 'accuracy' | 'hindsight'>(() =>
     new URLSearchParams(window.location.search).get('run') ? 'well' : 'screen',
   )
   // The reader can fold the charts away to give the evidence the whole column.
@@ -422,6 +423,9 @@ export default function App() {
                 <button type="button" role="tab" aria-selected={view === 'well'} onClick={() => setView('well')}>
                   Well {well}
                 </button>
+                <button type="button" role="tab" aria-selected={view === 'inside'} onClick={() => setView('inside')}>
+                  Inside {well}
+                </button>
                 <button type="button" role="tab" aria-selected={view === 'plan'} onClick={() => setView('plan')}>
                   Plan
                 </button>
@@ -439,7 +443,7 @@ export default function App() {
                   {chartsShown ? 'Hide charts' : 'Show charts'}
                 </button>
               )}
-              {view === 'well' && (
+              {(view === 'well' || view === 'inside') && (
                 <select
                   className="well-picker"
                   aria-label="Well to plot"
@@ -490,6 +494,8 @@ export default function App() {
                     setView('well')
                   }}
                 />
+              ) : view === 'inside' ? (
+                <InsideWell well={well} asOf={pastDate} onOpenWell={setPickedWell} />
               ) : view === 'accuracy' ? (
                 <AccuracyView />
               ) : view === 'hindsight' && state.id ? (

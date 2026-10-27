@@ -31,6 +31,7 @@ check "a backtest case up close"     sh -c "curl -sf $URL/api/backtest/cases/F-1
 check "the forecast film"            sh -c "curl -sf $URL/api/backtest/film/F-12 | grep -q '\"frames\"'"
 check "the field's history"          sh -c "curl -sf $URL/api/field/timeline | grep -q '\"replayed\"'"
 check "work on F-12 from its reports" sh -c "curl -sf $URL/api/wells/F-12/operations | grep -q '3150 m'"
+check "F-12 along its depth"         sh -c "curl -sf $URL/api/wells/F-12/inside | grep -q 'PLT 2009-03' && curl -sf -o /dev/null -w '%{content_type}' $URL/api/log-plots/f12-2009-high/image | grep -q 'image/png'"
 check "the plan's drawn curve"        sh -c "curl -sf $URL/api/field/plan-figure | grep -q '\"curve\"'"
 check "field against design limits"  sh -c "curl -sf $URL/api/field/design | grep -q 'Maksimum vannkutt'"
 check "a tool's source code"         sh -c "curl -sf $URL/api/code/wellpilot.agent.tools.detect_events@0 | grep -q 'def detect_events'"

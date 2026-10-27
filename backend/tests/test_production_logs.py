@@ -129,3 +129,30 @@ def test_a_share_from_the_log_passes_the_checker(processed) -> None:
         check_submission(Submission(summary="Done.", findings=[finding(written, share)]), log) == []
     )
     assert check_submission(Submission(summary="Done.", findings=[finding("60%", 0.6)]), log)
+
+
+def test_inside_the_well_puts_the_logs_plugs_and_response_on_one_depth_axis(processed) -> None:
+    from wellpilot.analysis.inside import inside_well
+    from wellpilot.ingest.operations import ingest as ingest_operations
+
+    ingest_operations(FIXTURES / "ddr", processed)
+    inside = inside_well(ProductionStore(processed), "F-12")
+
+    assert [s["survey"] for s in inside["surveys"]] == ["PLT 2009-03", "PLT 2010-09"]
+    assert len(inside["zones_m"]) == 5
+    medium = next(p for p in inside["surveys"][1]["passes"] if p["pass"] == "medium rate")
+    assert medium["water_cut_at_top"] == pytest.approx(0.63, abs=0.03)
+    assert len(medium["depth_m"]) == len(medium["water_share"]) == len(medium["oil_share"])
+    jobs = {j["start"]: j for j in inside["jobs"]}
+    plug_2010, plug_2014 = jobs["2010-09-23"], jobs["2014-11-22"]
+    assert plug_2010["plugs_m"] == [3210.0] and plug_2014["plugs_m"] == [3150.0]
+    assert plug_2014["perforations_m"] == [[3126.2, 3130.7]]
+    # The 2010 plug did not bring the water cut down; the 2014 one did, and oil came back.
+    assert plug_2010["after"]["water_cut"] >= plug_2010["before"]["water_cut"] - 0.02
+    assert plug_2014["before"]["water_cut"] > 0.9 and plug_2014["after"]["water_cut"] < 0.4
+    assert plug_2014["after"]["oil_sm3_per_day"] > 4 * plug_2014["before"]["oil_sm3_per_day"]
+    assert {p["id"] for p in inside["surveys"][0]["plots"]} == {
+        "f12-2009-high",
+        "f12-2009-medium",
+        "f12-2009-low",
+    }

@@ -148,6 +148,10 @@ export const api = {
   // The well's daily-report jobs; with `end`, only those done by then.
   operations: (well: string, end?: string | null) =>
     fetch(`/api/wells/${encodeURIComponent(well)}/operations${end ? `?end=${end}` : ''}`).then((r) => json<Operations>(r)),
+  // The well along its depth: production logs, perforations, plugs; with `end`, only by then.
+  inside: (well: string, end?: string | null) =>
+    fetch(`/api/wells/${encodeURIComponent(well)}/inside${end ? `?end=${end}` : ''}`).then((r) => json<Inside>(r)),
+  logPlotImageUrl: (plotId: string) => `/api/log-plots/${plotId}/image`,
   pageQuotes: (docId: string, page: number) =>
     fetch(`/api/reports/${docId}/pages/${page}/quotes`).then((r) => json<{ quote: string; boxes: number[][] }[]>(r)),
   pageImageUrl: (docId: string, page: number) => `/api/reports/${docId}/pages/${page}/image`,
@@ -186,6 +190,48 @@ export type OperationJob = {
 }
 
 export type Operations = { well: string; jobs: OperationJob[] }
+
+type Production = { water_cut: number; oil_sm3_per_day: number; days: number; from: string; to: string }
+
+/** A well along its depth: where its oil and water came in, and the work done on it. */
+export type Inside = {
+  well: string
+  zones_m: [number, number][]
+  surveys: {
+    survey: string
+    date: string
+    read_from: string
+    rate_unit?: string
+    check?: {
+      its_plot_read_by?: string
+      plot_against_files_median_share_gap?: Record<string, Record<string, number>>
+      agreement_with_colour_trace_median_share_gap?: Record<string, number>
+      upper_two_zones_share?: Record<string, number>
+      report_says?: { quote: string; share: number; page: number }
+      perforated_zones_m?: [number, number][]
+    }
+    production_30_days_before: { water_cut: number; oil_sm3_per_producing_day: number }
+    plots: { id: string; pass: string; page: number; read_by: Record<string, string>; prompts: Record<string, string> }[]
+    passes: {
+      pass: string
+      water_cut_at_top: number
+      depth_m: number[]
+      oil_share: number[]
+      water_share: number[] | null
+    }[]
+  }[]
+  jobs: {
+    start: string
+    end: string
+    kind: string
+    production_log: boolean
+    plugs_m: number[]
+    perforations_m: [number, number][]
+    summaries: { date: string; summary: string }[]
+    before: Production | null
+    after: Production | null
+  }[]
+}
 
 /** The plan's forecast curve read off its Figure 4.2, with the field's monthly oil rate. */
 export type PlanFigure = {
