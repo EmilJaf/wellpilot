@@ -113,3 +113,20 @@ def test_summary_numbers_are_read_as_a_reader_meets_them() -> None:
     )
 
     assert unreadable_numbers(summary) == ["0.4461", "1,133,053"]
+
+
+def test_dense_claims_are_flagged() -> None:
+    from wellpilot.eval import dense_claims
+
+    judged = (  # the time machine's first answer, as the judges read it
+        "F-12 (attention 3, highest priority) produced 1 551 Sm3/d oil at 0.69 water cut on "
+        "2010-12-31 with 16.5% decline over the last 90 days; its oil rate stepped down 55% "
+        "from 4 207 to 1 888 Sm3/d around 2010-05-02."
+    )
+    stats = "The fit after 2010-07-18 is exponential with r2_log 0.87."
+    plain = "F-12 needs a look first: its downhole gauge has been dead since 2010-10-12."
+
+    assert dense_claims([judged, stats, plain]) == [
+        "finding 1 (7 numbers, jargon)",
+        "finding 2 (1 numbers, jargon)",
+    ]

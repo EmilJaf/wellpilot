@@ -14,7 +14,7 @@ type ScreenWell = {
   uptime?: number | null
   oil_rate_change_90d?: number | null
   water_inj_sm3_per_day?: number | null
-  attention: number
+  level: 'alarm' | 'caution' | 'note' | null
   issues: Issue[]
 }
 
@@ -92,7 +92,7 @@ export function ScreenList({ result, onOpenWell }: { result: ScreenResult; onOpe
     <>
       <ol className="screen-list">
         {result.wells.map((w) => (
-          <li key={w.well} className={`screen-row attention-${w.attention}`}>
+          <li key={w.well} className={`screen-row level-${w.level ?? 'none'}`}>
             <div className="screen-head">
               <Level issues={w.issues} />
               {onOpenWell ? (

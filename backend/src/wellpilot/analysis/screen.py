@@ -162,7 +162,9 @@ def screen(store: ProductionStore) -> dict:
                 "share_of_field_oil": cum_oil / field_oil if field_oil else 0.0,
                 "cum_water_injected_sm3": injected,
                 **state,
-                "attention": max((LEVELS[i.level] for i in issues), default=0),
+                # The worst issue's level in words: a number here ("attention 3") ended up
+                # in answers as if it meant something to a reader.
+                "level": max((i.level for i in issues), key=LEVELS.get, default=None),
                 "issues": [i.__dict__ for i in sorted(issues, key=lambda i: -LEVELS[i.level])],
             }
         )

@@ -2064,11 +2064,11 @@ code,
   border-left: 3px solid transparent;
 }
 
-.screen-row.attention-3 {
+.screen-row.level-alarm {
   border-left-color: var(--alarm);
 }
 
-.screen-row.attention-1 {
+.screen-row.level-caution {
   border-left-color: var(--caution);
 }
 
@@ -2323,4 +2323,23 @@ code,
 
 .hindsight-change {
   color: var(--ink-3);
+}
+
+/* A finding's detail: the fit and exact values behind a plain claim, folded away. */
+.finding-detail {
+  margin: 4px 0 2px;
+}
+
+.finding-detail summary {
+  cursor: pointer;
+  color: var(--ink-3);
+  font-size: 12.5px;
+  width: fit-content;
+}
+
+.finding-detail p {
+  margin: 4px 0 0;
+  color: var(--ink-2);
+  font-size: 14px;
+  line-height: 1.5;
 }

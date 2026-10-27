@@ -78,6 +78,8 @@ def print_run(run: AgentRun) -> None:
         print(run.summary)
     for n, finding in enumerate(run.findings, start=1):
         print(f"\n{n}. [{finding.confidence}] {finding.claim}")
+        if finding.detail:
+            print(f"   detail: {finding.detail}")
         print(f"   evidence: {', '.join(finding.evidence_ids)}")
     tokens_in, tokens_out = run.total_tokens
     print(

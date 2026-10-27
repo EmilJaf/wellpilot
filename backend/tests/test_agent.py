@@ -639,3 +639,18 @@ def test_hyperbolic_b_never_exceeds_one() -> None:
     assert hyperbolic.b <= 1.0 + 1e-9
     p50 = forecast(result.best, 365, start=pd.Timestamp("2011-01-01"))
     assert p50.cumulative["p50"] < 391_544  # what b = 1.82 forecast
+
+
+def test_calculate_takes_several_expressions(store) -> None:
+    result = execute(store, "calculate", json.dumps({"expressions": ["4207 - 1888", "1 / 4"]}))
+
+    assert result["result"] == {
+        "results": [
+            {"expression": "4207 - 1888", "value": 2319.0},
+            {"expression": "1 / 4", "value": 0.25},
+        ]
+    }
+    both = execute(store, "calculate", json.dumps({"expression": "1", "expressions": ["2"]}))
+    bad = execute(store, "calculate", json.dumps({"expressions": ["1 / 0"]}))
+    assert "either expression or expressions" in both["error"]
+    assert "'1 / 0': division by zero" in bad["error"]

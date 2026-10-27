@@ -19,7 +19,7 @@ from typing import Any, Literal
 
 import numpy as np
 import pandas as pd
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 from wellpilot.analysis.anomalies import (
     gauge_failures,
@@ -151,10 +151,23 @@ class CalcArgs(Args):
     # A bare number evaluates to itself.
     model_config = ConfigDict(extra="forbid", coerce_numbers_to_str=True)
 
-    expression: str = Field(
-        description="Arithmetic on numbers taken from evidence, e.g. '0.7532 / 0.0575'. "
-        "Operators: + - * / ** and parentheses."
+    expression: str | None = Field(
+        None,
+        description="Arithmetic on numbers taken from evidence, e.g. '0.4461 / 0.0566'. "
+        "Operators: + - * / ** and parentheses.",
     )
+    expressions: list[str] | None = Field(
+        None,
+        description="Several expressions in one call, e.g. ['4207 - 1888', '1888 / 4207']: "
+        "use this rather than one call per step.",
+        max_length=20,
+    )
+
+    @model_validator(mode="after")
+    def _one(self) -> "CalcArgs":
+        if (self.expression is None) == (self.expressions is None):
+            raise ValueError("give either expression or expressions")
+        return self
 
 
 def _check_well(store: ProductionStore, well: str) -> None:
@@ -418,11 +431,24 @@ def _evaluate(node: ast.AST) -> float:
 
 
 def calculate(_: ProductionStore, args: CalcArgs) -> dict:
-    if len(args.expression) > 200:
+    if args.expressions is not None:
+        results = []
+        for expression in args.expressions:
+            try:
+                value = _calculate(expression)
+            except ValueError as e:
+                raise ValueError(f"{expression!r}: {e}") from e
+            results.append({"expression": expression, "value": value})
+        return {"results": results}
+    return {"expression": args.expression, "value": _calculate(args.expression or "")}
+
+
+def _calculate(text: str) -> float:
+    if len(text) > 200:
         raise ValueError("expression longer than 200 characters")
     # Thousands grouped with a comma, space or underscore ("1,133,053", "4 050"); any other
     # comma is a decimal comma, which would silently change the value.
-    expression = re.sub(r"(?<=\d)[,\s\u00a0\u202f_](?=\d{3}\b)", "", args.expression.strip())
+    expression = re.sub(r"(?<=\d)[,\s\u00a0\u202f_](?=\d{3}\b)", "", text.strip())
     if "," in expression:
         raise ValueError("use '.' as the decimal separator (write 0,80 as 0.80)")
     try:
@@ -435,7 +461,7 @@ def calculate(_: ProductionStore, args: CalcArgs) -> dict:
         raise ValueError("division by zero") from e
     except OverflowError as e:
         raise ValueError("number too large") from e
-    return {"expression": args.expression, "value": to_jsonable(float(value))}
+    return to_jsonable(float(value))
 
 
 class ReportSearchArgs(Args):
@@ -840,8 +866,10 @@ TOOLS = [
     ),
     Tool(
         "calculate",
-        "Evaluate arithmetic on numbers from evidence (ratios, differences, percentages). "
-        "Use it for every derived number you state, so the number has evidence.",
+        "Evaluate arithmetic on numbers from evidence (ratios, differences, changes). Use it "
+        "for every derived number you state, so the number has evidence; put all you need "
+        "in one call with 'expressions'. Not needed to write a share as a percent: declare "
+        "'69%' with the evidence's 0.69.",
         CalcArgs,
         calculate,
     ),

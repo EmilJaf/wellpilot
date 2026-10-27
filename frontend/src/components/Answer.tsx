@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import type { RunSummary, Span, StepEvent } from '../api'
 import { AlarmIcon, CheckIcon, RedoIcon } from '../icons'
-import { brief, compact, describeArgs, toolName } from '../labels'
+import { plainProblem, compact, describeArgs, toolName } from '../labels'
 import type { RunState } from '../useRun'
 import { corrections } from '../corrections'
 import { CorrectionList } from './Corrections'
@@ -213,7 +213,7 @@ function Live({ steps, thinking, asOf }: { steps: StepEvent[]; thinking: number 
               {rejected.problems?.length === 1 ? 'problem' : 'problems'}. The agent is fixing them.
             </strong>
             <ul>
-              {rejected.problems?.slice(0, 5).map((p, i) => <li key={i}>{brief(p)}</li>)}
+              {rejected.problems?.slice(0, 5).map((p, i) => <li key={i}>{plainProblem(p)}</li>)}
             </ul>
           </span>
         </div>
@@ -240,7 +240,7 @@ function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSe
       <div className={`status${final.verified ? '' : ' status-alarm'}`} role="status">
         <div className="status-main">
           {final.verified ? <CheckIcon /> : <AlarmIcon />}
-          <strong>{final.verified ? 'Verified' : 'Not verified'}</strong>
+          <strong>{final.verified ? 'Sources verified' : 'Not verified'}</strong>
           <span>
             {final.verified
               ? rounds.length > 1
@@ -276,9 +276,9 @@ function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSe
             {sentBack.length > 0 ? `What the checker caught (${problems})` : 'What the checker checks'}
           </summary>
           <p className="status-note">
-            Every number, date and quote in the answer was found in the tool result it cites, and causes are
-            marked as inferences. Whether the reasoning holds is for you to judge: every source is one click
-            away.
+            Every number, date and quote in the answer was found in the tool result it cites, as the well,
+            quantity, direction and event the text says, and causes are marked as inferences. Not checked: whether
+            the reasoning holds. That is for you to judge, and every source is one click away.
           </p>
           {rounds.length > 0 && sentBack.length > 0 && history}
         </details>
@@ -348,6 +348,12 @@ function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSe
                 >
                   {bySpans(finding.claim, finding.spans, onSelectEvidence, finding.evidence_ids.find(isReport))}
                 </p>
+                {finding.detail && (
+                  <details className="finding-detail">
+                    <summary>Details for engineers</summary>
+                    <p>{bySpans(finding.detail, finding.detail_spans, onSelectEvidence, finding.evidence_ids.find(isReport))}</p>
+                  </details>
+                )}
                 {fixed.length > 0 && (
                   <p className="fix-tag">
                     <RedoIcon />

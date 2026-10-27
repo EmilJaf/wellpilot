@@ -192,7 +192,15 @@ class DeclaredNumber(BaseModel):
 
 
 class Finding(BaseModel):
-    claim: str = Field(description="One finding in one or two sentences, with its numbers.")
+    claim: str = Field(
+        description="One finding in one or two plain sentences a manager can follow: at most "
+        "three numbers, rounded, with units; no fit statistics."
+    )
+    detail: str | None = Field(
+        None,
+        description="Optional support for an engineer: the fit behind the claim (model, "
+        "window, r2_log, di, b), exact values, how it was found. Checked like the claim.",
+    )
     evidence_ids: list[str] = Field(
         description="Ids (E1, E2, ...) of the evidence every number and date in the claim "
         "comes from."
@@ -370,14 +378,21 @@ def _calculations(log: EvidenceLog) -> dict[str, _Calc]:
             earlier.append(item)
             continue
         missing, warnings, inputs = [], [], 0
-        expression = str(item.arguments.get("expression", ""))
         years = _Pool(earlier).years
-        for value, decimals, _ in _numbers_in_text(expression):
-            if _is_constant(value) or (decimals <= 0 and value <= SMALL_INTEGER):
-                continue
-            if value.is_integer() and str(int(value)) in years:
-                continue  # year arithmetic: "2010 - 2008"
-            inputs += 1
+        # One expression, or several in one call: inputs counts the most any one uses.
+        expressions = item.arguments.get("expressions") or [item.arguments.get("expression", "")]
+        found = []
+        for expression in expressions:
+            used = 0
+            for value, decimals, _ in _numbers_in_text(str(expression)):
+                if _is_constant(value) or (decimals <= 0 and value <= SMALL_INTEGER):
+                    continue
+                if value.is_integer() and str(int(value)) in years:
+                    continue  # year arithmetic: "2010 - 2008"
+                used += 1
+                found.append((value, decimals))
+            inputs = max(inputs, used)
+        for value, decimals in found:
             holders = [e for e in earlier if _Pool([e]).has_number(value, decimals, None)]
             if not holders:
                 missing.append(f"{value:g}")
@@ -1163,6 +1178,11 @@ def display_spans(
     return sorted(spans, key=lambda s: (s["start"], s["kind"] != "quote"))
 
 
+def finding_text(finding: Finding) -> str:
+    """What the checker reads of a finding: its claim and its detail, as one text."""
+    return finding.claim + (f"\n{finding.detail}" if finding.detail else "")
+
+
 def check_submission(submission: Submission, log: EvidenceLog, question: str = "") -> list[str]:
     """Return problems as sentences for the model; an empty list means accepted."""
     free = _question_numbers(question)
@@ -1189,6 +1209,7 @@ def check_submission(submission: Submission, log: EvidenceLog, question: str = "
             problems.append(f"Finding {n} cites unknown evidence {', '.join(unknown)}.")
             continue
         cited = [log.get(e) for e in finding.evidence_ids]
+        text = finding_text(finding)
         ids = ", ".join(finding.evidence_ids)
         for item in cited:
             if item.id in calcs and calcs[item.id].unsupported:
@@ -1198,11 +1219,11 @@ def check_submission(submission: Submission, log: EvidenceLog, question: str = "
                     "Calculate only with numbers that tool results returned."
                 )
         pool = _Pool(e for e in cited if not (e.id in calcs and calcs[e.id].unsupported))
-        numbers, dates = _unsupported(finding.claim, pool, free, free_dates)
+        numbers, dates = _unsupported(text, pool, free, free_dates)
         if finding.numbers is not None:
             problems += _declared(
                 f"Finding {n}",
-                finding.claim,
+                text,
                 finding.numbers,
                 log,
                 calcs,
@@ -1218,12 +1239,12 @@ def check_submission(submission: Submission, log: EvidenceLog, question: str = "
             )
         if dates:
             problems.append(f"Finding {n}: date(s) {', '.join(dates)} not found in {ids}.")
-        elif misdated := _date_attribution(_normalize(finding.claim), cited, leaves_of, unowned):
+        elif misdated := _date_attribution(_normalize(text), cited, leaves_of, unowned):
             problems.append(
                 f"Finding {n} gives the well its sentence names date(s) {', '.join(misdated)}. "
                 "Cite evidence about that well, or name the well the date belongs to."
             )
-        missing_quotes = _missing_quotes(finding.claim, pool)
+        missing_quotes = _missing_quotes(text, pool)
         if missing_quotes:
             listed = "; ".join(f"'{q[:80]}'" for q in missing_quotes)
             problems.append(
@@ -1231,13 +1252,13 @@ def check_submission(submission: Submission, log: EvidenceLog, question: str = "
                 "word for word (the original quote or its statement_en) or drop the quotes."
             )
         # A cause inside a quote is the report's claim, which the finding only reports.
-        cause = CAUSAL.search(_own_words(finding.claim, pool))
+        cause = CAUSAL.search(_own_words(text, pool))
         if finding.confidence == "fact" and cause:
             problems.append(
                 f"Finding {n} states a cause ('{cause.group(0)}') but is marked fact. The data "
                 "shows timing and size, not causes: mark it inference."
             )
-        strangers = _wells_without_evidence(finding.claim, cited)
+        strangers = _wells_without_evidence(text, cited)
         if strangers:
             problems.append(
                 f"Finding {n} names {', '.join(strangers)}, but {ids} "

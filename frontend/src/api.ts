@@ -33,6 +33,8 @@ export type Span =
 
 export type Finding = {
   claim: string
+  detail?: string | null // the fit and exact values, for an engineer; checked like the claim
+  detail_spans?: Span[]
   evidence_ids: string[]
   confidence: 'fact' | 'inference'
   numbers?: DeclaredNumber[] | null

@@ -104,3 +104,49 @@ def test_an_undeclared_number_the_evidence_holds_comes_back_as_a_declaration() -
 
     assert problems and 'declare them as {"text": "21", "value": ' in problems[0]
     assert '"evidence_id": "E5"}' in problems[0]
+
+
+def test_a_findings_detail_is_checked_like_its_claim() -> None:
+    claim = "F-12 needs attention first: its downhole gauge is dead."
+    right = Finding(
+        claim=claim,
+        detail="The gauge has read 0 on 81 days since 2010-10-12.",
+        evidence_ids=["E4"],
+        confidence="fact",
+        numbers=[d("81", 81, "E4")],
+    )
+    wrong = right.model_copy(update={"detail": "The gauge has read 0 on 91 days since 2010-10-12."})
+    log = corpus_log(AS_OF_2010)
+
+    assert check_submission(Submission(summary="Done.", findings=[right]), log) == []
+    problems = check_submission(
+        Submission(
+            summary="Done.", findings=[wrong.model_copy(update={"numbers": [d("91", 91, "E4")]})]
+        ),
+        log,
+    )
+    assert problems and "'91' = 91 is not in E4" in problems[0]
+
+
+def test_several_calculations_in_one_call_are_checked_one_by_one() -> None:
+    log = corpus_log(AS_OF_2010)
+    batch = log.add(
+        "calculate",
+        {"expressions": ["4207 - 1888", "1551 / 2175"]},
+        {
+            "results": [
+                {"expression": "4207 - 1888", "value": 2319.0},
+                {"expression": "1551 / 2175", "value": 0.7131},
+            ]
+        },
+        lambda: None,
+    ).id
+    numbers = [d("2 319", 2319, batch), d("0.71", 0.7131, batch)]
+    finding = Finding(
+        claim="F-12's weekly rate fell by 2 319 Sm3/d; it makes 0.71 of F-14's rate.",
+        evidence_ids=[batch],
+        confidence="fact",
+        numbers=numbers,
+    )
+
+    assert check_submission(Submission(summary="Done.", findings=[finding]), log) == []

@@ -1,13 +1,10 @@
 import { type Correction, type Piece } from '../corrections'
-import { brief } from '../labels'
+import { plainProblem } from '../labels'
 
 /** The problem as one plain sentence, without the "Finding 3" the list already shows. */
 function problemText(c: Correction): string {
-  const warning = c.problem.match(/\((E\d+): ([^.;:]+)/)
-  return brief(c.problem)
+  return plainProblem(c.problem)
     .replace(/^(Finding \d+|Summary)( is|:)?\s*/, '')
-    .replace(/^undeclared number\(s\) (.+?)\.$/i, '$1 written without naming the tool result it comes from.')
-    .replace(/evidence with warnings\.$/, warning ? `a tool result with a warning (${warning[1]}: ${warning[2]}).` : '$&')
     .replace(/^./, (s) => s.toUpperCase())
 }
 

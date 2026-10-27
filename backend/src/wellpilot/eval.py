@@ -25,6 +25,7 @@ from datetime import UTC, date, datetime
 from pathlib import Path
 
 from wellpilot.agent import corpus
+from wellpilot.agent.checker import CALENDAR_WINDOW, WRITTEN_NUMBER
 from wellpilot.agent.corpus import CORPUS_DIR
 from wellpilot.agent.loop import AgentRun, run_agent
 from wellpilot.api.runs import RunRecord, new_run_id
@@ -129,6 +130,16 @@ CASES = [
         mentions=(r"2013-07", r"F-11"),
     ),
     Case(
+        "time_machine_2010",
+        "Which wells need attention right now, and why? Forecast the next 12 months of oil "
+        "for the well that needs it most.",
+        as_of=date(2010, 12, 31),
+        tools=("field_screen", "forecast_production"),
+        mentions=(r"F-12", r"gauge|pressure"),
+        max_steps=10,
+        max_cost=0.30,
+    ),
+    Case(
         "top_producers",
         "Which wells produced most of Volve's oil, and how much did each produce?",
         any_tools=("list_wells", "run_sql", "production_monthly"),
@@ -160,6 +171,24 @@ def unreadable_numbers(summary: str) -> list[str]:
     return found
 
 
+# What a finding's claim must not carry: fit statistics belong in its detail, and internal
+# fields (a score, a key name) mean nothing to a reader.
+JARGON = re.compile(r"\br2(?:_log)?\b|r²|\bAIC\b|\bqi\b|\bdi\b|\battention \d|_sm3|_bar\b")
+MAX_CLAIM_NUMBERS = 4  # the prompt asks for at most 3; one more for a rounding of the same
+
+
+def dense_claims(claims: list[str]) -> list[str]:
+    """Claims a manager could not follow: jargon, or more numbers than a sentence holds."""
+    found = []
+    for n, claim in enumerate(claims, start=1):
+        numbers = WRITTEN_NUMBER.findall(CALENDAR_WINDOW.sub(" ", MASK.sub(" ", claim)))
+        if JARGON.search(claim) or len(numbers) > MAX_CLAIM_NUMBERS:
+            found.append(
+                f"finding {n} ({len(numbers)} numbers{', jargon' if JARGON.search(claim) else ''})"
+            )
+    return found
+
+
 def cost(run: AgentRun) -> float:
     tokens_in, tokens_out = run.total_tokens
     return tokens_in * PRICE_IN + tokens_out * PRICE_OUT
@@ -168,7 +197,7 @@ def cost(run: AgentRun) -> float:
 def score(case: Case, run: AgentRun) -> list[tuple[str, bool, str]]:
     """Each check as (name, passed, detail)."""
     called = {e.tool for e in run.evidence}
-    answer = " ".join([run.summary or "", *(f.claim for f in run.findings)])
+    answer = " ".join([run.summary or "", *(f"{f.claim} {f.detail or ''}" for f in run.findings)])
     checks = [
         ("verified", run.verified, "" if run.verified else (run.stopped or "checker rejected")),
     ]
@@ -182,6 +211,8 @@ def score(case: Case, run: AgentRun) -> list[tuple[str, bool, str]]:
         checks.append((f"says /{pattern}/", bool(found), found.group(0) if found else ""))
     long = unreadable_numbers(run.summary or "")
     checks.append(("summary numbers <= 3 significant digits", not long, ", ".join(long)))
+    dense = dense_claims([f.claim for f in run.findings])
+    checks.append(("claims in plain words", not dense, ", ".join(dense)))
     steps = len(run.steps)
     checks.append((f"<= {case.max_steps} steps", steps <= case.max_steps, str(steps)))
     spent = cost(run)

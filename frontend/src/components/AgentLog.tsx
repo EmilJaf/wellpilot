@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import type { StepEvent, ToolCallView } from '../api'
 import { AlarmIcon, CautionIcon, CheckIcon } from '../icons'
-import { brief, compact, describeArgs, toolName } from '../labels'
+import { plainProblem, compact, describeArgs, toolName } from '../labels'
 import type { RunState } from '../useRun'
 
 type Props = {
@@ -163,7 +163,7 @@ function Call({
               <ul>
                 {call.problems?.map((p, i) => (
                   <li key={i} title={p}>
-                    {brief(p)}
+                    {plainProblem(p)}
                   </li>
                 ))}
               </ul>

@@ -148,7 +148,7 @@ def test_the_field_screen_flags_f12_at_the_end_of_2010() -> None:
     kinds = {i["kind"]: i for i in first["issues"]}
 
     assert result["as_of"] == "2010-12-31"
-    assert first["well"] == "F-12" and first["attention"] == 3
+    assert first["well"] == "F-12" and first["level"] == "alarm"
     assert kinds["dead_gauge"]["since"] == "2010-10-12"
     assert "123,258 Sm3" in kinds["dead_gauge"]["text"]
     assert kinds["step_down"]["since"] == "2010-05-02"

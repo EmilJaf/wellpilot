@@ -89,3 +89,23 @@ def test_a_share_written_as_a_percent_needs_no_calculation() -> None:
         numbers=[DeclaredNumber(text="51.3%", value=0.5134, evidence_id="E1")],
     )
     assert check_submission(Submission(summary="Done.", findings=[finding]), log) == []
+
+
+def test_the_submit_tools_example_finding_passes() -> None:
+    """The schema shows the model one finding; it must be one the checker accepts."""
+    import json
+
+    from wellpilot.agent.loop import submit_tool_schema
+
+    description = submit_tool_schema()["function"]["description"]
+    example = json.loads(description[description.index("{") : description.rindex("}") + 1])
+    log = EvidenceLog()
+    log.add("detect_events", {"well": "F-12"}, EVENTS, _tool)
+    log.add("fit_decline", {"well": "F-12"}, {"best": {"r2_log": 0.8732}}, _tool)
+    example["evidence_ids"] = ["E1", "E2"]  # the example's E3/E7, as this log numbers them
+    for number in example["numbers"]:
+        number["evidence_id"] = {"E3": "E1", "E7": "E2"}[number["evidence_id"]]
+
+    finding = Finding.model_validate(example)
+    assert finding.detail and len(finding.numbers) == 4
+    assert check_submission(Submission(summary="Done.", findings=[finding]), log) == []

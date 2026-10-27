@@ -62,6 +62,26 @@ export function brief(problem: string): string {
   return (first ? first[0] : shorter).trim()
 }
 
+/**
+ * A checker problem in plain words, for readers rather than the model: its first sentence,
+ * with the checker's terms ("undeclared", "evidence with warnings") said as what they mean.
+ * The model still gets the full text, with its instructions.
+ */
+export function plainProblem(problem: string): string {
+  const warning = problem.match(/\((E\d+): ([^.;:]+)/)
+  return brief(problem)
+    .replace(/undeclared number\(s\) (.+?)\.$/i, '$1 written without naming the tool result it comes from.')
+    .replace(/'(.+?)' = \S+ is not in (E\d+)\.$/, "'$1' is not in its source, $2.")
+    .replace(/'(.+?)' is named (.+?), but in (E\d+) it is the (.+?)\.$/, "'$1' is called $2, but $3 has it as $4.")
+    .replace(/'(.+?)' is in (E\d+) only for (.+?), not for the well its sentence names\.$/, "'$1' belongs to $3 in $2, not to the well named.")
+    .replace(/'(.+?)' is written as a rise, but (E\d+) has it as a fall.*$/, "'$1' is written as a rise; $2 shows a fall.")
+    .replace(/'(.+?)' is in (E\d+), but the text ties it to (\S+), and .*$/, "'$1' is dated $3, but that date is another event's.")
+    .replace(/states a cause \('(.+?)'\) but is marked fact\.$/, "states a cause ('$1') as a fact; causes are inferences.")
+    .replace(/is marked fact but rests on evidence with warnings\.?$/, warning ? `rests on a tool result with a warning (${warning[1]}: ${warning[2]}).` : 'rests on a tool result with a warning.')
+    .replace(/'(.+?)' comes from (E\d+), which has warnings.*$/, "'$1' comes from an unreliable result ($2) but reads as certain.")
+    .replace(/quoted text not found in .*$/, 'quotes something its sources do not say word for word.')
+}
+
 /** Letters and digits only, lowercased: how quotes are compared (as the backend does). */
 export const squash = (text: string) => text.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '')
 
