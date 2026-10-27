@@ -10,7 +10,7 @@ const METHODS: { key: string; label: string }[] = [
   { key: 'recent_6m', label: 'Decline fit, last 6 months' },
   { key: 'recent_12m', label: 'Decline fit, last 12 months' },
   { key: 'recent_24m', label: 'Decline fit, last 24 months' },
-  { key: 'classic', label: 'Decline fit, whole history' },
+  { key: 'classic', label: 'Decline fit, whole history (textbook default)' },
 ]
 
 type Case = { key: string; well: string; cutoff: string; actual: number; error: Record<string, number> }
@@ -124,21 +124,20 @@ export function AccuracyView() {
       </ul>
       {closer?.classic && (
         <p className="accuracy-closer">
-          The agent was closer than the whole-history fit in{' '}
-          <strong>
-            {closer.classic.closer} of {closer.classic.cases}
-          </strong>{' '}
-          forecasts, cutting the median error from {Math.round((summary.all_cases.classic?.median_abs_error ?? 0) * 100)}% to{' '}
-          {Math.round((agentStats?.median_abs_error ?? 0) * 100)}%.
           {best && closer[best] && (
             <>
-              {' '}
-              Against the best fixed window, which nobody could have chosen in advance, it was closer in{' '}
-              {closer[best].closer} of {closer[best].cases}
-              {versusBest && `, with ${versusBest}`}.
+              Against the best fixed window, which nobody could have chosen in advance, the agent was closer in{' '}
+              <strong>
+                {closer[best].closer} of {closer[best].cases}
+              </strong>{' '}
+              forecasts{versusBest && `, with ${versusBest}`}.{' '}
             </>
-          )}{' '}
-          All forecasts are below, misses included.
+          )}
+          Against the textbook default, a fit on the whole history, it was closer in {closer.classic.closer} of{' '}
+          {closer.classic.cases} and cut the median error from{' '}
+          {Math.round((summary.all_cases.classic?.median_abs_error ?? 0) * 100)}% to{' '}
+          {Math.round((agentStats?.median_abs_error ?? 0) * 100)}%. All forecasts are below, misses included; they come
+          from three wells of one field, so read them as a check, not a benchmark.
         </p>
       )}
       {agentStats?.bootstrap_band_coverage !== undefined && (
@@ -313,7 +312,10 @@ function CaseView({ entry }: { entry: Case }) {
       {agent && d.agent && (
         <div className="case-why">
           <p className="case-why-head">
-            The agent fitted a {agent.model} decline on {agent.window_start} to {agent.window_end}. In its own words:
+            {d.agent.window_asked?.[0]
+              ? `The agent chose the window from ${d.agent.window_asked[0]}${d.agent.window_asked[1] ? ` to ${d.agent.window_asked[1]}` : ''}, `
+              : 'The agent fitted the whole history, '}
+            producing days {agent.window_start} to {agent.window_end}, with a {agent.model} decline. In its own words:
           </p>
           <blockquote>{d.agent.summary}</blockquote>
           {d.agent.inferences.map((claim) => (

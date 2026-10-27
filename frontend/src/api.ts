@@ -181,7 +181,13 @@ export type BacktestCase = {
     p50_sm3: number
     error: number
   }[]
-  agent: { question: string; verified: boolean; summary: string | null; inferences: string[] } | null
+  agent: {
+    question: string
+    verified: boolean
+    summary: string | null
+    inferences: string[]
+    window_asked?: (string | null)[]
+  } | null
 }
 
 /** A run made with data up to a past date, against what happened next. */

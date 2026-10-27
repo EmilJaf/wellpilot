@@ -8,7 +8,7 @@ import { HindsightView } from './components/Hindsight'
 import { Answer, type Focus } from './components/Answer'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { EvidenceView } from './components/EvidenceView'
-import { PlanChart, type PlanResult } from './components/PlanChart'
+import { PlanByProductionYear, PlanChart, type PlanResult } from './components/PlanChart'
 import { type Marker, WellCharts } from './components/WellCharts'
 import { datesIn } from './labels'
 import { useRun } from './useRun'
@@ -23,6 +23,7 @@ const EXAMPLES = [
   },
   { label: 'F-12 decline vs the 2005 plan', question: 'Why did well F-12 decline faster after 2010? Compare with the 2005 development plan.', asOf: '' },
   { label: "F-12's missing pressure: reservoir or sensor?", question: "Is F-12's missing downhole pressure after October 2010 a reservoir problem or a sensor problem?", asOf: '' },
+  { label: "Read the plan's forecast chart", question: 'What oil plateau rate and duration does the forecast figure on page 23 of the 2005 development plan show?', asOf: '' },
   { label: 'Forecast F-14 from 2013', question: 'Forecast F-14 oil production for the next 12 months and say how confident the forecast is.', asOf: '2013-01-01' },
 ]
 
@@ -62,6 +63,8 @@ export default function App() {
   const [chartsShown, setChartsShown] = useState(true)
   const setSelectedEvidence = (id: string | null, clicked?: Focus) => {
     setSelected(id)
+    // A quote opens its report page: fold the charts away so the page shows large.
+    if (clicked?.quote) setChartsShown(false)
     // The field and accuracy views fill the column: go back to the well, where evidence shows.
     if (id) setView('well')
     setFocus(clicked ?? null)
@@ -130,7 +133,11 @@ export default function App() {
   useEffect(() => {
     api
       .runs()
-      .then((runs) => setRecorded(runs.find((r) => r.status === 'done' && r.verified) ?? null))
+      // The time machine first: a verified run answered as of a past date.
+      .then((runs) => {
+        const verified = runs.filter((r) => r.status === 'done' && r.verified)
+        setRecorded(verified.find((r) => r.as_of) ?? verified[0] ?? null)
+      })
       .catch(() => setRecorded(null))
     fetch('/api/wells')
       .then((r) => r.json() as Promise<Table>)
@@ -355,6 +362,7 @@ export default function App() {
                     <>
                       <h3 className="accuracy-title">The field against its 2005 plan</h3>
                       <PlanChart result={plan.result} />
+                      {plan.result.by_production_year && <PlanByProductionYear table={plan.result.by_production_year} />}
                       {plan.design && (
                         <>
                           <h3 className="accuracy-title field-view-second">Against the limits the platform was designed for</h3>

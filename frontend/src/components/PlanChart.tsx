@@ -5,6 +5,7 @@ import { useWidth } from '../useWidth'
 /** The plan_vs_actual tool's result (also served at /api/field/plan). */
 export type PlanResult = {
   years: Table
+  by_production_year?: Table // each year of production against the plan's year of the same number
   totals_msm3: { actual: number; plan_p90: number; plan_p50: number; plan_p10: number }
   plan_p50_last_year: number
   actual_last_year: number | null
@@ -161,6 +162,55 @@ export function PlanChart({ result }: { result: PlanResult }) {
         year{lateWells.length > 0 && `, with ${lateWells.join(', ')} coming online then`}.
       </p>
       <p className="chart-note-line">Plan figures: {result.plan_source}, as read from the page.</p>
+    </div>
+  )
+}
+
+/**
+ * The plan assumed first oil in March 2007; the field started in February 2008. Calendar
+ * years set the plan's second year against the field's first, so this compares each year of
+ * production with the plan's year of the same number.
+ */
+export function PlanByProductionYear({ table }: { table: Table }) {
+  const rows = table.rows.filter((r) => r[column(table, 'plan_p50_msm3')] !== null || r[column(table, 'actual_oil_msm3')] !== null)
+  const num = (v: unknown) => (typeof v === 'number' ? v : null)
+  return (
+    <div className="plan-aligned">
+      <p className="plan-summary">
+        Year by year from each start: the plan assumed first oil in March 2007, the field started in February 2008.
+      </p>
+      <table className="case-table">
+        <thead>
+          <tr>
+            <th scope="col">Year of production</th>
+            <th scope="col" className="num-col">Plan P50</th>
+            <th scope="col" className="num-col">Field</th>
+            <th scope="col" className="num-col">Field against plan</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => {
+            const plan = num(r[column(table, 'plan_p50_msm3')])
+            const actual = num(r[column(table, 'actual_oil_msm3')])
+            return (
+              <tr key={String(r[column(table, 'production_year')])}>
+                <th scope="row">
+                  {String(r[column(table, 'production_year')])}
+                  <span className="plan-aligned-years">
+                    {' '}
+                    (plan {String(r[column(table, 'plan_year')])}, field {String(r[column(table, 'actual_year')])})
+                  </span>
+                </th>
+                <td className="num-col">{fmt(plan)}</td>
+                <td className="num-col">{fmt(actual)}</td>
+                <td className="num-col">
+                  {plan && actual !== null ? `${actual >= plan ? '+' : '−'}${Math.abs(Math.round((actual / plan - 1) * 100))}%` : plan === 0 && actual ? 'not in plan' : ''}
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
     </div>
   )
 }

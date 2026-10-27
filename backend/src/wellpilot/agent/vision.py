@@ -133,10 +133,10 @@ async def look(store: ProductionStore, llm: LLM, arguments: str) -> dict:
 VISION_TOOL = Tool(
     LOOK,
     "Look at a report page yourself: the page image is shown to you with your question, for "
-    "what only the picture holds, such as a figure's curve or a scanned table (the plan's "
-    "oil forecast profile is a figure on PUD page 23; F-11 B's survey tables, time-depth "
-    "chart and wellhead schematic are pictures in its completion report). Values read off "
-    "a picture are approximate and carry a warning.",
+    "what only the picture holds, such as a figure's curve, a chart or a scanned table (the "
+    "plan's oil forecast profile is a figure on PUD page 23; completion reports hold survey "
+    "tables, time-depth charts and schematics as pictures). Values read off a picture are "
+    "approximate and carry a warning.",
     LookArgs,
     look_at_page,
 )

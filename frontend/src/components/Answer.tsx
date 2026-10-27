@@ -130,7 +130,18 @@ export function Answer(props: Props) {
         ) : state.status === 'idle' ? (
           <Intro recorded={props.recorded} onReplay={props.onReplay} />
         ) : state.status === 'error' ? (
-          <p className="empty">No answer: the run stopped. The agent log says where.</p>
+          <div className="empty">
+            <p>
+              {state.steps.length
+                ? 'No answer: the run stopped. The agent log says where.'
+                : `The agent could not start: ${state.error ?? 'the server refused the run'}.`}
+            </p>
+            {props.recorded && (
+              <button type="button" className="primary-button" onClick={() => props.onReplay(props.recorded!.id)}>
+                Watch a recorded run instead
+              </button>
+            )}
+          </div>
         ) : (
           <Live steps={state.steps} thinking={state.thinking} asOf={state.asOf} />
         )}
@@ -146,7 +157,8 @@ function Intro({ recorded, onReplay }: { recorded: RunSummary | null; onReplay: 
       <h3 className="intro-title">Ask why a well changed.</h3>
       <p className="intro-lead">
         An AI agent works it out on the field&rsquo;s own data and reports. Every number in its answer is
-        checked against the data before you see it.
+        checked against the data before you see it. Set a past date and it answers as of that day; then see
+        what happened next.
       </p>
       {/* plan, check, trace: the order the agent works in */}
       <ol className="intro-steps">
@@ -165,7 +177,7 @@ function Intro({ recorded, onReplay }: { recorded: RunSummary | null; onReplay: 
       </ol>
       {recorded && (
         <button type="button" className="primary-button" onClick={() => onReplay(recorded.id)}>
-          Watch a recorded run
+          {recorded.as_of ? `Watch it answer as of ${recorded.as_of}` : 'Watch a recorded run'}
         </button>
       )}
       <p className="intro-who">

@@ -2,8 +2,15 @@ import { useState } from 'react'
 import { column, type Table } from '../api'
 import { useWidth } from '../useWidth'
 
-type Limit = { limit: string; value: number; quote: string }
-type Against = { first_month_at_or_above: string | null; months_at_or_above: number; max: number; max_month: string }
+type Limit = { limit: string; value: number; quote: string | null }
+type Against = {
+  first_month_at_or_above: string | null
+  months_at_or_above: number
+  max: number
+  max_month: string
+  max_day?: number
+  max_day_month?: string
+}
 
 /** The field_vs_design tool's result (also served at /api/field/design). */
 export type DesignResult = {
@@ -62,6 +69,18 @@ export function DesignChart({ result }: { result: DesignResult }) {
       limit: limits.liquid_sm3_per_day,
       format: (v) => Math.round(v).toLocaleString('en'),
     },
+    ...(limits.water_sm3_per_day
+      ? [
+          {
+            key: 'water',
+            title: 'Field water',
+            unit: 'Sm³ per day',
+            series: [{ column: 'water_sm3_per_day', label: 'water', className: 'design-water' }],
+            limit: limits.water_sm3_per_day,
+            format: (v: number) => Math.round(v).toLocaleString('en'),
+          },
+        ]
+      : []),
   ]
   const height = 120
   const pad = { left: 52, right: 12, top: 8, bottom: 18 }
@@ -134,7 +153,7 @@ export function DesignChart({ result }: { result: DesignResult }) {
                 <g>
                   <line className="design-limit" x1={pad.left} x2={pad.left + plotW} y1={yAt(track.limit.value)} y2={yAt(track.limit.value)} />
                   <text className="design-limit-label" x={pad.left + 6} y={yAt(track.limit.value) - 5}>
-                    plan: {track.limit.quote}
+                    {track.limit.quote ? `plan: ${track.limit.quote}` : `${track.limit.value.toLocaleString('en')}: liquid capacity × maximum water cut`}
                   </text>
                 </g>
               )}
@@ -170,6 +189,15 @@ export function DesignChart({ result }: { result: DesignResult }) {
         Liquid peaked at {Math.round(result.field_against_limits.liquid_sm3_per_day.max).toLocaleString('en')} Sm³/d (
         {result.field_against_limits.liquid_sm3_per_day.max_month}), against a capacity of{' '}
         {limits.liquid_sm3_per_day.value.toLocaleString('en')}.
+        {limits.water_sm3_per_day && result.field_against_limits.water_sm3_per_day?.max_day !== undefined && (
+          <>
+            {' '}
+            The maximum water cut is a share at full liquid rate, so the water the platform was built for is{' '}
+            {limits.water_sm3_per_day.value.toLocaleString('en')} Sm³/d; the field&rsquo;s worst day was{' '}
+            {Math.round(result.field_against_limits.water_sm3_per_day.max_day).toLocaleString('en')} Sm³/d. It ran at its
+            design water cut, not over its water capacity.
+          </>
+        )}
       </p>
       <p className="chart-note-line">Limits: {result.plan_source}, as read from the page. Monthly averages per calendar day.</p>
     </div>

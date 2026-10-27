@@ -2343,3 +2343,12 @@ code,
   font-size: 14px;
   line-height: 1.5;
 }
+
+.plan-aligned {
+  margin-top: 16px;
+}
+
+.plan-aligned-years {
+  color: var(--ink-3);
+  font-weight: 400;
+}
