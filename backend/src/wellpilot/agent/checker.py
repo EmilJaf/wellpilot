@@ -134,11 +134,13 @@ CONSTANTS |= {6.2898, 0.159, 0.158987, 35.3147}
 # at evidence: neither is a claim about why.
 CAUSAL = re.compile(
     r"\b(because|caus(?:e|ed|es|ing)|"
-    r"(?<!water )(?<!gas )(?<!aquifer )(?<!depletion )(?<!gravity )dr(?:ove|ives?|iven|iving)|"
+    r"(?<!water )(?<!gas )(?<!aquifer )(?<!depletion )(?<!gravity )"
+    r"dr(?:ove|ives?|iven|iving|ivers?)|"
     r"due to|led to|leads? to|result(?:s|ed)? (?:from|in)(?! E\d)|(?:as a )?result of|"
     r"responsible for|attribut(?:able|ed) to|triggered by|owing to|thanks to|"
     r"(?:a )?consequence of|contribut(?:ed|es|ing) to|stem(?:s|med)? from|induced by|"
-    r"the reason|accounts? for|explain(?:s|ed by)?)\b",
+    r"the reason|accounts? for|explain(?:s|ed by)?|reflect(?:s|ed|ing)?|(?:direct )?effect of|"
+    r"(?:a |the )?direct effect)\b",
     re.IGNORECASE,
 )
 # A quoted passage: opened after a space or "(", closed before a space or punctuation, so
@@ -603,6 +605,52 @@ def _declared(
     return problems
 
 
+def _well_key(name: str) -> str:
+    return re.sub(r"\s+", "", name.removeprefix("15/9-")).upper()
+
+
+def _wells_without_evidence(claim: str, cited: list[Evidence]) -> list[str]:
+    """Wells the claim names that none of its evidence is about. Evidence without a well
+    argument (SQL, field-wide tools, calculations, report searches without a filter) may
+    hold any well, so it covers every name."""
+    if any(e.arguments.get("well") is None for e in cited):
+        return []
+    about = {_well_key(str(e.arguments["well"])) for e in cited}
+    named = dict.fromkeys(m.group(0).strip() for m in WELL.finditer(claim))
+    return [w for w in named if _well_key(w) not in about]
+
+
+def _unhedged_warned(
+    summary: str, declared: list[DeclaredNumber], log: EvidenceLog, calcs: dict[str, _Calc]
+) -> list[str]:
+    """Summary numbers from evidence with warnings (a poor fit, a calculation from one)
+    that their sentence states as settled. A finding marks such a number inference; the
+    summary has no label, so the sentence itself must say it is uncertain."""
+    text = _normalize(summary)
+    masked = _mask(text)
+    ends = [m.start() for m in SENTENCE.finditer(text)] + [len(text)]
+    problems = []
+    for number in declared:
+        item = log.get(number.evidence_id)
+        if item is None:
+            continue
+        warnings = item.warnings or (calcs[item.id].warnings if item.id in calcs else ())
+        if not warnings:
+            continue
+        for start, _ in _standalone(masked, _normalize(number.text)):
+            end = next(e for e in ends if e >= start)
+            begin = max([0] + [e for e in ends if e < start])
+            if not HEDGE.search(text[begin:end]):
+                problems.append(
+                    f"Summary: '{number.text}' comes from {item.id}, which has warnings "
+                    f"({warnings[0]}), but its sentence states it as settled. Say it is "
+                    "uncertain in the same sentence (e.g. 'the fit suggests', 'likely') or "
+                    "leave it out of the summary."
+                )
+                break
+    return problems
+
+
 def _question_numbers(question: str) -> set[float]:
     """Whole numbers the question names, plus the reports' years: the model may repeat them."""
     named = {
@@ -713,6 +761,14 @@ def check_submission(submission: Submission, log: EvidenceLog, question: str = "
                 f"Finding {n} states a cause ('{cause.group(0)}') but is marked fact. The data "
                 "shows timing and size, not causes: mark it inference."
             )
+        strangers = _wells_without_evidence(finding.claim, cited)
+        if strangers:
+            problems.append(
+                f"Finding {n} names {', '.join(strangers)}, but {ids} "
+                f"{'is' if len(cited) == 1 else 'are'} about other wells. Cite evidence for "
+                f"{'that well' if len(strangers) == 1 else 'those wells'} or leave "
+                f"{'it' if len(strangers) == 1 else 'them'} out."
+            )
         warned = {
             e.id: e.warnings or (calcs[e.id].warnings if e.id in calcs else ()) for e in cited
         }
@@ -737,6 +793,7 @@ def check_submission(submission: Submission, log: EvidenceLog, question: str = "
             everything,
             free,
         )
+        problems += _unhedged_warned(submission.summary, submission.summary_numbers, log, calcs)
         numbers = []
     missing = (
         numbers + dates + [f"'{q[:80]}'" for q in _missing_quotes(submission.summary, everything)]

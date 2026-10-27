@@ -6,14 +6,15 @@
   "question": "Forecast F-14 oil production for the next 12 months and say how confident the forecast is."
  },
  "to_review": false,
- "note": "Live checker also rejected 'P50 276,078', 'P90 259,265', 'P10 292,363' and 'r2 0.77' (digits of the label taken for a thousands group), unused declarations, and '12' in '12-month forecast': all false, since fixed. The rest is right: undeclared '-42%', '-45%', '0.76' and '-0.03869'; a fact on a fit with r2_log 0.011; '~1,100' from E2, which Finding 6 does not cite.",
+ "note": "Live checker also rejected 'P50 276,078', 'P90 259,265', 'P10 292,363' and 'r2 0.77' (digits of the label taken for a thousands group), unused declarations, and '12' in '12-month forecast': all false, since fixed. The rest is right: undeclared '-42%', '-45%', '0.76' and '-0.03869'; a fact on a fit with r2_log 0.011; '~1,100' from E2, which Finding 6 does not cite. Oct 27 rule change: a summary number from evidence with warnings must be hedged in its sentence; this summary states a figure from the r2_log 0.01-0.02 plateau fit as settled, so it is now rejected on purpose.",
  "expected": {
   "accepted": false,
   "flagged": [
    "Finding 1",
    "Finding 3",
    "Finding 4",
-   "Finding 6"
+   "Finding 6",
+   "Summary"
   ]
  },
  "submission": {

@@ -101,7 +101,8 @@ def test_fact_on_evidence_with_warnings_must_be_an_inference() -> None:
 
 
 def test_small_integers_and_identifiers_are_not_checked() -> None:
-    log = log_with(FIT)
+    log = EvidenceLog()
+    log.add("tool", {}, FIT, _tool)  # no well argument: may cover any well it names
     finding = Finding(
         claim="Across 3 steps the P90 case and r2_log for F-15 D and F-1 C in Sm3/d agree.",
         evidence_ids=["E1"],

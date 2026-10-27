@@ -177,6 +177,9 @@ def test_common_causal_phrasings_are_causes() -> None:
         "owing to water breakthrough",
         "which explains the faster decline",
         "a consequence of water breakthrough",
+        "and water breakthrough was the main driver",
+        "which reflects water breakthrough",
+        "a direct effect of water breakthrough",
     ):
         assert summary_problems(f"The rate fell, {phrase}."), phrase
     # Petroleum vocabulary and evidence references are not causes.
@@ -212,3 +215,38 @@ def test_an_undeclared_number_is_named_as_written() -> None:
     )
 
     assert problems and "undeclared number(s) 0,80." in problems[0]
+
+
+DEMO = "fcfb4188de3b-2"  # E2 detect_events for F-12; E11 calculates 7.89 from the 0.019 fit
+
+
+def summary_check(summary: str, numbers: list, log: EvidenceLog) -> list[str]:
+    finding = Finding(claim="F-12 declined.", evidence_ids=["E2"], confidence="fact", numbers=[])
+    submission = Submission(summary=summary, findings=[finding], summary_numbers=numbers)
+    return check_submission(submission, log)
+
+
+def test_a_summary_number_from_a_poor_fit_must_be_stated_as_uncertain() -> None:
+    log = corpus_log(DEMO)
+    ratio = [d("7.89", 7.89, "E11")]
+
+    problems = summary_check("F-12 then declined about 7.89 times faster.", ratio, log)
+    hedged = summary_check("The fit suggests F-12 declined about 7.89 times faster.", ratio, log)
+
+    assert problems and "E11, which has warnings" in problems[0]
+    assert hedged == []
+    # The hedge must be in the number's own sentence.
+    assert summary_check("The fit is likely poor. It fell 7.89 times faster.", ratio, log)
+
+
+def test_a_finding_about_a_well_needs_evidence_about_that_well() -> None:
+    log = corpus_log(DEMO)
+    numbers = [d("72%", -0.7171, "E2")]
+
+    problems = check("F-14's oil rate fell 72% around 2010-07-18.", ["E2"], numbers, log)
+    own_well = check("F-12's oil rate fell 72% around 2010-07-18.", ["E2"], numbers, log)
+    field_wide = check("F-14 and F-12 were both listed.", ["E1"], [], log)
+
+    assert problems and "names F-14" in problems[0]
+    assert own_well == []
+    assert field_wide == []  # list_wells is about every well

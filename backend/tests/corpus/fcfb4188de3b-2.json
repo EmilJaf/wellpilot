@@ -6,10 +6,12 @@
   "question": "Why did well F-12 decline faster after 2010? Compare with the 2005 development plan."
  },
  "to_review": false,
- "note": "",
+ "note": " Oct 27 rule change: a summary number from evidence with warnings must be hedged in its sentence; this summary states a figure from the r2_log 0.01-0.02 plateau fit as settled, so it is now rejected on purpose.",
  "expected": {
-  "accepted": true,
-  "flagged": []
+  "accepted": false,
+  "flagged": [
+   "Summary"
+  ]
  },
  "submission": {
   "summary": "Well F-12's oil rate fell 72% around 2010-07-18 when water cut surged from 0.03 to 0.51, then declined exponentially at 0.4461 per year, about 7.89 times faster than the pre-breakthrough trend. This timing matches the 2005 plan's forecast of breakthrough after omlag 2 år and that Produksjonen avtar grunnet økende vannrate, but the subsequent rise to 0.80 exceeded the planned Maksimum vannkutt 0,80 limit. Missing bottom-hole pressure after 2010-10-12 is a gauge failure during 1,133,053 Sm3 of production, not a reservoir collapse.",
