@@ -236,19 +236,42 @@ def summary_check(summary: str, numbers: list, log: EvidenceLog) -> list[str]:
 
 def test_a_summary_number_from_a_poor_fit_must_be_stated_as_uncertain() -> None:
     log = corpus_log(DEMO)
-    ratio = [d("7.89", 7.89, "E11")]
+    di = [d("0.0566", 0.05655, "E8")]  # the plateau fit's own decline rate
 
-    problems = summary_check("F-12 then declined about 7.89 times faster.", ratio, log)
-    hedged = summary_check("The fit suggests F-12 declined about 7.89 times faster.", ratio, log)
+    problems = summary_check("F-12 declined at 0.0566 per year before 2010.", di, log)
+    hedged = summary_check("The fit suggests F-12 declined at 0.0566 per year.", di, log)
 
-    assert problems and "E11, which has warnings" in problems[0]
+    assert problems and "E8, which has warnings" in problems[0]
     assert hedged == []
     # The hedge must be in the number's own sentence.
-    assert summary_check("The fit is likely poor. It fell 7.89 times faster.", ratio, log)
+    assert summary_check("The fit is likely poor. It declined at 0.0566 per year.", di, log)
     # A clause after a semicolon is the same sentence (run 83f441296bb7's first answer).
     assert not summary_check(
-        "It fell about 7.89 times faster; the fit suggests so, with low confidence.", ratio, log
+        "It declined at 0.0566 per year; the fit suggests so, with low confidence.", di, log
     )
+
+
+def test_a_comparison_built_on_a_poor_fit_stays_out_of_the_summary() -> None:
+    """The demo's "7.89 times faster" divides the post-breakthrough decline rate by the
+    plateau fit's (r2 0.019): a plateau has no decline rate, so the ratio is noise however
+    it is hedged (the reservoir engineer judge's point). A finding may keep it as an
+    inference."""
+    log = corpus_log(DEMO)
+    ratio = [d("7.89", 7.89, "E11")]
+
+    for summary in (
+        "F-12 then declined about 7.89 times faster.",
+        "The fit suggests F-12 declined about 7.89 times faster.",
+    ):
+        problems = summary_check(summary, ratio, log)
+        assert problems and "Leave it out of the summary" in problems[0]
+    finding = Finding(
+        claim="The fit suggests the decline sped up about 7.89 times.",
+        evidence_ids=["E11", "E8", "E9"],
+        confidence="inference",
+        numbers=ratio,
+    )
+    assert check_submission(Submission(summary="Done.", findings=[finding]), log) == []
 
 
 def test_a_finding_about_a_well_needs_evidence_about_that_well() -> None:
@@ -259,7 +282,8 @@ def test_a_finding_about_a_well_needs_evidence_about_that_well() -> None:
     own_well = check("F-12's oil rate fell 72% around 2010-07-18.", ["E2"], numbers, log)
     field_wide = check("F-14 and F-12 were both listed.", ["E1"], [], log)
 
-    assert problems and "names F-14" in problems[0]
+    assert problems and any("names F-14" in p for p in problems)
+    assert any("only for F-12" in p for p in problems)  # the number is F-12's, too
     assert own_well == []
     assert field_wide == []  # list_wells is about every well
 

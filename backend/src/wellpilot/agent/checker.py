@@ -19,7 +19,15 @@ found in that evidence at the precision it was written, and any digits left in t
 undeclared are rejected. Answers from before declared
 numbers (numbers=None) fall back to reading numbers out of the text.
 
-Known limit: the sign of a change is not checked ("rose 45%" passes against -0.45).
+A number found in its evidence must also be the one the text says it is, as far as the
+evidence states outright: not only another well's (its well argument, a record's "well", a
+table's well column), not only another quantity (uptime written as water cut), not a fall
+written as a rise, not another event's date, not a before and after swapped. Dates a
+finding gives a well must be that well's too.
+
+Known limit: meaning is not checked. "Pressure collapsed to 0" passes when the evidence
+says the gauge reads 0; whether the reasoning holds is for the reader, who can open every
+source.
 """
 
 import json
@@ -220,12 +228,16 @@ def _flatten(value: Any) -> Iterable[Any]:
         yield value
 
 
-def _numbers_in_text(text: str, european: bool = False) -> list[tuple[float, int, str | None]]:
+def _numbers_in_text(
+    text: str, european: bool = False, signed: bool = False
+) -> list[tuple[float, int, str | None]]:
     """(value, decimals, suffix) for each number, ignoring well names and ISO dates.
 
     european=True reads Norwegian report text: "9.000" is nine thousand, "0,80" is 0.8.
+    signed=True keeps a minus written right before a number ("(-55%)"); one after a digit
+    is a range ("4 000-5 000"), not a sign.
     """
-    text = DATE.sub(" ", WELL.sub(" ", text))
+    text = DATE.sub(" ", WELL.sub(" ", text)).replace("−", "-")
     # "4 050" and "1 133 053": thousands grouped with a space (or a narrow no-break space).
     text = SPACED_THOUSANDS.sub(lambda m: re.sub(r"\s", "", m.group(0)), text)
     if european:
@@ -239,7 +251,11 @@ def _numbers_in_text(text: str, european: bool = False) -> list[tuple[float, int
         # Decimals of the value as written: "1.200e+04" is good to tens, so -1. Clamped so
         # that "1e400" cannot overflow a tolerance.
         decimals = max(len(mantissa.partition(".")[2]) - int(exponent or 0), -30)
-        found.append((float(digits), decimals, suffix))
+        value = float(digits)
+        before = text[: match.start()]
+        if signed and re.search(r"(?:^|[^\w.,])-$", before):
+            value = -value
+        found.append((value, decimals, suffix))
     return found
 
 
@@ -337,6 +353,7 @@ def _is_constant(value: float) -> bool:
 class _Calc:
     unsupported: tuple[str, ...]  # inputs found in no evidence
     warnings: tuple[str, ...]  # warnings of the evidence its inputs came from
+    inputs: int = 0  # inputs taken from evidence (not unit constants): 2+ is a comparison
 
 
 def _calculations(log: EvidenceLog) -> dict[str, _Calc]:
@@ -352,7 +369,7 @@ def _calculations(log: EvidenceLog) -> dict[str, _Calc]:
         if item.tool != "calculate":
             earlier.append(item)
             continue
-        missing, warnings = [], []
+        missing, warnings, inputs = [], [], 0
         expression = str(item.arguments.get("expression", ""))
         years = _Pool(earlier).years
         for value, decimals, _ in _numbers_in_text(expression):
@@ -360,13 +377,14 @@ def _calculations(log: EvidenceLog) -> dict[str, _Calc]:
                 continue
             if value.is_integer() and str(int(value)) in years:
                 continue  # year arithmetic: "2010 - 2008"
+            inputs += 1
             holders = [e for e in earlier if _Pool([e]).has_number(value, decimals, None)]
             if not holders:
                 missing.append(f"{value:g}")
             elif all(e.warnings or calcs.get(e.id, _Calc((), ())).warnings for e in holders):
                 for e in holders:
                     warnings.extend(e.warnings or calcs[e.id].warnings)
-        calcs[item.id] = _Calc(tuple(missing), tuple(dict.fromkeys(warnings)))
+        calcs[item.id] = _Calc(tuple(missing), tuple(dict.fromkeys(warnings)), inputs)
         if not missing:
             earlier.append(item)  # a sound result can feed later calculations
     return calcs
@@ -588,6 +606,300 @@ def _row_mismatch(
     return None
 
 
+@dataclass(frozen=True)
+class _Leaf:
+    """One value a tool result holds, with where it sits in the result."""
+
+    value: float | None  # a number, with its sign
+    day: str | None  # or an ISO date (a day or a month)
+    labels: str  # its key (or column) and its parent's, and its records' signal or kind
+    well: str | None  # the well that part of the result is about; None: field-wide or unknown
+    record: int | None  # the record it belongs to: an event, a table row, an item of a list
+    record_days: frozenset[str]  # the dates that name its record: start, end, since, ...
+
+
+# String fields that say what a record measures ("signal": "water_cut"): they label its values.
+RECORD_LABEL_KEYS = {"signal", "kind", "metric", "column", "field"}
+# Fields that date a record: an event's start and end, an issue's since, a row's date.
+RECORD_DATE_KEYS = {"start", "end", "since", "date", "day", "month", "week"}
+
+
+def _leaves(item: Evidence) -> list[_Leaf]:
+    """Every number and date in a tool result, with its labels, well and record.
+
+    The well comes from the call's well argument, from a record's "well" key, or from a
+    table's "well" column; a subtree whose key starts with "field" (field_voidage) is
+    field-wide. Model-typed SQL literals are left out, as in the pool.
+    """
+    typed_numbers, typed_strings = _typed_by_model(item)
+    found: list[_Leaf] = []
+    records = iter(range(1_000_000))
+
+    def leaf(value: Any, labels: tuple[str, ...], well, record, days) -> None:
+        label = "|".join(labels)
+        if isinstance(value, bool) or value is None:
+            return
+        if isinstance(value, int | float):
+            if abs(float(value)) not in typed_numbers:
+                found.append(_Leaf(float(value), None, label, well, record, days))
+        elif isinstance(value, str) and value not in typed_strings:
+            for european in (False, True):
+                for number, _, _ in _numbers_in_text(value, european, signed=True):
+                    found.append(_Leaf(number, None, label, well, record, days))
+            for day in DATE.findall(normalize_dates(value)):
+                found.append(_Leaf(None, day, label, well, record, days))
+
+    def walk(node: Any, keys: tuple[str, ...], kinds: tuple[str, ...], well, record, days):
+        # A value's labels: its own key (or column) and its parent's, and what the records
+        # around it measure. Container names further up ("wor_fit") say nothing about it.
+        if isinstance(node, dict) and isinstance(node.get("columns"), list):
+            columns = [str(c).lower() for c in node["columns"]]
+            at_well = columns.index("well") if "well" in columns else None
+            dated = [i for i, c in enumerate(columns) if c in DATE_COLUMNS]
+            for row in node.get("rows") or []:
+                row_well = str(row[at_well]) if at_well is not None and row[at_well] else well
+                row_days = frozenset(str(row[i])[:10] for i in dated if row[i] is not None)
+                rid = next(records)
+                for column, value in zip(columns, row, strict=False):
+                    leaf(value, (*keys[-1:], column, *kinds), row_well, rid, row_days)
+        elif isinstance(node, dict):
+            here = node["well"] if isinstance(node.get("well"), str) else well
+            kinds = kinds + tuple(
+                str(v).lower()
+                for k, v in node.items()
+                if k in RECORD_LABEL_KEYS and isinstance(v, str)
+            )
+            for key, child in node.items():
+                key = str(key).lower()
+                field_wide = key.startswith("field")
+                walk(child, (*keys[-1:], key), kinds, None if field_wide else here, record, days)
+        elif isinstance(node, list):
+            for child in node:
+                if isinstance(child, dict) and not isinstance(child.get("columns"), list):
+                    child_days = frozenset(
+                        str(child[k])[:10]
+                        for k in RECORD_DATE_KEYS
+                        if isinstance(child.get(k), str) and DATE.match(str(child[k]))
+                    )
+                    walk(child, keys, kinds, well, next(records), child_days)
+                else:
+                    walk(child, keys, kinds, well, record, days)
+        else:
+            leaf(node, (*keys[-2:], *kinds), well, record, days)
+
+    well = item.arguments.get("well")
+    walk(item.result, (), (), str(well) if well else None, None, frozenset())
+    return found
+
+
+# Quantities a number may be named as, and how a tool result labels each one. A number the
+# text names as one quantity must not be, in its evidence, only another.
+QUANTITIES = {
+    "water cut": (r"water[\s-]?cut", r"water_?cut"),
+    "uptime": (r"uptime|on[\s-]stream", r"uptime|on_stream"),
+    "choke": (r"choke", r"choke"),
+    "GOR": (r"\bGOR\b|gas[\s/-]oil ratio", r"(?:^|[|_])gor(?:[|_]|$)"),
+    "downhole pressure": (
+        r"\bBHP\b|downhole pressure|bottom[\s-]?hole pressure",
+        r"(?:^|[|_])bhp(?:[|_]|$)|downhole",
+    ),
+    "wellhead pressure": (r"\bWHP\b|wellhead pressure", r"(?:^|[|_])whp(?:[|_]|$)"),
+    "WOR": (r"\bWOR\b|water[\s/-]oil ratio", r"(?:^|[|_])wor(?:[|_]|$)"),
+}
+_NAMES = re.compile("|".join(f"(?:{t})" for t, _ in QUANTITIES.values()), re.IGNORECASE)
+RISE_BEFORE = re.compile(
+    r"\b(?:rose|risen|rising|increased|increasing|grew|grown|jumped|climbed|gained)"
+    r"(?:\s+by)?(?:\s+(?:about|around|some|nearly|almost))?\s*[~≈]?\s*$",
+    re.IGNORECASE,
+)
+RISE_AFTER = re.compile(r"^\s*(?:%|percent)?\s*(?:increase|rise|jump|gain)\b", re.IGNORECASE)
+# A number tied to the date of one record (an event, an issue): "55% on 2010-05-02",
+# "81 days since 2010-10-12". As TIED, with "around" and "since".
+RECORD_TIED = TIED.replace(
+    r"(?:in|on|at|during|by|for)", r"(?:in|on|at|during|by|for|around|since)"
+)
+CLAUSE = re.compile(r"[.;!?](?=\s)|\n")
+# What may stand between a quantity's name and its number for the number to be that
+# quantity: "water cut on <date> was 0.98", "uptime of 0.92". Any other word ("to",
+# "limit", "producing") ends the name's reach.
+LINK = re.compile(
+    r"(?:'s)?(?:\s+|\s*[:=~≈]\s*|\b(?:of|at|is|was|were|on|in|by|reached|reaching|hit|"
+    r"stood|near|about|around|approximately|roughly|averaged|averaging|first|then|now|"
+    r"exceeded|above|below|median|mean|daily|monthly|weekly)\b)*",
+    re.IGNORECASE,
+)
+
+
+def _named(text: str, start: int) -> set[str]:
+    """Wells named in the clause around position `start`, else anywhere in the text."""
+    bounds = [0, *(m.end() for m in CLAUSE.finditer(text)), len(text)]
+    begin = max(b for b in bounds if b <= start)
+    end = min((b for b in bounds if b > start), default=len(text))
+    clause = {_well_key(m.group(0)) for m in WELL.finditer(text[begin:end])}
+    return clause or {_well_key(m.group(0)) for m in WELL.finditer(text)}
+
+
+def _quantity(blanked: str, start: int, end: int) -> str | None:
+    """The quantity the text names a number as: "water cut 0.98", "water cut on <date> was
+    0.98", "0.69 water cut", "53% choke"; None when it names none next to it."""
+    before = blanked[max(0, start - 60) : start]
+    last = None
+    for m in _NAMES.finditer(before):
+        last = m
+    if last and LINK.fullmatch(before[last.end() :]):
+        name = last.group(0)
+    else:
+        after = re.match(rf"\s*(?:%|percent)?\s*({_NAMES.pattern})", blanked[end:], re.IGNORECASE)
+        if not after:
+            return None
+        name = after.group(1)
+    return next(q for q, (text, _) in QUANTITIES.items() if re.fullmatch(text, name, re.I))
+
+
+def _attribution(
+    text: str,
+    blanked: str,
+    written: str,
+    fits: list[Reading],
+    item: Evidence,
+    leaves: list[_Leaf],
+) -> str | None:
+    """Why the number, though in its evidence, is not the one the text says, or None.
+
+    Each check judges only what the evidence states outright: a value found anywhere
+    without a well, label or sign that rules it out passes.
+    - well: in the evidence only for other wells than its clause names (F-12's 1 551 from
+      a field-wide screen written as F-14's);
+    - quantity: named as one quantity but held only as others (uptime 0.98 as water cut);
+    - sign: written as a rise but held only as a fall ("rose 55%" against -55%).
+    """
+    held = [
+        lf for lf in leaves if lf.value is not None and any(_reads_as(r, [lf.value]) for r in fits)
+    ]
+    if not held:
+        return None
+    for start, end in _standalone(blanked, written):
+        named = _named(text, start)
+        wells = {lf.well for lf in held}
+        if named and None not in wells and not {_well_key(w) for w in wells} & named:
+            owners = ", ".join(sorted(wells))
+            return f"is in {item.id} only for {owners}, not for the well its sentence names"
+        quantity = _quantity(blanked, start, end)
+        if quantity:
+            pattern = QUANTITIES[quantity][1]
+            other = [
+                q
+                for q, (_, label) in QUANTITIES.items()
+                if q != quantity and all(re.search(label, lf.labels) for lf in held)
+            ]
+            if not any(re.search(pattern, lf.labels) for lf in held) and other:
+                return f"is named {quantity}, but in {item.id} it is the {other[0]}"
+        rise = (
+            RISE_BEFORE.search(blanked[max(0, start - 40) : start])
+            or RISE_AFTER.match(blanked[end:])
+            or blanked[max(0, start - 1) : start] == "+"
+        )
+        if rise and all(lf.value < 0 for lf in held):
+            return f"is written as a rise, but {item.id} has it as a fall ({held[0].value:g})"
+    return None
+
+
+def _record_mismatch(
+    text: str, written: str, fits: list[Reading], leaves: list[_Leaf]
+) -> tuple[str, str] | None:
+    """(date, what that record holds) when the text ties a number to a date that names a
+    record of its evidence (an event, an issue) and no record of that date holds it: "55%
+    on 2010-06-04" when 55% is the 2010-05-02 step and 2010-06-04 a water-cut crossing. A
+    date that names no record, or another grain, is not judged."""
+    for _, end in _standalone(text, written):
+        tied = re.match(RECORD_TIED, text[end:])
+        if not tied:
+            continue
+        when = tied.group(1)
+        dated = {lf.record for lf in leaves if lf.record is not None and when in lf.record_days}
+        if not dated:
+            continue
+        values = [lf.value for lf in leaves if lf.record in dated and lf.value is not None]
+        if not any(_reads_as(r, values) for r in fits):
+            holders = [
+                lf
+                for lf in leaves
+                if lf.value is not None and any(_reads_as(r, [lf.value]) for r in fits)
+            ]
+            dates = sorted({d for lf in holders for d in lf.record_days})
+            return when, f"in its evidence it belongs to {', '.join(dates) or 'no dated record'}"
+    return None
+
+
+def _date_attribution(
+    text: str, cited: list[Evidence], leaves_of, free_dates: set[str]
+) -> list[str]:
+    """Dates the text gives a well that its evidence has only for other wells: "F-14's
+    gauge has read 0 since 2010-10-12" when 2010-10-12 is F-12's gauge failure. free_dates
+    are dates no well owns: the reports', the question's, and the data's first and last day
+    ("produced to 2016-12-01" is the field's end, though only F-4's rows reach it)."""
+    wrong = []
+    for match in DATE.finditer(text):
+        day = match.group(1)
+        if day in free_dates:
+            continue
+        named = _named(text, match.start())
+        held = [
+            lf
+            for item in cited
+            for lf in leaves_of(item)
+            if lf.day is not None and (lf.day == day or (len(day) == 7 and lf.day.startswith(day)))
+        ]
+        wells = {lf.well for lf in held}
+        if named and held and None not in wells and not {_well_key(w) for w in wells} & named:
+            wrong.append(f"{day} (evidence has it only for {', '.join(sorted(wells))})")
+    return list(dict.fromkeys(wrong))
+
+
+FROM_TO = re.compile(r"\s*(?:[^\W\d]+(?:/[^\W\d]+)?\s*)?(?:to|->|→)\s*")
+
+
+def _reversed(label, blanked, declared, unused, log, leaves_of) -> list[str]:
+    """ "from X to Y" where the evidence has a change the other way: a record whose before
+    value is Y and after value is X ("from 1 888 to 4 207" for a step from 4 207 to 1 888)."""
+    spans = sorted(
+        (start, end, id(d), d)
+        for d in declared
+        if d not in unused
+        for start, end in _standalone(blanked, d.text)[:1]
+    )
+    problems = []
+    for (a_start, a_end, _, a), (b_start, _, _, b) in zip(spans, spans[1:], strict=False):
+        if a.evidence_id != b.evidence_id or not re.search(r"\bfrom\s*$", blanked[:a_start]):
+            continue
+        if (
+            not FROM_TO.fullmatch(blanked[a_end:b_start])
+            or (item := log.get(a.evidence_id)) is None
+        ):
+            continue
+        sides: dict[int, dict[str, list[float]]] = {}
+        for lf in leaves_of(item):
+            side = "before" if "before" in lf.labels else "after" if "after" in lf.labels else None
+            if lf.record is not None and side and lf.value is not None:
+                sides.setdefault(lf.record, {}).setdefault(side, []).append(lf.value)
+
+        def holds(record: dict, side: str, text: str) -> bool:
+            return any(_reads_as(r, record.get(side, [])) for r in _readings(text))
+
+        backwards = any(
+            holds(r, "before", b.text) and holds(r, "after", a.text) for r in sides.values()
+        )
+        forwards = any(
+            holds(r, "before", a.text) and holds(r, "after", b.text) for r in sides.values()
+        )
+        if backwards and not forwards:
+            problems.append(
+                f"{label}: 'from {a.text} to {b.text}' runs the wrong way; in {item.id} the "
+                f"change is from {b.text} to {a.text}."
+            )
+    return problems
+
+
 def _as_written(value: float, decimals: int, suffix: str | None) -> str:
     return f"{value:.{max(decimals, 0)}f}{suffix or ''}"
 
@@ -601,6 +913,7 @@ def _declared(
     citable: set[str] | None,
     pool: _Pool,
     free: set[float],
+    leaves_of=None,
 ) -> list[str]:
     """Check declared numbers, then that the text holds no number left undeclared.
 
@@ -608,9 +921,11 @@ def _declared(
     where it comes from; the only parsing left is spotting digits nobody declared.
     """
     problems = []
+    leaves_of = leaves_of or _leaves
     text = _normalize(text)
     declared = [d.model_copy(update={"text": _normalize(d.text)}) for d in declared]
     masked = _mask(text)
+    blanked = _blank(text, WELL, DATE, CALENDAR_WINDOW, REFERENCE)  # positions as in text
     # A declaration with no number in the text hides nothing (every written number must be
     # declared anyway), so it costs no correction round; it is only named as a hint below.
     unused = [d for d in declared if not _standalone(masked, d.text)]
@@ -657,7 +972,15 @@ def _declared(
                 f"{label}: '{number.text}' is in {where}, but not in its {wrong_row[0]} row, "
                 f"which the text ties it to; that row has {wrong_row[1]}."
             )
+        elif wrong := _attribution(text, blanked, number.text, fits, item, leaves_of(item)):
+            problems.append(f"{label}: '{number.text}' {wrong}. Write what the evidence says.")
+        elif record := _record_mismatch(masked_dates, number.text, fits, leaves_of(item)):
+            problems.append(
+                f"{label}: '{number.text}' is in {where}, but the text ties it to {record[0]}, "
+                f"and {record[1]}. Give each number the date of its own event."
+            )
 
+    problems += _reversed(label, blanked, declared, unused, log, leaves_of)
     rest = _mask(QUOTED.sub(" ", text))  # numbers inside a quote are checked with the quote
     for number in sorted(declared, key=lambda d: -len(d.text)):
         for start, end in reversed(_standalone(rest, number.text)):
@@ -698,8 +1021,24 @@ def _declared(
         problems.append(
             f"{label}: undeclared number(s) {', '.join(leftover)}. Declare every number you "
             f"write, with its value and evidence id, or remove it.{hint}"
+            f"{_suggest(leftover, citable, log)}"
         )
     return problems
+
+
+def _suggest(written: list[str], citable: set[str] | None, log: EvidenceLog) -> str:
+    """Declarations for undeclared numbers its evidence does hold, so a true number is
+    declared rather than deleted ("21 months after first oil" is in E5 as 20.73)."""
+    items = [log.get(i) for i in sorted(citable)] if citable is not None else list(log)
+    found = []
+    for text in written[:3]:
+        for item in (i for i in items if i is not None):
+            numbers = _Pool([item]).numbers
+            hit = next((n for r in _readings(text) for n in numbers if _reads_as(r, [n])), None)
+            if hit is not None:
+                found.append(f'{{"text": "{text}", "value": {hit:g}, "evidence_id": "{item.id}"}}')
+                break
+    return f" These are in the evidence; declare them as {', '.join(found)}." if found else ""
 
 
 def _well_key(name: str) -> str:
@@ -733,6 +1072,21 @@ def _unhedged_warned(
             continue
         warnings = item.warnings or (calcs[item.id].warnings if item.id in calcs else ())
         if not warnings:
+            continue
+        poor = any(w.startswith(("poor fit", "no decline")) for w in warnings)
+        if (
+            poor
+            and item.id in calcs
+            and calcs[item.id].inputs >= 2
+            and _standalone(masked, _normalize(number.text))
+        ):
+            # A ratio or difference of two unreliable numbers is noise however it is hedged
+            # ("decline sped up 7.89 times" from a plateau fit that has no decline rate).
+            problems.append(
+                f"Summary: '{number.text}' compares numbers ({item.id}) that rest on evidence "
+                f"with warnings ({warnings[0]}). Leave it out of the summary; a finding may keep "
+                "it, marked inference."
+            )
             continue
         for start, _ in _standalone(masked, _normalize(number.text)):
             end = next(e for e in ends if e >= start)
@@ -815,6 +1169,16 @@ def check_submission(submission: Submission, log: EvidenceLog, question: str = "
     free_dates = REPORT_DATES | set(DATE.findall(_normalize(question)))
     calcs = _calculations(log)
     sound = [e for e in log if not (e.id in calcs and calcs[e.id].unsupported)]
+    walked: dict[str, list[_Leaf]] = {}
+
+    def leaves_of(item: Evidence) -> list[_Leaf]:
+        if item.id not in walked:
+            walked[item.id] = _leaves(item)
+        return walked[item.id]
+
+    days = sorted({lf.day for e in log for lf in leaves_of(e) if lf.day and len(lf.day) == 10})
+    unowned = free_dates | ({days[0], days[-1]} if days else set())
+
     problems = []
     for n, finding in enumerate(submission.findings, start=1):
         if not finding.evidence_ids:
@@ -845,6 +1209,7 @@ def check_submission(submission: Submission, log: EvidenceLog, question: str = "
                 set(finding.evidence_ids),
                 pool,
                 free,
+                leaves_of,
             )
         elif numbers:  # an answer from before declared numbers: read them from the text
             problems.append(
@@ -853,6 +1218,11 @@ def check_submission(submission: Submission, log: EvidenceLog, question: str = "
             )
         if dates:
             problems.append(f"Finding {n}: date(s) {', '.join(dates)} not found in {ids}.")
+        elif misdated := _date_attribution(_normalize(finding.claim), cited, leaves_of, unowned):
+            problems.append(
+                f"Finding {n} gives the well its sentence names date(s) {', '.join(misdated)}. "
+                "Cite evidence about that well, or name the well the date belongs to."
+            )
         missing_quotes = _missing_quotes(finding.claim, pool)
         if missing_quotes:
             listed = "; ".join(f"'{q[:80]}'" for q in missing_quotes)
@@ -898,6 +1268,7 @@ def check_submission(submission: Submission, log: EvidenceLog, question: str = "
             None,
             everything,
             free,
+            leaves_of,
         )
         problems += _unhedged_warned(submission.summary, submission.summary_numbers, log, calcs)
         numbers = []
