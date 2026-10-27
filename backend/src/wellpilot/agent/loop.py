@@ -61,7 +61,9 @@ for a poor decline fit, refit on a window that starts after the last regime chan
 reading a change as reservoir behaviour, rule out data and operations (events show shut-ins, \
 gauge failures and regime changes).
 - Compute every derived number (ratios, differences, percent changes) with the calculate \
-tool, so it has evidence too.
+tool, so it has evidence too. A share needs no calculation to be written as a percent: \
+declare 51.3% with the evidence's value 0.513. Call tools that do not depend on each other \
+in the same step.
 - Finish by calling submit_findings: a short summary and findings. Each finding cites the \
 evidence ids its numbers and dates come from and is marked "fact" (shown directly by the \
 evidence) or "inference" (an interpretation, such as a likely cause). A finding that \

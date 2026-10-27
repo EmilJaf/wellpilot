@@ -114,3 +114,12 @@ def test_pud_quotes_are_located_on_their_page(store) -> None:
     assert len(boxes) == 1
     x, y, w, h = boxes[0]
     assert 0 < x < 1 and 0 < y < 1 and 0 < w < 0.5 and 0 < h < 0.05
+
+
+def test_table_rows_parse_with_cells_written_apart_by_bars() -> None:
+    """Muse Spark Open writes table rows as "2010 | 2,14 | 1,49 | 2,13 | 2,82"."""
+    from wellpilot.agent.tools import DESIGN_LIMITS, PLAN_ROW, _cells
+
+    assert PLAN_ROW.match(_cells("2010 | 2,14 | 1,49 | 2,13 | 2,82"))[1] == "2010"
+    water_cut = next(p for key, p, _ in DESIGN_LIMITS if key == "water_cut")
+    assert water_cut.match(_cells("Maksimum vannkutt | 0,80"))[1] == "0,80"

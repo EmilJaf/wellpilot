@@ -16,3 +16,6 @@ Run fcfb4188de3b was taken out on Oct 27: its accepted summary states "about 7.8
 faster", a ratio calculated from the r2_log 0.019 plateau fit, as settled. The checker now
 sends such a summary back (summary numbers from evidence with warnings must be hedged), so
 the recording no longer replays as recorded. Re-record the demo runs and add them here.
+
+Run c8b6cbb62280 (Oct 27, Muse Spark Open) replaces it: the F-12 decline question, verified
+on the 2nd submission after 8 fair rejections, with plan_vs_actual and field_vs_design.

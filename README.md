@@ -139,7 +139,7 @@ fly auth login
 fly launch --copy-config --no-deploy        # creates the app; it may pick another name
 fly secrets set BASETEN_API_KEY=...          # the model key, never committed
 fly secrets set OPERATOR_KEY=$(openssl rand -hex 24)   # lifts the public limits for you
-fly secrets set FEATURED_RUNS=fcfb4188de3b   # the runs the public site lists and replays
+fly secrets set FEATURED_RUNS=c8b6cbb62280   # the runs the public site lists and replays
 fly deploy
 ```
 

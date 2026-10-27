@@ -517,6 +517,11 @@ PLAN_DOC, PLAN_PAGE = "volve_pud", 25
 PLAN_ROW = re.compile(r"^(?:\w+ )?(\d{4})((?:\s+(?:-|\d+,\d+)){4})$")
 
 
+def _cells(quote: str) -> str:
+    """A table row as plain words: models write cells apart with spaces or with "|"."""
+    return " ".join(quote.replace("|", " ").split())
+
+
 def _exact_quotes(store: ProductionStore, doc_id: str, page: int) -> pd.Series:
     """A page's quotes that stand word for word on the page."""
     return (
@@ -535,7 +540,7 @@ def plan_vs_actual(store: ProductionStore, _: NoArgs) -> dict:
     plan: dict[int, list[float]] = {}
     quotes = []
     for quote in _exact_quotes(store, PLAN_DOC, PLAN_PAGE):
-        match = PLAN_ROW.match(quote.strip())
+        match = PLAN_ROW.match(_cells(quote))
         if match:
             values = [0.0 if v == "-" else float(v.replace(",", ".")) for v in match[2].split()]
             plan[int(match[1])] = values
@@ -619,7 +624,7 @@ def field_vs_design(store: ProductionStore, _: NoArgs) -> dict:
     limits = {}
     for key, pattern, label in DESIGN_LIMITS:
         for quote in facts:
-            if match := pattern.match(quote.strip()):
+            if match := pattern.match(_cells(quote)):
                 limits[key] = {"limit": label, "value": _plan_number(match[1]), "quote": quote}
                 break
     if not limits:

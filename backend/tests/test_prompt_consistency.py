@@ -74,3 +74,17 @@ def test_the_prompts_rounding_examples_pass() -> None:
     ]
     finding = Finding(claim=claim, evidence_ids=["E1"], confidence="fact", numbers=numbers)
     assert check_submission(Submission(summary="Done.", findings=[finding]), log) == []
+
+
+def test_a_share_written_as_a_percent_needs_no_calculation() -> None:
+    """The prompt says 0.513 may be written 51.3% with the evidence's value declared."""
+    log = EvidenceLog()
+    log.add("events", {"well": "F-12"}, {"after": 0.5134}, _tool)
+    assert "declare 51.3% with the evidence's value 0.513" in SYSTEM_PROMPT
+    finding = Finding(
+        claim="F-12's water cut rose to 51.3%.",
+        evidence_ids=["E1"],
+        confidence="fact",
+        numbers=[DeclaredNumber(text="51.3%", value=0.5134, evidence_id="E1")],
+    )
+    assert check_submission(Submission(summary="Done.", findings=[finding]), log) == []
