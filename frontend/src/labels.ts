@@ -11,6 +11,7 @@ export const TOOL_NAMES: Record<string, string> = {
   search_reports: 'Search reports',
   read_report_page: 'Read report page',
   plan_vs_actual: 'Compare with the 2005 plan',
+  field_vs_design: 'Field against design limits',
   submit_findings: 'Submit answer',
 }
 

@@ -10,6 +10,7 @@ from fastapi.responses import FileResponse
 from wellpilot.agent.tools import (
     NoArgs,
     ReportPageArgs,
+    field_vs_design,
     list_wells,
     plan_vs_actual,
     read_report_page,
@@ -52,6 +53,15 @@ def field_plan(request: Request) -> dict:
     plan_vs_actual tool returns."""
     try:
         return plan_vs_actual(_store(request), NoArgs())
+    except ValueError as e:
+        raise HTTPException(404, str(e)) from None
+
+
+@router.get("/field/design")
+def field_design(request: Request) -> dict:
+    """The field by month against the plan's design limits: the field_vs_design tool's result."""
+    try:
+        return field_vs_design(_store(request), NoArgs())
     except ValueError as e:
         raise HTTPException(404, str(e)) from None
 

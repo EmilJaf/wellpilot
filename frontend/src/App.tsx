@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { api, type RunSummary, type Table } from './api'
 import { AgentLog } from './components/AgentLog'
 import { AccuracyView } from './components/AccuracyView'
+import { DesignChart, type DesignResult } from './components/DesignChart'
 import { Answer, type Focus } from './components/Answer'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { EvidenceView } from './components/EvidenceView'
@@ -49,8 +50,8 @@ export default function App() {
   const [view, setView] = useState<'well' | 'plan' | 'accuracy'>('well')
   const setSelectedEvidence = (id: string | null, clicked?: Focus) => {
     setSelected(id)
-    // The accuracy view has no room for evidence: go back to the data the evidence sits under.
-    if (id) setView((v) => (v === 'accuracy' ? 'well' : v))
+    // The field and accuracy views fill the column: go back to the well, where evidence shows.
+    if (id) setView('well')
     setFocus(clicked ?? null)
     setEvidenceAttempt((n) => n + 1)
     // On a narrow screen the evidence sits below the answer: bring it into view.
@@ -64,14 +65,13 @@ export default function App() {
   const [daily, setDaily] = useState<{ well: string; table: Table | null; error?: string } | null>(null)
   const [markers, setMarkers] = useState<{ key: string; list: Marker[] }>({ key: '', list: [] })
   const [recorded, setRecorded] = useState<RunSummary | null>(null)
-  const [plan, setPlan] = useState<{ result: PlanResult | null; error?: string } | null>(null)
+  const [plan, setPlan] = useState<{ result: PlanResult | null; design: DesignResult | null; error?: string } | null>(null)
 
   useEffect(() => {
     if (view !== 'plan' || plan) return
-    api
-      .fieldPlan()
-      .then((result) => setPlan({ result: result as PlanResult }))
-      .catch((e: Error) => setPlan({ result: null, error: e.message }))
+    Promise.all([api.fieldPlan(), api.fieldDesign().catch(() => null)])
+      .then(([result, design]) => setPlan({ result: result as PlanResult, design: design as DesignResult | null }))
+      .catch((e: Error) => setPlan({ result: null, design: null, error: e.message }))
   }, [view, plan])
 
   const running = state.status === 'starting' || state.status === 'running'
@@ -267,25 +267,34 @@ export default function App() {
                 </select>
               )}
             </div>
-            {view === 'accuracy' ? null : view === 'well' ? (
+            {view === 'well' && (
               <WellCharts
                 table={daily?.well === well ? daily.table : null}
                 error={daily?.well === well ? daily.error : undefined}
                 markers={chartMarkers}
                 highlights={highlights}
               />
-            ) : (
-              <div className="charts">
-                {plan?.result ? (
-                  <PlanChart result={plan.result} />
-                ) : (
-                  <p className="empty">{plan?.error ? `The plan comparison could not load: ${plan.error}` : 'Loading the plan comparison'}</p>
-                )}
-              </div>
             )}
             <div className="evidence-scroll" ref={evidencePanel}>
               {view === 'accuracy' ? (
                 <AccuracyView />
+              ) : view === 'plan' ? (
+                <div className="charts field-view">
+                  {plan?.result ? (
+                    <>
+                      <h3 className="accuracy-title">The field against its 2005 plan</h3>
+                      <PlanChart result={plan.result} />
+                      {plan.design && (
+                        <>
+                          <h3 className="accuracy-title field-view-second">Against the limits the platform was designed for</h3>
+                          <DesignChart result={plan.design} />
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    <p className="empty">{plan?.error ? `The plan comparison could not load: ${plan.error}` : 'Loading the plan comparison'}</p>
+                  )}
+                </div>
               ) : (
                 <EvidenceView runId={state.id} evidenceId={selectedEvidence} attempt={evidenceAttempt} focus={focus} />
               )}

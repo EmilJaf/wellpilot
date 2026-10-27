@@ -1730,3 +1730,70 @@ code,
   color: var(--ink);
   font-weight: 600;
 }
+
+/* ---------- field against the plan's design limits ---------- */
+
+.field-view {
+  padding: 14px 18px 24px;
+  max-width: 820px;
+}
+
+.field-view-second {
+  margin-top: 26px;
+  padding-top: 14px;
+  border-top: 1px solid var(--rule-strong);
+}
+
+.design-chart svg {
+  display: block;
+  overflow: visible;
+}
+
+.design-track + .design-track {
+  margin-top: 6px;
+}
+
+.design-line {
+  fill: none;
+  stroke-width: 1.75;
+  stroke-linejoin: round;
+}
+
+.design-water {
+  stroke: var(--water);
+}
+
+.design-oil {
+  stroke: var(--oil);
+}
+
+.design-liquid {
+  stroke: var(--pressure);
+}
+
+.design-limit {
+  stroke: var(--ink);
+  stroke-width: 1.25;
+  stroke-dasharray: 6 4;
+}
+
+.design-limit-label {
+  fill: var(--ink);
+  font-size: 12px;
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: var(--sheet);
+  stroke-width: 3px;
+}
+
+.design-key-water {
+  border-color: var(--water);
+}
+
+.design-key-liquid {
+  border-color: var(--pressure);
+}
+
+.design-key-limit {
+  border-top: 2px dashed var(--ink);
+}

@@ -517,15 +517,24 @@ PLAN_DOC, PLAN_PAGE = "volve_pud", 25
 PLAN_ROW = re.compile(r"^(?:\w+ )?(\d{4})((?:\s+(?:-|\d+,\d+)){4})$")
 
 
+def _exact_quotes(store: ProductionStore, doc_id: str, page: int) -> pd.Series:
+    """A page's quotes that stand word for word on the page."""
+    return (
+        store.query(
+            "SELECT quote FROM report_facts "
+            "WHERE doc_id = ? AND page = ? AND quote_check = 'exact'",
+            [doc_id, page],
+        )
+        .rows["quote"]
+        .dropna()
+    )
+
+
 def plan_vs_actual(store: ProductionStore, _: NoArgs) -> dict:
     _require_reports(store)
-    facts = store.query(
-        "SELECT quote FROM report_facts WHERE doc_id = ? AND page = ? AND quote_check = 'exact'",
-        [PLAN_DOC, PLAN_PAGE],
-    ).rows
     plan: dict[int, list[float]] = {}
     quotes = []
-    for quote in facts["quote"].dropna():
+    for quote in _exact_quotes(store, PLAN_DOC, PLAN_PAGE):
         match = PLAN_ROW.match(quote.strip())
         if match:
             values = [0.0 if v == "-" else float(v.replace(",", ".")) for v in match[2].split()]
@@ -577,6 +586,84 @@ def plan_vs_actual(store: ProductionStore, _: NoArgs) -> dict:
             "actual_after_plan_p50_ends_msm3": sum(after.values()),
             "wells_first_oil_after_plan_p50_ends": table(late_wells),
             "note": "The plan assumed first oil in March 2007; years are calendar years.",
+        }
+    )
+
+
+DESIGN_PAGE = 23
+# The plan's field constraints table (PUD p.23, Table 4.3): a label, the value as printed.
+DESIGN_LIMITS = (
+    (
+        "liquid_sm3_per_day",
+        re.compile(r"^Væskekapasitet\s+([\d.]+)\s*Sm3"),
+        "field liquid capacity",
+    ),
+    ("oil_sm3_per_day", re.compile(r"^Oljekapasitet\s+([\d.]+)\s*Sm3"), "field oil capacity"),
+    ("water_cut", re.compile(r"^Maksimum vannkutt\s+(\d+,\d+)"), "maximum water cut"),
+    (
+        "water_inj_sm3_per_day",
+        re.compile(r"^Vanninjeksjons kapasitet\s+([\d.]+)\s*Sm3"),
+        "field water injection capacity",
+    ),
+)
+
+
+def _plan_number(text: str) -> float:
+    """A number as the plan prints it: "0,80" is 0.8, "13000" and "13.000" are 13000."""
+    return float(text.replace(",", ".")) if "," in text else float(text.replace(".", ""))
+
+
+def field_vs_design(store: ProductionStore, _: NoArgs) -> dict:
+    _require_reports(store)
+    facts = _exact_quotes(store, PLAN_DOC, DESIGN_PAGE)
+    limits = {}
+    for key, pattern, label in DESIGN_LIMITS:
+        for quote in facts:
+            if match := pattern.match(quote.strip()):
+                limits[key] = {"limit": label, "value": _plan_number(match[1]), "quote": quote}
+                break
+    if not limits:
+        raise ValueError("the plan's design limits (PUD p.23) are not in the report facts")
+    months = store.query(
+        """
+        WITH daily AS (
+            SELECT date, sum(coalesce(oil_sm3, 0)) AS oil, sum(coalesce(water_sm3, 0)) AS water,
+                   sum(coalesce(water_inj_sm3, 0)) AS inj
+            FROM production_daily GROUP BY date
+        )
+        SELECT strftime(date_trunc('month', date), '%Y-%m') AS month, count(*) AS days,
+               sum(oil) / count(*) AS oil_sm3_per_day,
+               sum(oil + water) / count(*) AS liquid_sm3_per_day,
+               sum(water) / nullif(sum(oil + water), 0) AS water_cut,
+               sum(inj) / count(*) AS water_inj_sm3_per_day,
+               max(oil + water) AS max_day_liquid_sm3
+        FROM daily GROUP BY 1 HAVING sum(oil) > 0 ORDER BY 1
+        """
+    ).rows
+    crossings = {}
+    for key, limit in limits.items():
+        column = key if key in months else None
+        if column is None:
+            continue
+        above = months[months[column] >= limit["value"]]
+        crossings[key] = {
+            "first_month_at_or_above": above["month"].iloc[0] if len(above) else None,
+            "months_at_or_above": len(above),
+            "max": months[column].max(),
+            "max_month": months.loc[months[column].idxmax(), "month"],
+        }
+    economic = [q for q in facts if "minimum økonomisk rate" in q]
+    return to_jsonable(
+        {
+            "scope": "whole field, all producers and injectors summed per day, then per month",
+            "plan_source": f"{REPORTS_BY_ID[PLAN_DOC].title}, page {DESIGN_PAGE}, Table 4.3",
+            "design_limits": limits,
+            "field_against_limits": crossings,
+            "months": table(months),
+            "plan_end_quote": economic[0] if economic else None,
+            "note": "These are field and platform limits (PUD p.35 lists the same platform "
+            "capacities). A single well's water cut above 0.80 does not breach them; the field's "
+            "water cut does. Rates are per calendar day of each month.",
         }
     )
 
@@ -684,6 +771,16 @@ TOOLS = [
         "field's life with the plan.",
         NoArgs,
         plan_vs_actual,
+    ),
+    Tool(
+        "field_vs_design",
+        "The whole field's monthly oil and liquid rates, water cut and water injection against "
+        "the design limits of the 2005 development plan (Table 4.3 on PUD page 23, quoted): "
+        "liquid and oil capacity, maximum water cut, water injection capacity, with the first "
+        "month each was reached. These are field and platform limits: compare them with the "
+        "field, not with one well.",
+        NoArgs,
+        field_vs_design,
     ),
     Tool(
         "read_report_page",

@@ -3,6 +3,7 @@ import { api, type Evidence, type Table } from '../api'
 import { CautionIcon } from '../icons'
 import { describeArgs, sameQuote, toolName } from '../labels'
 import type { Focus } from './Answer'
+import { DesignChart, type DesignResult } from './DesignChart'
 import { PageImage } from './PageImage'
 import { PlanChart, type PlanResult } from './PlanChart'
 
@@ -127,6 +128,15 @@ function Result({ tool, result, focus }: { tool: string; result: unknown; focus?
   }
   if (tool === 'detect_events') return <Events events={result as EventRow[]} />
   if (tool === 'plan_vs_actual') return <PlanEvidence result={result as PlanResult} />
+  if (tool === 'field_vs_design') {
+    const design = result as DesignResult
+    return (
+      <>
+        <DesignChart result={design} />
+        <DataTable table={design.months} />
+      </>
+    )
+  }
   if (tool === 'search_reports') return <Facts result={result as SearchResult} focus={focus} />
   if (tool === 'read_report_page') return <ReportPage page={result as PageResult} focus={focus} />
   if (tool === 'fit_decline' || tool === 'forecast_production') return <Fit result={result as FitResult} />

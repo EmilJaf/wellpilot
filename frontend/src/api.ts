@@ -121,6 +121,7 @@ export const api = {
   evidence: (runId: string, evidenceId: string) =>
     fetch(`/api/runs/${runId}/evidence/${evidenceId}`).then((r) => json<Evidence>(r)),
   fieldPlan: () => fetch('/api/field/plan').then((r) => json<unknown>(r)),
+  fieldDesign: () => fetch('/api/field/design').then((r) => json<unknown>(r)),
   daily: (well: string) => fetch(`/api/wells/${encodeURIComponent(well)}/daily`).then((r) => json<Table>(r)),
   pageQuotes: (docId: string, page: number) =>
     fetch(`/api/reports/${docId}/pages/${page}/quotes`).then((r) => json<{ quote: string; boxes: number[][] }[]>(r)),

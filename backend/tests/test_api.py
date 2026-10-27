@@ -290,6 +290,7 @@ async def test_data_endpoints(settings) -> None:
         no_page = await client.get("/api/reports/volve_pud/pages/99/image")
         no_backtest = await client.get("/api/backtest")
         no_plan = await client.get("/api/field/plan")
+        no_design = await client.get("/api/field/design")
         no_quotes = (await client.get("/api/reports/volve_pud/pages/23/quotes")).json()
 
     assert wells["rows"][0][0] == "F-12"
@@ -303,6 +304,7 @@ async def test_data_endpoints(settings) -> None:
     assert no_page.status_code == 404
     assert no_backtest.status_code == 404
     assert no_plan.status_code == 404  # no report facts extracted: no plan to compare with
+    assert no_design.status_code == 404
     assert no_quotes == []
 
 

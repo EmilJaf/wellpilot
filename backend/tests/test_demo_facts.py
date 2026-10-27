@@ -82,6 +82,25 @@ def test_the_field_against_the_2005_plan(store) -> None:
     assert "2010 2,14 1,49 2,13 2,82" in result["plan_rows_quoted"]
 
 
+def test_the_field_against_the_plans_design_limits(store) -> None:
+    """The plan's 0,80 water cut is a field limit: the field reached it in June 2012, the
+    year the plan's forecast ends; liquid never reached the 13000 Sm3/d capacity."""
+    result = call(store, "field_vs_design")
+    limits = result["design_limits"]
+    against = result["field_against_limits"]
+
+    assert limits["water_cut"] == {
+        "limit": "maximum water cut",
+        "value": 0.8,
+        "quote": "Maksimum vannkutt 0,80",
+    }
+    assert limits["liquid_sm3_per_day"]["value"] == 13000
+    assert against["water_cut"]["first_month_at_or_above"] == "2012-06"
+    assert against["liquid_sm3_per_day"]["months_at_or_above"] == 0
+    assert against["liquid_sm3_per_day"]["max_month"] == "2014-06"
+    assert against["oil_sm3_per_day"]["max"] == pytest.approx(8924, abs=1)
+
+
 def test_pud_quotes_are_located_on_their_page(store) -> None:
     """The UI marks a quote on the page image Muse Spark read it from."""
     import json as _json
