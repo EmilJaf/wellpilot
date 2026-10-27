@@ -1,14 +1,39 @@
-import { useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { api, type Evidence, type Table } from '../api'
 import { CautionIcon } from '../icons'
 import { describeArgs, toolName } from '../labels'
+import type { Focus } from './Answer'
 
-type Props = { runId: string | null; evidenceId: string | null; attempt: number }
+type Props = { runId: string | null; evidenceId: string | null; attempt: number; focus?: Focus | null }
+
+/**
+ * Does a value in a tool result match the number the reader clicked? The declared value
+ * may be a fraction written as a percent (0.72 for "72%") or the other way round, and the
+ * text rounds it: a value within 0.6% is that number. Text matches the number as written.
+ */
+function matcher(focus: Focus | null | undefined): (v: unknown) => boolean {
+  if (!focus) return () => false
+  const targets = [focus.value, focus.value / 100, focus.value * 100].map(Math.abs).filter((t) => t > 0)
+  return (v) => {
+    if (typeof v === 'number') return targets.some((t) => Math.abs(Math.abs(v) - t) <= t * 0.006)
+    return typeof v === 'string' && v.includes(focus.text)
+  }
+}
+
+const HitContext = createContext<(v: unknown) => boolean>(() => false)
+
+function countHits(value: unknown, hit: (v: unknown) => boolean): number {
+  if (Array.isArray(value)) return value.reduce((n: number, v) => n + countHits(v, hit), 0)
+  if (value && typeof value === 'object') {
+    return Object.values(value).reduce((n: number, v) => n + countHits(v, hit), 0)
+  }
+  return hit(value) ? 1 : 0
+}
 
 type Loaded = { key: string; evidence?: Evidence; error?: string }
 
 /** One piece of evidence: what ran, on which arguments, and exactly what it returned. */
-export function EvidenceView({ runId, evidenceId, attempt }: Props) {
+export function EvidenceView({ runId, evidenceId, attempt, focus }: Props) {
   // Results are keyed by what was asked for, so a stale result or error never shows under
   // another id, and selecting the same id again retries.
   const key = `${runId}/${evidenceId}/${attempt}`
@@ -28,13 +53,20 @@ export function EvidenceView({ runId, evidenceId, attempt }: Props) {
 
   const evidence = loaded?.key === key ? loaded.evidence : undefined
   const error = loaded?.key === key ? loaded.error : undefined
+  const hit = matcher(focus)
+  const host = useRef<HTMLDivElement>(null)
+
+  // Opened from a number: bring its first match into view.
+  useEffect(() => {
+    if (evidence && focus) host.current?.querySelector('.hit')?.scrollIntoView({ block: 'center' })
+  }, [evidence, focus])
 
   if (!evidenceId) {
     return (
       <div className="panel-body evidence">
         <p className="empty">
-          Select a step in the agent log or an evidence tag in the answer to see exactly what the
-          tool returned and which code produced it.
+          Click a number in the answer, a source tag or a step in the agent log to see exactly
+          what the tool returned and which code produced it.
         </p>
       </div>
     )
@@ -42,8 +74,15 @@ export function EvidenceView({ runId, evidenceId, attempt }: Props) {
   if (error) return <div className="panel-body evidence"><p className="empty">Evidence {evidenceId}: {error}</p></div>
   if (!evidence) return <div className="panel-body evidence"><p className="empty">Loading {evidenceId}</p></div>
 
+  const hits = focus ? countHits(evidence.result, hit) : 0
   return (
-    <div className="panel-body evidence">
+    <div className="panel-body evidence" ref={host}>
+      {focus && (
+        <p className="focus-banner">
+          <strong>{focus.text}</strong> in the answer comes from this result
+          {hits ? ', marked below.' : '.'}
+        </p>
+      )}
       <h3 className="evidence-title">
         {evidence.id}: {toolName(evidence.tool)}
       </h3>
@@ -63,7 +102,9 @@ export function EvidenceView({ runId, evidenceId, attempt }: Props) {
           <span>{w}</span>
         </div>
       ))}
-      <Result tool={evidence.tool} result={evidence.result} />
+      <HitContext.Provider value={hit}>
+        <Result tool={evidence.tool} result={evidence.result} />
+      </HitContext.Provider>
     </div>
   )
 }
@@ -74,11 +115,7 @@ const isTable = (v: unknown): v is Table =>
 function Result({ tool, result }: { tool: string; result: unknown }) {
   if (tool === 'calculate') {
     const r = result as { expression: string; value: number }
-    return (
-      <p className="calc">
-        <code>{r.expression}</code> = {r.value}
-      </p>
-    )
+    return <CalcResult expression={r.expression} value={r.value} />
   }
   if (tool === 'detect_events') return <Events events={result as EventRow[]} />
   if (tool === 'search_reports') return <Facts result={result as SearchResult} />
@@ -88,7 +125,17 @@ function Result({ tool, result }: { tool: string; result: unknown }) {
   return <pre className="code">{JSON.stringify(result, null, 2)}</pre>
 }
 
+function CalcResult({ expression, value }: { expression: string; value: number }) {
+  const hit = useContext(HitContext)
+  return (
+    <p className="calc">
+      <code>{expression}</code> = <span className={hit(value) ? 'hit' : undefined}>{value}</span>
+    </p>
+  )
+}
+
 function DataTable({ table, maxRows = 200 }: { table: Table; maxRows?: number }) {
+  const hit = useContext(HitContext)
   return (
     <div className="table-scroll">
       <table className="data-table">
@@ -105,7 +152,7 @@ function DataTable({ table, maxRows = 200 }: { table: Table; maxRows?: number })
           {table.rows.slice(0, maxRows).map((row, i) => (
             <tr key={i}>
               {row.map((v, j) => (
-                <td key={j} className={typeof v === 'number' ? 'num' : ''}>
+                <td key={j} className={`${typeof v === 'number' ? 'num' : ''}${hit(v) ? ' hit' : ''}`}>
                   {v === null ? '' : String(v)}
                 </td>
               ))}
@@ -117,7 +164,14 @@ function DataTable({ table, maxRows = 200 }: { table: Table; maxRows?: number })
   )
 }
 
-type EventRow = { kind: string; signal: string; start: string; end: string | null; summary: string }
+type EventRow = {
+  kind: string
+  signal: string
+  start: string
+  end: string | null
+  summary: string
+  details?: Record<string, unknown>
+}
 
 const EVENT_KINDS: Record<string, string> = {
   gauge_failure: 'Gauge failure',
@@ -127,10 +181,11 @@ const EVENT_KINDS: Record<string, string> = {
 }
 
 function Events({ events }: { events: EventRow[] }) {
+  const hit = useContext(HitContext)
   return (
     <ul className="event-list">
       {events.map((e, i) => (
-        <li key={i}>
+        <li key={i} className={countHits(e, hit) ? 'hit' : undefined}>
           <span className="event-kind">
             {EVENT_KINDS[e.kind] ?? e.kind}, {e.signal.replace(/_/g, ' ')}
           </span>
@@ -144,6 +199,7 @@ function Events({ events }: { events: EventRow[] }) {
 type SearchResult = { documents: Record<string, { title: string; issued: string }>; facts?: Table; pages?: Table }
 
 function Facts({ result }: { result: SearchResult }) {
+  const hit = useContext(HitContext)
   const [open, setOpen] = useState<number | null>(null) // row index of the fact showing its page
   const table = result.facts
   if (!table) return result.pages ? <DataTable table={result.pages} /> : null
@@ -162,7 +218,7 @@ function Facts({ result }: { result: SearchResult }) {
           const page = Number(at(row, 'page'))
           const check = String(at(row, 'quote_check'))
           return (
-            <li key={i}>
+            <li key={i} className={row.some(hit) ? 'hit' : undefined}>
               <span className="fact-source">
                 Page {page}, {String(at(row, 'source'))}{' '}
                 <span className={`check-badge${check === 'unverified' ? ' check-badge-unverified' : ''}`}>
@@ -220,6 +276,7 @@ const FIT_LABELS: Record<string, string> = {
 }
 
 function Fit({ result }: { result: FitResult }) {
+  const hit = useContext(HitContext)
   const fit = result.best ?? result.fit ?? {}
   return (
     <>
@@ -229,7 +286,7 @@ function Fit({ result }: { result: FitResult }) {
             k in fit ? (
               <tr key={k}>
                 <td>{label}</td>
-                <td className="num">{String(fit[k])}</td>
+                <td className={`num${hit(fit[k]) ? ' hit' : ''}`}>{String(fit[k])}</td>
               </tr>
             ) : null,
           )}

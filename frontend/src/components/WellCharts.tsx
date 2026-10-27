@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import uPlot from 'uplot'
 import { column, type Table } from '../api'
 
@@ -67,13 +67,31 @@ export function WellCharts({ table, error, markers, highlights }: Props) {
 
   const syncing = useRef(false)
   const plots = useRef<uPlot[]>([])
+  const [cursor, setCursor] = useState<number | null>(null)
 
   if (error) return <p className="empty charts">Production data could not be loaded: {error}</p>
   if (!data) return <p className="empty charts">Loading production data</p>
   if (data.x.length === 0) return <p className="empty charts">This well has no production rows to plot.</p>
 
+  const at = cursor !== null && cursor < data.x.length ? cursor : null
+  const reading = (key: TrackKey, digits: number, unit = '') => {
+    const v = at === null ? null : data.series[key][at]
+    return v === null || v === undefined ? 'no reading' : `${v.toLocaleString('en-US', { maximumFractionDigits: digits })}${unit}`
+  }
   return (
     <div className="charts">
+      <p className="readout" aria-live="off">
+        {at === null ? (
+          'Hover a chart to read the values; drag across one to zoom, double-click to zoom out.'
+        ) : (
+          <>
+            <strong>{new Date(data.x[at] * 1000).toISOString().slice(0, 10)}</strong>
+            <span>oil {reading('oil', 0, ' Sm³/d')}</span>
+            <span>water cut {reading('water', 3)}</span>
+            <span>pressure {reading('bhp', 0, ' bar')}</span>
+          </>
+        )}
+      </p>
       {TRACKS.map((track, i) => (
         <ChartTrack
           key={track.key}
@@ -86,6 +104,7 @@ export function WellCharts({ table, error, markers, highlights }: Props) {
           register={(plot) => {
             plots.current[i] = plot
           }}
+          onCursor={setCursor}
           onZoom={(min, max) => {
             if (syncing.current) return
             syncing.current = true
@@ -95,9 +114,9 @@ export function WellCharts({ table, error, markers, highlights }: Props) {
         />
       ))}
       <p className="chart-key">
-        <span><i className="key-line" /> regime change or threshold</span>
-        <span><i className="key-band key-shut" /> shut in</span>
-        <span><i className="key-band key-gauge" /> gauge reads 0, readings removed</span>
+        <span><i className="key-line" /> step change or threshold the agent found</span>
+        <span><i className="key-band key-shut" /> well shut in</span>
+        <span><i className="key-band key-gauge" /> dead pressure gauge</span>
         <span><i className="key-rule" /> date in the selected finding</span>
       </p>
     </div>
@@ -113,6 +132,7 @@ function ChartTrack({
   showTime,
   register,
   onZoom,
+  onCursor,
 }: {
   track: Track
   x: number[]
@@ -122,6 +142,7 @@ function ChartTrack({
   showTime: boolean
   register: (plot: uPlot) => void
   onZoom: (min: number, max: number) => void
+  onCursor: (index: number | null) => void
 }) {
   const host = useRef<HTMLDivElement>(null)
   const plot = useRef<uPlot | null>(null)
@@ -146,7 +167,7 @@ function ChartTrack({
       height,
       tzDate: utc,
       cursor: { sync: { key: 'well' }, drag: { x: true, y: false } },
-      legend: { show: true, live: true },
+      legend: { show: false }, // one readout above all three charts instead
       scales: {
         x: { time: true },
         y: track.log ? { distr: 3 } : track.range ? { range: track.range } : {},
@@ -184,6 +205,7 @@ function ChartTrack({
           },
         ],
         draw: [(u) => drawOverlay(u, track.key, overlay.current.markers, overlay.current.highlights)],
+        setCursor: [(u) => onCursor(u.cursor.idx ?? null)],
       },
     }
     const instance = new uPlot(opts, [x, y], el)
@@ -196,7 +218,7 @@ function ChartTrack({
       instance.destroy()
       plot.current = null
     }
-    // onZoom and register are stable for the life of the track
+    // onZoom, onCursor and register are stable for the life of the track
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [track, x, y, showTime])
 

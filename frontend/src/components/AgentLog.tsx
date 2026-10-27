@@ -1,12 +1,20 @@
+import { useEffect, useRef } from 'react'
 import type { StepEvent, ToolCallView } from '../api'
 import { AlarmIcon, CautionIcon, CheckIcon } from '../icons'
-import { compact, describeArgs, toolName } from '../labels'
+import { brief, compact, describeArgs, toolName } from '../labels'
 import type { RunState } from '../useRun'
 
 type Props = {
   state: RunState
   selectedEvidence: string | null
   onSelectEvidence: (id: string) => void
+}
+
+/** "meta-models/muse-spark-open-1026" as people say it. */
+function modelName(model: string): string {
+  if (model.includes('muse-spark-open')) return 'Muse Spark Open'
+  const spark = model.match(/muse-spark-([\d.]+)/)
+  return spark ? `Muse Spark ${spark[1]}` : model
 }
 
 /** The agent's work as a log track: time runs down, every tool call is a tick. */
@@ -17,22 +25,38 @@ export function AgentLog({ state, selectedEvidence, onSelectEvidence }: Props) {
   const starts = state.steps.map((_, i) => state.steps.slice(0, i).reduce((sum, s) => sum + s.seconds, 0))
   const elapsed = state.steps.reduce((sum, s) => sum + s.seconds, 0)
 
+  // Follow the newest step while the run goes, unless the reader scrolled up to read.
+  const panel = useRef<HTMLElement>(null)
+  const following = useRef(true)
+  useEffect(() => {
+    const el = panel.current
+    if (el && following.current && state.status === 'running') el.scrollTop = el.scrollHeight
+  }, [state.steps.length, state.thinking, state.status])
+
   return (
-    <section aria-label="Agent log">
+    <section
+      aria-label="How the agent worked"
+      className="log-panel"
+      ref={panel}
+      onScroll={(e) => {
+        const el = e.currentTarget
+        following.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80
+      }}
+    >
       <div className="panel-head">
-        <h2>Agent log</h2>
+        <h2>How the agent worked</h2>
         {state.model && (
           <span className="panel-meta">
-            {state.model}
-            {tokensIn > 0 && `, ${compact(tokensIn)} in / ${compact(tokensOut)} out tokens`}
+            {modelName(state.model)}
+            {tokensIn > 0 && `, ${compact(tokensIn)} tokens in, ${compact(tokensOut)} out`}
           </span>
         )}
       </div>
       <div className="panel-body">
         {state.status === 'idle' && (
           <p className="empty">
-            Ask a question about a well. The agent plans the analysis, runs it on the Volve data and
-            reports, and every step it takes appears here as it happens.
+            Each step the agent takes appears here as it happens: the tools it calls, what they
+            return, its own reasoning, and the checker's verdicts.
           </p>
         )}
         {state.question && <p className="question">{state.question}</p>}
@@ -94,7 +118,7 @@ function Step({
       <div className="track-body">
         <p className="step-label">
           Step {step.index}
-          <span className="chart-note"> {step.seconds.toFixed(1)}s</span>
+          <span className="step-time"> {step.seconds.toFixed(1)} s</span>
         </p>
         {step.reasoning && (
           <details className="reasoning">
@@ -128,15 +152,20 @@ function Call({
         {call.accepted ? (
           <div className="flag flag-ok">
             <CheckIcon />
-            <span>Answer submitted and every claim checked against the evidence</span>
+            <span>Answer accepted: every claim checked against the evidence</span>
           </div>
         ) : (
           <div className="flag flag-alarm">
             <AlarmIcon />
             <span>
-              Checker sent the answer back ({call.problems?.length ?? 0})
+              The checker sent the answer back ({call.problems?.length ?? 0}{' '}
+              {call.problems?.length === 1 ? 'problem' : 'problems'})
               <ul>
-                {call.problems?.map((p, i) => <li key={i}>{p}</li>)}
+                {call.problems?.map((p, i) => (
+                  <li key={i} title={p}>
+                    {brief(p)}
+                  </li>
+                ))}
               </ul>
             </span>
           </div>

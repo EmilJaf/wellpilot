@@ -45,3 +45,13 @@ export function wellsIn(text: string): string[] {
 
 export const compact = (n: number) =>
   n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}k` : String(n)
+
+/**
+ * A checker problem in one short sentence: the first sentence, without long parentheticals
+ * (the full fit warning). The full text stays in the answer's record of the checks.
+ */
+export function brief(problem: string): string {
+  const shorter = problem.replace(/\s*\([^()]{40,}\)/g, '')
+  const first = shorter.match(/^.*?[.!?](?=\s|$)/)
+  return (first ? first[0] : shorter).trim()
+}

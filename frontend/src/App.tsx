@@ -1,17 +1,19 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { api, type RunSummary, type Table } from './api'
 import { AgentLog } from './components/AgentLog'
-import { Answer } from './components/Answer'
+import { Answer, type Focus } from './components/Answer'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { EvidenceView } from './components/EvidenceView'
 import { type Marker, WellCharts } from './components/WellCharts'
 import { datesIn } from './labels'
 import { useRun } from './useRun'
 
+// Short labels in the ask bar; a click puts the full question in the box.
 const EXAMPLES = [
-  'Why did well F-12 decline faster after 2010? Compare with the 2005 development plan.',
-  "Is F-12's missing downhole pressure after October 2010 a reservoir problem or a sensor problem?",
-  "Why did F-12's oil rate jump after the December 2014 shutdown?",
+  { label: 'F-12 decline vs the 2005 plan', question: 'Why did well F-12 decline faster after 2010? Compare with the 2005 development plan.' },
+  { label: "F-12's missing pressure: reservoir or sensor?", question: "Is F-12's missing downhole pressure after October 2010 a reservoir problem or a sensor problem?" },
+  { label: 'F-12 after the 2014 shutdown', question: "Why did F-12's oil rate jump after the December 2014 shutdown?" },
+  { label: 'Forecast F-14 from 2013', question: 'Forecast F-14 oil production for the next 12 months and say how confident the forecast is.' },
 ]
 
 type EventRow = { kind: string; signal: string; start: string; end: string | null; details: Record<string, unknown> }
@@ -34,13 +36,20 @@ function toMarkers(events: EventRow[]): Marker[] {
 
 export default function App() {
   const { state, ask, open } = useRun()
-  const [question, setQuestion] = useState(EXAMPLES[0])
+  const [question, setQuestion] = useState(EXAMPLES[0].question)
   const [asOf, setAsOf] = useState('')
   const [selectedEvidence, setSelected] = useState<string | null>(null)
+  const [focus, setFocus] = useState<Focus | null>(null)
   const [evidenceAttempt, setEvidenceAttempt] = useState(0)
-  const setSelectedEvidence = (id: string | null) => {
+  const evidencePanel = useRef<HTMLDivElement>(null)
+  const setSelectedEvidence = (id: string | null, clicked?: Focus) => {
     setSelected(id)
+    setFocus(clicked ?? null)
     setEvidenceAttempt((n) => n + 1)
+    // On a narrow screen the evidence sits below the answer: bring it into view.
+    if (id && window.innerWidth < 1100) {
+      requestAnimationFrame(() => evidencePanel.current?.scrollIntoView({ block: 'start', behavior: 'smooth' }))
+    }
   }
   const [selectedFinding, setSelectedFinding] = useState<number | null>(null)
   const [pickedWell, setPickedWell] = useState<string | null>(null)
@@ -151,11 +160,11 @@ export default function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <div>
+        <div className="brand">
           <h1 className="wordmark">WellPilot</h1>
-          <p className="wordmark-sub">
-            An AI agent for well performance on Equinor's open Volve field data, running on Meta
-            Muse Spark
+          <p className="tagline">
+            An AI agent that analyses oil wells on Equinor's open Volve field data and checks every
+            number it writes against the data. Running on Meta's open-weight Muse Spark Open.
           </p>
         </div>
         <form className="ask" onSubmit={submit}>
@@ -170,23 +179,24 @@ export default function App() {
               onChange={(e) => setQuestion(e.target.value)}
               placeholder="Ask about a well, e.g. why F-12 declined after 2010"
             />
-            <label className="as-of">
-              Hide data after
+            <label className="as-of" title="For backtests: the agent sees no data after this day, as if it were that day.">
+              Data up to
               <input type="date" value={asOf} min="2008-01-01" max="2016-12-01" onChange={(e) => setAsOf(e.target.value)} />
             </label>
             <button className="run-button" type="submit" disabled={running}>
-              {running ? 'Running' : 'Run analysis'}
+              {running ? 'Running' : 'Ask the agent'}
             </button>
           </div>
           <div className="suggestions">
-            {EXAMPLES.map((q) => (
-              <button key={q} type="button" className="link-button" onClick={() => setQuestion(q)}>
-                {q}
+            <span className="suggestions-label">Try</span>
+            {EXAMPLES.map((e) => (
+              <button key={e.label} type="button" className="suggestion" title={e.question} onClick={() => setQuestion(e.question)}>
+                {e.label}
               </button>
             ))}
             {recorded && (
               <button type="button" className="link-button" onClick={() => replay(recorded.id)} disabled={running}>
-                Replay a recorded run
+                or watch a recorded run
               </button>
             )}
           </div>
@@ -194,63 +204,65 @@ export default function App() {
       </header>
 
       <main className="console">
-        {/* One boundary per panel: a bad evidence render must not hide the live log. */}
+        {/* One boundary per panel: a bad evidence render must not hide the live log. The
+            answer comes first in reading order; on a wide screen it sits in the middle. */}
+        <ErrorBoundary>
+          <Answer
+            state={state}
+            recorded={recorded}
+            selectedFinding={selectedFinding}
+            selectedEvidence={selectedEvidence}
+            onSelectFinding={(i) => {
+              setSelectedFinding(i)
+              const first = i !== null ? state.final?.findings[i]?.evidence_ids[0] : undefined
+              if (first) setSelectedEvidence(first)
+            }}
+            onSelectEvidence={setSelectedEvidence}
+            onReplay={replay}
+          />
+        </ErrorBoundary>
+
+        <ErrorBoundary>
+          <section aria-label="Well data and evidence" className="center">
+            <div className="panel-head">
+              <h2>Data: well {well}</h2>
+              <select
+                className="well-picker"
+                aria-label="Well to plot"
+                value={well}
+                onChange={(e) => setPickedWell(e.target.value)}
+              >
+                {[...new Set([...wells, well])].map((w) => (
+                  <option key={w} value={w}>
+                    {w}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <WellCharts
+              table={daily?.well === well ? daily.table : null}
+              error={daily?.well === well ? daily.error : undefined}
+              markers={chartMarkers}
+              highlights={highlights}
+            />
+            <div className="evidence-scroll" ref={evidencePanel}>
+              <EvidenceView runId={state.id} evidenceId={selectedEvidence} attempt={evidenceAttempt} focus={focus} />
+            </div>
+          </section>
+        </ErrorBoundary>
+
         <ErrorBoundary>
           <AgentLog state={state} selectedEvidence={selectedEvidence} onSelectEvidence={setSelectedEvidence} />
         </ErrorBoundary>
-
-        <ErrorBoundary>
-        <section aria-label="Well data and evidence" className="center">
-          <div className="panel-head">
-            <h2>Well {well}</h2>
-            <select
-              className="well-picker"
-              aria-label="Well to plot"
-              value={well}
-              onChange={(e) => setPickedWell(e.target.value)}
-            >
-              {[...new Set([...wells, well])].map((w) => (
-                <option key={w} value={w}>
-                  {w}
-                </option>
-              ))}
-            </select>
-          </div>
-          <WellCharts
-            table={daily?.well === well ? daily.table : null}
-            error={daily?.well === well ? daily.error : undefined}
-            markers={chartMarkers}
-            highlights={highlights}
-          />
-          <div className="evidence-scroll">
-            <EvidenceView runId={state.id} evidenceId={selectedEvidence} attempt={evidenceAttempt} />
-          </div>
-        </section>
-        </ErrorBoundary>
-
-        <ErrorBoundary>
-        <Answer
-          state={state}
-          selectedFinding={selectedFinding}
-          selectedEvidence={selectedEvidence}
-          onSelectFinding={(i) => {
-            setSelectedFinding(i)
-            const first = i !== null ? state.final?.findings[i]?.evidence_ids[0] : undefined
-            if (first) setSelectedEvidence(first)
-          }}
-          onSelectEvidence={setSelectedEvidence}
-        />
-        </ErrorBoundary>
       </main>
       <footer className="credits">
-        Contains data from the Volve field dataset, made available by Equinor and the former Volve
-        license partners (ExxonMobil Exploration &amp; Production Norway AS, Bayerngas Norge AS) under
-        the{' '}
+        Volve data by Equinor and the former Volve license partners (ExxonMobil Exploration &amp;
+        Production Norway AS, Bayerngas Norge AS) under the{' '}
         <a href="https://www.equinor.com/content/dam/statoil/documents/what-we-do/Equinor-HRS-Terms-and-conditions-for-licence-to-data-Volve.pdf">
           Equinor Open Data Licence
         </a>
-        . WellPilot is not affiliated with or endorsed by Equinor. Its analyses are generated by an
-        AI agent and checked against the data, not reviewed by Equinor.
+        . Not affiliated with or endorsed by Equinor; analyses are generated by an AI agent and
+        checked against the data, not reviewed by Equinor.
       </footer>
     </div>
   )
