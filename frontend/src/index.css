@@ -237,6 +237,46 @@ button {
   gap: 8px;
 }
 
+.ask-row:has(.mic-button) {
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+}
+
+/* Ask by voice: a mic that becomes a stop button with the seconds counting. */
+.mic-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  border: 1px solid #8f99a3;
+  border-radius: 6px;
+  background: var(--sheet);
+  color: var(--ink);
+  font-size: 13.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.mic-button:hover:not(:disabled) {
+  border-color: var(--ink);
+}
+
+.mic-button:disabled {
+  color: var(--ink-3);
+  cursor: progress;
+}
+
+.mic-button.is-recording {
+  border-color: var(--alarm);
+  color: var(--alarm-ink);
+  box-shadow: 0 0 0 3px var(--alarm-wash);
+}
+
+.voice-note {
+  margin: -2px 0 0;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
 .ask input[type="text"] {
   font: inherit;
   font-size: 16px;
@@ -251,6 +291,12 @@ button {
 @media (max-width: 700px) {
   .ask-row {
     grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .ask-row:has(.mic-button) {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+  .ask-row:has(.mic-button) .as-of-label {
+    display: none; /* the date input says what it is; the mic and the button need the width */
   }
   .ask input[type="text"] {
     grid-column: 1 / -1;
@@ -907,6 +953,36 @@ button.evidence-chip[aria-pressed="true"] {
 }
 
 /* ---------- charts ---------- */
+
+/* The span the reader zoomed into, offered as a question. */
+.ask-span {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 18px 0;
+  font-size: 13.5px;
+}
+
+.ask-span-button {
+  padding: 6px 12px;
+  border: 1.5px solid var(--ink);
+  border-radius: 6px;
+  background: var(--sheet);
+  color: var(--ink);
+  font-weight: 650;
+  text-align: left;
+}
+
+.ask-span-button:hover {
+  background: var(--ink);
+  color: var(--sheet);
+}
+
+.ask-span .link-button {
+  font-size: 18px;
+  line-height: 1;
+  text-decoration: none;
+}
 
 .charts {
   padding: 10px 18px 6px;

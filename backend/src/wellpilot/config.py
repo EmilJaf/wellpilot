@@ -44,6 +44,10 @@ class Settings(BaseSettings):
     runs_per_client_per_hour: int = 6
     daily_token_budget: int = 3_000_000  # input + output, all runs, per UTC day
     run_timeout_s: float = 600.0  # a run that takes longer stops with its last answer
+    # Ask by voice: a short clip transcribed by the model. Its own hourly limit per client (a
+    # clip costs a fraction of a run) and a cap on the clip, base64 (about 16 s of 16 kHz WAV).
+    voice_per_client_per_hour: int = 20
+    voice_max_audio_b64: int = 1_500_000
     # Sent as the X-Operator-Key header (the UI reads localStorage.operatorKey), it skips
     # the per-client and daily limits and may use one extra slot: the demo cannot be locked
     # out by strangers. Empty disables it.

@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 from wellpilot import __version__
-from wellpilot.api import data, runs
+from wellpilot.api import data, runs, voice
 from wellpilot.config import Settings, get_settings
 from wellpilot.llm import LLM, make_llm
 
@@ -34,6 +34,8 @@ def create_app(
         default_reasoning=settings.agent_reasoning_effort,
         runs_per_client_per_hour=settings.runs_per_client_per_hour,
         daily_token_budget=settings.daily_token_budget,
+        voice_per_client_per_hour=settings.voice_per_client_per_hour,
+        voice_max_audio_b64=settings.voice_max_audio_b64,
         run_timeout_s=settings.run_timeout_s,
         featured=tuple(r.strip() for r in settings.featured_runs.split(",") if r.strip()) or None,
         public=settings.public or on_fly,
@@ -42,6 +44,7 @@ def create_app(
     )
     app.include_router(runs.router)
     app.include_router(data.router)
+    app.include_router(voice.router)
 
     @app.get("/api/health")
     async def health() -> dict:
@@ -53,6 +56,8 @@ def create_app(
             "version": __version__,
             "llm_provider": settings.llm_provider,
             "llm_configured": bool(key),
+            # Audio input is a Muse Spark Open on Baseten feature; the mic hides otherwise.
+            "voice": bool(key) and settings.llm_provider == "baseten",
             "data_ready": (settings.processed_dir / "production_daily.parquet").exists(),
         }
 

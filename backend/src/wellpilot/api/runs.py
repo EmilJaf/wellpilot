@@ -199,6 +199,8 @@ class RunManager:
         default_reasoning: str = "",
         runs_per_client_per_hour: int = 6,
         daily_token_budget: int = 3_000_000,
+        voice_per_client_per_hour: int = 20,
+        voice_max_audio_b64: int = 1_500_000,
         run_timeout_s: float | None = 600.0,
         featured: tuple[str, ...] | None = None,
         public: bool = False,
@@ -212,6 +214,8 @@ class RunManager:
         self.default_reasoning = default_reasoning
         self.runs_per_client_per_hour = runs_per_client_per_hour
         self.daily_token_budget = daily_token_budget
+        self.voice_per_client_per_hour = voice_per_client_per_hour
+        self.voice_max_audio_b64 = voice_max_audio_b64
         self.run_timeout_s = run_timeout_s
         # A tuple lists only those runs. None lists every saved run in development and none
         # in public, so a public deployment never shows other visitors' questions.
@@ -226,6 +230,7 @@ class RunManager:
         self._stores_lock = threading.Lock()
         self._tasks: set[asyncio.Task] = set()
         self._starts: dict[str, deque[float]] = {}
+        self._voice: dict[str, deque[float]] = {}  # voice questions per client, by start time
         # A restart (a deploy, an idle machine stopped) must not reset today's spend.
         self._spent: tuple[date, int] = (datetime.now(UTC).date(), self._spent_on_disk())
 
@@ -338,10 +343,33 @@ class RunManager:
         finally:
             self._finish(record)
 
-    def _finish(self, record: RunRecord) -> None:
+    def allow_voice(self, client: str, privileged: bool = False) -> None:
+        """A voice question costs a fraction of a run, so it has its own hourly limit per
+        client; the daily budget still applies. Raises Refused."""
+        if privileged:
+            return
+        now = time.monotonic()
+        starts = self._voice.setdefault(client, deque())
+        while starts and now - starts[0] > 3600:
+            starts.popleft()
+        if len(starts) >= self.voice_per_client_per_hour:
+            raise Refused(
+                f"limit of {self.voice_per_client_per_hour} voice questions per hour reached; "
+                "type the question instead"
+            )
+        if self.tokens_spent_today() >= self.daily_token_budget:
+            raise Refused("today's demo budget is used up; type the question instead")
+        starts.append(now)
+
+    def charge(self, tokens: int) -> None:
+        """Tokens spent outside a run (a transcription) count against today's budget. Not
+        written to disk: a restart forgets them, and they are small."""
         day, spent = self._spent
         today = datetime.now(UTC).date()
-        self._spent = (today, (spent if day == today else 0) + record.tokens())
+        self._spent = (today, (spent if day == today else 0) + tokens)
+
+    def _finish(self, record: RunRecord) -> None:
+        self.charge(record.tokens())
         self._save(record)
         finished = [r for r in self.runs.values() if r.done]
         for old in finished[:-FINISHED_IN_MEMORY]:

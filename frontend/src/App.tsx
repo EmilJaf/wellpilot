@@ -9,7 +9,9 @@ import { Answer, type Focus } from './components/Answer'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { EvidenceView } from './components/EvidenceView'
 import { PlanByProductionYear, PlanChart, type PlanResult } from './components/PlanChart'
-import { type Marker, WellCharts } from './components/WellCharts'
+import { type Marker, type Span, WellCharts } from './components/WellCharts'
+import { canRecord, startRecording, toBase64, toWav16k, type Recording } from './audio'
+import { MicIcon, StopIcon } from './icons'
 import { datesIn } from './labels'
 import { useRun } from './useRun'
 
@@ -74,6 +76,15 @@ export default function App() {
   }
   const [selectedFinding, setSelectedFinding] = useState<number | null>(null)
   const [pickedWell, setPickedWell] = useState<string | null>(null)
+  // A span the reader zoomed into on the charts, offered as a question about that well.
+  const [span, setSpan] = useState<(Span & { well: string }) | null>(null)
+  // Ask by voice: the mic shows when the browser can record and the server takes audio.
+  const [voiceOn, setVoiceOn] = useState<boolean | null>(() => (canRecord() ? null : false))
+  const [voice, setVoice] = useState<{ status: 'idle' | 'recording' | 'transcribing'; seconds: number; note?: string }>({
+    status: 'idle',
+    seconds: 0,
+  })
+  const recording = useRef<Recording | null>(null)
   const [wells, setWells] = useState<string[]>([])
   const [daily, setDaily] = useState<{ well: string; table: Table | null; error?: string } | null>(null)
   const [markers, setMarkers] = useState<{ key: string; list: Marker[] }>({ key: '', list: [] })
@@ -127,6 +138,14 @@ export default function App() {
     const runId = params.get('run')
     if (runId) open(runId, params.get('replay') === '1')
   }, [open])
+
+  useEffect(() => {
+    if (!canRecord()) return
+    api
+      .health()
+      .then((h) => setVoiceOn(h.voice))
+      .catch(() => setVoiceOn(false))
+  }, [])
 
   useEffect(() => {
     api
@@ -216,6 +235,46 @@ export default function App() {
     window.history.replaceState(null, '', `?run=${runId}&replay=1`)
   }
 
+  const MAX_CLIP_MS = 15_000
+
+  const toggleVoice = async () => {
+    if (voice.status === 'recording') {
+      recording.current?.stop()
+      return
+    }
+    if (voice.status !== 'idle') return
+    try {
+      const rec = await startRecording(MAX_CLIP_MS)
+      recording.current = rec
+      const started = Date.now()
+      setVoice({ status: 'recording', seconds: 0 })
+      const tick = window.setInterval(() => setVoice({ status: 'recording', seconds: Math.round((Date.now() - started) / 1000) }), 500)
+      const clip = await rec.done.finally(() => window.clearInterval(tick))
+      recording.current = null
+      setVoice({ status: 'transcribing', seconds: 0 })
+      const wav = await toWav16k(clip)
+      const { question: heard } = await api.transcribe(toBase64(wav))
+      setQuestion(heard)
+      setVoice({ status: 'idle', seconds: 0 })
+      ;(document.getElementById('question') as HTMLInputElement | null)?.focus()
+    } catch (e) {
+      recording.current = null
+      const message = e instanceof DOMException && (e.name === 'NotAllowedError' || e.name === 'SecurityError')
+        ? 'The browser blocked the microphone; allow it for this site and try again.'
+        : (e as Error).message
+      setVoice({ status: 'idle', seconds: 0, note: message })
+    }
+  }
+
+  // The zoomed span as a question: filled in, not sent (a run spends tokens).
+  const askAboutSpan = () => {
+    if (!span) return
+    setQuestion(`What happened to ${span.well} between ${span.start} and ${span.end}, and why?`)
+    const input = document.getElementById('question') as HTMLInputElement | null
+    input?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    input?.focus()
+  }
+
   return (
     <div className="app">
       <header className="topbar">
@@ -238,14 +297,39 @@ export default function App() {
               onChange={(e) => setQuestion(e.target.value)}
               placeholder="Ask about a well, e.g. why F-12 declined after 2010"
             />
+            {voiceOn !== false && (
+              <button
+                type="button"
+                className={`mic-button${voice.status === 'recording' ? ' is-recording' : ''}`}
+                onClick={toggleVoice}
+                disabled={voice.status === 'transcribing' || running}
+                aria-pressed={voice.status === 'recording'}
+                aria-label={voice.status === 'recording' ? 'Stop recording' : 'Ask by voice'}
+                title={voice.status === 'recording' ? 'Stop recording' : 'Ask by voice: up to 15 seconds, transcribed by the same model'}
+              >
+                {voice.status === 'recording' ? <StopIcon /> : <MicIcon />}
+                <span className="mic-state">
+                  {voice.status === 'recording'
+                    ? `0:${String(voice.seconds).padStart(2, '0')}`
+                    : voice.status === 'transcribing'
+                      ? 'Transcribing'
+                      : 'Voice'}
+                </span>
+              </button>
+            )}
             <label className="as-of" title="For backtests: the agent sees no data after this day, as if it were that day.">
-              Data up to
+              <span className="as-of-label">Data up to</span>
               <input type="date" value={asOf} min="2008-01-01" max="2016-12-01" onChange={(e) => setAsOf(e.target.value)} />
             </label>
             <button className="run-button" type="submit" disabled={running}>
               {running ? 'Running' : 'Ask the agent'}
             </button>
           </div>
+          {voice.note && (
+            <p className="voice-note" role="status">
+              {voice.note}
+            </p>
+          )}
           <div className="suggestions">
             <span className="suggestions-label">Try</span>
             {EXAMPLES.map((e) => (
@@ -336,12 +420,23 @@ export default function App() {
                 </select>
               )}
             </div>
+            {view === 'well' && chartsShown && span?.well === well && (
+              <p className="ask-span">
+                <button type="button" className="ask-span-button" onClick={askAboutSpan}>
+                  Ask what happened to {well} between {span.start} and {span.end}
+                </button>
+                <button type="button" className="link-button" onClick={() => setSpan(null)} aria-label="Dismiss">
+                  &times;
+                </button>
+              </p>
+            )}
             {view === 'well' && chartsShown && (
               <WellCharts
                 table={daily?.well === well ? daily.table : null}
                 error={daily?.well === well ? daily.error : undefined}
                 markers={chartMarkers}
                 highlights={highlights}
+                onSelect={(s) => setSpan(s && { ...s, well })}
               />
             )}
             <div className="evidence-scroll" ref={evidencePanel}>

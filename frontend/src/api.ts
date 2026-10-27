@@ -138,6 +138,14 @@ export const api = {
   hindsight: (runId: string) => fetch(`/api/runs/${runId}/hindsight`).then((r) => json<Hindsight>(r)),
   backtestCase: (well: string, cutoff: string) =>
     fetch(`/api/backtest/cases/${encodeURIComponent(well)}/${cutoff}`).then((r) => json<BacktestCase>(r)),
+  health: () => fetch('/api/health').then((r) => json<Health>(r)),
+  // A recorded question (16 kHz mono WAV, base64) transcribed by the model.
+  transcribe: (audioWavB64: string) =>
+    fetch('/api/transcribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...operatorHeader() },
+      body: JSON.stringify({ audio_wav_b64: audioWavB64 }),
+    }).then((r) => json<{ question: string; language: string; tokens: number }>(r)),
   film: (well: string) => fetch(`/api/backtest/film/${encodeURIComponent(well)}`).then((r) => json<Film>(r)),
   // A reader's edit of a finished answer, checked against the run's saved evidence (no model call).
   check: (runId: string, edit: CheckRequest) =>
@@ -146,6 +154,15 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(edit),
     }).then((r) => json<CheckResult>(r)),
+}
+
+export type Health = {
+  status: string
+  version: string
+  llm_provider: string
+  llm_configured: boolean
+  voice: boolean
+  data_ready: boolean
 }
 
 export type CheckRequest = {

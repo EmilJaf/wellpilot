@@ -38,3 +38,16 @@ export const RedoIcon = () => (
     <path d="M13.2 7A5.5 5.5 0 1 0 12 11.6" />
   </svg>
 )
+
+export const MicIcon = () => (
+  <svg {...base}>
+    <rect x="5.5" y="1.5" width="5" height="8" rx="2.5" />
+    <path d="M3 7.5a5 5 0 0 0 10 0M8 12.5v2M5.5 14.5h5" />
+  </svg>
+)
+
+export const StopIcon = () => (
+  <svg {...base}>
+    <rect x="3.5" y="3.5" width="9" height="9" rx="1" fill="currentColor" />
+  </svg>
+)

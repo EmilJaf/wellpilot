@@ -44,9 +44,18 @@ function heightFor(track: Track): number {
 
 const css = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim()
 
-type Props = { table: Table | null; error?: string; markers: Marker[]; highlights: string[] }
+/** A span the reader zoomed into, as ISO dates: the charts offer to ask about it. */
+export type Span = { start: string; end: string }
 
-export function WellCharts({ table, error, markers, highlights }: Props) {
+type Props = {
+  table: Table | null
+  error?: string
+  markers: Marker[]
+  highlights: string[]
+  onSelect?: (span: Span | null) => void
+}
+
+export function WellCharts({ table, error, markers, highlights, onSelect }: Props) {
   const data = useMemo(() => {
     if (!table) return null
     const kind = column(table, 'flow_kind')
@@ -82,7 +91,7 @@ export function WellCharts({ table, error, markers, highlights }: Props) {
     <div className="charts">
       <p className="readout" aria-live="off">
         {at === null ? (
-          'Hover a chart to read the values; drag across one to zoom, double-click to zoom out.'
+          'Hover a chart to read the values; drag across one to zoom in and ask about that span, double-click to zoom out.'
         ) : (
           <>
             <strong>{new Date(data.x[at] * 1000).toISOString().slice(0, 10)}</strong>
@@ -110,6 +119,16 @@ export function WellCharts({ table, error, markers, highlights }: Props) {
             syncing.current = true
             plots.current.forEach((p, j) => j !== i && p?.setScale('x', { min, max }))
             syncing.current = false
+            // A zoom narrower than the data is a span the reader may ask about; the full
+            // range (a double-click) clears it.
+            const first = data.x[0]
+            const last = data.x[data.x.length - 1]
+            if (max - min < last - first - 1) {
+              const iso = (s: number) => new Date(s * 1000).toISOString().slice(0, 10)
+              onSelect?.({ start: iso(Math.max(min, first)), end: iso(Math.min(max, last)) })
+            } else {
+              onSelect?.(null)
+            }
           }}
         />
       ))}
