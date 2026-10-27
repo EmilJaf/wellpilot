@@ -459,6 +459,46 @@ async def test_two_text_replies_in_a_row_keep_the_last_submission(store) -> None
     assert run.findings[0].claim == "On 61 days."
 
 
+async def test_a_submission_written_as_text_is_checked_like_a_call(store) -> None:
+    """Run fdb7132d6a1b: Muse Spark Open wrote its answer as the reply three times and the
+    run ended with the JSON as its summary. Now the text goes through the checker."""
+    rejected = json.dumps(submission("On 61 days.", numbers=[("61", 61)]))
+    llm, completions = fake_llm(
+        [
+            completion(tool_calls=[("list_wells", {})]),
+            completion(rejected),
+            completion(
+                f"```json\n{json.dumps(submission('On 60 days.', numbers=[('60', 60)]))}\n```"
+            ),
+        ]
+    )
+
+    run = await run_agent("Days?", llm, store)
+
+    assert run.verified and run.findings[0].claim == "On 60 days."
+    assert len(run.check_rounds) == 2 and "61" in run.check_rounds[0][0]
+    reply = completions.requests[2]["messages"][-1]
+    assert reply["role"] == "user" and "submit_findings tool" in reply["content"]
+    assert '"accepted": false' in reply["content"]
+    event = run.steps[1].to_event()["tool_calls"][0]
+    assert event["name"] == SUBMIT and event["as_text"] and event["accepted"] is False
+
+
+async def test_text_that_only_mentions_json_is_still_a_text_reply(store) -> None:
+    llm, _ = fake_llm(
+        [
+            completion(tool_calls=[("list_wells", {})]),
+            completion('Next I will query {"well": "F-12"}.'),
+            completion("Done."),
+        ]
+    )
+
+    run = await run_agent("Days?", llm, store)
+
+    assert not run.verified and run.check_rounds == []
+    assert run.steps[1].tool_calls == []
+
+
 async def test_a_provider_error_keeps_steps_evidence_and_the_last_submission(store) -> None:
     request = httpx.Request("POST", "https://inference.example/v1/chat/completions")
     llm, _ = fake_llm(

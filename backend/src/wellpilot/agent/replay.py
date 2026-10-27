@@ -29,14 +29,16 @@ def _completion(step: dict) -> ChatCompletion:
     message: dict = {"role": "assistant", "content": step.get("content")}
     if step.get("reasoning"):
         message["reasoning_content"] = step["reasoning"]
-    if step["tool_calls"]:
+    # A submission the model wrote as text was recorded as a call; it stays text here.
+    calls = [call for call in step["tool_calls"] if not call.get("as_text")]
+    if calls:
         message["tool_calls"] = [
             {
                 "id": f"call_{step['index']}_{i}",
                 "type": "function",
                 "function": {"name": call["name"], "arguments": json.dumps(call["arguments"])},
             }
-            for i, call in enumerate(step["tool_calls"])
+            for i, call in enumerate(calls)
         ]
     return ChatCompletion.model_validate(
         {

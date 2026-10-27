@@ -8,6 +8,7 @@ the evidence it cites, and rejected submissions go back to the model to fix.
 import asyncio
 import json
 import logging
+import re
 import time
 from collections.abc import Awaitable, Callable
 from dataclasses import asdict, dataclass, field
@@ -117,6 +118,11 @@ CUT_OFF = (
     "Your last reply was cut off by the output limit. Keep replies short: call tools, or "
     "submit your answer."
 )
+TEXT_SUBMISSION = (
+    "Your reply held a submission as text, so it was checked as a submit_findings call. "
+    "The checker's reply: {payload}. Send answers with the submit_findings tool."
+)
+FENCE = re.compile(r"^```(?:json)?\s*|\s*```$")
 
 
 def submit_tool_schema() -> dict:
@@ -158,6 +164,8 @@ class Step:
             if call["name"] == SUBMIT:
                 view["accepted"] = result.get("accepted", False)
                 view["problems"] = result.get("problems", [])
+                if call.get("as_text"):  # written as the reply, not called: replay skips it
+                    view["as_text"] = True
             elif "error" in result:
                 view["error"] = result["error"]
             else:
@@ -310,6 +318,22 @@ def _parse_arguments(arguments: str) -> dict:
     return parsed if isinstance(parsed, dict) else {"_raw": parsed}
 
 
+def _text_submission(content: str | None) -> str | None:
+    """The JSON of a submission the model wrote as its reply instead of calling
+    submit_findings (Muse Spark Open does this now and then late in a run), or None."""
+    text = FENCE.sub("", (content or "").strip())
+    start, end = text.find("{"), text.rfind("}")
+    if start < 0 or end < start:
+        return None
+    try:
+        parsed = json.loads(text[start : end + 1])
+    except json.JSONDecodeError:
+        return None
+    if isinstance(parsed, dict) and {"summary", "findings"} <= parsed.keys():
+        return text[start : end + 1]
+    return None
+
+
 def _nudge(log: EvidenceLog, last_submission: Submission | None) -> str:
     if last_submission:
         return NUDGE_FIX
@@ -453,29 +477,33 @@ async def run_agent(
         messages.append(assistant)
 
         accepted: Submission | None = None
+
+        def check(arguments: str) -> dict:
+            nonlocal accepted, last_submission
+            try:
+                submission = Submission.model_validate_json(arguments or "{}")
+            except ValidationError as e:
+                return {"accepted": False, "problems": [f"invalid submission: {e}"]}
+            last_submission = submission
+            try:
+                problems = check_submission(submission, log, question)
+            except Exception as e:  # a checker bug must cost a round, not the run
+                logger.exception("checker failed on a submission")
+                problems = [
+                    f"The checker could not read this submission ({type(e).__name__}). "
+                    "Write every number in plain decimal form and submit again."
+                ]
+            check_rounds.append(problems)
+            if not problems:
+                accepted = submission
+            return {"accepted": not problems, "problems": problems}
+
         calls = 0
         for call in message.tool_calls or []:
             name, arguments = call.function.name, call.function.arguments
             record: dict = {"name": name, "arguments": arguments}
             if name == SUBMIT:
-                try:
-                    submission = Submission.model_validate_json(arguments or "{}")
-                except ValidationError as e:
-                    payload = {"accepted": False, "problems": [f"invalid submission: {e}"]}
-                else:
-                    last_submission = submission
-                    try:
-                        problems = check_submission(submission, log, question)
-                    except Exception as e:  # a checker bug must cost a round, not the run
-                        logger.exception("checker failed on a submission")
-                        problems = [
-                            f"The checker could not read this submission ({type(e).__name__}). "
-                            "Write every number in plain decimal form and submit again."
-                        ]
-                    check_rounds.append(problems)
-                    payload = {"accepted": not problems, "problems": problems}
-                    if not problems:
-                        accepted = submission
+                payload = check(arguments)
             elif (calls := calls + 1) > MAX_CALLS_PER_STEP:
                 payload = {
                     "error": f"too many tool calls in one step; call at most {MAX_CALLS_PER_STEP}"
@@ -504,6 +532,17 @@ async def run_agent(
                     "content": json.dumps(payload, ensure_ascii=False, default=str),
                 }
             )
+        # A submission written as the reply instead of a call: checked the same way, so a
+        # model that forgets the tool still gets an answer checked and its problems back.
+        written = None if message.tool_calls else _text_submission(message.content)
+        if written:
+            payload = check(written)
+            step.tool_calls.append(
+                {"name": SUBMIT, "arguments": written, "result": payload, "as_text": True}
+            )
+            if not accepted:
+                reply = json.dumps(payload, ensure_ascii=False, default=str)
+                messages.append({"role": "user", "content": TEXT_SUBMISSION.format(payload=reply)})
 
         steps.append(step)
         if on_step:
@@ -520,7 +559,7 @@ async def run_agent(
                 False,
                 submission=last_submission,
             )
-        if message.tool_calls:
+        if message.tool_calls or written:
             text_replies = 0
         else:
             text_replies += 1
