@@ -22,9 +22,7 @@ const EXAMPLES = [
     asOf: '2010-12-31',
   },
   { label: 'F-12 decline vs the 2005 plan', question: 'Why did well F-12 decline faster after 2010? Compare with the 2005 development plan.', asOf: '' },
-  { label: "F-12's missing pressure: reservoir or sensor?", question: "Is F-12's missing downhole pressure after October 2010 a reservoir problem or a sensor problem?", asOf: '' },
   { label: "Read the plan's forecast chart", question: 'What oil plateau rate and duration does the forecast figure on page 23 of the 2005 development plan show?', asOf: '' },
-  { label: 'Forecast F-14 from 2013', question: 'Forecast F-14 oil production for the next 12 months and say how confident the forecast is.', asOf: '2013-01-01' },
 ]
 
 type EventRow = { kind: string; signal: string; start: string; end: string | null; details: Record<string, unknown> }
@@ -133,10 +131,11 @@ export default function App() {
   useEffect(() => {
     api
       .runs()
-      // The time machine first: a verified run answered as of a past date.
+      // The time machine first: a verified run of the first example's question and date.
       .then((runs) => {
         const verified = runs.filter((r) => r.status === 'done' && r.verified)
-        setRecorded(verified.find((r) => r.as_of) ?? verified[0] ?? null)
+        const machine = verified.find((r) => r.question === EXAMPLES[0].question && r.as_of === EXAMPLES[0].asOf)
+        setRecorded(machine ?? verified.find((r) => r.as_of) ?? verified[0] ?? null)
       })
       .catch(() => setRecorded(null))
     fetch('/api/wells')
@@ -272,7 +271,8 @@ export default function App() {
         </form>
       </header>
 
-      <main className="console">
+      {/* Until a run is open the agent log has nothing to show: two columns, not three. */}
+      <main className={`console${state.status === 'idle' ? ' console-intro' : ''}`}>
         {/* One boundary per panel: a bad evidence render must not hide the live log. The
             answer comes first in reading order; on a wide screen it sits in the middle. */}
         <ErrorBoundary>
@@ -298,7 +298,7 @@ export default function App() {
             <div className="panel-head">
               <div className="tabs" role="tablist" aria-label="Data to show">
                 <button type="button" role="tab" aria-selected={view === 'screen'} onClick={() => setView('screen')}>
-                  Field screen
+                  All wells
                 </button>
                 <button type="button" role="tab" aria-selected={view === 'well'} onClick={() => setView('well')}>
                   Well {well}
@@ -311,7 +311,7 @@ export default function App() {
                 </button>
                 {canReveal && (
                   <button type="button" role="tab" aria-selected={view === 'hindsight'} onClick={reveal}>
-                    What happened next
+                    What happened
                   </button>
                 )}
               </div>

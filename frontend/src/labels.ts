@@ -107,3 +107,12 @@ export const signed = (e: number) => `${e >= 0 ? '+' : '−'}${Math.abs(Math.rou
 
 /** An oil volume, in k Sm³ or MSm³. */
 export const volume = (sm3: number) => (sm3 >= 1e6 ? `${(sm3 / 1e6).toFixed(2)} MSm³` : `${Math.round(sm3 / 1000)}k Sm³`)
+
+/** A tool warning as a short label for the log ("poor fit: r2_log 0.688 < 0.7"); the full
+    text is in its title and in the evidence. */
+export function shortWarning(warning: string): string {
+  const sentence = warning.match(/^.*?\.(?=\s|$)/)?.[0] ?? warning
+  if (sentence.length <= 70) return sentence.replace(/\.$/, '')
+  const clause = sentence.match(/^[^:;]+/)?.[0] ?? sentence
+  return clause.length <= 70 ? clause : `${clause.slice(0, 67)}…`
+}

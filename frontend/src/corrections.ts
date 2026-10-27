@@ -108,9 +108,7 @@ function describe(
   if (added.length) changes.push(`Added ${plural(added.length, 'source')} ${list(added)}.`)
   const declared = after.numbers.filter((n) => !before.numbers.some((m) => m.text === n.text))
   if (declared.length) {
-    changes.push(
-      `Declared ${declared.map((n) => `${n.text} (${n.evidence_id})`).join(', ')} with ${declared.length === 1 ? 'its' : 'their'} source.`,
-    )
+    changes.push(`Named the source of ${declared.map((n) => `${n.text} (${n.evidence_id})`).join(', ')}.`)
   }
   const reworded = before.text !== after.text
   if (reworded) changes.push('Reworded it.')

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import type { StepEvent, ToolCallView } from '../api'
 import { AlarmIcon, CautionIcon, CheckIcon } from '../icons'
-import { plainProblem, compact, describeArgs, toolName } from '../labels'
+import { plainProblem, compact, describeArgs, shortWarning, toolName } from '../labels'
 import type { RunState } from '../useRun'
 
 type Props = {
@@ -199,9 +199,9 @@ function Call({
         <div className="call-button">{body}</div>
       )}
       {call.warnings?.map((w, i) => (
-        <div key={i} className="flag flag-caution">
+        <div key={i} className="flag flag-caution flag-short" title={w}>
           <CautionIcon />
-          <span>{w}</span>
+          <span>{shortWarning(w)}</span>
         </div>
       ))}
       {call.error && (

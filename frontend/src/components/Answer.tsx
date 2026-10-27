@@ -252,37 +252,30 @@ function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSe
       <div className={`status${final.verified ? '' : ' status-alarm'}`} role="status">
         <div className="status-main">
           {final.verified ? <CheckIcon /> : <AlarmIcon />}
-          <strong>{final.verified ? 'Sources verified' : 'Not verified'}</strong>
-          <span>
-            {final.verified
-              ? rounds.length > 1
-                ? `on attempt ${rounds.length}, after ${problems} ${problems === 1 ? 'fix' : 'fixes'}`
-                : 'on the first attempt'
-              : final.finished
-                ? final.findings.length
-                  ? 'problems remained after the last correction round'
-                  : 'no findings were submitted'
-                : `stopped early: ${final.stopped ?? 'step limit'}`}
-          </span>
+          <div>
+            <p className="status-line">
+              <strong>
+                {final.verified
+                  ? rounds.length > 1
+                    ? `Sources verified on attempt ${rounds.length}.`
+                    : 'Sources verified on the first attempt.'
+                  : 'Not verified.'}
+              </strong>{' '}
+              {final.verified
+                ? rounds.length > 1 &&
+                  `The checker sent ${rounds.length === 2 ? 'the first answer' : `${rounds.length - 1} answers`} back with ${problems} ${problems === 1 ? 'problem' : 'problems'}; the agent fixed ${problems === 1 ? 'it' : 'them'}.`
+                : final.finished
+                  ? final.findings.length
+                    ? 'Problems remained after the last correction round.'
+                    : 'No findings were submitted.'
+                  : `Stopped early: ${final.stopped ?? 'step limit'}.`}
+            </p>
+            <p className="status-facts">
+              {final.steps} steps and {final.evidence.length} tool results in {Math.round(seconds)} s,{' '}
+              {compact(final.tokens.input + final.tokens.output)} tokens.
+            </p>
+          </div>
         </div>
-        <dl className="status-metrics">
-          <div>
-            <dt>Steps</dt>
-            <dd>{final.steps}</dd>
-          </div>
-          <div>
-            <dt>Tool results</dt>
-            <dd>{final.evidence.length}</dd>
-          </div>
-          <div>
-            <dt>Time</dt>
-            <dd>{Math.round(seconds)} s</dd>
-          </div>
-          <div>
-            <dt>Tokens</dt>
-            <dd>{compact(final.tokens.input + final.tokens.output)}</dd>
-          </div>
-        </dl>
         <details className="status-more">
           <summary>
             {sentBack.length > 0 ? `What the checker caught (${problems})` : 'What the checker checks'}
