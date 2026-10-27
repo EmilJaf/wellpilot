@@ -238,3 +238,33 @@ def test_case_detail_shows_each_fit_on_data_up_to_the_cutoff(processed_dir) -> N
     assert all(abs(m["error"]) < 0.1 for m in detail["methods"])
     with pytest.raises(ValueError, match="no backtest case"):
         case_detail(processed_dir, store, "F-12", "2010-02-28")
+
+
+def test_the_agent_is_scored_on_the_forecast_its_answer_cites() -> None:
+    """Runs often try several windows; the answer cites one (10 of the 25 cached runs cite
+    an earlier one than their last call). The backtest scores what the answer says."""
+    from wellpilot.backtest import _agent_model, _answer_forecast
+
+    def forecast(eid: str, start: str, model: str | None = None) -> dict:
+        arguments = {"well": "F-12", "start": start, "horizon_days": 365}
+        return {
+            "id": eid,
+            "tool": "forecast_production",
+            "arguments": {**arguments, **({"model": model} if model else {})},
+        }
+
+    record = {
+        "forecast_evidence": "E5",
+        "forecast": {"fit": {"model": "hyperbolic"}},
+        "run": {
+            "evidence": [forecast("E3", "2010-02-14", "exponential"), forecast("E5", "2010-03-01")],
+            "findings": [{"evidence_ids": ["E1", "E3"]}],
+            "summary_numbers": [{"text": "235k", "value": 234606, "evidence_id": "E3"}],
+        },
+    }
+
+    chosen = _answer_forecast(record)
+    assert chosen["id"] == "E3" and _agent_model(record, chosen) == "exponential"
+    uncited = {**record, "run": {**record["run"], "findings": [], "summary_numbers": []}}
+    last = _answer_forecast(uncited)
+    assert last["id"] == "E5" and _agent_model(uncited, last) == "hyperbolic"

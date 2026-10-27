@@ -182,7 +182,7 @@ async def agent_row(
         path.write_text(json.dumps(record, ensure_ascii=False, indent=1))
     if not record["forecast_evidence"]:
         return None
-    chosen = next(e for e in record["run"]["evidence"] if e["id"] == record["forecast_evidence"])
+    chosen = _answer_forecast(record)
     args = chosen["arguments"]
     store = store or ProductionStore(processed_dir)
     row = _decline_row(
@@ -191,7 +191,7 @@ async def agent_row(
         "agent",
         start=args.get("start"),
         end=args.get("end"),
-        model=_agent_model(chosen),
+        model=_agent_model(record, chosen),
     )
     return {
         **row,
@@ -200,11 +200,28 @@ async def agent_row(
     }
 
 
-def _agent_model(forecast_evidence: dict) -> str:
-    """The Arps model the agent's forecast used: the one its result reports, so a refit
-    today keeps the agent's choice even where "auto" would now pick another."""
-    fit = (forecast_evidence.get("result") or {}).get("fit") or {}
-    return fit.get("model") or forecast_evidence["arguments"].get("model", "auto")
+def _answer_forecast(record: dict) -> dict:
+    """The forecast the agent's answer stands on: the last forecast_production its findings
+    or summary cite. Runs often forecast more than one window and answer with an earlier
+    one (10 of the 25 cached runs); scoring the last call scored a forecast nobody gave."""
+    run = record["run"]
+    cited = {i for f in run["findings"] for i in f["evidence_ids"]}
+    cited |= {n["evidence_id"] for n in run.get("summary_numbers") or []}
+    forecasts = [e for e in run["evidence"] if e["tool"] == "forecast_production"]
+    answered = [e for e in forecasts if e["id"] in cited]
+    last = next(e for e in forecasts if e["id"] == record["forecast_evidence"])
+    return answered[-1] if answered else last
+
+
+def _agent_model(record: dict, chosen: dict) -> str:
+    """The Arps model of the agent's forecast: the one its result reports (kept for its last
+    forecast), so a refit today keeps the agent's choice where "auto" would now pick
+    another; else what it asked for."""
+    if chosen["id"] == record["forecast_evidence"]:
+        fit = (record.get("forecast") or {}).get("fit") or {}
+        if fit.get("model"):
+            return fit["model"]
+    return chosen["arguments"].get("model", "auto")
 
 
 def calibrate(results: pd.DataFrame) -> pd.DataFrame:
@@ -328,12 +345,12 @@ def case_detail(processed_dir: Path, store: ProductionStore, well: str, cutoff: 
     if "agent" in rows.index and path.exists():
         record = json.loads(path.read_text())
         run = record["run"]
-        chosen = next(e for e in run["evidence"] if e["id"] == record["forecast_evidence"])
+        chosen = _answer_forecast(record)
         args = chosen["arguments"]
         windows["agent"] = {
             "start": args.get("start"),
             "end": args.get("end"),
-            "model": _agent_model(chosen),
+            "model": _agent_model(record, chosen),
         }
         agent = {
             "window_asked": [args.get("start"), args.get("end")],

@@ -4,6 +4,8 @@ An AI agent for production and reservoir engineers. Ask why a well changed; it w
 
 It runs on **Muse Spark Open**, Meta's open-weight model, so an operator can host it next to well data that never leaves the company. This demo uses Equinor's open Volve field (Norwegian North Sea, 2008-2016).
 
+**Try the time machine.** Set a past date and the agent answers as of that day, with no data after it. Then "Show what happened next" opens the rest. As of 2010-12-31 it picks F-12 as the well that needs attention first (a dead downhole gauge, a 55% step down) and forecasts its 2011 oil; the reveal sets that forecast against what the well produced and against the textbook decline fit made the same day.
+
 - Live demo: _link added at deploy_
 - Demo video: _link added at submission_
 
@@ -19,8 +21,9 @@ WellPilot turns that into one question, answered in about a minute for roughly $
 
 1. **Plans and runs real analysis.** The agent writes a short plan, then calls deterministic tools over the data: monthly production, event detection (regime changes, water-cut crossings, shut-ins, dead gauges), Arps decline fits and forecasts with ranges calibrated on past errors, waterflood diagnostics (WOR against cumulative oil, liquid and choke, injection support), a screen of every well, read-only SQL, arithmetic, a search of report facts, the field against the plan's forecast and design limits, and a look at a report page image when only the picture holds the answer.
 2. **Starts from the whole field.** The first screen ranks every well by what needs attention on any date: a dead downhole gauge, water cut past the platform's design limit, a steep decline, long shut-ins, a step down in rate.
-3. **Checks itself before answering.** A deterministic checker reads the submitted answer. Every declared number must be in the evidence it cites, at the precision written; every date and quote must be there word for word; a finding that states a cause, or rests on a poor fit, must be marked an inference; a summary figure from a poor fit must be hedged. Problems go back to the model, which fixes them and resubmits. The UI shows each round and what changed.
-4. **Lets you trace every number.** Click a number in the answer to open the tool result with that value marked; click a Norwegian quote to see the plan page with the passage outlined; open the tool's source code, hashed at run time.
+3. **Checks itself before answering.** A deterministic checker reads the submitted answer. Every declared number must be in the evidence it cites, at the precision written, and be what the text says it is: the right well, the right quantity (not an uptime called a water cut), the right direction (not a fall called a rise) and the right event's date. Every quote must be there word for word; a finding that states a cause, or rests on a poor fit, must be marked an inference. Problems go back to the model, which fixes them and resubmits. The UI shows each round and what changed.
+4. **Answers in plain words.** Each finding is one or two sentences with a few rounded numbers; the fit behind it (model, window, r2, decline rate) sits under "Details for engineers" and is checked the same way.
+5. **Lets you trace every number.** Click a number in the answer to open the tool result with that value marked; click a Norwegian quote to see the plan page with the passage outlined; open the tool's source code, hashed at run time.
 
 ## What it found in Volve
 
@@ -28,10 +31,11 @@ From the recorded runs and the data tabs (all reproducible with the tools in thi
 
 - **A dead gauge, not a collapsing reservoir.** F-12's downhole pressure reads 0 from 2010-10-12 to the end of the data: 2095 days, 1830 of them flowing and producing 1,133,053 Sm3 of oil. A naive reading is a pressure collapse; the agent rules it out.
 - **Water broke through as the plan said.** The 2005 plan expects injection water to break through "etter omlag 2 år" (after about 2 years). F-12's water cut passed 5% on 2009-10-31, 20.6 months after first oil, and its oil rate stepped down from 4,050 to 1,146 Sm3/d around 2010-07-18.
-- **The field hit its design water cut when the plan expected it to close.** The plan's facility limit is "Maksimum vannkutt 0,80". The field as a whole reached 0.80 in June 2012 and was at or above it in 27 months from then on; liquid peaked at 11,438 Sm3/d, under the 13,000 Sm3/d capacity.
-- **Water, not pressure.** From 2010 to 2014 F-12's liquid rate held near 5,000 Sm3/d while its choke opened from about 53% to 100% and water cut rose from 0.57 to 0.96, and the field injected more water than it produced every year: the oil fell because water took the well's capacity. With data to the end of 2012, the WOR trend left 165k Sm3 before a 0.90 water cut and 560k before 0.95; the well went on to make about 444k.
+- **The field reached its design water cut when the plan expected it to close.** The plan's facility limit is "Maksimum vannkutt 0,80". The field as a whole reached 0.80 in June 2012 and stayed at or above it for 27 months. It never ran over its capacities: liquid peaked at 11,438 Sm3/d against 13,000, and water at 10,240 Sm3/d on its worst day against the 10,400 the platform could handle (13,000 x 0.80).
+- **Water, not pressure.** From 2010 to 2014 F-12's liquid rate held near 5,000 Sm3/d while its choke opened from about 53% to 100% and water cut rose from 0.57 to 0.96: the oil fell because water took the well's capacity. Injection replaced what was produced at reservoir conditions (a ratio of 1.0-1.1 every year with the plan's oil formation volume factor, 1.385), so pressure support held. With data to the end of 2012, the WOR trend left 165k Sm3 before a 0.90 water cut and 560k before 0.95; the well went on to make about 444k.
 - **A report only a picture can answer.** F-11 B's completion report (filed under F-12 in the Volve data) keeps its survey tables and the completion's time-depth chart as images: the chart ends the job on 23.07.2013, and the production data shows F-11's first oil the next day.
-- **The field outlived its plan.** The plan's P50 forecast was 11.34 million Sm3 by 2012. The field produced 10.04 million Sm3 by 2016, 2.48 million of it after the plan's last year, from wells drilled later (F-11, F-15 D, F-1 C) and an injector turned producer (F-5).
+- **The field outlived its plan.** The plan's P50 forecast was 11.34 million Sm3 by 2012. The field produced 10.04 million Sm3 by 2016, 2.48 million of it after the plan's last year, from wells drilled later (F-11, F-15 D, F-1 C) and an injector turned producer (F-5). The plan assumed first oil in March 2007 and the field started in February 2008, so year by year from each start: ahead in the first year (1.76 against 1.53 million Sm3), behind from the second.
+- **What the agent would have said at the end of 2010.** With data cut at 2010-12-31 it ranked F-12 first and forecast its 2011 oil; F-12 then made 340k Sm3. The textbook whole-history decline fit, made the same day, said 685k (+102%): it averages the plateau years in. The gauge never came back.
 
 ## How accurate are its forecasts?
 
@@ -39,16 +43,20 @@ A rolling backtest: for each producer, every 6 months, the data is cut at that d
 
 | Method | Median error | Mean error | Off by more than 50% |
 |---|---|---|---|
-| WellPilot agent on Muse Spark Open, its own fit window | 14.9% | 22.4% | 3 |
-| Decline fit, last 3 months (best fixed window in hindsight) | 14.4% | 24.6% | 4 |
-| Decline fit, last 6 months | 19.7% | 32.0% | 5 |
-| Decline fit, last 24 months | 19.0% | 28.6% | 6 |
-| Decline fit, last 12 months | 21.0% | 29.4% | 6 |
-| Decline fit, whole history (the quick standard) | 27.6% | 39.5% | 8 |
+| WellPilot agent on Muse Spark Open, its own fit window | 13.8% | 19.9% | 2 |
+| Decline fit, last 3 months (best fixed window, known only in hindsight) | 14.4% | 24.7% | 4 |
+| Decline fit, last 24 months | 15.4% | 27.3% | 6 |
+| Decline fit, last 6 months | 19.7% | 31.6% | 5 |
+| Decline fit, last 12 months | 20.6% | 28.1% | 6 |
+| Decline fit, whole history (textbook default) | 27.6% | 39.5% | 8 |
 
-Uncertainty: a range from the fit's scatter (bootstrap) held the actual volume in 24% of the agent's forecasts. Each forecast now also reports a range built from the errors of forecasts made the same way from earlier dates; over the backtest it held the actual in 72% (13 of 18 forecasts with enough history), against an 80% goal.
+The fair comparison is the best fixed window: the agent is about even with it on the median (closer in 15 of 25), with a lower mean error and fewer large misses, while nobody could have picked that window in advance. Against the textbook whole-history fit it halves the median error and is closer in 17 of 25. These are 25 overlapping forecasts from three wells of one field: a check, not a benchmark, and too few for a significance claim. The agent's two large misses are F-12 on either side of its December 2014 restart, which no method saw coming.
 
-The agent halves the error of the whole-history fit and is closer in 16 of 25 forecasts. Against the best fixed window, which is only known after the fact, it is about even (closer in 14 of 25) with a lower mean error and fewer large misses. 25 overlapping forecasts from three wells are too few for a significance claim. All 25 agent runs were made with Muse Spark Open on Baseten (23 verified by the checker; 2.4M input and 0.19M output tokens, about $3.80 in total).
+Each case scores the forecast the agent's answer cites. Agents often try several windows and answer with one; in 10 of the 25 runs that is not their last forecast call. Scoring the last call instead gives a median of 14.3% and three large misses.
+
+Uncertainty: a range from the fit's scatter (bootstrap) held the actual volume in 40% of the agent's forecasts. Each forecast also reports a range built from the errors of forecasts made the same way from earlier dates; it held the actual in 76% (13 of 17 forecasts with enough history), against an 80% goal. Each forecast also gives the P50 of every Arps model, since the choice of model can matter as much as the data.
+
+Arps fits keep b at most 1 (harmonic): a waterflooded conventional well in boundary-dominated flow does not decline with b above 1, and letting b run to 2 made short windows overstate the tail. All 25 agent runs were made with Muse Spark Open on Baseten (23 verified by the checker; 2.4M input and 0.19M output tokens, about $3.80 in total); the table refits each with the window and model the agent chose.
 
 ## How it works
 
@@ -69,11 +77,21 @@ flowchart LR
 - **Reports:** the 2005 development plan (Norwegian, 53 pages) and F-11 B's final well report on its completion (English, 64 pages, 28 of them pictures: survey tables, a time-depth chart, a wellhead schematic). Pages that are pictures are marked at render time; their facts carry 'image' quotes, and the agent can read them itself with `look_at_page`.
 - **Tools** (`backend/src/wellpilot/agent/tools.py`, `vision.py`): `list_wells`, `production_monthly`, `detect_events`, `fit_decline`, `forecast_production`, `waterflood`, `field_screen`, `run_sql` (one read-only SELECT, sandboxed), `calculate`, `search_reports`, `read_report_page`, `plan_vs_actual`, `field_vs_design`, `look_at_page`. Each successful call becomes evidence with its arguments, result, warnings and a hash of the tool's source.
 - **Checker** (`backend/src/wellpilot/agent/checker.py`): numbers are declared by the model (`{text, value, evidence_id}`) rather than parsed from prose; English and Norwegian number formats, unit scales and dates written in words are handled. It is tested with property-based fuzzing over 10 number formats, a corpus of real submissions replayed in CI, and a table of probes for false rejections and false passes.
-- A number the text ties to a date ("0.85 in 2009-06") must stand in that date's row of the cited table.
-- **What the checker does not check:** whether the reasoning holds, or the direction of a change. That is why every number is one click from its source.
+- A number the text ties to a date ("0.85 in 2009-06", "55% on 2010-05-02") must stand in that date's row or event. A number found in its evidence must not be held there only for another well, as another quantity, or with the opposite sign; a "from X to Y" must run the way the evidence's change does.
+- **What the checker does not check:** meaning. "Pressure collapsed to 0" would pass when the evidence says the gauge reads 0; whether the reasoning holds is for the reader, and that is why every number is one click from its source.
 - **Quality gates:** `python -m wellpilot.ingest.facts_gate` (free) checks the report facts: the plan's table rows, the design limits, the key quotes verbatim, no unverified quote, quotes located on their pages. `python -m wellpilot.eval` runs real questions through the agent and checks each answer: verified, the right tools called, the facts any correct answer contains, a step and cost budget.
 - **Backend:** Python 3.13, FastAPI, Server-Sent Events, DuckDB, pandas, scipy, ruptures, pypdfium2. Runs are background tasks saved as JSON and replayable. 275 tests.
 - **Frontend:** React, TypeScript, Vite, uPlot, hand-written SVG charts. A control-room palette after ISA-101: grey by default, colour only for meaning (oil green, water blue, amber caution, red alarm).
+
+## Running it on another field
+
+The analysis tools, the agent loop, the checker and the UI work on any daily production table with the same columns (date, well, hours on stream, oil, water, gas, water injected, downhole and wellhead pressure, choke). What is specific to Volve:
+
+- the ingest's column map and cleaning rules (`backend/src/wellpilot/ingest/production.py`): another source needs its own map, and its own quirks (units, monthly data, how missing values are written);
+- the report registry (`backend/src/wellpilot/ingest/reports.py`) and the two plan tools, which parse this plan's production table and design limits (`plan_vs_actual`, `field_vs_design` in `agent/tools.py`), and the plan's oil formation volume factor used for voidage (`analysis/waterflood.py`);
+- one line of the system prompt naming the field (`agent/loop.py`).
+
+It has not yet been run on another field.
 
 ## Meta models
 

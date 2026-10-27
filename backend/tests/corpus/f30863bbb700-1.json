@@ -1,0 +1,662 @@
+{
+ "source": {
+  "run": "f30863bbb700",
+  "submission": 1,
+  "model": "meta-models/muse-spark-open-1026",
+  "question": "Why did well F-99 stop producing in 2013?"
+ },
+ "to_review": false,
+ "note": "",
+ "expected": {
+  "accepted": true,
+  "flagged": []
+ },
+ "submission": {
+  "summary": "Well F-99 does not exist in the Volve data. The database contains 7 wells and has 0 daily records for F-99, so it could not have stopped in 2013.",
+  "findings": [
+   {
+    "claim": "Well F-99 is not a Volve well and has no production history to stop.",
+    "detail": "list_wells returns 7 wells (F-1 C, F-11, F-12, F-14, F-15 D, F-4, F-5) with no F-99; production_daily has 0 rows for well='F-99' over 2007-09-01 to 2016-12-01; production_issues also 0 rows for F-99.",
+    "evidence_ids": [
+     "E1",
+     "E5",
+     "E6",
+     "E7",
+     "E8"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "7",
+      "value": 7,
+      "evidence_id": "E7"
+     },
+     {
+      "text": "0",
+      "value": 0,
+      "evidence_id": "E5"
+     }
+    ]
+   },
+   {
+    "claim": "The producers that were active around 2013 were F-12, F-14 and the new well F-11, which started in July 2013.",
+    "detail": "F-11 first oil 2013-07-24, F-12 since 2008-02-12, F-14 since 2008-07-13; F-11 B completion activities in June-July 2013 (liner, perforation 09.07.2013) correspond to F-11 coming online, not a well stopping.",
+    "evidence_ids": [
+     "E1",
+     "E3",
+     "E8"
+    ],
+    "confidence": "fact",
+    "numbers": []
+   }
+  ],
+  "summary_numbers": [
+   {
+    "text": "7",
+    "value": 7,
+    "evidence_id": "E7"
+   },
+   {
+    "text": "0",
+    "value": 0,
+    "evidence_id": "E5"
+   }
+  ]
+ },
+ "evidence": [
+  {
+   "id": "E1",
+   "tool": "list_wells",
+   "arguments": {},
+   "result": {
+    "columns": [
+     "well",
+     "well_types",
+     "first_oil",
+     "last_date",
+     "cum_oil_sm3",
+     "cum_water_sm3",
+     "cum_water_injected_sm3",
+     "producing_days"
+    ],
+    "rows": [
+     [
+      "F-1 C",
+      "OP/WI",
+      "2014-04-22",
+      "2016-04-21",
+      177709,
+      207302,
+      null,
+      438
+     ],
+     [
+      "F-11",
+      "OP",
+      "2013-07-24",
+      "2016-09-17",
+      1147849,
+      1090806,
+      0.0,
+      1122
+     ],
+     [
+      "F-12",
+      "OP",
+      "2008-02-12",
+      "2016-09-17",
+      4579610,
+      6833792,
+      0.0,
+      2838
+     ],
+     [
+      "F-14",
+      "OP",
+      "2008-07-13",
+      "2016-09-17",
+      3942233,
+      7121310,
+      0.0,
+      2724
+     ],
+     [
+      "F-15 D",
+      "OP",
+      "2014-01-16",
+      "2016-09-17",
+      148519,
+      52366,
+      0.0,
+      769
+     ],
+     [
+      "F-4",
+      "WI",
+      null,
+      "2016-12-01",
+      0.0,
+      0.0,
+      16240727,
+      0
+     ],
+     [
+      "F-5",
+      "OP/WI",
+      "2016-04-20",
+      "2016-09-18",
+      41161,
+      13533,
+      14089406,
+      129
+     ]
+    ]
+   },
+   "code": "wellpilot.agent.tools.list_wells@67bd47cfcdd1",
+   "created_at": "2026-10-27T15:11:55+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E2",
+   "tool": "run_sql",
+   "arguments": {
+    "sql": "SELECT DISTINCT well, well_type, flow_kind FROM production_daily ORDER BY well"
+   },
+   "result": {
+    "columns": [
+     "well",
+     "well_type",
+     "flow_kind"
+    ],
+    "rows": [
+     [
+      "F-1 C",
+      "OP",
+      "production"
+     ],
+     [
+      "F-1 C",
+      "WI",
+      "production"
+     ],
+     [
+      "F-11",
+      "OP",
+      "production"
+     ],
+     [
+      "F-12",
+      "OP",
+      "production"
+     ],
+     [
+      "F-14",
+      "OP",
+      "production"
+     ],
+     [
+      "F-15 D",
+      "OP",
+      "production"
+     ],
+     [
+      "F-4",
+      "WI",
+      "injection"
+     ],
+     [
+      "F-5",
+      "WI",
+      "injection"
+     ],
+     [
+      "F-5",
+      "WI",
+      "production"
+     ],
+     [
+      "F-5",
+      "OP",
+      "production"
+     ]
+    ],
+    "row_count": 10,
+    "truncated": false
+   },
+   "code": "wellpilot.agent.tools.run_sql@50068378f8ca",
+   "created_at": "2026-10-27T15:11:55+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E3",
+   "tool": "search_reports",
+   "arguments": {
+    "query": "F-99",
+    "limit": 10
+   },
+   "result": {
+    "documents": {
+     "f11b_completion": {
+      "title": "Final Well Report, Completion, 15/9-F-11 B",
+      "issued": "2013-09-04"
+     }
+    },
+    "facts": {
+     "columns": [
+      "doc_id",
+      "page",
+      "topic",
+      "source",
+      "statement_en",
+      "quote",
+      "quote_check",
+      "wells"
+     ],
+     "rows": [
+      [
+       "f11b_completion",
+       3,
+       "schedule",
+       "text",
+       "For well F-11 B the Liner IOR activity occurred on 12.06.2013 20:15.",
+       "15/9 F-11B IOR, Liner (12.06.2013 20:15)",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       3,
+       "schedule",
+       "text",
+       "For well F-11 B the Well bore preparation IOR activity occurred on 16.06.2013 13:30.",
+       "15/9 F-11B IOR, Well bore preparation (16.06.2013 13:30)",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       3,
+       "schedule",
+       "text",
+       "For well F-11 B the Temporary abandonment with SAFELOCK plug occurred on 21.06.2013 07:00.",
+       "15/9 F-11B IOR, Temporary abandonment (SAFELOCK plug) (21.06.2013 07:00)",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       3,
+       "schedule",
+       "text",
+       "For well F-11 B the Other activity Retrieve HPDR and install PR and surface WH occurred on 21.06.2013 21:00.",
+       "NO 15/9-F-11 B, Other (Retrieve HPDR and install PR and surface WH) (21.06.2013 21:00)",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       3,
+       "schedule",
+       "text",
+       "For well F-11 B the Install 10 ¾” tie 11 B, Tie-back IOR activity occurred on 28.06.2013 01:00.",
+       "NO 15/9 -F-11B IOR, Install 10 ¾” tie 11 B, Tie-back (28.06.2013 01:00)",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       3,
+       "schedule",
+       "text",
+       "For well F-11 B the Retrieve SAFELOCK plug 11 B, Other activity occurred on 30.06.2013 07:15.",
+       "NO 15/9 -F-11B IOR, Retrieve SAFELOCK plug11 B, Other (30.06.2013 07:15)",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       3,
+       "schedule",
+       "text",
+       "For well F-11 B the Run completion, Completion IOR activity occurred on 30.06.2013 14:15.",
+       "NO 15/9 -F-11B IOR11 B, Run completion, Completion (30.06.2013 14:15)",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       3,
+       "schedule",
+       "text",
+       "For well F-11 B the Install tubing hanger, Tubing Hanger IOR activity occurred on 04.07.2013 20:00.",
+       "NO 15/9 -F-11B IOR11 B, Install tubing hanger, Tubing Hanger (04.07.2013 20:00)",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       3,
+       "schedule",
+       "text",
+       "For well F-11 B the Install X-mas tree Tree IOR activity occurred on 06.07.2013 12:30.",
+       "NO 15/9 -F-11B IOR11 B, Install X-mas treeTree (06.07.2013 12:30)",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       3,
+       "schedule",
+       "text",
+       "For well F-11 B the Perforation IOR activity occurred on 09.07.2013 00:45.",
+       "NO 15/9 -F-11B IOR11 B, Perforation (09.07.2013 00:45)",
+       "exact",
+       "F-11 B"
+      ]
+     ]
+    }
+   },
+   "code": "wellpilot.agent.tools.search_reports@5907b6347b0e",
+   "created_at": "2026-10-27T15:11:55+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E4",
+   "tool": "field_screen",
+   "arguments": {},
+   "result": {
+    "as_of": "2016-09-17",
+    "window_days": 90,
+    "field_oil_sm3": 10037081,
+    "wells": [
+     {
+      "well": "F-11",
+      "role": "producer",
+      "first_oil": "2013-07-24",
+      "cum_oil_sm3": 1147849,
+      "share_of_field_oil": 0.1144,
+      "cum_water_injected_sm3": 0.0,
+      "oil_rate_sm3_per_day": 481.56,
+      "water_cut": 0.8459,
+      "uptime": 0.9907,
+      "oil_rate_change_90d": -0.03297,
+      "level": "caution",
+      "issues": [
+       {
+        "level": "caution",
+        "kind": "water_cut",
+        "since": "2016-05-02",
+        "text": "water cut above 0.80 (now 0.85); the platform was designed for 0.80"
+       },
+       {
+        "level": "caution",
+        "kind": "step_down",
+        "since": "2016-03-27",
+        "text": "oil rate stepped down 60%, weekly mean 1,259 -> 509 Sm3/d"
+       }
+      ]
+     },
+     {
+      "well": "F-5",
+      "role": "producer",
+      "first_oil": "2016-04-20",
+      "cum_oil_sm3": 41161,
+      "share_of_field_oil": 0.004101,
+      "cum_water_injected_sm3": 14089406,
+      "oil_rate_sm3_per_day": 334.41,
+      "water_cut": 0.2056,
+      "uptime": 0.7135,
+      "oil_rate_change_90d": 0.08348,
+      "level": "caution",
+      "issues": [
+       {
+        "level": "caution",
+        "kind": "shut_in",
+        "since": null,
+        "text": "31 days shut in over the last 180"
+       }
+      ]
+     },
+     {
+      "well": "F-12",
+      "role": "producer",
+      "first_oil": "2008-02-12",
+      "cum_oil_sm3": 4579610,
+      "share_of_field_oil": 0.4563,
+      "cum_water_injected_sm3": 0.0,
+      "oil_rate_sm3_per_day": 143.87,
+      "water_cut": 0.8694,
+      "uptime": 0.5804,
+      "oil_rate_change_90d": -0.27,
+      "level": "note",
+      "issues": [
+       {
+        "level": "note",
+        "kind": "stopped",
+        "since": "2016-08-12",
+        "text": "no oil since then"
+       }
+      ]
+     },
+     {
+      "well": "F-14",
+      "role": "producer",
+      "first_oil": "2008-07-13",
+      "cum_oil_sm3": 3942233,
+      "share_of_field_oil": 0.3928,
+      "cum_water_injected_sm3": 0.0,
+      "oil_rate_sm3_per_day": 103.05,
+      "water_cut": 0.9667,
+      "uptime": 0.2617,
+      "oil_rate_change_90d": -0.005645,
+      "level": "note",
+      "issues": [
+       {
+        "level": "note",
+        "kind": "stopped",
+        "since": "2016-07-13",
+        "text": "no oil since then"
+       }
+      ]
+     },
+     {
+      "well": "F-1 C",
+      "role": "producer",
+      "first_oil": "2014-04-22",
+      "cum_oil_sm3": 177709,
+      "share_of_field_oil": 0.01771,
+      "cum_water_injected_sm3": 0.0,
+      "oil_rate_sm3_per_day": null,
+      "water_cut": null,
+      "uptime": null,
+      "oil_rate_change_90d": null,
+      "level": "note",
+      "issues": [
+       {
+        "level": "note",
+        "kind": "stopped",
+        "since": "2016-04-06",
+        "text": "no oil since then"
+       }
+      ]
+     },
+     {
+      "well": "F-15 D",
+      "role": "producer",
+      "first_oil": "2014-01-16",
+      "cum_oil_sm3": 148519,
+      "share_of_field_oil": 0.0148,
+      "cum_water_injected_sm3": 0.0,
+      "oil_rate_sm3_per_day": 144.95,
+      "water_cut": 0.5851,
+      "uptime": 0.1863,
+      "oil_rate_change_90d": -0.1216,
+      "level": "note",
+      "issues": [
+       {
+        "level": "note",
+        "kind": "stopped",
+        "since": "2016-07-06",
+        "text": "no oil since then"
+       }
+      ]
+     },
+     {
+      "well": "F-4",
+      "role": "injector",
+      "first_oil": null,
+      "cum_oil_sm3": 0.0,
+      "share_of_field_oil": 0.0,
+      "cum_water_injected_sm3": 16240727,
+      "water_inj_sm3_per_day": 2957,
+      "level": null,
+      "issues": []
+     }
+    ],
+    "levels": "alarm: act now; caution: watch; note: for the record"
+   },
+   "code": "wellpilot.agent.tools.field_screen@f53b60160989",
+   "created_at": "2026-10-27T15:11:55+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E5",
+   "tool": "run_sql",
+   "arguments": {
+    "sql": "SELECT COUNT(*) as rows_for_F99 FROM production_daily WHERE well = 'F-99'"
+   },
+   "result": {
+    "columns": [
+     "rows_for_F99"
+    ],
+    "rows": [
+     [
+      0
+     ]
+    ],
+    "row_count": 1,
+    "truncated": false
+   },
+   "code": "wellpilot.agent.tools.run_sql@50068378f8ca",
+   "created_at": "2026-10-27T15:11:57+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E6",
+   "tool": "run_sql",
+   "arguments": {
+    "sql": "SELECT COUNT(*) as issues_for_F99 FROM production_issues WHERE well = 'F-99'"
+   },
+   "result": {
+    "columns": [
+     "issues_for_F99"
+    ],
+    "rows": [
+     [
+      0
+     ]
+    ],
+    "row_count": 1,
+    "truncated": false
+   },
+   "code": "wellpilot.agent.tools.run_sql@50068378f8ca",
+   "created_at": "2026-10-27T15:11:57+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E7",
+   "tool": "run_sql",
+   "arguments": {
+    "sql": "SELECT MIN(date) as min_date, MAX(date) as max_date, COUNT(DISTINCT well) as n_wells FROM production_daily"
+   },
+   "result": {
+    "columns": [
+     "min_date",
+     "max_date",
+     "n_wells"
+    ],
+    "rows": [
+     [
+      "2007-09-01",
+      "2016-12-01",
+      7
+     ]
+    ],
+    "row_count": 1,
+    "truncated": false
+   },
+   "code": "wellpilot.agent.tools.run_sql@50068378f8ca",
+   "created_at": "2026-10-27T15:12:04+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E8",
+   "tool": "run_sql",
+   "arguments": {
+    "sql": "SELECT well, MIN(date) as first_date, MAX(date) as last_date FROM production_daily GROUP BY well ORDER BY well"
+   },
+   "result": {
+    "columns": [
+     "well",
+     "first_date",
+     "last_date"
+    ],
+    "rows": [
+     [
+      "F-1 C",
+      "2014-04-07",
+      "2016-04-21"
+     ],
+     [
+      "F-11",
+      "2013-07-08",
+      "2016-09-17"
+     ],
+     [
+      "F-12",
+      "2008-02-12",
+      "2016-09-17"
+     ],
+     [
+      "F-14",
+      "2008-02-12",
+      "2016-09-17"
+     ],
+     [
+      "F-15 D",
+      "2014-01-12",
+      "2016-09-17"
+     ],
+     [
+      "F-4",
+      "2007-09-01",
+      "2016-12-01"
+     ],
+     [
+      "F-5",
+      "2007-09-01",
+      "2016-09-18"
+     ]
+    ],
+    "row_count": 7,
+    "truncated": false
+   },
+   "code": "wellpilot.agent.tools.run_sql@50068378f8ca",
+   "created_at": "2026-10-27T15:12:07+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E9",
+   "tool": "calculate",
+   "arguments": {
+    "expressions": []
+   },
+   "result": {
+    "results": []
+   },
+   "code": "wellpilot.agent.tools.calculate@5c1d806d8f4d",
+   "created_at": "2026-10-27T15:12:10+00:00",
+   "warnings": []
+  }
+ ]
+}
