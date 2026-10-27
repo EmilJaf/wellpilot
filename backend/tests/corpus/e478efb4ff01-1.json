@@ -5,8 +5,8 @@
   "model": "meta-models/muse-spark-open-1026",
   "question": "Which wells needed attention at the end of 2010, and why?"
  },
- "to_review": true,
- "note": "",
+ "to_review": false,
+ "note": "Fair: 1 888, 17% and 2 397 written but not declared.",
  "expected": {
   "accepted": false,
   "flagged": [

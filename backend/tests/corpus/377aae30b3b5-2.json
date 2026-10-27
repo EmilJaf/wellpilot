@@ -5,8 +5,8 @@
   "model": "meta-models/muse-spark-open-1026",
   "question": "When was well F-11 B completed, and how does its completion report's timing compare with when it started producing?"
  },
- "to_review": true,
- "note": "",
+ "to_review": false,
+ "note": "Fair: the chart's dates still cited without their evidence.",
  "expected": {
   "accepted": false,
   "flagged": [

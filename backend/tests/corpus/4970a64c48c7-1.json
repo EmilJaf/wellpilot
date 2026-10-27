@@ -5,8 +5,8 @@
   "model": "meta-models/muse-spark-open-1026",
   "question": "Forecast F-14 oil production for the next 12 months and say how confident the forecast is."
  },
- "to_review": true,
- "note": "",
+ "to_review": false,
+ "note": "Fair: facts on poor fits, a cause as a fact, warned forecast numbers unhedged in the summary.",
  "expected": {
   "accepted": false,
   "flagged": [

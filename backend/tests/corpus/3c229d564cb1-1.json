@@ -5,8 +5,8 @@
   "model": "meta-models/muse-spark-open-1026",
   "question": "Which wells produced most of Volve's oil, and how much did each produce?"
  },
- "to_review": true,
- "note": "",
+ "to_review": false,
+ "note": "Fair: 367,389 is not in its cited evidence; 4%, 1.15 million and 11% written but not declared.",
  "expected": {
   "accepted": false,
   "flagged": [

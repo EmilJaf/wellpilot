@@ -438,15 +438,19 @@ def _unsupported(
 def _looked_up(text: str, pool: _Pool, free: set[float]) -> list[str]:
     """Numbers a text writes (outside quotes) that its evidence does not hold, read as a
     declared number would be: either convention, trailing zeros as rounding ("1500" is good
-    to 50), a unit's scale or the unit written in the evidence too. For a finding's detail,
-    whose numbers are looked up rather than declared."""
+    to 50), a unit's scale or the unit written in the evidence too, and cut or rounded at the
+    last digit. For a finding's detail, whose numbers are looked up rather than declared."""
     missing = []
     for match in WRITTEN_NUMBER.finditer(_mask(QUOTED.sub(" ", _normalize(text)))):
         written = match.group(0).strip()
         values = [n for european in (False, True) for n in _numbers_in_text(written, european)]
         if not values or all(_free(*n, pool, free) for n in values):
             continue
-        if not any(_reads_as(r, pool.numbers) for r in _readings(written)):
+        # A copied value may be cut rather than rounded (0.5536 as "0.553"): a whole unit of
+        # the last digit either way.
+        if not any(
+            _reads_as((n, 2 * unit, sc), pool.numbers) for n, unit, sc in _readings(written)
+        ):
             missing.append(written)
     return list(dict.fromkeys(missing))
 
@@ -1296,7 +1300,9 @@ def check_submission(submission: Submission, log: EvidenceLog, question: str = "
             )
         if dates:
             problems.append(f"Finding {n}: date(s) {', '.join(dates)} not found in {ids}.")
-        elif misdated := _date_attribution(_normalize(text), cited, leaves_of, unowned):
+        # The claim only: a detail is tool-speak ("field_wide with F-1 C, F-15 D") whose
+        # clauses do not say whose date it is.
+        elif misdated := _date_attribution(_normalize(finding.claim), cited, leaves_of, unowned):
             problems.append(
                 f"Finding {n} gives the well its sentence names date(s) {', '.join(misdated)}. "
                 "Cite evidence about that well, or name the well the date belongs to."

@@ -5,12 +5,11 @@
   "model": "meta-models/muse-spark-open-1026",
   "question": "Why did F-12's oil rate jump after the December 2014 shutdown?"
  },
- "to_review": true,
- "note": "",
+ "to_review": false,
+ "note": "Re-judged: the detail's 'field_wide with F-1 C, F-15 D' made F-12's shut-in date look like theirs; date attribution now reads the claim only. The rest is fair.",
  "expected": {
   "accepted": false,
   "flagged": [
-   "Finding 1",
    "Finding 2",
    "Finding 3",
    "Summary"

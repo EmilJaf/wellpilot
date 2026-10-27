@@ -5,8 +5,8 @@
   "model": "meta-models/muse-spark-open-1026",
   "question": "Which wells need attention right now, and why? Forecast the next 12 months of oil for the well that needs it most."
  },
- "to_review": true,
- "note": "",
+ "to_review": false,
+ "note": "Fair: 1 888 undeclared, a cause as a fact, warned forecast numbers unhedged in the summary. Cut values in its detail (0.553 for 0.5536) now pass.",
  "expected": {
   "accepted": false,
   "flagged": [
