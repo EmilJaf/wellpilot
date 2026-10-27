@@ -1,0 +1,36 @@
+{
+ "model": "meta-models/muse-spark-open-1026",
+ "mode": "guess",
+ "results": [
+  {
+   "question": "How much oil did well F-12 (15/9-F-12) of the Volve field in the Norwegian North Sea produce in 2011, in standard cubic metres? Give your best number.",
+   "data_says": "about 340,000 Sm3 in 2011",
+   "answer": "For Volve 15/9-F-12, 2011 oil (Equinor/NPD Volve daily dataset) was in the ~ 180,000 - 250,000 Sm3 range.\n\nBest single estimate: **~ 200,000 - 230,000 Sm3 for calendar 2011**, about ~210k Sm3 - roughly 550-650 Sm3/d average on producing days.\n\nHow sure: **low - ~25-30% confidence**, estimated from field decline/public Volve dataset aggregate, not checked well-file line by line.",
+   "tokens": 806
+  },
+  {
+   "question": "What happened to the downhole pressure gauge of Volve well F-12 in 2010?",
+   "data_says": "it read 0 from 2010-10-12 to the end of the data: a dead gauge",
+   "answer": "My best estimate for Volve F-12 PDG in 2010:\n\nPermanent downhole gauge (PDG) at ~2,700-2,800m MD became unreliable / effectively failed in mid 2010 - best guess ~April-July 2010, often cited as ~June 2010.\n\nWhat was seen: readings started to drift/ flatline/ show non-physical offset vs wellhead pressure + rate, on the order of 20-50 bar too high/low vs expected ~200-270 bara flowing BHP, with erratic spikes, then flagged as bad quality in the Equinor open Volve daily data and not used for reservoir pressure after that, with BHP thereafter estimated from wellhead pressure.\n\nHow sure I am: very unsure - ~10-15% - this is a low confidence guess based on gaps/flags in the public Volve dataset, not on a verified failure report.",
+   "tokens": 1226
+  },
+  {
+   "question": "What work was done on Volve well F-12 in November 2014, and what did the well do after?",
+   "data_says": "a plug at 3150 m and a new zone perforated (3126.2-3130.7 m MD); water cut 0.97 to about 0.3, oil about 180 to 860 Sm3/d",
+   "answer": "My best estimate for Volve well 15/9-F-12 in November 2014 is:\n\n*   **Work done:** A light well intervention / workover in early-mid November 2014, around Nov 5-18, lasting ~5-10 days, likely a scale squeeze / clean-out and gas-lift valve replacement to address declining productivity / scaling. It was not a new sidetrack drilling operation.\n*   **What it did after:** Returned to intermittent oil production at a reduced rate, on the order of 1,000 - 3,000 bpd of oil plus water, for several months before declining again and being finally shut-in with the rest of Volve field in 2016.\n\nI am **very unsure / low confidence ~10-15%** about those specific dates and operation type, as I do not have a verified public well activity report for F-12 in my training data for that exact month.\n\nIf you need to confirm, the authoritative sources to check would be the Norwegian Petroleum Directorate FactPages for well 15/9-F-12 and the Equinor Volve open dataset daily production / well intervention files, which contain the official history.",
+   "tokens": 1202
+  },
+  {
+   "question": "What were Volve well F-12's oil rate and water cut at the end of 2012?",
+   "data_says": "about 610 Sm3/d of oil per producing day at a water cut of 0.88 (Nov-Dec 2012)",
+   "answer": "Volva (Volve) F-12, Hugin producer:\n\nBest estimate for **end of December 2012, daily average 31 Dec 2012**:\n\n* **Oil rate: ~2,000 - 2,500 stb/d** - my point estimate **~2,200 stb/d**\n* **Water Cut: ~65% - 75%** - my point estimate **~70%**\n\nThat is for the Equinor-released Volve daily production file, F-12 oil + water rate, where Water Cut = Water / (Oil+Water).\n\nHow sure: **Low confidence, +/- 30% on rate** - interpolating public Volve dataset from memory.",
+   "tokens": 808
+  },
+  {
+   "question": "When did the Volve field stop producing, and how much oil did it produce in total?",
+   "data_says": "shut down in September 2016; about 10 million Sm3 (63 million barrels)",
+   "answer": "Volve, North Sea Block 15/9 off Norway was a short life field:\n\n* **First oil:** 3 February 2008\n* **Last / shut-in:** **15-17 September 2016** - platform Maersk Inspirer jack-up ceased production - decommissioning Oct 2016 - 2018\n\nIt produced for ~8.6 years.\n\n* **Total cumulative oil:** **~60-63 million barrels** = **~9.5-10.2 million Sm3** oil\n\nThe most quoted NPD/Equinor open Volve dataset figure is:\n\n> **~63 MMbbls oil, ~5-6% of that gas/NGL, ~63-65 MMboe total**\n\nwith ~2.5 million Sm3 (~15.7 MMbbls) originally predicted to *more* than double the early 46 MMbbl expected reserves due to good performance.\n\n*How sure:* **Medium-high sure on 2008- Sept 2016, medium sure on 60-65 MMbbl within ~10%.**",
+   "tokens": 1316
+  }
+ ]
+}

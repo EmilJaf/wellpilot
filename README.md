@@ -24,7 +24,17 @@ Built for the Meta Global AI Developer Hackathon (Oct 26 - Nov 4, 2026), Indie t
 Volve is a public dataset, and a model may have read about it. Three things keep the time machine honest:
 
 - **The tools never return data after the chosen date** (tested), and a question asked as of a past date does not name the field or its operator in the prompt. Well names and the 2005 plan would still identify it to a model that knows Volve well.
-- **We asked the model what it remembers**, with no tools and no data (`python -m wellpilot.memory_probe`, Muse Spark Open, Oct 28; answers in [docs/evidence](docs/evidence/memory-probe-2026-10-28.json)). Of F-12 it knew nothing: not its 2011 oil (340,000 m³), not its dead gauge, not the November 2014 work that cut its water cut from 0.97 to 0.3, not its rate at the end of 2012; it said so each time rather than guess. It did know what is widely published about the field as a whole: production stopped in September 2016, after about 10 million m³. The time machine asks about wells, not the field's end.
+- **We asked the model what it remembers**, with no tools and no data (`python -m wellpilot.memory_probe`, Muse Spark Open, Oct 28; answers in [docs/evidence](docs/evidence)). Allowed to say it did not know, it declined every question about F-12. Made to guess (`--guess`), it got each one wrong, one in the wrong direction; only the field's end, widely published, it knew:
+
+  | Question | The model's guess, from memory | The data |
+  |---|---|---|
+  | F-12's oil in 2011 | about 210,000 m³ | 340,000 m³ (the agent's forecast from the data: 359,000) |
+  | F-12's downhole gauge in 2010 | drifted, failed around June | read zero from 2010-10-12 on |
+  | Work on F-12 in November 2014, and after | a scale clean-out; a lower rate after | a plug at 3150 m and a new zone opened; oil from 180 to 860 m³/d |
+  | F-12 at the end of 2012 | about 350 m³/d of oil, water cut 0.70 | 610 m³/d, water cut 0.88 |
+  | When the field stopped, and its total | September 2016, about 10 million m³ | September 2016, 10.0 million m³ |
+
+  The time machine asks about wells, not the field's end.
 - **A field no model can have read about.** `python -m wellpilot.synthetic` generates six wells with known causes planted in them (a dead gauge, a choke cut, depletion, an injector stopping), run through the same ingest, tools and agent. The agent named every planted cause, and its 12-month forecast after the choke cut came within 5% of the outcome, where the textbook fit was 25% off.
 
 ## Terms
