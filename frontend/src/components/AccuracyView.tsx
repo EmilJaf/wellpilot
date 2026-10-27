@@ -154,9 +154,17 @@ export function AccuracyView() {
       )}
       {agentStats?.bootstrap_band_coverage !== undefined && (
         <p className="chart-note-line">
-          The forecasts’ P90 to P10 ranges are too narrow: they held the actual volume in{' '}
-          {Math.round(agentStats.bootstrap_band_coverage * 100)}% of the agent’s forecasts, where an honest 80% range
-          would hold it in 80%. Read them as the spread of the fit, not of the future.
+          Uncertainty: a range from the fit&rsquo;s scatter held the actual volume in{' '}
+          {Math.round(agentStats.bootstrap_band_coverage * 100)}% of the agent&rsquo;s forecasts, far from the 80% it
+          claims.
+          {agentStats.hindcast_band_coverage !== null && agentStats.hindcast_band_coverage !== undefined && (
+            <>
+              {' '}
+              The range each forecast now reports is built from the errors of forecasts made the same way from earlier
+              dates; it held the actual in {Math.round(agentStats.hindcast_band_coverage * 100)}% (
+              {agentStats.hindcast_band_cases} forecasts with enough history to calibrate on).
+            </>
+          )}
         </p>
       )}
       {summary.agent_models && (

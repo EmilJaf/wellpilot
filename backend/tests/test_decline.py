@@ -5,8 +5,10 @@ import pytest
 from wellpilot.analysis.decline import (
     DAYS_PER_YEAR,
     arps_rate,
+    calibrated_band,
     fit_decline,
     forecast,
+    hindcast_errors,
     producing_day_rate,
 )
 
@@ -154,3 +156,23 @@ def test_a_short_window_still_gets_a_band_and_a_warning() -> None:
     assert fc.cumulative["p10"] > fc.cumulative["p50"] > fc.cumulative["p90"]
     assert any("short window" in w for w in fc.warnings)
     assert forecast(fit_decline(synthetic_daily()).best, 365).warnings == []
+
+
+def test_hindcast_errors_use_only_what_had_happened_by_the_cutoff() -> None:
+    """On a clean exponential well, forecasts made the same way from earlier dates err
+    little, and none of them looks past the cutoff."""
+    daily = synthetic_daily(b=0.0, days=1500, noise=0.02)
+    cutoff = pd.Timestamp("2013-03-31")
+
+    errors = hindcast_errors(daily, cutoff, window_days=365, horizon_days=365)
+    later = hindcast_errors(daily, cutoff + pd.Timedelta(days=180), 365, 365)
+
+    assert len(errors) >= 5 and max(abs(e) for e in errors) < 0.1
+    assert len(later) > len(errors)  # later cutoffs have more finished forecast years
+    band = calibrated_band(1000.0, errors)
+    assert band["p90"] < 1000.0 * 1.1 and band["p10"] > 1000.0 * 0.9
+    assert band["p90"] <= band["p10"]
+
+
+def test_no_calibrated_band_from_too_few_forecasts() -> None:
+    assert calibrated_band(1000.0, [0.1, -0.2]) is None

@@ -61,7 +61,9 @@ for a poor decline fit, refit on a window that starts after the last regime chan
 reading a change as reservoir behaviour, rule out data and operations (events show shut-ins, \
 gauge failures and regime changes). Volve is a waterflood: when water cut rises, check with \
 waterflood whether liquid held while the choke opened (water taking the well's capacity) and \
-how much oil the WOR trend leaves before the economic water cut.
+how much oil the WOR trend leaves before the economic water cut. For a forecast's \
+uncertainty, report the calibrated band (calibrated_band_sm3, from the errors of earlier \
+forecasts made the same way), not the bootstrap band, which only shows the fit's scatter.
 - Compute every derived number (ratios, differences, percent changes) with the calculate \
 tool, so it has evidence too. A share needs no calculation to be written as a percent: \
 declare 51.3% with the evidence's value 0.513. Call tools that do not depend on each other \

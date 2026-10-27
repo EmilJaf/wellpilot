@@ -408,6 +408,8 @@ type FitResult = {
   best?: Record<string, number | string>
   fit?: Record<string, number | string>
   cumulative_oil_sm3?: Record<string, number>
+  calibrated_band_sm3?: { p90: number; p10: number; past_forecasts: number; median_abs_error: number } | null
+  calibrated_band_note?: string
   monthly_rate_sm3_per_producing_day?: Table
 }
 
@@ -442,11 +444,30 @@ function Fit({ result }: { result: FitResult }) {
         </tbody>
       </table>
       {result.cumulative_oil_sm3 && (
-        <p>
-          Forecast cumulative oil, Sm³: low (P90) {result.cumulative_oil_sm3.p90}, mid (P50){' '}
-          {result.cumulative_oil_sm3.p50}, high (P10) {result.cumulative_oil_sm3.p10}
-        </p>
+        <dl className="forecast-bands">
+          <div>
+            <dt>Forecast, P50</dt>
+            <dd className={hit(result.cumulative_oil_sm3.p50) ? 'hit' : undefined}>
+              {result.cumulative_oil_sm3.p50.toLocaleString('en')} Sm³
+            </dd>
+          </div>
+          {result.calibrated_band_sm3 && (
+            <div className="is-honest">
+              <dt>Range from past errors (P90 to P10)</dt>
+              <dd>
+                {result.calibrated_band_sm3.p90.toLocaleString('en')} to {result.calibrated_band_sm3.p10.toLocaleString('en')}
+              </dd>
+            </div>
+          )}
+          <div>
+            <dt>Range of the fit&rsquo;s scatter (bootstrap)</dt>
+            <dd>
+              {result.cumulative_oil_sm3.p90.toLocaleString('en')} to {result.cumulative_oil_sm3.p10.toLocaleString('en')}
+            </dd>
+          </div>
+        </dl>
       )}
+      {result.calibrated_band_note && <p className="evidence-sub">{result.calibrated_band_note}</p>}
       {result.monthly_rate_sm3_per_producing_day && <DataTable table={result.monthly_rate_sm3_per_producing_day} />}
     </>
   )

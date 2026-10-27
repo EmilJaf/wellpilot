@@ -33,7 +33,13 @@ import pandas as pd
 
 from wellpilot.agent.loop import run_agent
 from wellpilot.agent.tools import fit_warnings, to_jsonable
-from wellpilot.analysis.decline import fit_decline, forecast, producing_day_rate
+from wellpilot.analysis.decline import (
+    calibrated_band,
+    fit_decline,
+    forecast,
+    hindcast_errors,
+    producing_day_rate,
+)
 from wellpilot.config import get_settings
 from wellpilot.data.store import ProductionStore
 
@@ -91,6 +97,10 @@ def _decline_row(
     history = daily[daily["date"] <= case.cutoff]
     fit = fit_decline(history, start=start, end=end, model=model).best
     fc = forecast(fit, HORIZON_DAYS, n_boot=100, start=case.cutoff + pd.Timedelta(days=1))
+    # The band forecast_production reports: errors of the same method from earlier dates.
+    window = (pd.Timestamp(end or case.cutoff) - pd.Timestamp(start)).days if start else None
+    errors = hindcast_errors(daily, case.cutoff, window, HORIZON_DAYS, model)
+    band = calibrated_band(fc.cumulative["p50"], errors)
     return {
         "well": case.well,
         "cutoff": case.cutoff,
@@ -101,6 +111,7 @@ def _decline_row(
         "p10": fc.cumulative["p10"],
         "actual": case.actual_sm3,
         "warned": bool(fit_warnings(fit)),
+        "in_hindcast_band": (band["p90"] <= case.actual_sm3 <= band["p10"]) if band else None,
     }
 
 
@@ -226,11 +237,14 @@ def summarize(results: pd.DataFrame) -> dict:
     summary = {}
     for method, rows in results.groupby("method"):
         abs_error = rows["error"].abs()
+        hindcast = rows.get("in_hindcast_band", pd.Series(dtype=object)).dropna().astype(bool)
         summary[method] = {
             "cases": len(rows),
             "median_abs_error": float(abs_error.median()),
             "mean_abs_error": float(abs_error.mean()),
             "misses_over_50pct": int((abs_error > 0.5).sum()),
+            "hindcast_band_cases": len(hindcast),
+            "hindcast_band_coverage": float(hindcast.mean()) if len(hindcast) else None,
             "median_bias": float(rows["error"].median()),
             "bootstrap_band_coverage": float(rows["in_bootstrap_band"].mean()),
             "calibrated_band_cases": int(rows["in_calibrated_band"].notna().sum()),

@@ -253,3 +253,61 @@ def forecast(
         },
         warnings=warnings,
     )
+
+
+def p50_volume(fit: DeclineFit, start: pd.Timestamp, horizon_days: int) -> float:
+    """The P50 cumulative volume over horizon_days from `start`: rate x the window's uptime."""
+    dates = pd.date_range(start, periods=horizon_days, freq="D")
+    rate = arps_rate((dates - fit.t0).days.to_numpy().astype(float), fit.qi, fit.di_per_day, fit.b)
+    return float(rate.sum() * fit.uptime)
+
+
+def hindcast_errors(
+    daily: pd.DataFrame,
+    as_of: pd.Timestamp,
+    window_days: int | None,
+    horizon_days: int = 365,
+    model: Model | Literal["auto"] = "auto",
+    step_days: int = 91,
+) -> list[float]:
+    """Relative errors (forecast / actual - 1) of forecasts made the same way from earlier
+    dates: every step_days, a fit on the same window length (or the whole history) ending at
+    that date, forecasting horizon_days that had all happened by as_of. Only data up to
+    as_of is used, so the errors are ones a forecaster could have known then."""
+    prod = daily[daily["date"] <= as_of]
+    oil = prod[prod["oil_sm3"] > 0]
+    if oil.empty:
+        return []
+    first = oil["date"].min()
+    origin = first + pd.Timedelta(days=max(window_days or 0, 180))
+    last_origin = as_of - pd.Timedelta(days=horizon_days)
+    errors = []
+    while origin <= last_origin:
+        history = prod[prod["date"] <= origin]
+        start = origin - pd.Timedelta(days=window_days) if window_days else None
+        try:
+            fit = fit_decline(history, start=start, model=model).best
+        except (ValueError, RuntimeError):
+            origin += pd.Timedelta(days=step_days)
+            continue
+        horizon_end = origin + pd.Timedelta(days=horizon_days)
+        ahead = prod[(prod["date"] > origin) & (prod["date"] <= horizon_end)]
+        actual = float(ahead["oil_sm3"].sum())
+        if actual > 0:
+            errors.append(p50_volume(fit, origin + pd.Timedelta(days=1), horizon_days) / actual - 1)
+        origin += pd.Timedelta(days=step_days)
+    return errors
+
+
+def calibrated_band(p50: float, errors: list[float], min_errors: int = 5) -> dict | None:
+    """An 80% band from past errors: if forecasts like this one erred by e (forecast /
+    actual - 1), the actual lies at p50 / (1 + e); the 10% and 90% error quantiles bound it."""
+    if len(errors) < min_errors:
+        return None
+    q10, q90 = np.quantile(errors, [0.1, 0.9])
+    return {
+        "p90": p50 / (1 + q90),  # low case
+        "p10": p50 / (1 + q10),  # high case
+        "past_forecasts": len(errors),
+        "median_abs_error": float(np.median(np.abs(errors))),
+    }

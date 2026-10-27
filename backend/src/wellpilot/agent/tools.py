@@ -28,7 +28,14 @@ from wellpilot.analysis.anomalies import (
     shut_ins,
     threshold_crossing,
 )
-from wellpilot.analysis.decline import B_BOUNDS, DeclineFit, fit_decline, forecast
+from wellpilot.analysis.decline import (
+    B_BOUNDS,
+    DeclineFit,
+    calibrated_band,
+    fit_decline,
+    forecast,
+    hindcast_errors,
+)
 from wellpilot.analysis.screen import screen
 from wellpilot.analysis.waterflood import waterflood
 from wellpilot.data.store import ProductionStore, QueryError
@@ -313,6 +320,15 @@ def forecast_tool(store: ProductionStore, args: ForecastArgs) -> dict:
     # fit used: from the day after the as-of date, or after the well's last day of data.
     last = pd.Timestamp(store.as_of) if store.as_of else store.well_daily(args.well)["date"].max()
     fc = forecast(fit, args.horizon_days, start=last + pd.Timedelta(days=1))
+    # The bootstrap band shows the fit's scatter, not how wrong such forecasts turn out: an
+    # 80% band from the errors of forecasts made the same way from earlier dates.
+    window = (
+        (pd.Timestamp(args.end or last) - pd.Timestamp(args.start)).days if args.start else None
+    )
+    errors = hindcast_errors(
+        _production(store, args.well), last, window, args.horizon_days, args.model
+    )
+    calibrated = calibrated_band(fc.cumulative["p50"], errors)
     monthly = (
         pd.DataFrame({"p90": fc.p90, "p50": fc.p50, "p10": fc.p10}, index=fc.dates)
         .resample("MS")
@@ -327,6 +343,15 @@ def forecast_tool(store: ProductionStore, args: ForecastArgs) -> dict:
             "forecast_to": fc.dates[-1],
             "horizon_days": args.horizon_days,
             "cumulative_oil_sm3": fc.cumulative,
+            "calibrated_band_sm3": calibrated,
+            "calibrated_band_note": (
+                f"P90-P10 from the errors of {calibrated['past_forecasts']} forecasts made the "
+                "same way from earlier dates on data up to then; use it for confidence, the "
+                "bootstrap band above only reflects the fit's scatter."
+                if calibrated
+                else f"only {len(errors)} earlier forecasts to calibrate on (5 needed): no "
+                "calibrated band; the bootstrap band understates the uncertainty."
+            ),
             "monthly_rate_sm3_per_producing_day": table(monthly.rename_axis("month").reset_index()),
             "note": "P90 = low case, P10 = high case. Volumes = rate x historical uptime.",
         }

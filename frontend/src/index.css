@@ -2232,3 +2232,33 @@ code,
 .strip-key-water {
   background: var(--water);
 }
+
+.forecast-bands {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0 8px;
+}
+
+.forecast-bands div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 10px;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.forecast-bands dt {
+  color: var(--ink-2);
+}
+
+.forecast-bands dd {
+  margin: 0;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.forecast-bands .is-honest {
+  border-color: var(--ink);
+}

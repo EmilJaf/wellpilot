@@ -142,6 +142,8 @@ export type MethodSummary = {
   median_bias: number
   misses_over_50pct?: number
   bootstrap_band_coverage?: number
+  hindcast_band_coverage?: number | null
+  hindcast_band_cases?: number
 }
 
 /** The backtest: 12-month oil forecasts made at past dates, against what the wells then produced. */
