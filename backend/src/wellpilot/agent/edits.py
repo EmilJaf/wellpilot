@@ -45,8 +45,9 @@ def redeclare(
     """The declarations of `text` carried to `edited`: a number left alone keeps its
     declaration; one the edit replaced is declared anew as written, with the same evidence
     id, so the checker looks for the reader's number in the agent's source; one the edit
-    removed, or turned into several, is dropped. Numbers typed elsewhere stay undeclared, and
-    the checker says so. None (numbers read from the text) stays None."""
+    removed, or turned into several, is dropped; one the text never wrote is kept. Numbers
+    typed elsewhere stay undeclared, and the checker says so. None (numbers read from the
+    text) stays None."""
     if numbers is None:
         return None
     unused = list(numbers)
@@ -82,7 +83,10 @@ def redeclare(
         carried.append(
             DeclaredNumber(text=new_text, value=reading[0], evidence_id=declared.evidence_id)
         )
-    return carried
+    # Declarations written nowhere in the text stay as they were: the checker reads them as
+    # another form of a number ("100%" covers a "1.0" written later), so an unedited claim
+    # keeps its verdict.
+    return carried + unused
 
 
 def check_edits(

@@ -603,7 +603,7 @@ def _mask(text: str) -> str:
 
 # A number the text ties to a month or day: "0.85 in 2009-06", "1 146 Sm3/d on 2010-07-18".
 TIED = (
-    r"(?:\s*(?:[^\W\d]+/?[^\W\d]*|%)){0,3}?"  # a unit or two ("Sm3/d", "%"); no comma
+    r"(?:\s*(?:[^\W\d]+\d?(?:/[^\W\d]+)?|%)){0,3}?"  # a unit or two ("Sm3/d", "%"); no comma
     r"\s+(?:in|on|at|during|by|for)\s+(\d{4}-\d{2}(?:-\d{2})?)\b"
     r"(?!\s*(?:to|until|through|and|-|–)\s*\d{4})"  # a range of dates is no one row
 )
@@ -678,6 +678,7 @@ class _Leaf:
     well: str | None  # the well that part of the result is about; None: field-wide or unknown
     record: int | None  # the record it belongs to: an event, a table row, an item of a list
     record_days: frozenset[str]  # the dates that name its record: start, end, since, ...
+    unit: str | None = None  # the suffix a text wrote after it ("%" in "-22%")
 
 
 # String fields that say what a record measures ("signal": "water_cut"): they label its values.
@@ -706,8 +707,8 @@ def _leaves(item: Evidence) -> list[_Leaf]:
                 found.append(_Leaf(float(value), None, label, well, record, days))
         elif isinstance(value, str) and value not in typed_strings:
             for european in (False, True):
-                for number, _, _ in _numbers_in_text(value, european, signed=True):
-                    found.append(_Leaf(number, None, label, well, record, days))
+                for number, _, suffix in _numbers_in_text(value, european, signed=True):
+                    found.append(_Leaf(number, None, label, well, record, days, suffix))
             for day in DATE.findall(normalize_dates(value)):
                 found.append(_Leaf(None, day, label, well, record, days))
 
@@ -773,6 +774,8 @@ RISE_BEFORE = re.compile(
     r"(?:\s+by)?(?:\s+(?:about|around|some|nearly|almost))?\s*[~≈]?\s*$",
     re.IGNORECASE,
 )
+# A number written as a duration: "21 months after first oil", "81 days".
+DURATION_AFTER = re.compile(r"\s*(?:days?|weeks?|months?|years?|hours?)\b", re.IGNORECASE)
 RISE_AFTER = re.compile(r"^\s*(?:%|percent)?\s*(?:increase|rise|jump|gain)\b", re.IGNORECASE)
 # A number tied to the date of one record (an event, an issue): "55% on 2010-05-02",
 # "81 days since 2010-10-12". As TIED, with "around" and "since".
@@ -870,6 +873,8 @@ def _attribution(
             ]
             if not any(re.search(pattern, lf.labels) for lf in held) and other:
                 return f"is named {quantity}, but in {item.id} it is the {other[0]}"
+        if DURATION_AFTER.match(blanked[end:]) and all(lf.unit == "%" for lf in held):
+            return f"is written as a duration, but {item.id} has it only as a percentage"
         rise = (
             RISE_BEFORE.search(blanked[max(0, start - 40) : start])
             or RISE_AFTER.match(blanked[end:])
@@ -920,6 +925,7 @@ def _date_attribution(
         if day in free_dates:
             continue
         named = _named(text, match.start())
+        field = _names_field(text, match.start())
         held = [
             lf
             for item in cited
@@ -929,6 +935,65 @@ def _date_attribution(
         wells = {lf.well for lf in held}
         if named and held and None not in wells and not {_well_key(w) for w in wells} & named:
             wrong.append(f"{day} (evidence has it only for {', '.join(sorted(wells))})")
+        elif field and held and None not in wells:
+            wrong.append(
+                f"{day} (evidence has it only for {', '.join(sorted(wells))}, not the field)"
+            )
+    return list(dict.fromkeys(wrong))
+
+
+# The whole field as a sentence's subject: "the field", "field totals", "the field's". Not
+# "field-wide", which describes a well's shut-in.
+FIELD_OWNER = re.compile(
+    r"\b(?:the|whole|entire)\s+field\b(?![-\s]wide)|\bfield(?:'s|\s+totals?)\b", re.IGNORECASE
+)
+
+
+def _names_field(text: str, start: int) -> bool:
+    """Is the part of the sentence holding `start` about the field, with no well named in
+    it ("The field ... first went above 0.80 on <date>")?"""
+    bounds = [0, *(m.end() for m in CLAUSE.finditer(text)), len(text)]
+    begin = max(b for b in bounds if b <= start)
+    end = min((b for b in bounds if b > start), default=len(text))
+    part = text[begin:end]
+    return bool(FIELD_OWNER.search(part)) and not WELL.search(part)
+
+
+# Words that name the event a date is given to, and how a tool result labels that event's
+# records: "gauge dead since <date>", "shut in from <date>", "stepped down on <date>".
+EVENT_DATES = {
+    "gauge failure": (r"\bgauges?\b|\bsensors?\b", r"gauge|bhp"),
+    "shut-in": (r"\bshut[\s-]?in\b|\bshut down\b|\bshutdown\b", r"shut"),
+    "step in rate": (r"\bstep(?:ped)?[\s-]down\b|\bregime change\b", r"regime|step"),
+}
+EVENT_REACH = re.compile(
+    r"^(?:[\s,]*[^\W\d][\w'-]*){0,4}?\s*(?:since|from|on|at|around|in)\s*$", re.IGNORECASE
+)
+
+
+def _date_events(text: str, cited: list[Evidence], leaves_of) -> list[str]:
+    """Dates given to an event that, in the evidence, date another: "gauge dead since
+    2010-08-16" when 2010-08-16 starts a shut-in and the gauge failure starts on 2010-10-12.
+    Judged only where the date names records and some record of that event is cited."""
+    leaves = [lf for item in cited for lf in leaves_of(item)]
+    wrong = []
+    for match in DATE.finditer(text):
+        day = match.group(1)
+        before = text[max(0, match.start() - 60) : match.start()]
+        for event, (words, labels) in EVENT_DATES.items():
+            named = None
+            for m in re.finditer(words, before, re.IGNORECASE):
+                named = m
+            if named is None or not EVENT_REACH.match(before[named.end() :]):
+                continue
+            dated = {lf.record for lf in leaves if lf.record is not None and day in lf.record_days}
+            of_event = {
+                lf.record for lf in leaves if lf.record is not None and re.search(labels, lf.labels)
+            }
+            if dated and of_event and not dated & of_event:
+                wrong.append(
+                    f"{day} is given as the {event}'s date, but no {event} in its evidence has it"
+                )
     return list(dict.fromkeys(wrong))
 
 
@@ -1326,10 +1391,23 @@ def _three_digits(v: float, decimals: int) -> str:
     return f"{round(v, 3 - len(str(round(v)))):,.0f}"
 
 
+# A claim a reader takes in at once holds a few numbers; the rest go to its detail.
+MAX_CLAIM_NUMBERS = 4
+YEAR = re.compile(r"\b(?:19|20)\d{2}\b")
+
+
+def claim_numbers(claim: str) -> list[str]:
+    """The numbers a reader meets in a claim: not its dates, years, well names, windows or
+    quotes."""
+    outside = QUOTED.sub(" ", _translations_outside(claim))
+    return WRITTEN_NUMBER.findall(YEAR.sub(" ", _mask(outside)))
+
+
 def readability(submission: Submission) -> list[str]:
     """Claims and a summary a reader takes in at a glance: numbers rounded to three
-    significant digits, no forecaster's or fit labels. Exact values and labels belong in a
-    finding's detail. Numbers inside quotes are the document's and stay as written."""
+    significant digits, no forecaster's or fit labels, at most MAX_CLAIM_NUMBERS numbers in
+    a claim. Exact values, labels and the other numbers belong in a finding's detail.
+    Numbers inside quotes are the document's and stay as written."""
     parts = [
         (f"Finding {n}", "claim", f.claim, f.numbers or [])
         for n, f in enumerate(submission.findings, start=1)
@@ -1348,6 +1426,12 @@ def readability(submission: Submission) -> list[str]:
                 f"{label}: round {', '.join(dict.fromkeys(long))} in the {where} to three "
                 f"significant digits{detail}; a reader takes in three. Declare the rounded "
                 "text with the same value and evidence id."
+            )
+        if where == "claim" and (count := len(claim_numbers(text))) > MAX_CLAIM_NUMBERS:
+            problems.append(
+                f"{label}: the claim holds {count} numbers; keep the two or three that make "
+                "the point and move the others to its detail, where numbers are looked up in "
+                "the evidence, not declared."
             )
         if jargon := sorted({m.group(0) for m in READER_JARGON.finditer(outside)}):
             plain = []
@@ -1435,6 +1519,8 @@ def check_submission(submission: Submission, log: EvidenceLog, question: str = "
                 f"Finding {n} gives the well its sentence names date(s) {', '.join(misdated)}. "
                 "Cite evidence about that well, or name the well the date belongs to."
             )
+        elif misevent := _date_events(_normalize(finding.claim), cited, leaves_of):
+            problems.append(f"Finding {n}: {'; '.join(misevent)}. Give each event its own date.")
         missing_quotes = _missing_quotes(text, pool)
         if missing_quotes:
             listed = "; ".join(f"'{q[:80]}'" for q in missing_quotes)

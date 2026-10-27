@@ -50,3 +50,16 @@ def test_the_norwegian_convention_follows_the_original() -> None:
 
 def test_legacy_answers_keep_reading_numbers_from_the_text() -> None:
     assert redeclare(CLAIM, None, CLAIM.replace("1 551", "1 800")) is None
+
+
+def test_a_declaration_the_text_never_wrote_is_kept() -> None:
+    """Featured run e51eada95269 declared '100%' without writing it; the checker reads its
+    "near 1.0" as that value in another form. Dropping it made the unedited claim fail."""
+    numbers = [
+        DeclaredNumber(text="0.98", value=0.98, evidence_id="E4"),
+        DeclaredNumber(text="100%", value=100, evidence_id="E4"),
+    ]
+    text = "Injection kept pace with voidage near 1.0."
+
+    assert redeclare(text, numbers, text) == numbers
+    assert redeclare(text, numbers, text.replace("1.0", "1.2")) == numbers
