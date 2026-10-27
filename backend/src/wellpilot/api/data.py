@@ -26,6 +26,7 @@ from wellpilot.agent.vision import VISION_TOOL
 from wellpilot.analysis.timeline import TIMELINE_FILE
 from wellpilot.backtest import RESULTS_FILE, SUMMARY_FILE, case_detail, film
 from wellpilot.data.store import ProductionStore
+from wellpilot.ingest.figure import CURVE_FILE, OVERLAY_FILE
 from wellpilot.ingest.reports import REPORTS_BY_ID, page_dir
 
 router = APIRouter(prefix="/api", tags=["data"])
@@ -63,6 +64,43 @@ def field_plan(request: Request) -> dict:
         return plan_vs_actual(_store(request), NoArgs())
     except ValueError as e:
         raise HTTPException(404, str(e)) from None
+
+
+@router.get("/field/plan-figure")
+def field_plan_figure(request: Request) -> dict:
+    """The plan's forecast curve as drawn in Figure 4.2 (PUD p.23), read off the picture
+    (by SAM 3.1, checked by colour; python -m wellpilot.ingest.figure), with the field's
+    oil rate per calendar day by month to set it against."""
+    path = request.app.state.runs.processed_dir / CURVE_FILE
+    if not path.exists():
+        raise HTTPException(
+            404, "the figure has not been read; run python -m wellpilot.ingest.figure"
+        )
+    monthly = (
+        _store(request)
+        .query(
+            "SELECT strftime(date, '%Y-%m') AS month, sum(oil_sm3) / count(DISTINCT date) AS rate "
+            "FROM production_daily GROUP BY 1 HAVING sum(oil_sm3) > 0 ORDER BY 1"
+        )
+        .rows
+    )
+    return {
+        **json.loads(path.read_text()),
+        "actual": {
+            "month": monthly["month"].tolist(),
+            "rate": [round(float(v)) for v in monthly["rate"]],
+            "how": "the field's oil per calendar day, by month",
+        },
+    }
+
+
+@router.get("/field/plan-figure/image")
+def field_plan_figure_image(request: Request) -> FileResponse:
+    """Figure 4.2 with the curve that was read drawn over it in ink."""
+    path = request.app.state.runs.processed_dir / OVERLAY_FILE
+    if not path.exists():
+        raise HTTPException(404, "the figure has not been read")
+    return FileResponse(path, media_type="image/png")
 
 
 @router.get("/field/screen")

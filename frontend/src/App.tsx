@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { api, type OperationJob, type RunSummary, type Table } from './api'
 import { AgentLog } from './components/AgentLog'
+import { PlanFigure } from './components/PlanFigure'
 import { FieldTimeline } from './components/FieldTimeline'
 import { AccuracyView } from './components/AccuracyView'
 import { DesignChart, type DesignResult } from './components/DesignChart'
@@ -500,6 +501,7 @@ export default function App() {
                       <h3 className="accuracy-title">The field against its 2005 plan</h3>
                       <PlanChart result={plan.result} />
                       {plan.result.by_production_year && <PlanByProductionYear table={plan.result.by_production_year} />}
+                      <PlanFigure />
                       {plan.design && (
                         <>
                           <h3 className="accuracy-title field-view-second">Against the limits the platform was designed for</h3>

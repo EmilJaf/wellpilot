@@ -19,6 +19,7 @@ Built for the Meta Global AI Developer Hackathon (Oct 26 - Nov 4, 2026), Indie t
 - **Drag to ask.** Drag across a span on the well chart; a chip offers "Ask what happened to F-12 between ... and ...", which fills the ask bar with the dates.
 - **See what was done to the wells.** Volve's daily drilling and well-work reports (819 of them for the seven producing wellbores) are parsed into jobs: the agent can call `well_operations`, the well charts mark each job, and the History tab replays the field screen at every month end with the work on one axis. On 2014-11-26 F-12 got a plug at 3150 m and a new zone perforated, and came back at about 840 Sm3/d of oil with a water cut of 0.22, after 176 Sm3/d at 0.97: the restart no forecast saw.
 - **A second opinion.** After the checker accepts an answer, the same model reads it as a senior reservoir engineer and questions the reasoning, which the checker does not check. The agent gets one chance to settle the points with its tools; if its revision does not pass the checker, the checked answer stands.
+- **The plan's curve, read off its picture.** The 2005 plan draws its expected oil rate only in a figure. SAM 3.1, Meta's segmentation model, finds the curve from the words "magenta line"; the axes are calibrated on the figure's gridlines, and a colour trace of the same pixels checks the reading. The Plan tab sets that curve against what the field produced: the plan drew a plateau near 8,500 Sm3/d until mid-2009, while its text says 9,000.
 - **Ask by voice.** The microphone button records up to 15 seconds; the same open-weight model transcribes it (Muse Spark Open takes audio as it takes page images) and the question lands in the ask bar for you to check before sending.
 
 ## Who it is for
@@ -107,6 +108,7 @@ The analysis tools, the agent loop, the checker and the UI work on any daily pro
 
 - **Muse Spark Open** (`meta-models/muse-spark-open-1026` on Baseten) is the agent: tool calling with parallel calls, structured submissions, and its visible reasoning streamed to the UI per step. It also reads report page images during a run (`look_at_page`, JSON-schema output).
 - **Muse Spark Open also reads every report page at ingest**, both documents, (vision plus JSON-schema output), corrected by the review rounds above. So the whole pipeline, ingest, agent and backtest, runs on the open-weight model. Muse Spark on the Meta Model API is a drop-in alternative: the same OpenAI-compatible client serves both providers and `LLM_PROVIDER` switches them.
+- **SAM 3.1** (Meta Model API) reads the plan's forecast curve off Figure 4.2: one segmentation call with a text prompt, its mask decoded with Meta's `meta-sam-parser` (`backend/src/wellpilot/ingest/figure.py`). Muse Spark Open also takes the engineer's question by voice (`/api/transcribe`), and on each accepted answer gives a second opinion on the reasoning.
 - Why open weights matter here: production data and well reports are an operator's most guarded data. An open-weight model can run on the operator's own hardware with this same code.
 
 ## Built during the hackathon
@@ -186,4 +188,4 @@ Public limits (settings in `backend/src/wellpilot/config.py`, overridable with F
 
 ## License
 
-Code: [MIT](LICENSE). Volve data: the Equinor Open Data Licence, see [Data](#data).
+Code: [MIT](LICENSE). Volve data: the Equinor Open Data Licence, see [Data](#data). The `meta-sam-parser` dependency is Meta's, under the SAM License; its text ships with the package (`meta_sam_parser-*.dist-info/licenses/LICENSE`) and so inside the Docker image.

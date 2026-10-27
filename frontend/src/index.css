@@ -1692,6 +1692,48 @@ code,
   border: 1px solid var(--rule);
 }
 
+/* ---------- the plan's drawn forecast, read off its figure ---------- */
+.plan-figure svg {
+  display: block;
+  overflow: visible;
+}
+
+.plan-figure-plan {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2;
+  stroke-dasharray: 6 4;
+}
+
+.plan-figure-actual {
+  fill: none;
+  stroke: var(--oil);
+  stroke-width: 1.75;
+  stroke-linejoin: round;
+}
+
+.case-key.plan-figure-key-plan {
+  border-top: 2px dashed var(--ink);
+}
+
+.plan-figure-source {
+  margin-top: 8px;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.plan-figure-source summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.plan-figure-source img {
+  display: block;
+  max-width: 100%;
+  margin-top: 6px;
+  border: 1px solid var(--rule);
+}
+
 /* ---------- the field's history: the screen replayed month by month ---------- */
 .timeline {
   padding: 14px 18px 24px;

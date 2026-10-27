@@ -143,6 +143,8 @@ export const api = {
   daily: (well: string, end?: string | null) =>
     fetch(`/api/wells/${encodeURIComponent(well)}/daily${end ? `?end=${end}` : ''}`).then((r) => json<Table>(r)),
   timeline: () => fetch('/api/field/timeline').then((r) => json<Timeline>(r)),
+  planFigure: () => fetch('/api/field/plan-figure').then((r) => json<PlanFigure>(r)),
+  planFigureImageUrl: () => '/api/field/plan-figure/image',
   // The well's daily-report jobs; with `end`, only those done by then.
   operations: (well: string, end?: string | null) =>
     fetch(`/api/wells/${encodeURIComponent(well)}/operations${end ? `?end=${end}` : ''}`).then((r) => json<Operations>(r)),
@@ -184,6 +186,18 @@ export type OperationJob = {
 }
 
 export type Operations = { well: string; jobs: OperationJob[] }
+
+/** The plan's forecast curve read off its Figure 4.2, with the field's monthly oil rate. */
+export type PlanFigure = {
+  read_by: string
+  prompt?: string
+  objects_found?: number
+  confidence?: number | null
+  calibration: { gridlines: number; rate_axis_sm3_per_day: [number, number]; year_axis: [number, number] }
+  curve: { month: string[]; rate: number[] }
+  agreement_with_colour?: { columns: number; median_sm3_per_day: number; p90_sm3_per_day: number; within_200: number }
+  actual: { month: string[]; rate: number[] }
+}
 
 /** The field screen replayed month by month, with each producer's rate and its wells' work. */
 export type Timeline = {
