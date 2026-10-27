@@ -18,6 +18,7 @@ still true. Those are the ones to read.
 import argparse
 import asyncio
 import json
+import sys
 from collections import Counter
 from datetime import UTC, datetime
 from pathlib import Path
@@ -156,7 +157,11 @@ async def attack_run(
     for index in findings or range(1, len(result["findings"]) + 1):
         finding = result["findings"][index - 1]
         cited = [evidence[i] for i in finding["evidence_ids"] if i in evidence]
-        attacks, used = await attack(llm, record["question"], finding, cited, per_finding)
+        try:
+            attacks, used = await attack(llm, record["question"], finding, cited, per_finding)
+        except Exception as e:  # one finding the model could not attack; go on with the rest
+            print(f"  finding {index}: no attempts ({type(e).__name__})", file=sys.stderr)
+            continue
         tokens += used
         out.extend(judge(record["question"], result, evidence, index, attacks))
     return out, tokens
@@ -195,27 +200,42 @@ def main() -> None:
     if not runs:
         raise SystemExit("name runs, or set FEATURED_RUNS")
     llm = make_llm(settings)
-    attempts: list[dict] = []
-    tokens = 0
-    for run_id in runs:
-        path = settings.runs_dir / f"{run_id}.json"
-        record = json.loads((path if path.exists() else FROZEN_RUNS / path.name).read_text())
-        found, used = asyncio.run(attack_run(llm, record, args.per_finding))
-        tokens += used
-        attempts.extend({"run": run_id, **a} for a in found)
-        print(f"{run_id}: {sum(a['caught'] for a in found)} of {len(found)} caught")
-    report = {
-        "at": datetime.now(UTC).isoformat(timespec="seconds"),
-        "model": llm.model,
-        "tokens": tokens,
-        "summary": summarize(attempts),
-        "attempts": attempts,
-    }
+    at = datetime.now(UTC).isoformat(timespec="seconds")
     out = settings.data_dir / REPORTS_DIR
     out.mkdir(parents=True, exist_ok=True)
-    path = out / f"{report['at'].replace(':', '')}.json"
-    path.write_text(json.dumps(report, indent=1, ensure_ascii=False))
-    print(json.dumps(report["summary"], indent=1, ensure_ascii=False))
+    path = out / f"{at.replace(':', '')}.json"
+    attempts: list[dict] = []
+    tokens = 0
+
+    def save() -> None:
+        """The report so far: written after every run, so a failure keeps what was done."""
+        report = {
+            "at": at,
+            "model": llm.model,
+            "runs": runs,
+            "tokens": tokens,
+            "summary": summarize(attempts),
+            "attempts": attempts,
+        }
+        path.write_text(json.dumps(report, indent=1, ensure_ascii=False))
+
+    async def attack_all() -> None:
+        # One event loop for every call: the client's connections belong to the loop that
+        # opened them, so a second asyncio.run would find them closed.
+        nonlocal tokens
+        for run_id in runs:
+            source = settings.runs_dir / f"{run_id}.json"
+            record = json.loads(
+                (source if source.exists() else FROZEN_RUNS / source.name).read_text()
+            )
+            found, used = await attack_run(llm, record, args.per_finding)
+            tokens += used
+            attempts.extend({"run": run_id, **a} for a in found)
+            save()
+            print(f"{run_id}: {sum(a['caught'] for a in found)} of {len(found)} caught")
+
+    asyncio.run(attack_all())
+    print(json.dumps(summarize(attempts), indent=1, ensure_ascii=False))
     print(f"{tokens} tokens; report in {path}")
 
 
