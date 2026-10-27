@@ -107,6 +107,14 @@ CASES = [
         max_steps=10,
     ),
     Case(
+        "own_code_f12",
+        "Over 2011 to 2013, how closely did F-12's monthly water cut follow its choke opening? "
+        "Give the correlation and what it suggests.",
+        tools=("run_python",),
+        mentions=(r"correlat", r"choke"),
+        max_steps=10,
+    ),
+    Case(
         "unknown_well",
         "Why did well F-99 stop producing in 2013?",
         any_tools=("list_wells", "run_sql"),
