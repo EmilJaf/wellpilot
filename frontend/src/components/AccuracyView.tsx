@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api, column, type Backtest, type BacktestCase } from '../api'
 import { CheckIcon } from '../icons'
+import { SHORT, signed, volume } from '../labels'
 import { useWidth } from '../useWidth'
 
 const METHODS: { key: string; label: string }[] = [
@@ -12,19 +13,7 @@ const METHODS: { key: string; label: string }[] = [
   { key: 'classic', label: 'Decline fit, whole history' },
 ]
 
-const SHORT: Record<string, string> = {
-  agent: 'agent',
-  classic: 'classic',
-  recent_3m: 'last 3 months',
-  recent_6m: 'last 6 months',
-  recent_12m: 'last 12 months',
-  recent_24m: 'last 24 months',
-}
-
 type Case = { key: string; well: string; cutoff: string; actual: number; error: Record<string, number> }
-
-const signed = (e: number) => `${e >= 0 ? '+' : '−'}${Math.abs(Math.round(e * 100))}%`
-const volume = (sm3: number) => (sm3 >= 1e6 ? `${(sm3 / 1e6).toFixed(2)} MSm³` : `${Math.round(sm3 / 1000)}k Sm³`)
 
 /** One row per forecast (well, cutoff) with each method's error, in the backtest's order. */
 function toCases(backtest: Backtest): Case[] {
@@ -386,7 +375,7 @@ const DAY = 86_400_000
 const time = (iso: string) => Date.parse(`${iso}T00:00:00Z`)
 
 /** Oil rate per producing day on a log scale, with the cut and the two forecasts. */
-function CaseChart({ detail }: { detail: BacktestCase }) {
+export function CaseChart({ detail }: { detail: BacktestCase }) {
   const [host, width] = useWidth(520)
   const [hover, setHover] = useState<number | null>(null)
   const height = 240

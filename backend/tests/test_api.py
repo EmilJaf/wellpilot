@@ -473,3 +473,21 @@ async def test_the_built_frontend_is_served_beside_the_api(settings, tmp_path) -
     )
     assert "not for the web" not in escape.text
     assert health.json()["status"] == "ok"
+
+
+async def test_hindsight_only_for_a_run_with_an_as_of_date(settings) -> None:
+    async with client_for(create_app(settings, llm_factory=fake_llm)) as client:
+        started = await client.post("/api/runs", json={"question": "Which?", "as_of": "2010-02-15"})
+        past_id = started.json()["id"]
+        await client.get(f"/api/runs/{past_id}/events")
+        all_id, _ = await run_to_end(client)
+
+        past = await client.get(f"/api/runs/{past_id}/hindsight")
+        everything = await client.get(f"/api/runs/{all_id}/hindsight")
+
+    assert past.status_code == 200
+    body = past.json()
+    assert body["as_of"] == "2010-02-15" and body["forecasts"] == []
+    (f12,) = body["wells"]
+    assert f12["well"] == "F-12" and f12["oil_year_after_sm3"] > 0  # the days after the cut
+    assert everything.status_code == 404

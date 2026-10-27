@@ -279,6 +279,24 @@ def _curve(fit, dates: pd.DatetimeIndex) -> dict:
     }
 
 
+def weekly_rate(daily: pd.DataFrame, cut: pd.Timestamp, end: pd.Timestamp) -> dict:
+    """Weekly mean oil rate per producing day up to `end`, dated at each week's middle day,
+    never mixing days before and after the cut."""
+    rates = producing_day_rate(daily[daily["date"] <= end])
+    days = pd.DataFrame({"date": rates.index, "rate": rates.to_numpy()})
+    weekly = (
+        days.groupby(
+            [days["date"].dt.to_period("W").rename("week"), (days["date"] > cut).rename("after")]
+        )
+        .agg(date=("date", "mean"), rate=("rate", "mean"))
+        .sort_values("date")
+    )
+    return {
+        "date": [d.date().isoformat() for d in weekly["date"]],
+        "rate": [round(float(r), 1) for r in weekly["rate"]],
+    }
+
+
 def case_detail(processed_dir: Path, store: ProductionStore, well: str, cutoff: str) -> dict:
     """One case for the dashboard: the well's weekly oil rate per producing day up to the
     end of the forecast year, and each method's fit window and curves, refitted on data up
@@ -292,16 +310,6 @@ def case_detail(processed_dir: Path, store: ProductionStore, well: str, cutoff: 
     horizon_end = cut + pd.Timedelta(days=HORIZON_DAYS)
     daily = _production(store, well)
     history = daily[daily["date"] <= cut]
-    rates = producing_day_rate(daily[daily["date"] <= horizon_end])
-    days = pd.DataFrame({"date": rates.index, "rate": rates.to_numpy()})
-    # Weekly means dated at their middle day, never mixing days before and after the cut.
-    weekly = (
-        days.groupby(
-            [days["date"].dt.to_period("W").rename("week"), (days["date"] > cut).rename("after")]
-        )
-        .agg(date=("date", "mean"), rate=("rate", "mean"))
-        .sort_values("date")
-    )
     future = pd.date_range(cut + pd.Timedelta(days=1), horizon_end, freq="7D")
 
     windows: dict[str, dict] = {
@@ -349,10 +357,7 @@ def case_detail(processed_dir: Path, store: ProductionStore, well: str, cutoff: 
         "cutoff": cut.date().isoformat(),
         "horizon_end": horizon_end.date().isoformat(),
         "actual_sm3": round(float(rows["actual"].iloc[0])),
-        "rate": {
-            "date": [d.date().isoformat() for d in weekly["date"]],
-            "rate": [round(float(r), 1) for r in weekly["rate"]],
-        },
+        "rate": weekly_rate(daily, cut, horizon_end),
         "methods": methods,
         "agent": agent,
     }

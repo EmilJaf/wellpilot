@@ -18,6 +18,8 @@ type Props = {
   onSelectFinding: (index: number | null) => void
   onSelectEvidence: (id: string, focus?: Focus) => void
   onReplay: (runId: string) => void
+  revealed: boolean
+  onReveal?: () => void // a run made with data up to a past date: show what happened next
 }
 
 /**
@@ -130,7 +132,7 @@ export function Answer(props: Props) {
         ) : state.status === 'error' ? (
           <p className="empty">No answer: the run stopped. The agent log says where.</p>
         ) : (
-          <Live steps={state.steps} thinking={state.thinking} />
+          <Live steps={state.steps} thinking={state.thinking} asOf={state.asOf} />
         )}
       </div>
     </section>
@@ -180,7 +182,7 @@ function Intro({ recorded, onReplay }: { recorded: RunSummary | null; onReplay: 
 }
 
 /** While the agent works: what it is doing now, and the checker's verdicts as they come. */
-function Live({ steps, thinking }: { steps: StepEvent[]; thinking: number | null }) {
+function Live({ steps, thinking, asOf }: { steps: StepEvent[]; thinking: number | null; asOf: string | null }) {
   const calls = steps.flatMap((s) => s.tool_calls)
   const results = calls.filter((c) => c.evidence_id).length
   const submissions = calls.filter((c) => c.name === 'submit_findings')
@@ -192,6 +194,7 @@ function Live({ steps, thinking }: { steps: StepEvent[]; thinking: number | null
         <span className="pulse" aria-hidden />
         {thinking !== null ? `Step ${thinking}: the model is deciding what to do next` : 'Starting the run'}
       </p>
+      {asOf && <p className="live-last">The agent sees the data up to {asOf} only, as if it were that day.</p>}
       {latest && (
         <p className="live-last">
           Last tool run: <strong>{toolName(latest.name)}</strong>
@@ -220,7 +223,7 @@ function Live({ steps, thinking }: { steps: StepEvent[]; thinking: number | null
   )
 }
 
-function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSelectEvidence }: Props) {
+function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSelectEvidence, revealed, onReveal }: Props) {
   const final = state.final!
   const tools = Object.fromEntries(final.evidence.map((e) => [e.id, e.tool]))
   const isReport = (id: string) => tools[id] === 'search_reports' || tools[id] === 'read_report_page'
@@ -280,6 +283,19 @@ function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSe
           {rounds.length > 0 && sentBack.length > 0 && history}
         </details>
       </div>
+
+      {state.asOf && (
+        <div className="past">
+          <p>
+            <strong>Answered as of {state.asOf}.</strong> The agent saw no data after that day.
+          </p>
+          {onReveal && (
+            <button type="button" className={revealed ? 'link-button' : 'primary-button'} onClick={onReveal}>
+              Show what happened next
+            </button>
+          )}
+        </div>
+      )}
 
       {final.summary && (
         <section className="conclusion" aria-label="Conclusion">

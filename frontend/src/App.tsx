@@ -4,6 +4,7 @@ import { AgentLog } from './components/AgentLog'
 import { AccuracyView } from './components/AccuracyView'
 import { DesignChart, type DesignResult } from './components/DesignChart'
 import { FieldScreen } from './components/FieldScreen'
+import { HindsightView } from './components/Hindsight'
 import { Answer, type Focus } from './components/Answer'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { EvidenceView } from './components/EvidenceView'
@@ -12,12 +13,17 @@ import { type Marker, WellCharts } from './components/WellCharts'
 import { datesIn } from './labels'
 import { useRun } from './useRun'
 
-// Short labels in the ask bar; a click puts the full question in the box.
+// Short labels in the ask bar; a click puts the full question in the box, and the date the
+// agent's data stops at (none: all of it).
 const EXAMPLES = [
-  { label: 'F-12 decline vs the 2005 plan', question: 'Why did well F-12 decline faster after 2010? Compare with the 2005 development plan.' },
-  { label: "F-12's missing pressure: reservoir or sensor?", question: "Is F-12's missing downhole pressure after October 2010 a reservoir problem or a sensor problem?" },
-  { label: 'F-12 after the 2014 shutdown', question: "Why did F-12's oil rate jump after the December 2014 shutdown?" },
-  { label: 'Forecast F-14 from 2013', question: 'Forecast F-14 oil production for the next 12 months and say how confident the forecast is.' },
+  {
+    label: 'Back to the end of 2010',
+    question: 'Which wells need attention right now, and why? Forecast the next 12 months of oil for the well that needs it most.',
+    asOf: '2010-12-31',
+  },
+  { label: 'F-12 decline vs the 2005 plan', question: 'Why did well F-12 decline faster after 2010? Compare with the 2005 development plan.', asOf: '' },
+  { label: "F-12's missing pressure: reservoir or sensor?", question: "Is F-12's missing downhole pressure after October 2010 a reservoir problem or a sensor problem?", asOf: '' },
+  { label: 'Forecast F-14 from 2013', question: 'Forecast F-14 oil production for the next 12 months and say how confident the forecast is.', asOf: '2013-01-01' },
 ]
 
 type EventRow = { kind: string; signal: string; start: string; end: string | null; details: Record<string, unknown> }
@@ -41,7 +47,7 @@ function toMarkers(events: EventRow[]): Marker[] {
 export default function App() {
   const { state, ask, open } = useRun()
   const [question, setQuestion] = useState(EXAMPLES[0].question)
-  const [asOf, setAsOf] = useState('')
+  const [asOf, setAsOf] = useState(EXAMPLES[0].asOf)
   const [selectedEvidence, setSelected] = useState<string | null>(null)
   const [focus, setFocus] = useState<Focus | null>(null)
   const [evidenceAttempt, setEvidenceAttempt] = useState(0)
@@ -49,7 +55,7 @@ export default function App() {
   // The data column shows one well's daily data, the field against its 2005 plan, or how
   // close past forecasts came.
   // A first visit opens on the field screen; a shared run opens on its well.
-  const [view, setView] = useState<'screen' | 'well' | 'plan' | 'accuracy'>(() =>
+  const [view, setView] = useState<'screen' | 'well' | 'plan' | 'accuracy' | 'hindsight'>(() =>
     new URLSearchParams(window.location.search).get('run') ? 'well' : 'screen',
   )
   // The reader can fold the charts away to give the evidence the whole column.
@@ -81,6 +87,27 @@ export default function App() {
   }, [view, plan])
 
   const running = state.status === 'starting' || state.status === 'running'
+  // The time machine: the date the agent's data stops at (the open run's, or the one in the
+  // box before a run). Its data after that stays hidden until the reader asks to see it.
+  const pastDate = state.id ? state.asOf : asOf || null
+  const [revealed, setRevealed] = useState(false)
+  const canReveal = Boolean(state.id && state.asOf && state.final)
+  const reveal = () => {
+    setRevealed(true)
+    setSelected(null)
+    setView('hindsight')
+    // On a narrow screen the data panel sits below the answer: bring it into view.
+    if (window.innerWidth < 1100) {
+      requestAnimationFrame(() => evidencePanel.current?.scrollIntoView({ block: 'start', behavior: 'smooth' }))
+    }
+  }
+  // An opened run's question and date go in the ask bar, so the bar never shows another day.
+  const [inBar, setInBar] = useState<string | null>(null)
+  if (state.id && state.question && state.id !== inBar) {
+    setInBar(state.id)
+    setQuestion(state.question)
+    setAsOf(state.asOf ?? '')
+  }
 
   // The well the agent is working on, unless the reader picked another one.
   const agentWell = useMemo(() => {
@@ -116,14 +143,15 @@ export default function App() {
 
   useEffect(() => {
     let current = true
+    const end = pastDate && !revealed ? pastDate : null
     api
-      .daily(well)
+      .daily(well, end)
       .then((table) => current && setDaily({ well, table }))
       .catch((e: Error) => current && setDaily({ well, table: null, error: e.message }))
     return () => {
       current = false
     }
-  }, [well])
+  }, [well, pastDate, revealed])
 
   // Events the agent detected for this well become marks on the charts.
   const eventsEvidence = useMemo(() => {
@@ -154,15 +182,18 @@ export default function App() {
   // Stable arrays, so the charts redraw only when a selection or the markers change.
   const highlights = useMemo(() => (finding ? datesIn(finding.claim) : []), [finding])
   const markersKey = eventsEvidence ? `${state.id}/${eventsEvidence}` : ''
-  const chartMarkers = useMemo(
-    () => (markersKey && markers.key === markersKey ? markers.list : NO_MARKERS),
-    [markersKey, markers],
-  )
+  const chartMarkers = useMemo(() => {
+    const list = markersKey && markers.key === markersKey ? markers.list : NO_MARKERS
+    if (!(revealed && pastDate)) return list
+    return [...list, { at: pastDate, kind: 'hidden' as const, track: 'all' as const, label: `Hidden from the agent after ${pastDate}` }]
+  }, [markersKey, markers, revealed, pastDate])
 
   const reset = () => {
     setSelectedEvidence(null)
     setSelectedFinding(null)
     setPickedWell(null)
+    setRevealed(false)
+    if (view === 'hindsight') setView('screen')
   }
 
   const submit = async (event: React.FormEvent) => {
@@ -212,7 +243,16 @@ export default function App() {
           <div className="suggestions">
             <span className="suggestions-label">Try</span>
             {EXAMPLES.map((e) => (
-              <button key={e.label} type="button" className="suggestion" title={e.question} onClick={() => setQuestion(e.question)}>
+              <button
+                key={e.label}
+                type="button"
+                className="suggestion"
+                title={e.asOf ? `${e.question} (data up to ${e.asOf})` : e.question}
+                onClick={() => {
+                  setQuestion(e.question)
+                  setAsOf(e.asOf)
+                }}
+              >
                 {e.label}
               </button>
             ))}
@@ -241,6 +281,8 @@ export default function App() {
             }}
             onSelectEvidence={setSelectedEvidence}
             onReplay={replay}
+            revealed={revealed}
+            onReveal={canReveal ? reveal : undefined}
           />
         </ErrorBoundary>
 
@@ -260,6 +302,11 @@ export default function App() {
                 <button type="button" role="tab" aria-selected={view === 'accuracy'} onClick={() => setView('accuracy')}>
                   Accuracy
                 </button>
+                {canReveal && (
+                  <button type="button" role="tab" aria-selected={view === 'hindsight'} onClick={reveal}>
+                    What happened next
+                  </button>
+                )}
               </div>
               {view === 'well' && (
                 <button type="button" className="link-button charts-toggle" aria-pressed={!chartsShown} onClick={() => setChartsShown(!chartsShown)}>
@@ -292,7 +339,7 @@ export default function App() {
             <div className="evidence-scroll" ref={evidencePanel}>
               {view === 'screen' ? (
                 <FieldScreen
-                  asOf={asOf}
+                  asOf={pastDate ?? ''}
                   onOpenWell={(w) => {
                     setPickedWell(w)
                     setView('well')
@@ -300,6 +347,8 @@ export default function App() {
                 />
               ) : view === 'accuracy' ? (
                 <AccuracyView />
+              ) : view === 'hindsight' && state.id ? (
+                <HindsightView runId={state.id} />
               ) : view === 'plan' ? (
                 <div className="charts field-view">
                   {plan?.result ? (

@@ -5,7 +5,7 @@ import { column, type Table } from '../api'
 export type Marker = {
   at: string // ISO date
   until?: string // ISO date, for a band
-  kind: 'regime' | 'crossing' | 'gauge' | 'shut_in'
+  kind: 'regime' | 'crossing' | 'gauge' | 'shut_in' | 'hidden'
   track: TrackKey | 'all'
   label?: string
 }
@@ -118,6 +118,9 @@ export function WellCharts({ table, error, markers, highlights }: Props) {
         <span><i className="key-band key-shut" /> well shut in</span>
         <span><i className="key-band key-gauge" /> dead pressure gauge</span>
         <span><i className="key-rule" /> date in the selected finding</span>
+        {markers.some((m) => m.kind === 'hidden') && (
+          <span><i className="key-band key-future" /> after the agent&rsquo;s date: data it never saw</span>
+        )}
       </p>
     </div>
   )
@@ -254,7 +257,15 @@ function drawOverlay(u: uPlot, key: TrackKey, markers: Marker[], highlights: str
   for (const m of markers) {
     if (m.track !== 'all' && m.track !== key) continue
     const x0 = xAt(m.at)
-    if (m.until) {
+    if (m.kind === 'hidden') {
+      // The time machine's reveal: the days after the agent's date, which it never saw.
+      const x1 = m.until ? xAt(m.until) : left + width
+      ctx.fillStyle = css('--future-wash')
+      ctx.fillRect(x0, top, Math.max(x1 - x0, 0), height)
+      ctx.fillStyle = css('--ink')
+      ctx.fillRect(Math.round(x0), top, 2 * ratio, height)
+      if (m.label && key === 'oil') ctx.fillText(m.label, x0 + 6 * ratio, top + 4 * ratio)
+    } else if (m.until) {
       const x1 = xAt(m.until)
       const gauge = m.kind === 'gauge'
       ctx.fillStyle = css(gauge ? '--caution-wash' : '--shut-wash')

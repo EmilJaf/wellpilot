@@ -122,12 +122,15 @@ export const api = {
     fetch(`/api/runs/${runId}/evidence/${evidenceId}`).then((r) => json<Evidence>(r)),
   fieldPlan: () => fetch('/api/field/plan').then((r) => json<unknown>(r)),
   fieldDesign: () => fetch('/api/field/design').then((r) => json<unknown>(r)),
-  daily: (well: string) => fetch(`/api/wells/${encodeURIComponent(well)}/daily`).then((r) => json<Table>(r)),
+  // With `end`, only the days up to it: what an agent cut at that date could see.
+  daily: (well: string, end?: string | null) =>
+    fetch(`/api/wells/${encodeURIComponent(well)}/daily${end ? `?end=${end}` : ''}`).then((r) => json<Table>(r)),
   pageQuotes: (docId: string, page: number) =>
     fetch(`/api/reports/${docId}/pages/${page}/quotes`).then((r) => json<{ quote: string; boxes: number[][] }[]>(r)),
   pageImageUrl: (docId: string, page: number) => `/api/reports/${docId}/pages/${page}/image`,
   code: (ref: string) => fetch(`/api/code/${encodeURIComponent(ref)}`).then((r) => json<ToolCode>(r)),
   backtest: () => fetch('/api/backtest').then((r) => json<Backtest>(r)),
+  hindsight: (runId: string) => fetch(`/api/runs/${runId}/hindsight`).then((r) => json<Hindsight>(r)),
   backtestCase: (well: string, cutoff: string) =>
     fetch(`/api/backtest/cases/${encodeURIComponent(well)}/${cutoff}`).then((r) => json<BacktestCase>(r)),
 }
@@ -176,7 +179,29 @@ export type BacktestCase = {
     p50_sm3: number
     error: number
   }[]
-  agent: { question: string; verified: boolean; summary: string; inferences: string[] } | null
+  agent: { question: string; verified: boolean; summary: string | null; inferences: string[] } | null
+}
+
+/** A run made with data up to a past date, against what happened next. */
+export type Hindsight = {
+  as_of: string
+  forecasts: (BacktestCase & {
+    evidence_id: string
+    forecast_from: string
+    data_ends: string | null
+    classic_warned: boolean
+    agent_range: { p90: number; p10: number }
+    calibrated_band: { p90: number; p10: number; holds_actual: boolean } | null
+  })[]
+  wells: {
+    well: string
+    oil_year_before_sm3: number
+    oil_year_after_sm3: number
+    water_cut_at_cut: number | null
+    water_cut_year_later: number | null
+    gauge_dead_at_cut: boolean
+    gauge_back_on: string | null
+  }[]
 }
 
 /**

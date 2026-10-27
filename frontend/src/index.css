@@ -22,6 +22,7 @@
   --rule: #d3d8dc;
   --rule-strong: #b4bcc3;
   --shut-wash: #e3e6e9;
+  --future-wash: rgba(31, 38, 45, 0.07); /* the time machine: data after the agent's date */
 
   --oil: #008300;
   --water: #2a78d6;
@@ -2261,4 +2262,65 @@ code,
 
 .forecast-bands .is-honest {
   border-color: var(--ink);
+}
+
+/* The time machine: an answer made as of a past date, and the reveal of what came next. */
+.past {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  margin: 14px 0 4px;
+  padding: 10px 14px;
+  border-left: 3px solid var(--ink);
+  background: var(--panel);
+}
+
+.past p {
+  margin: 0;
+  flex: 1 1 260px;
+  color: var(--ink-2);
+}
+
+.past strong {
+  color: var(--ink);
+}
+
+.key-future {
+  background: var(--future-wash);
+  border-left: 2px solid var(--ink);
+}
+
+.hindsight-forecast + .hindsight-forecast {
+  margin-top: 28px;
+}
+
+.hindsight-verdict {
+  margin: 6px 0 8px;
+  max-width: 68ch;
+  line-height: 1.5;
+}
+
+.hindsight-band {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 10px;
+  color: var(--ink-2);
+}
+
+.hindsight-band svg {
+  flex: none;
+}
+
+.hindsight-band.is-miss {
+  color: var(--caution-ink);
+}
+
+.hindsight-wells-title {
+  margin-top: 28px;
+}
+
+.hindsight-change {
+  color: var(--ink-3);
 }

@@ -34,6 +34,7 @@ from wellpilot.agent.evidence import EvidenceLog
 from wellpilot.agent.loop import AgentRun, run_agent, with_spans
 from wellpilot.agent.tools import to_jsonable
 from wellpilot.data.store import ProductionStore
+from wellpilot.hindsight import hindsight
 from wellpilot.llm import LLM
 
 logger = logging.getLogger(__name__)
@@ -427,6 +428,27 @@ async def run_events(run_id: str, request: Request) -> EventSourceResponse:
     last = request.headers.get("last-event-id", "")
     after = int(last) if last.isascii() and last.isdigit() else -1  # "²" is a digit too
     return EventSourceResponse(_manager(request).stream(record, after))
+
+
+@router.get("/{run_id}/hindsight")
+def run_hindsight(run_id: str, request: Request) -> dict:
+    """What happened after a run's as-of date: its forecasts against the actual oil and the
+    classic fit, and every well's next year. Only once the run has ended."""
+    record = _record(request, run_id)
+    if not record.done:
+        raise HTTPException(409, "the run is still going")
+    manager = _manager(request)
+    run = {
+        "question": record.question,
+        "as_of": record.as_of.isoformat() if record.as_of else None,
+        "verified": bool((record.result or {}).get("verified")),
+        "result": record.result,
+        "evidence": record.evidence,
+    }
+    try:
+        return hindsight(run, manager.store(None), manager.store(record.as_of))
+    except ValueError as e:
+        raise HTTPException(404, str(e)) from None
 
 
 @router.get("/{run_id}/evidence/{evidence_id}")

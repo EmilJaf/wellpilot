@@ -71,3 +71,19 @@ export function sameQuote(a: string, b: string): boolean {
   const y = squash(b)
   return x.length >= 6 && y.length >= 6 && (x.includes(y) || y.includes(x))
 }
+
+/** Forecast methods by their short names, as the backtest and the time machine show them. */
+export const SHORT: Record<string, string> = {
+  agent: 'agent',
+  classic: 'classic',
+  recent_3m: 'last 3 months',
+  recent_6m: 'last 6 months',
+  recent_12m: 'last 12 months',
+  recent_24m: 'last 24 months',
+}
+
+/** A relative forecast error as a signed percent, e.g. +7% or −52%. */
+export const signed = (e: number) => `${e >= 0 ? '+' : '−'}${Math.abs(Math.round(e * 100))}%`
+
+/** An oil volume, in k Sm³ or MSm³. */
+export const volume = (sm3: number) => (sm3 >= 1e6 ? `${(sm3 / 1e6).toFixed(2)} MSm³` : `${Math.round(sm3 / 1000)}k Sm³`)
