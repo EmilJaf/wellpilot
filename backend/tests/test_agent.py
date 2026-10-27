@@ -176,6 +176,44 @@ def test_execute_reports_errors_instead_of_raising(store) -> None:
     assert "single SELECT" in execute(store, "run_sql", '{"sql": "DROP TABLE x"}')["error"]
 
 
+def test_unknown_argument_names_are_errors(store) -> None:
+    result = execute(store, "fit_decline", '{"well": "F-12", "from": "2010-01-15"}')
+
+    assert "invalid arguments" in result["error"] and "from" in result["error"]
+
+
+def test_monthly_table_counts_days_and_averages_gauges_over_flowing_days(tmp_path) -> None:
+    days = pd.date_range("2011-01-01", periods=31, freq="D")
+    flowing = np.arange(31) < 15  # 15 days on stream, then shut in
+    pd.DataFrame(
+        {
+            "date": days,
+            "well": "F-12",
+            "well_type": "OP",
+            "flow_kind": "production",
+            "on_stream_hrs": np.where(flowing, 24.0, 0.0),
+            "oil_sm3": np.where(flowing, 1000.0, 0.0),
+            "water_sm3": 0.0,
+            "gas_sm3": 0.0,
+            "water_inj_sm3": np.nan,
+            "water_cut": 0.0,
+            "bhp_bar": np.nan,
+            "whp_bar": np.where(flowing, 50.0, 90.0),  # bled up while shut in
+            "choke_pct": 50.0,
+        }
+    ).to_parquet(tmp_path / DAILY_FILE, index=False)
+    pd.DataFrame(columns=ISSUE_COLUMNS).astype({"date": "datetime64[us]"}).to_parquet(
+        tmp_path / ISSUES_FILE, index=False
+    )
+
+    result = execute(ProductionStore(tmp_path), "production_monthly", '{"well": "F-12"}')["result"]
+
+    row = dict(zip(result["columns"], result["rows"][0], strict=True))
+    assert (row["days"], row["producing_days"]) == (31, 15)
+    assert row["whp_bar"] == 50
+    assert row["oil_rate_per_producing_day"] == 1000
+
+
 def test_to_jsonable_cuts_long_text_at_a_space() -> None:
     text = "rate 1146 " * 300
 
@@ -522,3 +560,18 @@ async def test_an_empty_reply_is_sent_back_as_text_and_a_cut_off_is_explained(st
     second = completions.requests[1]["messages"]
     assert second[2] == {"role": "assistant", "content": ""}
     assert "cut off by the output limit" in second[-1]["content"]
+
+
+def test_a_fit_with_b_at_its_bound_is_warned_about(store) -> None:
+    from dataclasses import replace
+
+    from wellpilot.agent.tools import fit_warnings
+    from wellpilot.analysis.decline import B_BOUNDS, fit_decline
+
+    fit = fit_decline(store.well_daily("F-12")).best
+
+    assert not any(
+        "upper bound" in w for w in fit_warnings(replace(fit, model="hyperbolic", b=0.5))
+    )
+    stuck = replace(fit, model="hyperbolic", b=B_BOUNDS[1])
+    assert any("upper bound" in w for w in fit_warnings(stuck))

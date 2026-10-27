@@ -143,3 +143,14 @@ def test_block_bootstrap_widens_bands_for_autocorrelated_noise() -> None:
         return cum["p10"] - cum["p90"]
 
     assert width(60) > 2 * width(1)
+
+
+def test_a_short_window_still_gets_a_band_and_a_warning() -> None:
+    """A 30-day block on a 30-point window resampled nothing: P90 = P50 = P10."""
+    fit = fit_decline(synthetic_daily(days=30, b=0.0, noise=0.05), model="exponential").best
+
+    fc = forecast(fit, 365)
+
+    assert fc.cumulative["p10"] > fc.cumulative["p50"] > fc.cumulative["p90"]
+    assert any("short window" in w for w in fc.warnings)
+    assert forecast(fit_decline(synthetic_daily()).best, 365).warnings == []

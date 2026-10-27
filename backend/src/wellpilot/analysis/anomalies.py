@@ -98,8 +98,8 @@ def regime_changes(
                     "after_to": weekly.index[bounds[i + 2] - 1],
                 },
                 summary=(
-                    f"{signal} shifts around {start.date()}: weekly mean {before:.3g} -> "
-                    f"{after:.3g} ({change:+.0%})."
+                    f"{signal} shifts around {start.date()}: weekly mean {_fmt(before)} -> "
+                    f"{_fmt(after)} ({change:+.0%})."
                 ),
             )
         )
@@ -148,6 +148,11 @@ def threshold_crossing(
             f"{day.date()}, {months:.0f} months after first oil."
         ),
     )
+
+
+def _fmt(x: float) -> str:
+    """A number as an engineer writes it: 4,050 and 1,146, 0.513, never 4.05e+03."""
+    return f"{x:,.0f}" if abs(x) >= 100 else f"{x:.3g}"
 
 
 def _runs(dates: pd.Series, max_gap_days: int) -> list[tuple[pd.Timestamp, pd.Timestamp]]:
@@ -258,8 +263,8 @@ def shut_ins(daily: pd.DataFrame, min_days: int = 3, compare_days: int = 30) -> 
     window = pd.Timedelta(days=compare_days)
 
     events = []
-    # The sheet skips the odd calendar day, so a one-day hole does not end a shut-in.
-    for start, end in _runs(off, max_gap_days=2):
+    # Days the sheet left out are inserted at ingest, so any day with hours ends a run.
+    for start, end in _runs(off, max_gap_days=1):
         n_days = (end - start).days + 1
         if n_days < min_days:
             continue

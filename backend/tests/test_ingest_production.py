@@ -155,6 +155,29 @@ def test_injection_rows_are_not_flagged_for_missing_volumes() -> None:
     assert result.daily.loc[0, "water_inj_sm3"] == 5000.0
 
 
+def test_days_the_sheet_leaves_out_are_inserted_as_zero_days() -> None:
+    raw = raw_rows(
+        {"DATEPRD": pd.Timestamp("2012-01-02")},
+        {"DATEPRD": pd.Timestamp("2012-01-06")},
+    )
+
+    result = clean_daily(raw)
+
+    daily = result.daily.set_index("date")
+    inserted = daily.loc["2012-01-03":"2012-01-05"]
+    assert len(daily) == 5
+    assert (inserted["on_stream_hrs"] == 0).all() and (inserted["oil_sm3"] == 0).all()
+    assert inserted["bhp_bar"].isna().all() and inserted["water_cut"].isna().all()
+    assert (inserted["well"] == "F-12").all() and (inserted["flow_kind"] == "production").all()
+    missing = issues_for(result, "missing_day")
+    assert missing["date"].dt.strftime("%Y-%m-%d").tolist() == [
+        "2012-01-03",
+        "2012-01-04",
+        "2012-01-05",
+    ]
+    assert (missing["action"] == "inserted").all()
+
+
 def test_rejects_sheet_with_missing_columns() -> None:
     with pytest.raises(ValueError, match="BORE_OIL_VOL"):
         clean_daily(raw_rows().drop(columns=["BORE_OIL_VOL"]))
@@ -182,7 +205,11 @@ def test_real_volve_sheet() -> None:
     result = clean_daily(pd.read_excel(REAL_SOURCE, sheet_name=DAILY_SHEET))
     daily = result.daily
 
-    assert len(daily) == 15_634
+    # 15,634 sheet rows plus the 228 days it leaves out of the wells' spans.
+    assert len(daily) == 15_634 + 228
+    for _, rows in daily.groupby("well"):
+        assert len(rows) == (rows["date"].max() - rows["date"].min()).days + 1
+    assert (result.issues["issue"] == "missing_day").sum() == 228
     f12 = daily[daily["well"] == "F-12"].set_index("date")
     # Total F-12 oil is unchanged by cleaning: no F-12 oil value is negative.
     assert f12["oil_sm3"].sum() == pytest.approx(4_579_610, abs=1)

@@ -68,6 +68,15 @@ def test_regime_change_finds_a_water_cut_step() -> None:
     assert event.details["after_mean"] == pytest.approx(0.60, abs=0.01)
 
 
+def test_event_summaries_write_numbers_as_engineers_do() -> None:
+    daily = flowing_well()
+    daily.loc[400:, "oil_sm3"] *= 0.5
+
+    summary = regime_changes(daily, "oil_rate")[0].summary
+
+    assert "e+" not in summary and "," in summary  # "1,920 -> 960", not "1.92e+03"
+
+
 def test_regime_change_on_oil_rate_reports_rates_not_logs() -> None:
     daily = flowing_well()
     daily.loc[400:, "oil_sm3"] *= 0.5
@@ -143,17 +152,25 @@ def test_gauge_reading_zero_while_shut_in() -> None:
     assert "shut in" in events[0].summary
 
 
-def test_shut_in_tolerates_a_missing_row_and_compares_rates() -> None:
+def test_shut_in_counts_its_days_and_compares_rates() -> None:
     daily = flowing_well(days=200)
     daily.loc[100:109, ["on_stream_hrs", "oil_sm3"]] = 0.0
     daily.loc[110:, "oil_sm3"] *= 1.5
-    daily = daily.drop(index=105)
 
     events = shut_ins(daily, min_days=3)
 
     assert len(events) == 1
     assert events[0].details["days"] == 10
     assert events[0].details["relative_change"] == pytest.approx(0.5, abs=0.1)
+
+
+def test_a_flowing_day_ends_a_shut_in() -> None:
+    """F-14 produced 1,474 Sm3 on 2008-08-31 between two stops; they are two shut-ins."""
+    daily = flowing_well(days=200)
+    daily.loc[100:104, ["on_stream_hrs", "oil_sm3"]] = 0.0
+    daily.loc[106:110, ["on_stream_hrs", "oil_sm3"]] = 0.0
+
+    assert [e.details["days"] for e in shut_ins(daily, min_days=3)] == [5, 5]
 
 
 def test_short_stops_are_not_shut_ins() -> None:
@@ -196,6 +213,9 @@ def test_real_volve_events() -> None:
     assert wc80.start.strftime("%Y-%m") == "2012-02"
 
     marked = mark_field_wide(shut_ins(f12, min_days=7) + shut_ins(f14, min_days=7))
-    oct_2011 = [e for e in marked if e.start == pd.Timestamp("2011-10-19")]
-    assert {e.well for e in oct_2011} == {"F-12", "F-14"}
-    assert all(e.details["field_wide"] for e in oct_2011)
+    # The sheet leaves out 2011-10-16..18 and 2012-01-03..13; inserted at ingest, they are
+    # the start of the October shut-in and an 11-day platform shut-in of their own.
+    for start, days in (("2011-10-16", 20), ("2012-01-03", 11)):
+        found = [e for e in marked if e.start == pd.Timestamp(start)]
+        assert {e.well for e in found} == {"F-12", "F-14"}
+        assert all(e.details["field_wide"] and e.details["days"] == days for e in found)

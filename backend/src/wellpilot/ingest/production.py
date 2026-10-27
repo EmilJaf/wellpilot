@@ -47,6 +47,8 @@ RAW_COLUMNS = {
     "DP_CHOKE_SIZE": "dp_choke_bar",
 }
 VOLUME_COLUMNS = ("oil_sm3", "gas_sm3", "water_sm3", "water_inj_sm3")
+# Carried onto a day the sheet leaves out: who the well is and how it was flowing.
+IDENTITY_COLUMNS = ("well", "wellbore", "npd_wellbore_code", "flow_kind", "well_type")
 ISSUE_COLUMNS = ["date", "well", "field", "issue", "raw_value", "action"]
 
 
@@ -123,6 +125,8 @@ def clean_daily(raw: pd.DataFrame) -> CleanResult:
     log.keep(production & ~flowing & has_volume, "on_stream_hrs", "volume_without_uptime")
     log.keep(production & flowing & ~has_volume, "on_stream_hrs", "uptime_without_volume")
 
+    df, inserted = _fill_calendar(df)
+
     liquid = df["oil_sm3"] + df["water_sm3"]
     df["water_cut"] = (df["water_sm3"] / liquid).where(liquid > 0)
     df["gor_sm3_sm3"] = (df["gas_sm3"] / df["oil_sm3"]).where(df["oil_sm3"] > 0)
@@ -130,7 +134,48 @@ def clean_daily(raw: pd.DataFrame) -> CleanResult:
     columns = ["date", "well", *[c for c in RAW_COLUMNS.values() if c != "date"]]
     columns += ["water_cut", "gor_sm3_sm3"]
     daily = df[columns].sort_values(["well", "date"]).reset_index(drop=True)
-    return CleanResult(daily=daily, issues=log.frame())
+    issues = pd.concat([log.frame(), inserted], ignore_index=True)
+    issues["date"] = pd.to_datetime(issues["date"])  # an empty log has no dtype
+    issues = issues.sort_values(["well", "date", "field"]).reset_index(drop=True)
+    return CleanResult(daily=daily, issues=issues)
+
+
+def _fill_calendar(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Insert the days the sheet leaves out of each well's span, as days with no hours on
+    stream and no volumes.
+
+    The Monthly sheet's hours and volumes equal the sums of the daily rows, so a missing
+    day produced nothing: it is a shut-in day, not an unknown one. Left out, it inflates
+    uptime (F-12, January 2012: 0.88 instead of 0.54) and hides shut-ins (F-12 and F-14
+    share 85 missing days, 2012-01-03..13 among them). Each inserted day is logged.
+    """
+    filled, inserted = [], []
+    for _, rows in df.groupby("well", sort=True):
+        rows = rows.set_index("date").sort_index()
+        span = pd.date_range(rows.index.min(), rows.index.max(), freq="D", name="date")
+        missing = span.difference(rows.index)
+        if len(missing):
+            rows = rows.reindex(span)
+            new = rows.index.isin(missing)
+            rows[list(IDENTITY_COLUMNS)] = rows[list(IDENTITY_COLUMNS)].ffill()
+            rows.loc[new, ["on_stream_hrs", *VOLUME_COLUMNS]] = 0.0
+            inserted.append(
+                pd.DataFrame(
+                    {
+                        "date": missing,
+                        "well": rows.loc[new, "well"].to_numpy(),
+                        "field": "on_stream_hrs",
+                        "issue": "missing_day",
+                        "raw_value": np.nan,
+                        "action": "inserted",
+                    }
+                )
+            )
+        filled.append(rows.reset_index())
+    issues = (
+        pd.concat(inserted, ignore_index=True) if inserted else pd.DataFrame(columns=ISSUE_COLUMNS)
+    )
+    return pd.concat(filled, ignore_index=True), issues
 
 
 def file_sha256(path: Path) -> str:

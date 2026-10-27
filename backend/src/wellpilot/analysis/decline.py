@@ -183,6 +183,7 @@ class Forecast:
     p10: np.ndarray
     # Calendar-time volume over the horizon: producing-day rate times the fit's uptime.
     cumulative: dict[str, float]
+    warnings: list[str] = field(default_factory=list)  # about the band, not the fit
 
 
 def _block_resample(residuals: np.ndarray, block: int, rng: np.random.Generator) -> np.ndarray:
@@ -218,9 +219,12 @@ def forecast(
     fitted = np.log(arps_rate(fit.t_days, fit.qi, fit.di_per_day, fit.b))
     residuals = fit.log_rate - fitted
     rng = np.random.default_rng(seed)
+    # On a short window a 30-day block is the whole series and every resample is the
+    # original: the band collapses to zero width. Keep at least four blocks.
+    block = min(block_days, max(2, len(residuals) // 4))
     samples = []
     for _ in range(n_boot):
-        y_star = fitted + _block_resample(residuals, block_days, rng)
+        y_star = fitted + _block_resample(residuals, block, rng)
         try:
             qi, di, b = _fit_model(fit.model, fit.t_days, y_star)
         except RuntimeError:  # curve_fit did not converge on this resample
@@ -229,6 +233,14 @@ def forecast(
     curves = np.vstack(samples) if samples else p50[np.newaxis, :]
 
     cum = curves.sum(axis=1) * fit.uptime
+    warnings = []
+    if len(residuals) < 3 * block_days:
+        warnings.append(
+            f"short window ({len(residuals)} producing days): the P90-P10 band is unreliable; "
+            "fit a longer window for a band."
+        )
+    if np.ptp(cum) == 0:
+        warnings.append("the P90-P10 band has zero width: the bootstrap failed on this window.")
     return Forecast(
         dates=dates,
         p90=np.percentile(curves, 10, axis=0),
@@ -239,4 +251,5 @@ def forecast(
             "p50": float(p50.sum() * fit.uptime),
             "p10": float(np.percentile(cum, 90)),
         },
+        warnings=warnings,
     )

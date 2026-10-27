@@ -28,7 +28,7 @@ from wellpilot.analysis.anomalies import (
     shut_ins,
     threshold_crossing,
 )
-from wellpilot.analysis.decline import DeclineFit, fit_decline, forecast
+from wellpilot.analysis.decline import B_BOUNDS, DeclineFit, fit_decline, forecast
 from wellpilot.data.store import ProductionStore, QueryError
 from wellpilot.ingest.report_facts import Topic
 from wellpilot.ingest.reports import REPORTS_BY_ID
@@ -104,11 +104,18 @@ def table(frame: pd.DataFrame) -> dict:
     }
 
 
-class NoArgs(BaseModel):
+class Args(BaseModel):
+    """Unknown argument names are an error the model can fix ("from" for "start"), not a
+    silently ignored filter."""
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class NoArgs(Args):
     pass
 
 
-class WellArgs(BaseModel):
+class WellArgs(Args):
     well: str = Field(description="Well name, e.g. 'F-12'.")
 
 
@@ -127,12 +134,13 @@ class ForecastArgs(DeclineArgs):
     horizon_days: int = Field(365, ge=30, le=3650, description="Days to forecast ahead.")
 
 
-class SqlArgs(BaseModel):
+class SqlArgs(Args):
     sql: str = Field(description="One DuckDB SELECT statement.")
 
 
-class CalcArgs(BaseModel):
-    model_config = ConfigDict(coerce_numbers_to_str=True)  # a bare number evaluates to itself
+class CalcArgs(Args):
+    # A bare number evaluates to itself.
+    model_config = ConfigDict(extra="forbid", coerce_numbers_to_str=True)
 
     expression: str = Field(
         description="Arithmetic on numbers taken from evidence, e.g. '0.7532 / 0.0575'. "
@@ -177,6 +185,9 @@ def production_monthly(store: ProductionStore, args: WindowArgs) -> dict:
     rows = store.query(
         f"""
         SELECT strftime(date_trunc('month', date), '%Y-%m') AS month,
+               count(*) AS days,
+               count(*) FILTER (WHERE flow_kind = 'production' AND on_stream_hrs > 0)
+                   AS producing_days,
                sum(oil_sm3) AS oil_sm3,
                sum(water_sm3) AS water_sm3,
                sum(gas_sm3) AS gas_sm3,
@@ -184,10 +195,12 @@ def production_monthly(store: ProductionStore, args: WindowArgs) -> dict:
                sum(water_sm3) / nullif(sum(oil_sm3) + sum(water_sm3), 0) AS water_cut,
                sum(on_stream_hrs) FILTER (WHERE flow_kind = 'production')
                    / (24 * count(*) FILTER (WHERE flow_kind = 'production')) AS uptime,
-               24 * sum(oil_sm3) / nullif(sum(on_stream_hrs), 0) AS oil_rate_per_producing_day,
-               avg(bhp_bar) AS bhp_bar,
-               avg(whp_bar) AS whp_bar,
-               avg(choke_pct) AS choke_pct
+               24 * sum(oil_sm3)
+                   / nullif(sum(on_stream_hrs) FILTER (WHERE flow_kind = 'production'), 0)
+                   AS oil_rate_per_producing_day,
+               avg(bhp_bar) FILTER (WHERE on_stream_hrs >= 12) AS bhp_bar,
+               avg(whp_bar) FILTER (WHERE on_stream_hrs >= 12) AS whp_bar,
+               avg(choke_pct) FILTER (WHERE on_stream_hrs >= 12) AS choke_pct
         FROM production_daily WHERE {" AND ".join(conditions)}
         GROUP BY 1 ORDER BY 1
         """,
@@ -237,6 +250,13 @@ def fit_warnings(fit: DeclineFit) -> list[str]:
             "or a regime change; refit after the last regime change, or treat any decline "
             "rate from this fit as an inference."
         )
+    if fit.model == "hyperbolic" and fit.b >= B_BOUNDS[1] - 1e-6:
+        warnings.append(
+            f"b is at its upper bound {B_BOUNDS[1]:g}: the window does not constrain the "
+            "decline's curvature, so the forecast and its band are not reliable."
+        )
+    if fit.di_per_year <= 1e-6:
+        warnings.append("no decline in this window (di at 0): it is a plateau, not a decline.")
     if abs(fit.residual_trend) > MAX_RESIDUAL_TREND:
         direction = "faster" if fit.residual_trend < 0 else "slower"
         warnings.append(
@@ -300,7 +320,7 @@ def forecast_tool(store: ProductionStore, args: ForecastArgs) -> dict:
     return to_jsonable(
         {
             "fit": _fit_summary(fit),
-            "warnings": fit_warnings(fit),
+            "warnings": fit_warnings(fit) + fc.warnings,
             "forecast_from": fc.dates[0],
             "forecast_to": fc.dates[-1],
             "horizon_days": args.horizon_days,
@@ -376,7 +396,7 @@ def calculate(_: ProductionStore, args: CalcArgs) -> dict:
     return {"expression": args.expression, "value": to_jsonable(float(value))}
 
 
-class ReportSearchArgs(BaseModel):
+class ReportSearchArgs(Args):
     query: str | None = Field(
         None, description="Keywords in English or Norwegian, e.g. 'water breakthrough'."
     )
@@ -385,7 +405,7 @@ class ReportSearchArgs(BaseModel):
     limit: int = Field(8, ge=1, le=30)
 
 
-class ReportPageArgs(BaseModel):
+class ReportPageArgs(Args):
     doc_id: str = Field(description="Document id from search_reports, e.g. 'volve_pud'.")
     page: int = Field(ge=1)
 
@@ -522,9 +542,12 @@ TOOLS = [
     ),
     Tool(
         "production_monthly",
-        "Monthly production for one well: volumes, water cut, uptime, oil rate per producing "
-        "day, average BHP/WHP/choke. Missing gauge readings are null, not zero. Pass start "
-        "and end to keep the result small.",
+        "Monthly production for one well: days in the data and producing days, volumes, water "
+        "cut, uptime, oil rate per producing day, and BHP/WHP/choke averaged over days on "
+        "stream at least 12 h. A month with fewer days than the calendar month is partial "
+        "(the data is cut there, or the well starts or stops), so its volumes are not a "
+        "collapse. Missing gauge readings are null, not zero. Pass start and end to keep the "
+        "result small.",
         WindowArgs,
         production_monthly,
     ),
