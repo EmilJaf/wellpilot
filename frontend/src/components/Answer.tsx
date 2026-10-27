@@ -242,7 +242,12 @@ function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSe
   const tools = Object.fromEntries(final.evidence.map((e) => [e.id, e.tool]))
   const isReport = (id: string) => tools[id] === 'search_reports' || tools[id] === 'read_report_page'
   const anyReport = final.evidence.map((e) => e.id).find(isReport)
-  const rounds = final.check_rounds
+  // Rounds up to the first accepted answer; after a second opinion the agent may have
+  // submitted again, which is told apart below.
+  const review = final.review ?? state.review
+  const firstAccepted = final.check_rounds.findIndex((r) => r.length === 0)
+  const rounds = review && firstAccepted >= 0 ? final.check_rounds.slice(0, firstAccepted + 1) : final.check_rounds
+  const afterReview = review && firstAccepted >= 0 ? final.check_rounds.slice(firstAccepted + 1) : []
   const sentBack = rounds.filter((r) => r.length)
   const problems = sentBack.reduce((n, r) => n + r.length, 0)
   const fixes = corrections(state.steps, final.findings)
@@ -271,6 +276,10 @@ function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSe
                     ? 'Problems remained after the last correction round.'
                     : 'No findings were submitted.'
                   : `Stopped early: ${final.stopped ?? 'step limit'}.`}
+              {final.verified && review?.outcome === 'revised' &&
+                ` Then a second opinion questioned the reasoning; the agent checked and revised its answer, and the checker verified it again${afterReview.length > 1 ? ` on attempt ${afterReview.length}` : ''}.`}
+              {final.verified && review?.outcome === 'kept' &&
+                ' Then a second opinion questioned the reasoning; the revision did not pass the checker, so this is the checked answer.'}
             </p>
             <p className="status-facts">
               {final.steps} steps and {final.evidence.length} tool results in {Math.round(seconds)} s,{' '}
@@ -308,6 +317,39 @@ function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSe
         <section className="conclusion" aria-label="Conclusion">
           <h3 className="section-label">Conclusion</h3>
           <Summary text={final.summary} spans={final.summary_spans} open={onSelectEvidence} quoteSource={anyReport} />
+        </section>
+      )}
+
+      {review && (
+        <section className={`second-opinion${review.points.length ? '' : ' is-sound'}`} aria-label="Second opinion">
+          <h3 className="section-label">Second opinion</h3>
+          {review.points.length === 0 ? (
+            <p>
+              <CheckIcon /> A reviewer (the same model, reading as a senior reservoir engineer) found the reasoning
+              sound. It checks what the checker does not: whether the conclusion follows.
+            </p>
+          ) : (
+            <>
+              <p>
+                A reviewer (the same model, reading as a senior reservoir engineer) questioned the reasoning, which the
+                checker does not check:
+              </p>
+              <ol>
+                {review.points.map((p, i) => (
+                  <li key={i}>
+                    {p.point} <span className="second-opinion-check">Check: {p.check}</span>
+                  </li>
+                ))}
+              </ol>
+              <p className="second-opinion-outcome">
+                {review.outcome === 'revised'
+                  ? 'The agent ran the checks and revised its answer; the findings below are the revision, verified again.'
+                  : review.outcome === 'kept'
+                    ? 'The agent’s revision did not pass the checker, so the findings below are its checked answer from before the review.'
+                    : 'The agent is answering these points.'}
+              </p>
+            </>
+          )}
         </section>
       )}
 

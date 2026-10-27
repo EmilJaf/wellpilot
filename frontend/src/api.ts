@@ -64,6 +64,7 @@ export type FinalEvent = {
   /** Why the run ended early: step or time limit, a model provider error. */
   stopped?: string | null
   check_rounds: string[][]
+  review?: ReviewEvent | null
   steps: number
   tokens: { input: number; output: number }
   evidence: EvidenceMeta[]
@@ -74,8 +75,19 @@ export type RunEvent = { seq: number } & (
   | { type: 'llm_call'; step: number }
   | StepEvent
   | FinalEvent
+  | ({ type: 'review' } & ReviewEvent)
   | { type: 'run_error'; message: string }
 )
+
+/** The second opinion on the first accepted answer: the reviewer's points, and what came
+    of them (revised, kept because the revision did not pass, or sound). */
+export type ReviewEvent = {
+  verdict: 'sound' | 'concerns'
+  points: { point: string; check: string }[]
+  tokens: number
+  after_step: number
+  outcome?: 'asked' | 'revised' | 'kept' | 'sound'
+}
 
 export type RunSummary = {
   id: string

@@ -15,6 +15,7 @@ from datetime import date
 from wellpilot.agent import corpus
 from wellpilot.agent.corpus import CORPUS_DIR
 from wellpilot.agent.loop import MAX_STEPS, SUBMIT, AgentRun, Step, run_agent
+from wellpilot.agent.review import review
 from wellpilot.api.runs import RunRecord, new_run_id
 from wellpilot.config import get_settings
 from wellpilot.data.store import ProductionStore
@@ -119,6 +120,7 @@ async def main() -> None:
         on_step=print_step,
         on_event=record.emit,
         evidence_log=record.log,
+        review_fn=review if settings.review_answers else None,
     )
     print_run(run)
     record.complete(run)

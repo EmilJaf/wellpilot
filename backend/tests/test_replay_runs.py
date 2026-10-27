@@ -75,3 +75,40 @@ async def test_the_replay_harness_reproduces_a_run_recorded_now() -> None:
 
     assert run.verified
     assert differences(saved, await replay(saved, FIXTURES / "processed")) == []
+
+
+async def test_a_run_with_a_second_opinion_replays_as_recorded() -> None:
+    """The review is the model's answer too: the replay feeds the recorded one back."""
+    from wellpilot.agent.review import Point, Review
+
+    script = [*STEPS]
+    # After the first accepted answer, the reviewer asks; the model submits the same again.
+    script.append(
+        next(s for s in STEPS if any(c["name"] == "submit_findings" for c in s["tool_calls"]))
+    )
+    replies = iter([_completion({**step, "index": i}) for i, step in enumerate(script, start=1)])
+
+    async def create(**_):
+        return next(replies)
+
+    async def review_fn(*_):
+        return Review(
+            verdict="concerns", points=[Point(point="Shut-ins?", check="detect_events")]
+        ), 700
+
+    client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=create)))
+    record = RunRecord("0123456789ac", "Why did F-12 fall?", None)
+    run = await run_agent(
+        record.question,
+        LLM(client, "scripted", "scripted"),
+        ProductionStore(FIXTURES / "processed"),
+        on_event=record.emit,
+        evidence_log=record.log,
+        review_fn=review_fn,
+    )
+    record.complete(run)
+    saved = json.loads(json.dumps(record.to_file()))
+
+    assert run.verified and run.review["outcome"] == "revised"
+    assert record.tokens() == sum(s.prompt_tokens + s.completion_tokens for s in run.steps) + 700
+    assert differences(saved, await replay(saved, FIXTURES / "processed")) == []

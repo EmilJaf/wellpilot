@@ -66,6 +66,7 @@ def settings(tmp_path) -> Settings:
         max_active_runs=1,
         runs_per_client_per_hour=100,
         daily_token_budget=10**9,
+        review_answers=False,  # scripted replies: the review is tested on its own
     )
 
 

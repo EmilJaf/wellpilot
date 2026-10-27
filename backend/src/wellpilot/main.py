@@ -36,6 +36,7 @@ def create_app(
         daily_token_budget=settings.daily_token_budget,
         voice_per_client_per_hour=settings.voice_per_client_per_hour,
         voice_max_audio_b64=settings.voice_max_audio_b64,
+        review_answers=settings.review_answers,
         run_timeout_s=settings.run_timeout_s,
         featured=tuple(r.strip() for r in settings.featured_runs.split(",") if r.strip()) or None,
         public=settings.public or on_fly,

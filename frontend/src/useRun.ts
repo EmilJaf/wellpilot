@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useReducer, useRef } from 'react'
-import { api, followRun, type FinalEvent, type RunEvent, type StepEvent } from './api'
+import { api, followRun, type FinalEvent, type ReviewEvent, type RunEvent, type StepEvent } from './api'
 
 export type RunState = {
   id: string | null
@@ -10,6 +10,7 @@ export type RunState = {
   steps: StepEvent[]
   thinking: number | null // the step the model is working on right now
   final: FinalEvent | null
+  review: ReviewEvent | null // the second opinion, once given
   error: string | null
 }
 
@@ -22,6 +23,7 @@ const initial: RunState = {
   steps: [],
   thinking: null,
   final: null,
+  review: null,
   error: null,
 }
 
@@ -57,8 +59,10 @@ function applyEvent(state: State, event: RunEvent): State {
       return { ...state, thinking: event.step }
     case 'step':
       return { ...state, thinking: null, steps: [...state.steps, event] }
+    case 'review':
+      return { ...state, review: event }
     case 'final':
-      return { ...state, thinking: null, final: event, status: 'done' }
+      return { ...state, thinking: null, final: event, review: event.review ?? state.review, status: 'done' }
     case 'run_error':
       return { ...state, thinking: null, status: 'error', error: event.message }
     default: {
@@ -75,6 +79,7 @@ const REPLAY_PAUSE_MS: Record<RunEvent['type'], number> = {
   run_started: 300,
   llm_call: 1100,
   step: 500,
+  review: 1500, // the reviewer reads the whole answer
   final: 0,
   run_error: 0,
 }

@@ -2590,6 +2590,43 @@ code,
   line-height: 1.5;
 }
 
+/* ---------- the second opinion on the accepted answer ---------- */
+.second-opinion {
+  margin: 18px 0 6px;
+  padding: 10px 14px;
+  border-left: 3px solid var(--caution);
+  background: var(--caution-wash);
+  border-radius: 0 4px 4px 0;
+  font-size: 14.5px;
+  line-height: 1.5;
+}
+
+.second-opinion.is-sound {
+  border-left-color: var(--ink);
+  background: var(--panel);
+}
+
+.second-opinion p {
+  margin: 4px 0;
+}
+
+.second-opinion svg {
+  vertical-align: -2px;
+}
+
+.second-opinion ol {
+  margin: 4px 0;
+  padding-left: 20px;
+}
+
+.second-opinion-check {
+  color: var(--ink-2);
+}
+
+.second-opinion-outcome {
+  font-weight: 600;
+}
+
 /* ---------- try to fool the checker: edit a finding, check it again ---------- */
 .fool {
   margin-top: 28px;

@@ -40,6 +40,7 @@ from wellpilot.agent.checker import (
 from wellpilot.agent.edits import redeclare
 from wellpilot.agent.evidence import EvidenceLog
 from wellpilot.agent.loop import AgentRun, run_agent, with_spans
+from wellpilot.agent.review import review
 from wellpilot.agent.tools import to_jsonable
 from wellpilot.data.store import ProductionStore
 from wellpilot.hindsight import hindsight
@@ -105,11 +106,12 @@ class RunRecord:
         await self._changed.wait()
 
     def tokens(self) -> int:
-        return sum(
+        steps = sum(
             e.get("prompt_tokens", 0) + e.get("completion_tokens", 0)
             for e in self.events
             if e["type"] == "step"
         )
+        return steps + sum(e.get("tokens", 0) for e in self.events if e["type"] == "review")
 
     def summary(self) -> dict:
         return {
@@ -201,6 +203,7 @@ class RunManager:
         daily_token_budget: int = 3_000_000,
         voice_per_client_per_hour: int = 20,
         voice_max_audio_b64: int = 1_500_000,
+        review_answers: bool = True,
         run_timeout_s: float | None = 600.0,
         featured: tuple[str, ...] | None = None,
         public: bool = False,
@@ -216,6 +219,7 @@ class RunManager:
         self.daily_token_budget = daily_token_budget
         self.voice_per_client_per_hour = voice_per_client_per_hour
         self.voice_max_audio_b64 = voice_max_audio_b64
+        self.review_answers = review_answers
         self.run_timeout_s = run_timeout_s
         # A tuple lists only those runs. None lists every saved run in development and none
         # in public, so a public deployment never shows other visitors' questions.
@@ -245,9 +249,9 @@ class RunManager:
                 continue
             if str(data.get("created_at", "")).startswith(today):
                 spent += sum(
-                    e.get("prompt_tokens", 0) + e.get("completion_tokens", 0)
+                    e.get("prompt_tokens", 0) + e.get("completion_tokens", 0) + e.get("tokens", 0)
                     for e in data.get("events", [])
-                    if e.get("type") == "step"
+                    if e.get("type") in ("step", "review")
                 )
         return spent
 
@@ -330,6 +334,7 @@ class RunManager:
                 timeout_s=self.run_timeout_s,
                 on_event=record.emit,
                 evidence_log=record.log,
+                review_fn=review if self.review_answers else None,
             )
             record.complete(run)
         except asyncio.CancelledError:

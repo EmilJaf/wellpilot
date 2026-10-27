@@ -28,6 +28,7 @@ from wellpilot.agent.checker import (
     readability,
 )
 from wellpilot.agent.evidence import Evidence, EvidenceLog
+from wellpilot.agent.review import Review, revise_message
 from wellpilot.agent.tools import TOOLS_BY_NAME, execute, tool_schemas
 from wellpilot.agent.vision import LOOK, VISION_TOOL, look
 from wellpilot.data.store import ProductionStore
@@ -35,6 +36,9 @@ from wellpilot.ingest.reports import REPORTS_BY_ID
 from wellpilot.llm import LLM, json_schema
 
 logger = logging.getLogger(__name__)
+
+# Reviews an accepted answer: (llm, question, answer, evidence) -> (review, tokens).
+ReviewFn = Callable[[LLM, str, Submission, EvidenceLog], Awaitable[tuple[Review, int]]]
 
 SUBMIT = "submit_findings"
 MAX_STEPS = 14  # real runs use 5-9; the model is warned two steps before the end
@@ -216,6 +220,9 @@ class AgentRun:
     steps: list[Step]
     summary_numbers: list[DeclaredNumber] = field(default_factory=list)
     stopped: str | None = None  # why the run ended early: step or time limit, provider error
+    # The second opinion: the reviewer's points, and whether the answer was revised after
+    # them ("revised"), kept because the revision did not pass ("kept"), or not needed.
+    review: dict | None = None
 
     @property
     def total_tokens(self) -> tuple[int, int]:
@@ -237,6 +244,7 @@ class AgentRun:
                 "finished": self.finished,
                 "stopped": self.stopped,
                 "check_rounds": self.check_rounds,
+                "review": self.review,
                 "steps": len(self.steps),
                 "tokens": {"input": tokens_in, "output": tokens_out},
                 "evidence": [
@@ -403,6 +411,7 @@ async def run_agent(
     on_event: Callable[[dict], None] | None = None,
     evidence_log: EvidenceLog | None = None,
     look_fn: Callable[[ProductionStore, LLM, str], Awaitable[dict]] = look,
+    review_fn: ReviewFn | None = None,
 ) -> AgentRun:
     """Run the agent on one question.
 
@@ -410,7 +419,9 @@ async def run_agent(
     {"type": "llm_call", "step": n} before each model call, {"type": "step", ...} after.
     Pass evidence_log to read evidence while the run is still going. timeout_s bounds the
     whole run, including a model call that hangs. look_fn runs look_at_page calls (the
-    replay passes recorded readings instead of asking the model again).
+    replay passes recorded readings instead of asking the model again). review_fn, when
+    given, reviews the first accepted answer; with points raised, the model gets one chance
+    to revise, and the checked answer stands if the revision does not pass.
 
     The run ends with an answer whatever happens to it: out of steps or time, or a provider
     error after the client's retries, it returns the last submission (unverified) with the
@@ -426,6 +437,8 @@ async def run_agent(
     check_rounds: list[list[str]] = []
     last_submission: Submission | None = None
     asked_readability = False  # rounded numbers and plain labels, asked once per run
+    reviewed: dict | None = None  # the second opinion, once given
+    checked: Submission | None = None  # the accepted answer the review was given on
     text_replies = 0  # consecutive replies without a tool call
     deadline = time.monotonic() + timeout_s if timeout_s else None
 
@@ -444,10 +457,20 @@ async def run_agent(
             steps,
             numbers,
             stopped,
+            reviewed,
         )
+
+    def unrevised(**kwargs) -> AgentRun | None:
+        """After a review, any ending without a new accepted answer keeps the checked one."""
+        if checked is None:
+            return None
+        reviewed["outcome"] = "kept"
+        return finish(checked.summary, checked.findings, True, submission=checked, **kwargs)
 
     def stop(reason: str) -> AgentRun:
         """End early, keeping the last answer the model submitted, marked unverified."""
+        if kept := unrevised():
+            return kept
         if last_submission:
             return finish(
                 last_submission.summary,
@@ -606,9 +629,30 @@ async def run_agent(
         emit({"type": "step", **step.to_event()})
 
         if accepted:
+            # A second opinion on the first accepted answer, while steps remain to act on
+            # it; points raised give the model one chance to revise.
+            if review_fn is not None and reviewed is None and index <= max_steps - 3:
+                try:
+                    result, tokens = await review_fn(llm, question, accepted, log)
+                except Exception as e:  # a failed review must not cost the checked answer
+                    logger.warning("review failed: %s", type(e).__name__)
+                    result, tokens = Review(verdict="sound", points=[]), 0
+                reviewed = {**result.model_dump(), "tokens": tokens, "after_step": index}
+                emit({"type": "review", **reviewed})
+                if result.points:
+                    checked, accepted = accepted, None
+                    reviewed["outcome"] = "asked"
+                    messages.append({"role": "user", "content": revise_message(result)})
+                    continue
+                reviewed["outcome"] = "sound"
+            elif reviewed is not None and checked is not None:
+                reviewed["outcome"] = "revised"
             return finish(accepted.summary, accepted.findings, True, submission=accepted)
-        if last_submission and len(check_rounds) >= MAX_CHECK_ROUNDS:
-            # Out of correction rounds: return the last answer, marked unverified.
+        if last_submission and len(check_rounds) >= MAX_CHECK_ROUNDS + (checked is not None):
+            # Out of correction rounds: return the last answer, marked unverified (or the
+            # checked one, if this was a revision after a review).
+            if kept := unrevised():
+                return kept
             return finish(
                 last_submission.summary,
                 last_submission.findings,
@@ -620,6 +664,8 @@ async def run_agent(
         else:
             text_replies += 1
             if text_replies >= 2:  # two in a row: the model will not call tools again
+                if kept := unrevised():
+                    return kept
                 if last_submission:
                     return finish(
                         last_submission.summary,

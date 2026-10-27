@@ -679,3 +679,100 @@ def test_calculate_takes_several_expressions(store) -> None:
     bad = execute(store, "calculate", json.dumps({"expressions": ["1 / 0"]}))
     assert "either expression or expressions" in both["error"]
     assert "'1 / 0': division by zero" in bad["error"]
+
+
+# The second opinion: a reviewer reads the first accepted answer and may question it.
+
+
+def reviewer(*points: str, fail: bool = False):
+    from wellpilot.agent.review import Point, Review
+
+    calls = []
+
+    async def review_fn(llm, question, answer, log):
+        calls.append(answer)
+        if fail:
+            raise RuntimeError("provider down")
+        result = Review(
+            verdict="concerns" if points else "sound",
+            points=[Point(point=p, check="call list_wells") for p in points],
+        )
+        return result, 500
+
+    return review_fn, calls
+
+
+FIRST = submission("F-12 produced on 60 days.", numbers=[("60", 60)])
+REVISED = submission("F-12 produced on 60 days, all of them in 2010.", numbers=[("60", 60)])
+
+
+async def test_a_review_with_points_gets_one_revision(store) -> None:
+    review_fn, calls = reviewer("Was the well shut in on any day?")
+    llm, completions = fake_llm(
+        [
+            completion(tool_calls=[("list_wells", {})]),
+            completion(tool_calls=[(SUBMIT, FIRST)]),
+            completion(tool_calls=[("list_wells", {})]),
+            completion(tool_calls=[(SUBMIT, REVISED)]),
+        ]
+    )
+
+    run = await run_agent("Days?", llm, store, review_fn=review_fn)
+
+    assert run.verified and run.findings[0].claim.endswith("all of them in 2010.")
+    assert run.review["outcome"] == "revised" and run.review["tokens"] == 500
+    assert run.review["points"][0]["point"] == "Was the well shut in on any day?"
+    assert len(calls) == 1  # one review, on the first accepted answer only
+    asked = completions.requests[2]["messages"][-1]["content"]
+    assert "A reviewer read your answer" in asked and "shut in" in asked
+
+
+async def test_a_sound_answer_ends_at_once(store) -> None:
+    review_fn, _ = reviewer()
+    llm, completions = fake_llm(
+        [completion(tool_calls=[("list_wells", {})]), completion(tool_calls=[(SUBMIT, FIRST)])]
+    )
+
+    run = await run_agent("Days?", llm, store, review_fn=review_fn)
+
+    assert run.verified and run.review["outcome"] == "sound" and run.review["points"] == []
+    assert len(completions.requests) == 2
+
+
+async def test_a_revision_that_fails_keeps_the_checked_answer(store) -> None:
+    review_fn, _ = reviewer("Check the shut-ins.")
+    wrong = submission("F-12 produced on 61 days.", numbers=[("61", 61)])
+    llm, _ = fake_llm(
+        [
+            completion(tool_calls=[("list_wells", {})]),
+            completion(tool_calls=[(SUBMIT, FIRST)]),
+            *[completion(tool_calls=[(SUBMIT, wrong)])] * 4,
+        ]
+    )
+
+    run = await run_agent("Days?", llm, store, review_fn=review_fn)
+
+    assert run.verified and run.findings[0].claim == "F-12 produced on 60 days."
+    assert run.review["outcome"] == "kept"
+
+
+async def test_a_failed_review_costs_nothing(store) -> None:
+    review_fn, _ = reviewer(fail=True)
+    llm, _ = fake_llm(
+        [completion(tool_calls=[("list_wells", {})]), completion(tool_calls=[(SUBMIT, FIRST)])]
+    )
+
+    run = await run_agent("Days?", llm, store, review_fn=review_fn)
+
+    assert run.verified and run.review["outcome"] == "sound"
+
+
+async def test_no_review_near_the_step_limit(store) -> None:
+    review_fn, calls = reviewer("Anything?")
+    llm, _ = fake_llm(
+        [completion(tool_calls=[("list_wells", {})]), completion(tool_calls=[(SUBMIT, FIRST)])]
+    )
+
+    run = await run_agent("Days?", llm, store, review_fn=review_fn, max_steps=4)
+
+    assert run.verified and run.review is None and calls == []

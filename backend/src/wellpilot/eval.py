@@ -28,6 +28,7 @@ from wellpilot.agent import corpus
 from wellpilot.agent.checker import CALENDAR_WINDOW, WRITTEN_NUMBER
 from wellpilot.agent.corpus import CORPUS_DIR
 from wellpilot.agent.loop import AgentRun, run_agent
+from wellpilot.agent.review import review
 from wellpilot.api.runs import RunRecord, new_run_id
 from wellpilot.config import get_settings
 from wellpilot.data.store import ProductionStore
@@ -232,7 +233,8 @@ def dense_claims(claims: list[str]) -> list[str]:
 
 def cost(run: AgentRun) -> float:
     tokens_in, tokens_out = run.total_tokens
-    return tokens_in * PRICE_IN + tokens_out * PRICE_OUT
+    reviewed = (run.review or {}).get("tokens", 0)  # mostly input
+    return (tokens_in + reviewed) * PRICE_IN + tokens_out * PRICE_OUT
 
 
 def score(case: Case, run: AgentRun) -> list[tuple[str, bool, str]]:
@@ -288,6 +290,7 @@ async def run_case(
         timeout_s=settings.run_timeout_s,
         on_event=record.emit,
         evidence_log=record.log,
+        review_fn=review if settings.review_answers else None,  # the product as served
     )
     record.complete(run)
     path = record.save(runs_dir)

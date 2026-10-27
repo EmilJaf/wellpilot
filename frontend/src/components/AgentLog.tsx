@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { Fragment, useEffect, useRef } from 'react'
 import type { StepEvent, ToolCallView } from '../api'
 import { AlarmIcon, CautionIcon, CheckIcon } from '../icons'
 import { plainProblem, compact, describeArgs, shortWarning, toolName } from '../labels'
@@ -63,13 +63,37 @@ export function AgentLog({ state, selectedEvidence, onSelectEvidence }: Props) {
         {state.asOf && <p className="narration">Data after {state.asOf} is hidden from the agent.</p>}
         <ol className="track" aria-live="polite" aria-label="Agent steps">
           {state.steps.map((step, i) => (
-            <Step
-              key={step.index}
-              step={step}
-              startedAt={starts[i]}
-              selectedEvidence={selectedEvidence}
-              onSelectEvidence={onSelectEvidence}
-            />
+            <Fragment key={step.index}>
+              <Step
+                step={step}
+                startedAt={starts[i]}
+                selectedEvidence={selectedEvidence}
+                onSelectEvidence={onSelectEvidence}
+              />
+              {state.review && state.review.after_step === step.index && (
+                <li className="track-step">
+                  <span className="track-time" />
+                  <div className="track-body">
+                    <div className={`flag ${state.review.points.length ? 'flag-caution' : 'flag-ok'}`}>
+                      {state.review.points.length ? <CautionIcon /> : <CheckIcon />}
+                      <span>
+                        Second opinion:{' '}
+                        {state.review.points.length
+                          ? `the reviewer questioned the reasoning (${state.review.points.length} ${state.review.points.length === 1 ? 'point' : 'points'})`
+                          : 'the reviewer found the reasoning sound'}
+                        {state.review.points.length > 0 && (
+                          <ul>
+                            {state.review.points.map((p, j) => (
+                              <li key={j}>{p.point}</li>
+                            ))}
+                          </ul>
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                </li>
+              )}
+            </Fragment>
           ))}
           {state.thinking !== null && (
             <li className="track-step">

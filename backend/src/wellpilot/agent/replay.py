@@ -19,6 +19,7 @@ from types import SimpleNamespace
 from openai.types.chat import ChatCompletion
 
 from wellpilot.agent.loop import AgentRun, run_agent
+from wellpilot.agent.review import Review
 from wellpilot.agent.vision import LOOK
 from wellpilot.config import get_settings
 from wellpilot.data.store import ProductionStore
@@ -76,11 +77,25 @@ async def replay(run: dict, processed_dir: Path) -> AgentRun:
     async def recorded_look(*_):
         return next(readings)
 
+    # The second opinion is the model's too: replay the recorded one, if the run had it.
+    recorded = next((e for e in run["events"] if e.get("type") == "review"), None)
+
+    async def recorded_review(*_):
+        return Review.model_validate(recorded), recorded.get("tokens", 0)
+
     client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=create)))
     llm = LLM(client=client, model="replay", provider="replay")
     as_of = date.fromisoformat(run["as_of"]) if run.get("as_of") else None
     store = ProductionStore(processed_dir, as_of=as_of)
-    return await run_agent(run["question"], llm, store, max_steps=len(steps), look_fn=recorded_look)
+    return await run_agent(
+        run["question"],
+        llm,
+        store,
+        # Room for the review to happen where it did (it needs three steps left).
+        max_steps=max(len(steps), recorded["after_step"] + 3) if recorded else len(steps),
+        look_fn=recorded_look,
+        review_fn=recorded_review if recorded else None,
+    )
 
 
 def differences(run: dict, replayed: AgentRun) -> list[str]:
