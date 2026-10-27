@@ -45,7 +45,8 @@ def verdict(problems: list[str]) -> dict:
 
 def replay(case: dict) -> list[str]:
     log = EvidenceLog.restore(case["evidence"])
-    return check_submission(Submission.model_validate(case["submission"]), log)
+    submission = Submission.model_validate(case["submission"])
+    return check_submission(submission, log, case["source"].get("question", ""))
 
 
 def submissions(run: dict) -> Iterator[tuple[dict, list[str]]]:

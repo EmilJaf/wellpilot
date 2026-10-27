@@ -291,6 +291,7 @@ def forecast_tool(store: ProductionStore, args: ForecastArgs) -> dict:
             "warnings": fit_warnings(fit),
             "forecast_from": fc.dates[0],
             "forecast_to": fc.dates[-1],
+            "horizon_days": args.horizon_days,
             "cumulative_oil_sm3": fc.cumulative,
             "monthly_rate_sm3_per_producing_day": table(monthly.rename_axis("month").reset_index()),
             "note": "P90 = low case, P10 = high case. Volumes = rate x historical uptime.",

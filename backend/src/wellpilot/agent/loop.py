@@ -50,8 +50,9 @@ rests on evidence with warnings must be an inference.
 - Declare every number you write: in each finding's "numbers" (and the summary's \
 "summary_numbers") list it with its text exactly as written, its full value, and the \
 evidence id it comes from, e.g. {{"text": "4 050", "value": 4050, "evidence_id": "E3"}} \
-or {{"text": "72%", "value": 0.72, "evidence_id": "E9"}}. Dates, years and well names need \
-no declaration.
+or {{"text": "72%", "value": 0.72, "evidence_id": "E9"}}. Write dates as YYYY-MM-DD. \
+Dates, years, well names, integers up to 10, window lengths ("30-day median", "the next 12 \
+months") and numbers from the question need no declaration.
 - A checker verifies every declared number, date and quote against the evidence. If it \
 rejects your submission, fix the listed problems and submit again.{as_of_note}"""
 
@@ -302,7 +303,7 @@ async def run_agent(
                     payload = {"accepted": False, "problems": [f"invalid submission: {e}"]}
                 else:
                     last_submission = submission
-                    problems = check_submission(submission, log)
+                    problems = check_submission(submission, log, question)
                     check_rounds.append(problems)
                     payload = {"accepted": not problems, "problems": problems}
                     if not problems:

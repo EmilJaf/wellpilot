@@ -22,16 +22,21 @@ numbers (numbers=None) fall back to reading numbers out of the text.
 Known limit: the sign of a change is not checked ("rose 45%" passes against -0.45).
 """
 
+import json
 import re
 from collections.abc import Iterable
+from contextlib import suppress
 from dataclasses import dataclass
 from decimal import Decimal
+from functools import lru_cache
 from typing import Any, Literal
 
+import duckdb
 from pydantic import BaseModel, Field
 
 from wellpilot.agent.evidence import Evidence, EvidenceLog
 from wellpilot.ingest.report_facts import squash
+from wellpilot.ingest.reports import REPORTS
 
 WELL = re.compile(r"\b(?:15/9-)?F-\d+(?:\s?[A-Z]\b)?")
 DATE = re.compile(r"\b(\d{4}-\d{2}(?:-\d{2})?)\b")
@@ -45,6 +50,8 @@ NUMBER = re.compile(
 SQL_STRING = re.compile(r"'((?:[^']|'')*)'")
 SCALES = {"%": (0.01, 1.0), "million": (1e6,), "k": (1e3,)}
 SMALL_INTEGER = 10  # "3 wells", "2 years": too generic to demand evidence for
+# Years of the indexed reports: the system prompt names "the February 2005 development plan".
+REPORT_YEARS = {float(r.doc_date[:4]) for r in REPORTS}
 # Unit conversions a calculation may use without citing them.
 CONSTANTS = {12.0, 24.0, 30.0, 30.44, 100.0, 1000.0, 365.0, 365.25}
 # Causes are interpretations: the data shows timing and size, not why.
@@ -149,14 +156,42 @@ def _matches(candidates: Iterable[float], value: float, decimals: int, suffix: s
     return False
 
 
-def _typed_by_model(item: Evidence) -> tuple[set[float], set[str]]:
-    """Numbers and strings the model wrote into a SQL query: echoes, not data."""
+@lru_cache(maxsize=256)
+def _echoes(sql: str) -> tuple[frozenset[float], frozenset[str]]:
+    """Literals the model wrote into a SELECT list (SELECT 4321 AS n): the query only echoes
+    them back. A literal in a filter (WHERE date = '2010-10-12') is not an echo: when the
+    data returns that value, it is data. Unparseable SQL counts every literal as an echo."""
+    tree = json.loads(duckdb.connect().execute("SELECT json_serialize_sql(?)", [sql]).fetchone()[0])
+    if tree.get("error"):
+        strings = {s.replace("''", "'") for s in SQL_STRING.findall(sql)}
+        numbers = {v for v, _, _ in _numbers_in_text(SQL_STRING.sub(" ", sql))}
+        return frozenset(numbers), frozenset(strings)
+    numbers, strings = set(), set()
+
+    def walk(node: Any, projected: bool) -> None:
+        if isinstance(node, list):
+            for child in node:
+                walk(child, projected)
+        elif isinstance(node, dict):
+            literal = node.get("literal") if node.get("class") == "CONSTANT" else None
+            if projected and isinstance(literal, dict):
+                if literal.get("kind") == "STRING":
+                    strings.add(literal.get("text", ""))
+                else:
+                    with suppress(ValueError):
+                        numbers.add(abs(float(literal.get("text", ""))))
+            for key, child in node.items():
+                walk(child, projected or key == "select_list")
+
+    walk(tree, False)
+    return frozenset(numbers), frozenset(strings)
+
+
+def _typed_by_model(item: Evidence) -> tuple[frozenset[float], frozenset[str]]:
+    """Numbers and strings the model wrote into a SQL query's SELECT list: echoes, not data."""
     if item.tool != "run_sql":
-        return set(), set()
-    sql = str(item.arguments.get("sql", ""))
-    strings = {s.replace("''", "'") for s in SQL_STRING.findall(sql)}
-    numbers = {v for v, _, _ in _numbers_in_text(SQL_STRING.sub(" ", sql))}
-    return numbers, strings
+        return frozenset(), frozenset()
+    return _echoes(str(item.arguments.get("sql", "")))
 
 
 class _Pool:
@@ -229,17 +264,25 @@ def _calculations(log: EvidenceLog) -> dict[str, _Calc]:
     return calcs
 
 
-def _unsupported(text: str, pool: _Pool) -> tuple[list[str], list[str]]:
+def _free(value: float, decimals: int, suffix: str | None, pool: _Pool, free: set[float]) -> bool:
+    """Whole numbers that need no evidence: integers up to 10, years (an evidence year, a
+    year the data returns as a number, a report's year) and whole numbers the question
+    itself names ("the next 12 months")."""
+    if decimals != 0 or suffix or not value.is_integer():
+        return False
+    if value <= SMALL_INTEGER or value in free:
+        return True
+    return 1900 <= value <= 2100 and (
+        str(int(value)) in pool.years or pool.has_number(value, 0, None)
+    )
+
+
+def _unsupported(text: str, pool: _Pool, free: set[float]) -> tuple[list[str], list[str]]:
     numbers = []
-    for value, decimals, suffix in _numbers_in_text(text):
-        bare_integer = decimals == 0 and not suffix and value.is_integer()
-        if bare_integer and 1900 <= value <= 2100:
-            # A year, or a plain number such as 2095 days or 2000 Sm3/d.
-            if str(int(value)) not in pool.years and not pool.has_number(value, 0, None):
-                numbers.append(str(int(value)))
-        elif decimals == 0 and not suffix and value <= SMALL_INTEGER:
-            continue
-        elif not pool.has_number(value, decimals, suffix):
+    for value, decimals, suffix in _numbers_in_text(_mask(text)):
+        if not _free(value, decimals, suffix, pool, free) and not pool.has_number(
+            value, decimals, suffix
+        ):
             numbers.append(_as_written(value, decimals, suffix))
     dates = [d for d in DATE.findall(text) if not pool.has_date(d)]
     return numbers, dates
@@ -297,9 +340,12 @@ def _reads_as(reading: Reading, candidates: Iterable[float]) -> bool:
 # A standalone group of 1-3 digits and a space just before: "1 " in "1 146". Not "P50 " or
 # "r2 ", where the digits belong to a label.
 GROUP_BEFORE = re.compile(r"(?:^|[^\w.,])\d{1,3}[ \u00a0\u202f]$")
-# Window lengths in calendar units ("30-day median", "12-month forecast") describe a method,
-# not the data, so they need no declaring. Any other duration ("45-day shut-in") does.
-CALENDAR_WINDOW = re.compile(r"\b(?:12-month|24-hour|30-day|365-day)\b")
+# Window lengths in calendar units ("30-day median", "12 month forecast", "the next 12
+# months", "365 days after the cutoff") describe a method, not the data, so they need no
+# declaring. Any other duration ("45-day shut-in", "30 days of shut-in") does.
+CALENDAR_WINDOW = re.compile(
+    r"\b(?:12|24|30|365)[-\s](?:month|hour|day)\b|\b(?:12\s+months|24\s+hours|365\s+days)\b"
+)
 
 
 def _standalone(text: str, written: str) -> list[tuple[int, int]]:
@@ -326,7 +372,8 @@ def _declared(
     log: EvidenceLog,
     calcs: dict[str, _Calc],
     citable: set[str] | None,
-    years: set[str],
+    pool: _Pool,
+    free: set[float],
 ) -> list[str]:
     """Check declared numbers, then that the text holds no number left undeclared.
 
@@ -345,6 +392,9 @@ def _declared(
         item = log.get(where)
         readings = _readings(number.text)
         fits = [r for r in readings if _reads_as(r, [number.value])]
+        exempt = [n for n in _numbers_in_text(number.text) if _free(*n, pool, free)]
+        if fits and exempt:
+            continue  # "3 producers", "2010": declared though it needs no evidence
         if not readings:
             problems.append(
                 f"{label}: '{number.text}' must be one number exactly as written, e.g. "
@@ -375,8 +425,7 @@ def _declared(
     # Either convention: an undeclared "1.234.567" is a number too.
     for european in (False, True):
         for value, decimals, suffix in _numbers_in_text(rest, european):
-            bare = decimals == 0 and not suffix and value.is_integer()
-            if bare and (value <= SMALL_INTEGER or str(int(value)) in years):
+            if _free(value, decimals, suffix, pool, free):
                 continue
             written = _as_written(value, decimals, suffix)
             if written not in leftover:
@@ -394,8 +443,17 @@ def _declared(
     return problems
 
 
-def check_submission(submission: Submission, log: EvidenceLog) -> list[str]:
+def _question_numbers(question: str) -> set[float]:
+    """Whole numbers the question names, plus the reports' years: the model may repeat them."""
+    named = {
+        v for v, decimals, suffix in _numbers_in_text(question) if decimals == 0 and not suffix
+    }
+    return named | REPORT_YEARS
+
+
+def check_submission(submission: Submission, log: EvidenceLog, question: str = "") -> list[str]:
     """Return problems as sentences for the model; an empty list means accepted."""
+    free = _question_numbers(question)
     calcs = _calculations(log)
     sound = [e for e in log if not (e.id in calcs and calcs[e.id].unsupported)]
     problems = []
@@ -417,7 +475,7 @@ def check_submission(submission: Submission, log: EvidenceLog) -> list[str]:
                     "Calculate only with numbers that tool results returned."
                 )
         pool = _Pool(e for e in cited if not (e.id in calcs and calcs[e.id].unsupported))
-        numbers, dates = _unsupported(finding.claim, pool)
+        numbers, dates = _unsupported(finding.claim, pool, free)
         if finding.numbers is not None:
             problems += _declared(
                 f"Finding {n}",
@@ -426,7 +484,8 @@ def check_submission(submission: Submission, log: EvidenceLog) -> list[str]:
                 log,
                 calcs,
                 set(finding.evidence_ids),
-                pool.years,
+                pool,
+                free,
             )
         elif numbers:  # an answer from before declared numbers: read them from the text
             problems.append(
@@ -461,7 +520,7 @@ def check_submission(submission: Submission, log: EvidenceLog) -> list[str]:
             )
 
     everything = _Pool(sound)
-    numbers, dates = _unsupported(submission.summary, everything)
+    numbers, dates = _unsupported(submission.summary, everything, free)
     if submission.summary_numbers is not None:
         problems += _declared(
             "Summary",
@@ -470,7 +529,8 @@ def check_submission(submission: Submission, log: EvidenceLog) -> list[str]:
             log,
             calcs,
             None,
-            everything.years,
+            everything,
+            free,
         )
         numbers = []
     missing = (
