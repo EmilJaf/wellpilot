@@ -69,7 +69,8 @@ class RunRecord:
         return self.status != "running"
 
     def emit(self, event: dict) -> None:
-        self.events.append({"seq": len(self.events), **to_jsonable(event)})
+        # Whole strings: step events already bound reasoning (6000) and previews (300).
+        self.events.append({"seq": len(self.events), **to_jsonable(event, max_text=None)})
         changed, self._changed = self._changed, asyncio.Event()
         changed.set()
 

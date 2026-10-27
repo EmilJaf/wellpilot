@@ -249,6 +249,20 @@ async def test_a_failed_run_keeps_its_evidence_after_a_restart(settings) -> None
     assert evidence.json()["tool"] == "list_wells"
 
 
+async def test_long_model_reasoning_reaches_the_stream_whole(settings) -> None:
+    reasoning = "I compare F-12 with the plan. " * 160  # about 4800 characters
+    step = SCRIPT[0].model_copy(deep=True)
+    step.choices[0].message = step.choices[0].message.model_copy(
+        update={"reasoning_content": reasoning}
+    )
+    llm = fake_llm([step, SCRIPT[1]])
+    async with client_for(create_app(settings, llm_factory=lambda: llm)) as client:
+        _, events = await run_to_end(client)
+
+    first = next(e for e in events if e["type"] == "step")
+    assert first["reasoning"] == reasoning
+
+
 async def test_question_is_validated(settings) -> None:
     async with client_for(create_app(settings, llm_factory=fake_llm)) as client:
         assert (await client.post("/api/runs", json={"question": "x"})).status_code == 422

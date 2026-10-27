@@ -176,6 +176,16 @@ def test_execute_reports_errors_instead_of_raising(store) -> None:
     assert "single SELECT" in execute(store, "run_sql", '{"sql": "DROP TABLE x"}')["error"]
 
 
+def test_to_jsonable_cuts_long_text_at_a_space() -> None:
+    text = "rate 1146 " * 300
+
+    cut = to_jsonable(text)
+
+    assert len(cut) <= 2001 and cut.endswith("…")
+    assert cut[:-1].split()[-1] in ("rate", "1146")  # no number cut in half
+    assert to_jsonable(text, max_text=None) == text
+
+
 def test_to_jsonable() -> None:
     value = {
         "when": pd.Timestamp("2010-10-12"),

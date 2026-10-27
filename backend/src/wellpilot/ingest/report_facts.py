@@ -13,6 +13,7 @@ Run (spends tokens): uv run python -m wellpilot.ingest.report_facts --pages 23,2
 import argparse
 import asyncio
 import base64
+import hashlib
 import json
 import re
 import time
@@ -104,7 +105,7 @@ def _clean(text: str) -> str:
     The superscript in "Sm³" comes out of the text layer as "Sm3", "Sm 3" or nothing at
     all, so it is dropped on both sides.
     """
-    text = re.sub(r"(?i)(?<=sm)\s*3", "", normalize_text(text))
+    text = re.sub(r"(?i)(?<=sm)\s*3(?!\d)", "", normalize_text(text))  # not "Sm 30"
     return DROPPED_GLYPHS.sub("", text).casefold()
 
 
@@ -120,16 +121,28 @@ def quote_in_text(quote: str, page_text: str) -> bool:
     return len(squashed) >= 6 and squashed in squash(page_text)
 
 
+# Words, and numbers kept whole with their separators: "0,80" is one token, not 0 and 80.
+TOKEN = re.compile(r"\d+(?:[.,]\d+)*|[^\W\d_]+")
+
+
 def quote_check(quote: str, page_text: str) -> QuoteCheck:
-    """'exact': the quote is on the page as written. 'tokens': every word and number of
-    the quote is on the page, but not in that order, as when a table row is read across
-    columns. 'unverified': neither, e.g. text inside a figure or a misquote."""
+    """'exact': the quote is on the page as written. 'tokens': every word and whole number
+    of the quote is on the page, but not in that order, as when a table row is read across
+    columns. 'unverified': neither, e.g. text inside a figure or a misquote. Numbers count
+    whole, so a quote whose number was swapped ("vannkutt 0,40" for 0,80) is unverified
+    even when its digits occur elsewhere on the page."""
     if quote_in_text(quote, page_text):
         return "exact"
-    words = set(re.findall(r"\w+", _clean(quote)))
-    if len(words) >= 3 and words <= set(re.findall(r"\w+", _clean(page_text))):
+    words = set(TOKEN.findall(_clean(quote)))
+    if len(words) >= 3 and words <= set(TOKEN.findall(_clean(page_text))):
         return "tokens"
     return "unverified"
+
+
+def _fingerprint() -> str:
+    """Of the prompt and output schema: a cached page made with others is stale."""
+    spec = SYSTEM_PROMPT + json.dumps(json_schema(PageExtraction), sort_keys=True)
+    return hashlib.sha256(spec.encode()).hexdigest()[:12]
 
 
 def cache_path(processed_dir: Path, doc_id: str, page: int) -> Path:
@@ -192,6 +205,7 @@ async def extract_page(
             "reasoning_tokens": (details.reasoning_tokens or 0) if details else 0,
             "reasoning_effort": reasoning_effort or "default",
             "seconds": round(time.monotonic() - started, 1),
+            "fingerprint": _fingerprint(),
             "extraction": extraction.model_dump(),
         }
     raise ValueError(f"page {page['page']}: no valid extraction: {errors}")
@@ -239,8 +253,18 @@ async def run(doc_id: str, page_numbers: list[int], force: bool) -> None:
     processed = settings.processed_dir
     pages = pd.read_parquet(processed / PAGES_FILE)
     pages = pages[pages["doc_id"] == doc_id].set_index("page")
-    todo = [p for p in page_numbers if force or not cache_path(processed, doc_id, p).exists()]
-    print(f"{doc_id}: {len(page_numbers)} pages requested, {len(todo)} to extract")
+
+    def stale(page: int) -> bool:
+        path = cache_path(processed, doc_id, page)
+        return (
+            not path.exists() or json.loads(path.read_text()).get("fingerprint") != _fingerprint()
+        )
+
+    todo = [p for p in page_numbers if force or stale(p)]
+    print(
+        f"{doc_id}: {len(page_numbers)} pages requested, {len(todo)} to extract "
+        "(missing, made with another prompt or schema, or --force)"
+    )
 
     if todo:
         llm = make_llm(settings, timeout=180.0)  # a dense page can take minutes to transcribe

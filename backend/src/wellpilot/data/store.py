@@ -6,6 +6,7 @@ tables, can run only a single SELECT, and never sees rows after the store's `as_
 (nor reports issued after it), which is what keeps backtests honest.
 """
 
+import logging
 import threading
 from dataclasses import dataclass
 from datetime import date
@@ -25,6 +26,8 @@ REPORT_TABLES = {
     "report_facts": FACTS_FILE,
     "report_summaries": SUMMARIES_FILE,
 }
+
+logger = logging.getLogger(__name__)
 
 
 class QueryError(ValueError):
@@ -61,6 +64,10 @@ class ProductionStore:
             if not (processed_dir / file).exists():
                 continue
             frame = pd.read_parquet(processed_dir / file)
+            unknown = set(frame["doc_id"]) - set(REPORTS_BY_ID)
+            if unknown:  # a document dropped from the registry: no date to cut it by
+                logger.warning("ignoring reports not in REPORTS: %s", sorted(unknown))
+                frame = frame[~frame["doc_id"].isin(unknown)]
             if as_of is not None:
                 issued = frame["doc_id"].map(lambda d: REPORTS_BY_ID[d].doc_date)
                 frame = frame[issued <= as_of.isoformat()]

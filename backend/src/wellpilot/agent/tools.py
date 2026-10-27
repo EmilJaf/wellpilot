@@ -56,12 +56,22 @@ def _round(x: float) -> float | int:
     return float(f"{x:.4g}")
 
 
-def to_jsonable(value: Any) -> Any:
-    """Dates to ISO strings, numpy scalars to Python, NaN to None, floats rounded."""
+def _cut(text: str, max_text: int | None) -> str:
+    """At most max_text characters, cut at a space so no number is split in half."""
+    if max_text is None or len(text) <= max_text:
+        return text
+    cut = text[:max_text]
+    space = cut.rfind(" ")
+    return (cut[:space] if space > max_text // 2 else cut) + "…"
+
+
+def to_jsonable(value: Any, max_text: int | None = MAX_TEXT_CHARS) -> Any:
+    """Dates to ISO strings, numpy scalars to Python, NaN to None, floats rounded, strings
+    cut at max_text characters (None keeps them whole)."""
     if isinstance(value, dict):
-        return {str(k): to_jsonable(v) for k, v in value.items()}
+        return {str(k): to_jsonable(v, max_text) for k, v in value.items()}
     if isinstance(value, list | tuple):
-        return [to_jsonable(v) for v in value]
+        return [to_jsonable(v, max_text) for v in value]
     if value is None or value is pd.NaT:
         return None
     if isinstance(value, pd.Timestamp):
@@ -79,11 +89,11 @@ def to_jsonable(value: Any) -> Any:
     if isinstance(value, timedelta | pd.Timedelta | np.timedelta64):
         return to_jsonable(pd.Timedelta(value).total_seconds() / 86400)  # days
     if isinstance(value, str):
-        return value if len(value) <= MAX_TEXT_CHARS else value[:MAX_TEXT_CHARS] + "…"
+        return _cut(value, max_text)
     if isinstance(value, int | float):
         return value
     # Anything else DuckDB or pandas may hand back (UUID, bytes, time...) becomes text.
-    return to_jsonable(str(value))
+    return to_jsonable(str(value), max_text)
 
 
 def table(frame: pd.DataFrame) -> dict:
@@ -427,7 +437,7 @@ def search_reports(store: ProductionStore, args: ReportSearchArgs) -> dict:
     rows = store.query(
         f"""
         SELECT doc_id, page, topic, source, statement_en,
-               CASE WHEN quote_check = 'unverified' THEN NULL ELSE quote END AS quote,
+               CASE WHEN quote_check = 'exact' THEN quote END AS quote,
                quote_check, wells
         FROM (SELECT *, {score or "0"} AS score FROM report_facts) {where}
         ORDER BY score DESC, doc_id, page, fact_no LIMIT {args.limit}
@@ -458,13 +468,13 @@ def read_report_page(store: ProductionStore, args: ReportPageArgs) -> dict:
         "document": _documents([args.doc_id])[args.doc_id],
         "page": args.page,
         "pages": int(page.loc[0, "pages"]),
-        "text": page.loc[0, "text"][:3000],
+        "text": page.loc[0, "text"],  # whole: PUD pages are at most ~7k characters
         "image": page.loc[0, "image"],
     }
     if "report_facts" in store.tables:
         facts = store.query(
             "SELECT topic, source, statement_en, "
-            "CASE WHEN quote_check = 'unverified' THEN NULL ELSE quote END AS quote, "
+            "CASE WHEN quote_check = 'exact' THEN quote END AS quote, "
             "quote_check, wells FROM report_facts "
             "WHERE doc_id = ? AND page = ? ORDER BY fact_no",
             [args.doc_id, args.page],
@@ -475,7 +485,7 @@ def read_report_page(store: ProductionStore, args: ReportPageArgs) -> dict:
         ).rows
         result["summary_en"] = summary.iloc[0, 0] if len(summary) else None
         result["facts"] = table(facts)
-    return to_jsonable(result)
+    return to_jsonable(result, max_text=None)
 
 
 @dataclass(frozen=True)
@@ -563,9 +573,10 @@ TOOLS = [
         "development plan (PUD, in Norwegian): planned plateau rates, expected water "
         "breakthrough, facility limits such as maximum water cut. Each fact has an English "
         "statement, the verbatim original quote, and quote_check: 'exact' (the quote is on "
-        "the page as written), 'tokens' (all its words and numbers are on the page, e.g. a "
-        "table row) or 'unverified' (quote withheld: it was not found on the page). Use it to "
-        "compare what happened with what was planned.",
+        "the page as written), 'tokens' (its words and numbers are on the page but not in "
+        "that order, e.g. a table row) or 'unverified' (not found on the page). Only exact "
+        "quotes are given; for the others, use the English statement. Use it to compare what "
+        "happened with what was planned.",
         ReportSearchArgs,
         search_reports,
     ),

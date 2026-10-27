@@ -142,6 +142,23 @@ def test_quote_check_levels() -> None:
     assert quote_check('oljebasert slam i 8 ½" og 12 ¼" seksjonene', page) == "exact"
     assert quote_check("3 injeksjonsbrønner Borevæske 4485 Kaks 2115", page) == "tokens"
     assert quote_check("3 injeksjonsbrønner Borevæske 9999", page) == "unverified"
+    # Numbers count whole: digits that occur only inside other numbers are not on the page.
+    assert quote_check("3 injeksjonsbrønner Borevæske 448", page) == "unverified"
+
+
+def test_tampered_quotes_on_pud_page_23_are_not_exact() -> None:
+    """The audit's swapped-number quotes. Two are caught as unverified; the other two still
+    read as 'tokens' (each number is on the page, in another row), which is why only exact
+    quotes reach the agent."""
+    table = (
+        "Tabell 4.3 - Felt begrensninger Antatt produksjonsstart mars.2007 Væskekapasitet 13000 "
+        "Sm3 /d Oljekapasitet 9000 Sm3 /d Gass kapasitet 1,5 M Sm3 /d Maksimum vannkutt 0,80"
+    )
+    assert quote_check("Maksimum vannkutt 0,40", table) == "unverified"
+    assert quote_check("bryter gjennom i brønnene etter omlag 5 år", PAGE_23) == "unverified"
+    assert quote_check("Væskekapasitet 9000 Sm3/d", table) == "tokens"
+    assert quote_check("Oljekapasitet 13000 Sm3/d", table) == "tokens"
+    assert quote_check("Oljekapasitet 9000 Sm3/d", table) == "exact"
 
 
 def test_parse_pages() -> None:
@@ -228,6 +245,30 @@ def test_read_report_page(processed_dir) -> None:
     assert page["image"] == "reports/volve_pud/p023.png"
     assert len(page["facts"]["rows"]) == 3
     assert "error" in execute(store, "read_report_page", '{"doc_id": "nope", "page": 1}')
+
+
+def test_a_long_report_page_reaches_the_agent_whole(processed_dir) -> None:
+    """PUD p.28 runs past 2000 characters; the Ba/Sr and Utsira sentences come last."""
+    pages = pd.read_parquet(processed_dir / PAGES_FILE)
+    long_text = "Vanninjeksjon. " * 300 + "Barium og strontium i Utsira vannet."
+    pages.loc[pages["page"] == 23, "text"] = long_text
+    pages.to_parquet(processed_dir / PAGES_FILE, index=False)
+    store = ProductionStore(processed_dir)
+
+    page = execute(store, "read_report_page", '{"doc_id": "volve_pud", "page": 23}')["result"]
+
+    assert page["text"] == long_text
+
+
+def test_a_report_not_in_the_registry_is_skipped_not_fatal(processed_dir) -> None:
+    pages = pd.read_parquet(processed_dir / PAGES_FILE)
+    stray = pages.iloc[:1].assign(doc_id="f12_completion_report")
+    pd.concat([pages, stray]).to_parquet(processed_dir / PAGES_FILE, index=False)
+
+    store = ProductionStore(processed_dir, as_of=date(2012, 12, 31))
+
+    ids = store.query("SELECT DISTINCT doc_id FROM report_pages").rows["doc_id"].tolist()
+    assert ids == ["volve_pud"]
 
 
 def test_reports_issued_after_as_of_are_hidden(processed_dir) -> None:
