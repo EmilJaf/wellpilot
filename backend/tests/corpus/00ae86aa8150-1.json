@@ -5,13 +5,12 @@
   "model": "meta-models/muse-spark-open-1026",
   "question": "What oil plateau rate and duration does the forecast figure on page 23 of the 2005 development plan show?"
  },
- "to_review": true,
- "note": "",
+ "to_review": false,
+ "note": "Re-judged when a finding's detail numbers became looked up instead of declared (Oct 27 evening): the remaining problems are undeclared claim numbers, facts on warned evidence, causes as facts or uncited sources, all fair.",
  "expected": {
   "accepted": false,
   "flagged": [
    "Finding 1",
-   "Finding 2",
    "Summary"
   ]
  },

@@ -199,7 +199,8 @@ class Finding(BaseModel):
     detail: str | None = Field(
         None,
         description="Optional support for an engineer: the fit behind the claim (model, "
-        "window, r2_log, di, b), exact values, how it was found. Checked like the claim.",
+        "window, r2_log, di, b) and exact values, copied as the tools give them. Its numbers "
+        "need no declaring, but each must be in the evidence the finding cites.",
     )
     evidence_ids: list[str] = Field(
         description="Ids (E1, E2, ...) of the evidence every number and date in the claim "
@@ -270,7 +271,9 @@ def _numbers_in_text(
 def _matches(candidates: Iterable[float], value: float, decimals: int, suffix: str | None) -> bool:
     """Does any candidate round to the claimed value at the precision it was written?"""
     pool = list(candidates)
-    for scale in SCALES.get(suffix or "", (1.0,)):
+    # A unit may be written in the evidence too ("6 MSm3" in the plan): the bare number
+    # counts as well as the scaled one.
+    for scale in dict.fromkeys((*SCALES.get(suffix or "", ()), 1.0)):
         target = value * scale
         tolerance = 0.5 * 10**-decimals * scale + 1e-9
         if any(abs(n - target) <= tolerance for n in pool):
@@ -430,6 +433,22 @@ def _unsupported(
             numbers.append(_as_written(value, decimals, suffix))
     dates = [d for d in DATE.findall(text) if d not in free_dates and not pool.has_date(d)]
     return numbers, dates
+
+
+def _looked_up(text: str, pool: _Pool, free: set[float]) -> list[str]:
+    """Numbers a text writes (outside quotes) that its evidence does not hold, read as a
+    declared number would be: either convention, trailing zeros as rounding ("1500" is good
+    to 50), a unit's scale or the unit written in the evidence too. For a finding's detail,
+    whose numbers are looked up rather than declared."""
+    missing = []
+    for match in WRITTEN_NUMBER.finditer(_mask(QUOTED.sub(" ", _normalize(text)))):
+        written = match.group(0).strip()
+        values = [n for european in (False, True) for n in _numbers_in_text(written, european)]
+        if not values or all(_free(*n, pool, free) for n in values):
+            continue
+        if not any(_reads_as(r, pool.numbers) for r in _readings(written)):
+            missing.append(written)
+    return list(dict.fromkeys(missing))
 
 
 def _quoted_in(quote: str, pool: _Pool) -> bool:
@@ -1132,6 +1151,34 @@ def _blank(text: str, *patterns: re.Pattern) -> str:
     return text
 
 
+def lookup_spans(text: str | None, log: EvidenceLog | None) -> list[dict]:
+    """Spans for a text whose numbers are looked up rather than declared (a finding's
+    detail): each number with the first evidence that holds it, and each quote."""
+    if not text:
+        return []
+    spans = [s for s in display_spans(text, [], log) if s["kind"] == "quote"]
+    plain = text.replace("\u2212", "-").replace("\u2013", "-")
+    masked = _blank(plain, DATE, WELL, CALENDAR_WINDOW, REFERENCE, DAY_MONTH_YEAR, MONTH_YEAR)
+    pools = [(e.id, _Pool([e])) for e in log or []]
+    for match in WRITTEN_NUMBER.finditer(masked):
+        found = _numbers_in_text(match.group(0))
+        if len(found) != 1:
+            continue
+        value, decimals, suffix = found[0]
+        source = next((i for i, pool in pools if pool.has_number(value, decimals, suffix)), None)
+        if source:
+            spans.append(
+                {
+                    "kind": "number",
+                    "start": match.start(),
+                    "end": match.end(),
+                    "value": value,
+                    "evidence_id": source,
+                }
+            )
+    return sorted(spans, key=lambda s: (s["start"], s["kind"] != "quote"))
+
+
 def display_spans(
     text: str | None, numbers: list[DeclaredNumber] | None, log: EvidenceLog | None = None
 ) -> list[dict]:
@@ -1179,7 +1226,8 @@ def display_spans(
 
 
 def finding_text(finding: Finding) -> str:
-    """What the checker reads of a finding: its claim and its detail, as one text."""
+    """A finding's claim and detail as one text: for dates, quotes, causes and wells. Its
+    numbers are checked apart: the claim's declared, the detail's looked up."""
     return finding.claim + (f"\n{finding.detail}" if finding.detail else "")
 
 
@@ -1221,9 +1269,18 @@ def check_submission(submission: Submission, log: EvidenceLog, question: str = "
         pool = _Pool(e for e in cited if not (e.id in calcs and calcs[e.id].unsupported))
         numbers, dates = _unsupported(text, pool, free, free_dates)
         if finding.numbers is not None:
+            # The claim declares its numbers; the detail is supporting values copied from
+            # the tools, each looked up in the cited evidence instead (declaring them all
+            # cost every run of Oct 27 evening a round, and the model deleted the details).
+            supported = _looked_up(finding.detail or "", pool, free)
+            if supported:
+                problems.append(
+                    f"Finding {n}: in its detail, {', '.join(supported)} not found in {ids}. "
+                    "Copy the values as the tools give them, or leave them out."
+                )
             problems += _declared(
                 f"Finding {n}",
-                text,
+                finding.claim,
                 finding.numbers,
                 log,
                 calcs,

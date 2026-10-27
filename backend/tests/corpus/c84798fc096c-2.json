@@ -5,8 +5,8 @@
   "model": "meta-models/muse-spark-open-1026",
   "question": "Was F-12's falling oil rate in 2011-2013 a loss of reservoir pressure or water taking over the well? How much oil was left before an uneconomic water cut?"
  },
- "to_review": true,
- "note": "",
+ "to_review": false,
+ "note": "Fair: 80% written but not declared.",
  "expected": {
   "accepted": false,
   "flagged": [

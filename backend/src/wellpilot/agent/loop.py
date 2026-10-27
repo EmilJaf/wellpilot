@@ -24,6 +24,7 @@ from wellpilot.agent.checker import (
     Submission,
     check_submission,
     display_spans,
+    lookup_spans,
 )
 from wellpilot.agent.evidence import Evidence, EvidenceLog
 from wellpilot.agent.tools import TOOLS_BY_NAME, execute, tool_schemas
@@ -90,9 +91,10 @@ months") and numbers from the question need no declaration.
 question in plain words. Round numbers to what a reader needs (0.45 per year, 72%, 1.13 \
 million Sm3) and give their units; in the summary, at most 3 significant digits (0.45, not \
 0.4461; 1.13 million, not 1,133,053). Each finding's claim is one or two plain sentences \
-with at most three numbers; the fit behind it (model, window, r2_log, di, b) and exact \
-values go in its detail, which is checked the same way. Keep fit statistics out of claims \
-and the summary, and never write internal scores or field names. For a share such as \
+with at most three numbers, all declared; the fit behind it (model, window, r2_log, di, b) \
+and exact values go in its detail, copied as the tools give them: the detail's numbers need \
+no declaring, but each must be in the evidence the finding cites. Keep fit statistics out of \
+claims and the summary, and never write internal scores or field names. For a share such as \
 water cut, give the values before and after, not a percent change. Translate every quote \
 that is not in English, in brackets right after it. A summary number from evidence with \
 warnings needs a hedge in its own sentence ("the fit suggests").
@@ -149,14 +151,14 @@ def submit_tool_schema() -> dict:
         "function": {
             "name": SUBMIT,
             "description": "Submit the final answer: a summary and findings that cite "
-            "evidence ids, with every number declared. A checker verifies them; fix any "
-            "problems it returns. A finding looks like: "
+            "evidence ids, with every number of the summary and the claims declared. A checker "
+            "verifies them; fix any problems it returns. A finding looks like: "
             '{"claim": "F-12\'s oil rate fell 72% around 2010-07-18, to 1 146 Sm3/d.", '
-            '"detail": "Weekly mean 4 050 -> 1 146 Sm3/d; exponential fit after it, r2_log '
-            '0.87.", "evidence_ids": ["E3", "E7"], "confidence": "fact", "numbers": '
+            '"detail": "Weekly mean 4050.37 -> 1145.72 Sm3/d; exponential fit after it, '
+            'r2_log 0.8732.", "evidence_ids": ["E3", "E7"], "confidence": "fact", "numbers": '
             '[{"text": "72%", "value": 0.7171, "evidence_id": "E3"}, {"text": "1 146", '
-            '"value": 1146, "evidence_id": "E3"}, {"text": "4 050", "value": 4050, '
-            '"evidence_id": "E3"}, {"text": "0.87", "value": 0.8732, "evidence_id": "E7"}]}.',
+            '"value": 1146, "evidence_id": "E3"}]}. The detail\'s numbers are looked up in the '
+            "cited evidence: copy them as the tools give them.",
             "parameters": parameters,
         },
     }
@@ -268,7 +270,7 @@ def with_spans(result: dict, log: EvidenceLog | None = None) -> dict:
             cited = EvidenceLog.restore(asdict(e) for e in log if e.id in ids)
         declared = numbers(finding.get("numbers"))
         finding["spans"] = display_spans(finding.get("claim"), declared, cited)
-        finding["detail_spans"] = display_spans(finding.get("detail"), declared, cited)
+        finding["detail_spans"] = lookup_spans(finding.get("detail"), cited)
     return result
 
 

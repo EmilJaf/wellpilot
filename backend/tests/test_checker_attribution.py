@@ -106,26 +106,26 @@ def test_an_undeclared_number_the_evidence_holds_comes_back_as_a_declaration() -
     assert '"evidence_id": "E5"}' in problems[0]
 
 
-def test_a_findings_detail_is_checked_like_its_claim() -> None:
-    claim = "F-12 needs attention first: its downhole gauge is dead."
+def test_a_findings_detail_numbers_are_looked_up_in_its_evidence() -> None:
+    """The claim declares its numbers; the detail holds values copied from the tools, which
+    need no declaring but must be in the evidence the finding cites."""
     right = Finding(
-        claim=claim,
-        detail="The gauge has read 0 on 81 days since 2010-10-12.",
+        claim="F-12 needs attention first: its downhole gauge is dead.",
+        detail="Gauge failure: 81 zero days from 2010-10-12, last good reading 253.9 bar.",
         evidence_ids=["E4"],
         confidence="fact",
-        numbers=[d("81", 81, "E4")],
+        numbers=[],
     )
-    wrong = right.model_copy(update={"detail": "The gauge has read 0 on 91 days since 2010-10-12."})
+    wrong = right.model_copy(update={"detail": "Gauge failure: 91 zero days from 2010-10-12."})
+    misdated = right.model_copy(update={"detail": "Gauge failure: 81 zero days from 2010-10-21."})
     log = corpus_log(AS_OF_2010)
 
-    assert check_submission(Submission(summary="Done.", findings=[right]), log) == []
-    problems = check_submission(
-        Submission(
-            summary="Done.", findings=[wrong.model_copy(update={"numbers": [d("91", 91, "E4")]})]
-        ),
-        log,
-    )
-    assert problems and "'91' = 91 is not in E4" in problems[0]
+    def problems(finding: Finding) -> list[str]:
+        return check_submission(Submission(summary="Done.", findings=[finding]), log)
+
+    assert problems(right) == []
+    assert "in its detail, 91 not found in E4" in problems(wrong)[0]
+    assert "2010-10-21 not found" in problems(misdated)[0]
 
 
 def test_several_calculations_in_one_call_are_checked_one_by_one() -> None:

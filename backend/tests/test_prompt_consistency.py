@@ -107,5 +107,5 @@ def test_the_submit_tools_example_finding_passes() -> None:
         number["evidence_id"] = {"E3": "E1", "E7": "E2"}[number["evidence_id"]]
 
     finding = Finding.model_validate(example)
-    assert finding.detail and len(finding.numbers) == 4
+    assert finding.detail and len(finding.numbers) == 2  # the claim's; the detail's are looked up
     assert check_submission(Submission(summary="Done.", findings=[finding]), log) == []
