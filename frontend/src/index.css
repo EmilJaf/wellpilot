@@ -1716,6 +1716,23 @@ code,
   border-top: 2px dashed var(--ink);
 }
 
+.plan-figure-finding {
+  margin: 0 0 4px;
+  font-size: 14.5px;
+}
+
+.plan-figure-quotes {
+  margin: 0 0 10px;
+  padding-left: 18px;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+
+.plan-figure-translation {
+  color: var(--ink-3);
+}
+
 .plan-figure-source {
   margin-top: 8px;
   font-size: 13.5px;

@@ -3,14 +3,24 @@ traced by colour, and SAM 3.1's mask read through Meta's parser (a mask made wit
 codec, so no API call). On a chart drawn here, like the PUD's: grey fill, gridlines every
 1000 Sm3/d, a magenta curve."""
 
+import json
 from datetime import date
+from pathlib import Path
 
 import numpy as np
 import pytest
 from meta_sam_parser._mask_codec import _encode_raster  # the codec SAM's masks use
 from PIL import Image
 
-from wellpilot.ingest.figure import compare, digitize, find_axes
+from wellpilot.ingest.figure import (
+    axes_from,
+    compare,
+    digitize,
+    find_axes,
+    mask_trace,
+    monthly,
+    parse_masks,
+)
 
 LEFT, TOP, RIGHT, BOTTOM = 60, 30, 660, 480  # plot area in the drawn chart
 
@@ -100,3 +110,25 @@ def test_no_mask_is_an_error_and_disagreement_is_measured() -> None:
         digitize(figure, "<0f>\n")
     far = compare({100: row_of(5000)}, {100: row_of(4000)}, axes)
     assert far["median_sm3_per_day"] == pytest.approx(1000, abs=5) and far["within_200"] == 0
+
+
+FIXTURE = Path(__file__).parent / "fixtures" / "sam"
+
+
+def test_sams_real_answer_rebuilds_the_saved_curve() -> None:
+    """SAM 3.1's answer for the PUD's Figure 4.2, as it came: Meta's parser reads one mask,
+    and the curve read from it is the one saved, month by month. The plateau is the plan's
+    19 months, near its 9,000 Sm3/d capacity at 94% regularity."""
+    saved = json.loads((FIXTURE / "plan_figure_curve.json").read_text())
+    axes = axes_from(saved["calibration"])
+
+    masks = parse_masks((FIXTURE / "plan_figure_sam_output.txt").read_text())
+
+    assert len(masks) == 1 and masks[0].confidence == pytest.approx(0.91, abs=0.005)
+    trace = mask_trace(masks[0], axes, (axes.left, axes.top))
+    assert monthly(trace, axes) == saved["curve"]
+    curve = dict(zip(saved["curve"]["month"], saved["curve"]["rate"], strict=True))
+    plateau = [m for m, r in curve.items() if r >= 0.98 * max(curve.values())]
+    assert (plateau[0], plateau[-1], len(plateau)) == ("2008-03", "2009-09", 19)
+    assert max(curve.values()) == pytest.approx(9000 * 0.94, abs=40)
+    assert saved["agreement_with_colour"]["median_sm3_per_day"] <= 15

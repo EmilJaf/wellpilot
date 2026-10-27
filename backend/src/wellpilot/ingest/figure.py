@@ -43,6 +43,7 @@ from wellpilot.config import get_settings
 
 CURVE_FILE = "plan_figure_curve.json"
 OVERLAY_FILE = "plan_figure_overlay.png"
+SAM_OUTPUT_FILE = "plan_figure_sam_output.txt"  # SAM's answer as it came, kept to rebuild
 MODEL = "sam-3.1"
 PROMPT = "magenta line"
 SOURCE = {
@@ -79,6 +80,12 @@ class Axes:
         frac = (column - self.left) / (self.right - self.left)
         start = date(YEAR_AXIS[0], 1, 1)
         return start + timedelta(days=frac * years * 365.25)
+
+
+def axes_from(calibration: dict) -> Axes:
+    """The axes a saved curve file was read with."""
+    left, top, right, bottom = calibration["plot_area_px"]
+    return Axes(left, right, top, bottom, list(calibration["gridline_rows"]))
 
 
 def render_figure(pdf_path: Path) -> Image.Image:
@@ -250,6 +257,7 @@ def digitize(figure: Image.Image, sam_output: str | None) -> tuple[dict, dict[in
         "calibration": {
             "plot_area_px": [axes.left, axes.top, axes.right, axes.bottom],
             "gridlines": len(axes.gridlines),
+            "gridline_rows": [round(r, 1) for r in axes.gridlines],
             "rate_axis_sm3_per_day": list(RATE_AXIS),
             "year_axis": list(YEAR_AXIS),
             "how": "plot area and gridlines found in the image; edge values from the axis labels",
@@ -300,15 +308,20 @@ def plot_png(pdf_path: Path) -> bytes:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--colour", action="store_true", help="colour trace only, no SAM call")
+    parser.add_argument(
+        "--from-output", type=Path, help="rebuild from SAM output text saved earlier, no call"
+    )
     args = parser.parse_args()
     settings = get_settings()
     pdf = settings.raw_dir / "reports" / "Volve_PUD.pdf"
     output = None
-    if not args.colour:
+    if args.from_output:
+        output = args.from_output.read_text()
+    elif not args.colour:
         if not settings.model_api_key:
             raise SystemExit("MODEL_API_KEY is not set (SAM 3.1 is on the Meta Model API)")
         output = asyncio.run(segment(settings.model_api_key, settings.meta_base_url, plot_png(pdf)))
-        (settings.processed_dir / "plan_figure_sam_output.txt").write_text(output)
+        (settings.processed_dir / SAM_OUTPUT_FILE).write_text(output)
     result = build(pdf, settings.processed_dir, output)
     print(
         json.dumps(

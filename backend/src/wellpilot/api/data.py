@@ -4,6 +4,7 @@ import inspect
 import json
 from datetime import date
 
+import numpy as np
 import pandas as pd
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import FileResponse
@@ -84,8 +85,28 @@ def field_plan_figure(request: Request) -> dict:
         )
         .rows
     )
+    figure = json.loads(path.read_text())
+    curve = figure["curve"]
+    top = max(curve["rate"])
+    flat = [m for m, r in zip(curve["month"], curve["rate"], strict=True) if r >= 0.98 * top]
+    store = _store(request)
+    said = []
+    if "report_facts" in store.tables:
+        # What the plan's text says about the same plateau, quoted where it is exact.
+        said = store.query(
+            "SELECT page, quote, statement_en FROM report_facts WHERE doc_id = 'volve_pud' "
+            "AND quote_check = 'exact' AND (quote ILIKE 'Platåraten%' OR quote ILIKE "
+            "'regularitet på 94%') ORDER BY page, quote"
+        ).rows.to_dict(orient="records")
     return {
-        **json.loads(path.read_text()),
+        **figure,
+        "plateau": {
+            "sm3_per_day": round(float(np.median([r for r in curve["rate"] if r >= 0.98 * top]))),
+            "first": flat[0],
+            "last": flat[-1],
+            "months": len(flat),
+        },
+        "plan_text": said,
         "actual": {
             "month": monthly["month"].tolist(),
             "rate": [round(float(v)) for v in monthly["rate"]],

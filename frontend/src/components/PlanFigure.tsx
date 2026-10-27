@@ -38,26 +38,50 @@ function FigureChart({ f }: { f: Figure }) {
   const line = (months: string[], rates: number[]) => months.map((m, i) => `${xAt(time(m))},${yAt(rates[i])}`).join(' ')
   const plan = Object.fromEntries(f.curve.month.map((m, i) => [m, f.curve.rate[i]]))
   const actual = Object.fromEntries(f.actual.month.map((m, i) => [m, f.actual.rate[i]]))
-  const plateau = Math.max(...f.curve.rate)
   const sam = f.read_by === 'sam-3.1'
+  // The plan's plateau rate and the regularity its profiles assume, from its own quotes
+  // ("Platåraten på 9.000 Sm3/d", "regularitet på 94 %").
+  const rateQuote = f.plan_text.map((q) => q.quote.match(/Platåraten på ([\d.]+)/)?.[1]).find(Boolean)
+  const shareQuote = f.plan_text.map((q) => q.quote.match(/regularitet på (\d+) %/)?.[1]).find(Boolean)
+  const regularity =
+    rateQuote && shareQuote ? { rate: Number(rateQuote.replace(/\./g, '')), share: Number(shareQuote) / 100 } : null
   const years = Array.from({ length: 6 }, (_, i) => 2007 + 2 * i)
 
   return (
     <div className="plan-figure">
       <h3 className="accuracy-title field-view-second">The plan&rsquo;s forecast as drawn, against what the field made</h3>
       <p className="accuracy-lead">
-        The plan&rsquo;s text gives a plateau of 9 000 Sm³/d; its Figure 4.2 draws the rate it expected month by month,
-        with a plateau near {Math.round(plateau / 100) * 100} Sm³/d.{' '}
+        The plan states its forecast in words and draws it in Figure 4.2.{' '}
         {sam ? (
           <>
-            SAM 3.1, Meta&rsquo;s segmentation model, found the curve in the picture from the words &ldquo;{f.prompt}
-            &rdquo;; the axes were calibrated on the figure&rsquo;s {f.calibration.gridlines} gridlines. A colour trace of
-            the same pixels agrees within {f.agreement_with_colour?.median_sm3_per_day} Sm³/d (median).
+            SAM 3.1, Meta&rsquo;s segmentation model, found the drawn curve from the words &ldquo;{f.prompt}&rdquo;; the axes
+            were calibrated on the figure&rsquo;s {f.calibration.gridlines} gridlines, and a colour trace of the same pixels
+            agrees within {f.agreement_with_colour?.median_sm3_per_day} Sm³/d (median).
           </>
         ) : (
-          <>The curve was traced by its colour; the SAM 3.1 reading has not been run yet.</>
+          <>The drawn curve was traced by its colour; the SAM 3.1 reading has not been run yet.</>
         )}
       </p>
+      <p className="plan-figure-finding">
+        The drawn plateau: about <strong>{f.plateau.sm3_per_day.toLocaleString('en')} Sm³/d for {f.plateau.months} months</strong>{' '}
+        ({f.plateau.first} to {f.plateau.last}).
+      </p>
+      {regularity && (
+        <p className="plan-figure-finding">
+          The text&rsquo;s rate at the regularity it assumed: {regularity.rate.toLocaleString('en')} &times;{' '}
+          {regularity.share} = <strong>{Math.round(regularity.rate * regularity.share).toLocaleString('en')} Sm³/d</strong>
+          , the level the figure draws.
+        </p>
+      )}
+      {f.plan_text.length > 0 && (
+        <ul className="plan-figure-quotes">
+          {f.plan_text.map((q) => (
+            <li key={q.quote}>
+              <q lang="no">{q.quote}</q> <span className="plan-figure-translation">({q.statement_en} PUD p.{q.page})</span>
+            </li>
+          ))}
+        </ul>
+      )}
       <p className="readout">
         {hover ? (
           <>

@@ -197,6 +197,8 @@ export type PlanFigure = {
   curve: { month: string[]; rate: number[] }
   agreement_with_colour?: { columns: number; median_sm3_per_day: number; p90_sm3_per_day: number; within_200: number }
   actual: { month: string[]; rate: number[] }
+  plateau: { sm3_per_day: number; first: string; last: string; months: number }
+  plan_text: { page: number; quote: string; statement_en: string }[]
 }
 
 /** The field screen replayed month by month, with each producer's rate and its wells' work. */
