@@ -272,7 +272,8 @@ def edges(hit: np.ndarray, cal: Calibration, under: np.ndarray | None = None) ->
             elif run:
                 end = x
                 break
-        if end < hit.shape[1]:  # a run to the track's edge is a gridline across it
+        # A run to the track's edge is a gridline across it; no run, nothing beside.
+        if run == 0 or end < hit.shape[1]:
             widths[y] = float(run)
     return widths
 
@@ -336,12 +337,12 @@ def profile(widths: dict[int, float], cal: Calibration, line_px: float = 0.0) ->
 
 def _line_px(widths: dict[int, float]) -> float:
     """The width of the line along an area drawn beside another: what the area measures
-    where it holds nothing (the median of its narrow rows)."""
-    values = np.array([w for w in widths.values() if w > 0])
+    where it holds nothing (the median of its narrow rows). A reading that leaves the line
+    out (SAM's mask of the area) has rows of 0 there, and nothing to take off."""
+    values = np.array(list(widths.values()))
     if not len(values):
         return 0.0
-    narrow = values[values <= 3 * np.percentile(values, 5)]
-    return float(np.median(narrow))
+    return float(np.median(values[values <= 3 * np.percentile(values, 5)]))
 
 
 def shares(rates: dict[float, float], top_m: float = 30.0) -> dict[float, float]:
@@ -400,6 +401,9 @@ def read(
             "rate_axis": list(plot.rate_axis),
             "depth_rows_px": [round(r, 1) for r in cal.rows],
             "depth_marks_m": list(plot.depth_marks),
+            "body_rows_px": list(cal.body),
+            "crop_origin_px": list(origin),
+            "image_height_px": rgb.shape[0],
             "how": "track edges and labelled depths found in the image; values from the "
             "header and the depth labels",
         },
@@ -420,12 +424,9 @@ def read(
             phase.update({"read_by": "colour trace (no model)", "rate": by_colour})
             hits[layer.phase], read_edges[layer.phase] = colour, by_colour_px
         else:
-            masks = parse_masks(sam_outputs[layer.phase])
-            if not masks:
-                raise ValueError(f"{plot.id}: SAM found no {layer.prompt!r}")
-            sam = mask_hits(masks, shape, origin)
-            by_sam_px = edges(sam, cal, hits[under] if under else None)
-            by_sam = profile(by_sam_px, cal, _line_px(by_sam_px) if under else 0.0)
+            masks, sam, by_sam_px, by_sam = sam_reading(
+                sam_outputs[layer.phase], cal, origin, shape, layer, hits.get(under or "")
+            )
             phase.update(
                 {
                     "read_by": MODEL,
@@ -451,6 +452,40 @@ def read(
             )
     _checks(plot, rgb, cal, result, las)
     return result, overlay
+
+
+def sam_reading(
+    output: str,
+    cal: Calibration,
+    origin: tuple[int, int],
+    shape: tuple[int, int],
+    layer: Layer,
+    under: np.ndarray | None,
+) -> tuple[list[SegmentationMaskRecord], np.ndarray, dict[int, float], dict[float, float]]:
+    """One layer read from SAM's answer: its masks, the track pixels they cover, the width
+    per image row, and the rates by depth. Needs no image, only the calibration, so a saved
+    answer rebuilds its reading anywhere."""
+    masks = parse_masks(output)
+    if not masks:
+        raise ValueError(f"{cal.plot.id}: SAM found no {layer.prompt!r}")
+    hit = mask_hits(masks, shape, origin)
+    widths = edges(hit, cal, under)
+    return masks, hit, widths, profile(widths, cal, _line_px(widths) if layer.beside else 0.0)
+
+
+def calibration_from(result: dict) -> tuple[Calibration, tuple[int, int], tuple[int, int]]:
+    """A saved reading's calibration, crop corner and the page's shape in track columns."""
+    c = result["calibration"]
+    plot = PLOTS_BY_ID[result["id"]]
+    cal = Calibration(
+        c["track_px"][0],
+        c["track_px"][1],
+        tuple(c["depth_rows_px"]),
+        tuple(c["body_rows_px"]),
+        plot,
+    )
+    shape = (c["image_height_px"], cal.right - cal.left - 1)
+    return cal, tuple(c["crop_origin_px"]), shape
 
 
 def _layer(plot: Plot, phase: str) -> Layer:

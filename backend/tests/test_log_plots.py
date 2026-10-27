@@ -4,7 +4,9 @@ image, the rate areas traced by colour, and SAM 3.1's masks read through Meta's 
 F-12's surveys: 2009's (an oil area from a zero line, depths underlined) and 2010's (water
 in cyan, the oil drawn beside it in black, on a grid)."""
 
+import json
 from dataclasses import replace
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -17,9 +19,11 @@ from wellpilot.ingest.log_plots import (
     PLOTS_BY_ID,
     WATER_2010,
     calibrate,
+    calibration_from,
     colour_hits,
     crop,
     read,
+    sam_reading,
 )
 
 # 2009 style: depths underlined at these rows; the track from -500 to 6000 m3/d.
@@ -185,3 +189,46 @@ def test_a_2010_plot_reads_water_and_the_oil_beside_it() -> None:
         assert oil[3200.0] == pytest.approx(0, abs=30)
         assert water[3200.0] == pytest.approx(1050, abs=60)
     assert by_sam["phases"]["oil"]["agreement_with_colour"]["median_share_gap"] <= 0.02
+
+
+SAM_ANSWERS = Path(__file__).parent / "fixtures" / "sam" / "log_plots"
+SAVED = json.loads(
+    (Path(__file__).parent / "fixtures" / "plt" / "production_log_plots.json").read_text()
+)
+
+
+@pytest.mark.parametrize("saved", SAVED, ids=[s["id"] for s in SAVED])
+def test_sams_real_answers_rebuild_the_saved_readings(saved: dict) -> None:
+    """SAM 3.1's answers for F-12's five log plots, as they came: Meta's parser reads one
+    mask per prompt, and the rates read from them are the ones saved, depth by depth."""
+    cal, origin, shape = calibration_from(saved)
+    hits: dict = {}
+    for layer in PLOTS_BY_ID[saved["id"]].layers:
+        answer = (SAM_ANSWERS / f"{saved['id']}-{layer.phase}.txt").read_text()
+        masks, hit, _, rates = sam_reading(
+            answer, cal, origin, shape, layer, hits.get(layer.beside or "")
+        )
+        hits[layer.phase] = hit
+        phase = saved["phases"][layer.phase]
+        assert len(masks) == 1 and phase["read_by"] == "sam-3.1"
+        assert {str(d): v for d, v in rates.items()} == phase["rate"]
+        assert phase["agreement_with_colour"]["median_share_gap"] <= 0.01
+
+
+def test_the_readings_hold_their_checks() -> None:
+    """2009: the upper two zones' share against the report's "~83%", and one volume factor
+    at all three rates; 2010: the plot against its LAS files."""
+    by_id = {s["id"]: s for s in SAVED}
+    assert by_id["f12-2009-high"]["checks"]["upper_two_zones_share"] == pytest.approx(
+        0.83, abs=0.01
+    )
+    factors = [
+        by_id[f"f12-2009-{r}"]["checks"]["top_rate_over_simulated_surface_rate"]
+        for r in ("high", "medium", "low")
+    ]
+    assert max(factors) - min(factors) < 0.03
+    for rate in ("low", "medium"):
+        checks = by_id[f"f12-2010-{rate}"]["checks"]
+        assert checks["oil_against_las"]["median_share_gap"] <= 0.02
+        assert checks["water_against_las"]["median_share_gap"] <= 0.01
+        assert checks["water_cut_at_top"] == pytest.approx(0.63, abs=0.02)
