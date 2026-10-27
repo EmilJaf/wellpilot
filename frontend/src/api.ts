@@ -141,6 +141,7 @@ export type MethodSummary = {
   mean_abs_error: number
   median_bias: number
   misses_over_50pct?: number
+  bootstrap_band_coverage?: number
 }
 
 /** The backtest: 12-month oil forecasts made at past dates, against what the wells then produced. */

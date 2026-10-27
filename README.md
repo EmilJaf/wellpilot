@@ -1,16 +1,81 @@
 # WellPilot
 
-An AI agent that helps oil and gas engineers analyze well performance, from raw field data to explainable forecasts.
+An AI agent for production and reservoir engineers. Ask why a well changed; it works the answer out on the field's own data and reports, and every number, date and quote in its answer is checked against the tool result it came from before you see it.
 
-You ask a question in plain language, for example "Why did well F-12 decline faster after 2014?". The agent plans the analysis and runs real tools over the field data: decline curve fitting, forecasting and anomaly detection. It reads the well reports, checks its own results, and returns a dashboard. Every conclusion traces back to the source data and to the code that actually ran.
+It runs on **Muse Spark Open**, Meta's open-weight model, so an operator can host it next to well data that never leaves the company. This demo uses Equinor's open Volve field (Norwegian North Sea, 2008-2016).
 
-The agent runs on **Muse Spark Open**, Meta's open-weight model.
+- Live demo: _link added at deploy_
+- Demo video: _link added at submission_
 
-> Work in progress for the Meta Global AI Developer Hackathon (Oct 26 - Nov 4, 2026).
+Built for the Meta Global AI Developer Hackathon (Oct 26 - Nov 4, 2026), Indie track, "Push the Frontier".
+
+## Who it is for
+
+A production engineer reviewing a well asks questions like: why did output fall, is that a reservoir problem or a dead gauge, what will the well make next year, and how does it compare with the development plan? Answering one today means hours across a production database, PDF reports (here a 53-page plan in Norwegian), scripts and spreadsheets, and the result is hard to audit.
+
+WellPilot turns that into one question, answered in about a minute for roughly $0.15 of model time, where every figure links to the exact tool result, the data behind it and the Python that produced it. The decisions it supports are the everyday ones: next year's forecast for a budget, which wells need a gauge or a workover, and whether the field is running against the limits it was designed for.
+
+## What it does
+
+1. **Plans and runs real analysis.** The agent writes a short plan, then calls deterministic tools over the data: monthly production, event detection (regime changes, water-cut crossings, shut-ins, dead gauges), Arps decline fits and forecasts with uncertainty bands, read-only SQL, arithmetic, a search of report facts, the field against the plan's forecast and design limits, and a look at a report page image when only the picture holds the answer.
+2. **Checks itself before answering.** A deterministic checker reads the submitted answer. Every declared number must be in the evidence it cites, at the precision written; every date and quote must be there word for word; a finding that states a cause, or rests on a poor fit, must be marked an inference; a summary figure from a poor fit must be hedged. Problems go back to the model, which fixes them and resubmits. The UI shows each round and what changed.
+3. **Lets you trace every number.** Click a number in the answer to open the tool result with that value marked; click a Norwegian quote to see the plan page with the passage outlined; open the tool's source code, hashed at run time.
+
+## What it found in Volve
+
+From the recorded runs and the data tabs (all reproducible with the tools in this repo):
+
+- **A dead gauge, not a collapsing reservoir.** F-12's downhole pressure reads 0 from 2010-10-12 to the end of the data: 2095 days, 1830 of them flowing and producing 1,133,053 Sm3 of oil. A naive reading is a pressure collapse; the agent rules it out.
+- **Water broke through as the plan said.** The 2005 plan expects injection water to break through "etter omlag 2 år" (after about 2 years). F-12's water cut passed 5% on 2009-10-31, 20.6 months after first oil, and its oil rate stepped down from 4,050 to 1,146 Sm3/d around 2010-07-18.
+- **The field hit its design water cut when the plan expected it to close.** The plan's facility limit is "Maksimum vannkutt 0,80". The field as a whole reached 0.80 in June 2012 and was at or above it in 27 months from then on; liquid peaked at 11,438 Sm3/d, under the 13,000 Sm3/d capacity.
+- **The field outlived its plan.** The plan's P50 forecast was 11.34 million Sm3 by 2012. The field produced 10.04 million Sm3 by 2016, 2.48 million of it after the plan's last year, from wells drilled later (F-11, F-15 D, F-1 C) and an injector turned producer (F-5).
+
+## How accurate are its forecasts?
+
+A rolling backtest: for each producer, every 6 months, the data is cut at that day and the next 12 months of oil are forecast, then compared with what the well produced. The tools never return data after the cut. 25 forecasts in total (F-12, F-14, F-11).
+
+| Method | Median error | Mean error | Off by more than 50% |
+|---|---|---|---|
+| WellPilot agent, its own fit window | 14.8% | 23.2% | 3 |
+| Decline fit, last 3 months (best fixed window in hindsight) | 14.4% | 24.6% | 4 |
+| Decline fit, last 6 months | 19.7% | 32.0% | 5 |
+| Decline fit, last 24 months | 19.0% | 28.6% | 6 |
+| Decline fit, last 12 months | 21.0% | 29.4% | 6 |
+| Decline fit, whole history (the quick standard) | 27.6% | 39.5% | 8 |
+
+The agent halves the error of the whole-history fit and is closer in 16 of 25 forecasts. Against the best fixed window, which is only known after the fact, it is about even (closer in 15 of 25) with a lower mean error and fewer large misses. 25 overlapping forecasts from three wells are too few for a significance claim, and the agent's uncertainty bands are too narrow (an 80% band covered 28% of actuals); the app says so. The backtest's agent runs predate recording the model; rerun them with `--agent --refresh` to record it.
+
+## How it works
+
+```mermaid
+flowchart LR
+  Q[Question] --> A[Agent loop on Muse Spark Open]
+  A -->|tool calls| T[Deterministic tools: DuckDB, scipy, ruptures]
+  A -->|page image + question| V[look_at_page: Muse Spark Open vision]
+  T --> E[(Evidence log: E1, E2... with code hash)]
+  V --> E
+  A -->|submit_findings| C{Claim checker}
+  C -->|problems| A
+  C -->|verified| U[Answer: every number links to its evidence]
+  E --> U
+```
+
+- **Data:** Volve daily production (xlsx) is cleaned into Parquet: zeros in pressure and temperature columns become missing, 228 days absent from the sheet are restored as zero-production days, and every change is logged. The 2005 development plan (PDF, Norwegian) is rendered page by page to PNG plus text; at ingest Muse Spark reads every page image and extracts structured facts with verbatim quotes, and each quote is matched against the PDF's text layer (315 of 322 exact) and located on the page.
+- **Tools** (`backend/src/wellpilot/agent/tools.py`, `vision.py`): `list_wells`, `production_monthly`, `detect_events`, `fit_decline`, `forecast_production`, `run_sql` (one read-only SELECT, sandboxed), `calculate`, `search_reports`, `read_report_page`, `plan_vs_actual`, `field_vs_design`, `look_at_page`. Each successful call becomes evidence with its arguments, result, warnings and a hash of the tool's source.
+- **Checker** (`backend/src/wellpilot/agent/checker.py`): numbers are declared by the model (`{text, value, evidence_id}`) rather than parsed from prose; English and Norwegian number formats, unit scales and dates written in words are handled. It is tested with property-based fuzzing over 10 number formats, a corpus of real submissions replayed in CI, and a table of probes for false rejections and false passes.
+- **What the checker does not check:** whether the reasoning holds, the direction of a change, or which row of a table a number came from. That is why every number is one click from its source.
+- **Backend:** Python 3.13, FastAPI, Server-Sent Events, DuckDB, pandas, scipy, ruptures, pypdfium2. Runs are background tasks saved as JSON and replayable. 275 tests.
+- **Frontend:** React, TypeScript, Vite, uPlot, hand-written SVG charts. A control-room palette after ISA-101: grey by default, colour only for meaning (oil green, water blue, amber caution, red alarm).
+
+## Meta models
+
+- **Muse Spark Open** (`meta-models/muse-spark-open-1026` on Baseten) is the agent: tool calling with parallel calls, structured submissions, and its visible reasoning streamed to the UI per step. It also reads report page images during a run (`look_at_page`, JSON-schema output).
+- **Muse Spark** on the Meta Model API reads every report page at ingest (vision plus JSON-schema output). The same OpenAI-compatible client serves both providers; `LLM_PROVIDER` switches them.
+- Why open weights matter here: production data and well reports are an operator's most guarded data. An open-weight model can run on the operator's own hardware with this same code.
 
 ## Built during the hackathon
 
-Everything in this repository was built during the hackathon, starting from the first commit on Oct 26, 2026. No code was carried over from earlier projects. Third-party open-source libraries are listed in `backend/pyproject.toml` and `frontend/package.json`.
+Everything in this repository was built during the hackathon, starting from the first commit on Oct 26, 2026: the data ingest and cleaning, the analysis tools, the agent loop, the claim checker and its tests, the backtest, the API and the web app. No code was carried over from earlier projects. Third-party open-source libraries are listed in `backend/pyproject.toml` and `frontend/package.json`.
 
 ## Data
 

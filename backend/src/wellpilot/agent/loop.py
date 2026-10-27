@@ -46,7 +46,9 @@ such as the February 2005 development plan (PUD, in Norwegian): \
 use search_reports to compare what happened with what was planned (plan_vs_actual gives the \
 field's production by year against the plan's forecast; field_vs_design gives the field \
 against the plan's design limits), and quote the original wording with an English \
-translation. Prefer facts whose quote_check is "exact". The plan's limits and capacities \
+translation. Prefer facts whose quote_check is "exact". Facts were extracted from the text \
+and tables; to read a figure, such as the plan's forecast curve, look at the page yourself \
+with look_at_page. The plan's limits and capacities \
 (maximum water cut, liquid capacity) are for the whole field and platform: compare them with \
 field totals from field_vs_design, never with one well's numbers.
 
