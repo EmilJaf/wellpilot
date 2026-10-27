@@ -135,6 +135,12 @@ flowchart LR
 - **Backend:** Python 3.13, FastAPI, Server-Sent Events, DuckDB, pandas, scipy, ruptures, pypdfium2. Runs are background tasks saved as JSON and replayable. About 560 tests, including the featured runs replayed in CI.
 - **Frontend:** React, TypeScript, Vite, uPlot, hand-written SVG charts. A control-room palette after ISA-101: grey by default, colour only for meaning (oil green, water blue, amber caution, red alarm).
 
+## Next: the checker as a teacher
+
+The checker labels every answer the model submits, with its reasons. That makes training data an open-weight model can learn from, which a closed model cannot: `python -m wellpilot.agent.corpus export` writes 68 preference pairs (an answer the checker sent back and the answer it accepted next, in the same run, with what it caught) and 70 accepted answers with the evidence they cite, from 66 real runs on Muse Spark Open. Labels are the reviewed verdicts, so the checker's own false rejections, corrected in review, are not taught as wrong.
+
+We did not train on it during the hackathon. The runs cover 18 questions, so a fair before-and-after needs new questions, not these, and enough of them to tell learning from memory.
+
 ## Running it on another field
 
 The analysis tools, the agent loop, the checker and the UI work on any daily production table with the same columns (date, well, hours on stream, oil, water, gas, water injected, downhole and wellhead pressure, choke). What is specific to Volve:

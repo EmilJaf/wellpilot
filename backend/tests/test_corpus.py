@@ -80,3 +80,24 @@ def test_rejections_are_queued_for_review_and_runs_are_added_once(tmp_path: Path
     assert cases[1]["source"]["model"] == "test-model"
     assert again == []
     assert len(add(runs / "0123456789ab.json", corpus)) == 2  # an explicit add redoes a run
+
+
+def test_the_corpus_exports_as_checker_labelled_training_data(tmp_path) -> None:
+    """Within a run, the answer sent back and the one accepted after it form a pair; the
+    reviewed verdict is the label, so a corrected false rejection is not taught as wrong."""
+    import json
+    import shutil
+
+    from wellpilot.agent.corpus import CORPUS_DIR, export
+
+    corpus = tmp_path / "corpus"
+    corpus.mkdir()
+    for name in ("e8c3374117a8-1.json", "e8c3374117a8-2.json"):
+        shutil.copy(CORPUS_DIR / name, corpus / name)
+
+    counts = export(corpus, tmp_path / "training")
+
+    assert counts["preference_pairs"] == 1 and counts["accepted_answers"] == 1
+    (pair,) = [json.loads(line) for line in (tmp_path / "training" / "preferences.jsonl").open()]
+    assert pair["checker_said"] and pair["rejected"] != pair["chosen"]
+    assert pair["question"].startswith("F-12's water cut fell")
