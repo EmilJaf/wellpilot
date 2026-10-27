@@ -20,6 +20,7 @@ import asyncio
 import json
 from collections import Counter
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -32,6 +33,8 @@ TIMEOUT_S = 120.0
 MAX_ATTACKS = 6
 EVIDENCE_CHARS = 6000  # of each cited result shown to the attacker
 REPORTS_DIR = "redteam"  # under data/
+# The featured runs, frozen with the tests: what the red team attacks by default.
+FROZEN_RUNS = Path(__file__).resolve().parents[3] / "tests" / "fixtures" / "runs"
 
 Kind = Literal[
     "number", "well", "date", "direction", "quote", "cause", "scale", "unsupported"
@@ -181,18 +184,22 @@ def main() -> None:
     from wellpilot.llm import make_llm
 
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    parser.add_argument("runs", nargs="*", help="run ids (default: FEATURED_RUNS)")
+    parser.add_argument(
+        "runs", nargs="*", help="run ids (default: FEATURED_RUNS, else the frozen featured runs)"
+    )
     parser.add_argument("--per-finding", type=int, default=3)
     args = parser.parse_args()
     settings = get_settings()
     runs = args.runs or [r.strip() for r in settings.featured_runs.split(",") if r.strip()]
+    runs = runs or sorted(p.stem for p in FROZEN_RUNS.glob("*.json"))
     if not runs:
         raise SystemExit("name runs, or set FEATURED_RUNS")
     llm = make_llm(settings)
     attempts: list[dict] = []
     tokens = 0
     for run_id in runs:
-        record = json.loads((settings.runs_dir / f"{run_id}.json").read_text())
+        path = settings.runs_dir / f"{run_id}.json"
+        record = json.loads((path if path.exists() else FROZEN_RUNS / path.name).read_text())
         found, used = asyncio.run(attack_run(llm, record, args.per_finding))
         tokens += used
         attempts.extend({"run": run_id, **a} for a in found)
