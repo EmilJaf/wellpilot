@@ -12,18 +12,21 @@ Add a run after recording it on the frozen code (it costs tokens; Emil runs it):
 
 The same ids go into FEATURED_RUNS for the public deployment.
 
-The featured runs (Oct 27 evening, Muse Spark Open on Baseten, recorded by the eval):
+The featured runs (Muse Spark Open on Baseten, recorded by the eval):
 
-- cc62fd10242e, the time machine: "Which wells need attention right now, and why? Forecast
+- 8aef8d548380, the time machine: "Which wells need attention right now, and why? Forecast
   the next 12 months of oil for the well that needs it most." with data up to 2010-12-31.
-  F-12 first (dead gauge, 55% step down); its 2011 forecast 359k Sm3 against 340k produced
-  (+6%), the whole-history fit 685k (+102%). Verified on attempt 2; 7 steps, about $0.15.
-- 44f49414e399, F-12's decline against the 2005 plan: breakthrough after about 2 years as
-  planned, liquid held while the choke opened, the field at its design water cut. Verified
-  on attempt 3; 11 steps, about $0.48.
+  F-12 first (dead gauge; rate 55% lower since May 2010, a gradual shift); its 2011 forecast
+  359k Sm3 against 340k produced (+6%), the whole-history fit 685k (+102%), the band from
+  past errors held. Verified on attempt 2; 9 steps, about $0.23.
+- e51eada95269, F-12's decline against the 2005 plan: breakthrough after about 2 years as
+  planned, the 2010-07-18 change 72% between periods but 22% across it (a gradual shift as
+  water took over), the field within its design limits. Verified on attempt 3; 7 steps,
+  about $0.26.
 - 3fc72959335a, the plan's forecast chart read by the model (look_at_page): the text says
   9 000 Sm3/d for about 19 months, the figure as drawn about 8 400 Sm3/d for about 2 years.
   Verified on attempt 2; 5 steps, about $0.07.
 
-Earlier frozen runs (fcfb4188de3b, c8b6cbb62280) were retired when the checker and the
-tools changed what they would return.
+Earlier frozen runs (fcfb4188de3b, c8b6cbb62280, then cc62fd10242e and 44f49414e399 when the
+regime-change detector changed) were retired when the checker and the tools changed what
+they would return.

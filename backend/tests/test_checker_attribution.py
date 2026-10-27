@@ -171,3 +171,92 @@ def test_a_level_reached_during_a_month_may_stand_in_the_next_row() -> None:
     assert check("P-2's choke was cut to 40% in 2018-11.", "40%", 40) == []
     assert check("P-2's oil rate fell to 512 Sm3/d in 2018-11.", "512", 512) == []
     assert check("P-2's choke was at 40% in 2018-11.", "40%", 40)  # a level, not a change
+
+
+def test_a_month_name_before_a_value_is_not_a_date() -> None:
+    """Run 4461982df3dc's detail "Monthly p50 Jan 1363 Dec 840.53" was read as January of
+    the year 1363 ("date(s) 1363-01 not found") three submissions running; the run ended
+    unverified. A month in words with a real year is still a date."""
+    log = EvidenceLog()
+    monthly = {"columns": ["month", "p50_rate"], "rows": [["2011-01", 1363.0], ["2011-12", 840.53]]}
+    eid = log.add("forecast_production", {"well": "F-12"}, monthly, lambda: None).id
+
+    def check(claim: str) -> list[str]:
+        finding = Finding(
+            claim=claim,
+            detail="Monthly p50 Jan 1363 Dec 840.53.",
+            evidence_ids=[eid],
+            confidence="inference",
+            numbers=[d("1,363", 1363, eid), d("841", 840.53, eid)],
+        )
+        return check_submission(Submission(summary="Done.", findings=[finding]), log)
+
+    assert check("F-12's rate is forecast to fall from 1,363 to 841 Sm3/d.") == []
+    wrong = check("F-12's rate is forecast to fall from 1,363 to 841 Sm3/d by Dec 2013.")
+    assert any("2013-12" in p for p in wrong)
+
+
+def test_a_number_belongs_to_the_well_named_before_it_not_after() -> None:
+    """Run 336805e71b52 (synthetic field): the summary's "water cut stayed near 0.9029, and
+    field replacement fell ... after injector I-2 stopped" gave P-1's water cut to I-2, the
+    only well its sentence names. P-1, the subject of the sentence before, owns it; the run
+    was sent back three times and ended unverified."""
+    log = EvidenceLog()
+    flood = {
+        "by_year": {"columns": ["year", "water_cut"], "rows": [[2019, 0.9012], [2020, 0.9029]]}
+    }
+    wf = log.add("waterflood", {"well": "P-1"}, flood, lambda: None).id
+    stopped = {"wells": [{"well": "I-2", "issues": [{"kind": "stopped", "since": "2019-08-31"}]}]}
+    screen = log.add("field_screen", {}, stopped, lambda: None).id
+    finding = Finding(
+        claim="P-1's water cut stayed near 0.90.",
+        evidence_ids=[wf],
+        confidence="fact",
+        numbers=[d("0.90", 0.9029, wf)],
+    )
+
+    def check(summary: str) -> list[str]:
+        submission = Submission(
+            summary=summary, findings=[finding], summary_numbers=[d("0.9029", 0.9029, wf)]
+        )
+        return check_submission(submission, log)
+
+    assert screen
+    assert (
+        check(
+            "P-1's oil decline sped up in late 2019. Its water cut stayed near 0.9029, and "
+            "field replacement fell after injector I-2 stopped on 2019-08-31."
+        )
+        == []
+    )
+    wrong = check("Water cut stayed near 0.9029 at I-2 before it stopped on 2019-08-31.")
+    assert any("only for P-1" in p for p in wrong)
+
+
+def test_a_well_the_result_names_may_be_named() -> None:
+    """Run e51eada95269: F-12's shut-ins were "field-wide with F-14", cited from
+    detect_events for F-12, whose shut-in record lists F-14. A well the evidence never
+    names is still sent back."""
+    log = EvidenceLog()
+    shut = [
+        {
+            "kind": "shut_in",
+            "well": "F-12",
+            "start": "2010-08-16",
+            "details": {"days": 12, "field_wide": True, "field_wide_with": ["F-14"]},
+        }
+    ]
+    eid = log.add("detect_events", {"well": "F-12"}, shut, lambda: None).id
+
+    def check(detail: str) -> list[str]:
+        finding = Finding(
+            claim="F-12 was shut in for 12 days from 2010-08-16.",
+            detail=detail,
+            evidence_ids=[eid],
+            confidence="fact",
+            numbers=[d("12 days", 12, eid)],
+        )
+        return check_submission(Submission(summary="Done.", findings=[finding]), log)
+
+    assert check("Field-wide, with F-14.") == []
+    assert any("names F-11" in p for p in check("Field-wide, with F-11."))

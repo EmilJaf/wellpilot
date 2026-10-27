@@ -432,6 +432,18 @@ def test_F6_slash_translation_control() -> None:
     assert check(f, log=log) == []
 
 
+def test_F7_translation_inside_the_quote_marks() -> None:
+    """Run e51eada95269 put each translation inside the quote marks, before the closing
+    one; the whole was read as the quotation, not found, and the model dropped the
+    translations to pass."""
+    log = corpus_log(F12)
+    eid = evidence_with_quote(log, NOR)
+    f = finding(
+        f"The PUD states '{NOR} [Production declines due to increasing water rate.]'.", [eid], []
+    )
+    assert check(f, log=log) == []
+
+
 # G. causal regex over petroleum vocabulary
 
 

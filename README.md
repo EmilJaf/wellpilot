@@ -91,7 +91,7 @@ The analysis tools, the agent loop, the checker and the UI work on any daily pro
 - the report registry (`backend/src/wellpilot/ingest/reports.py`) and the two plan tools, which parse this plan's production table and design limits (`plan_vs_actual`, `field_vs_design` in `agent/tools.py`), and the plan's oil formation volume factor used for voidage (`analysis/waterflood.py`);
 - one line of the system prompt naming the field (`agent/loop.py`).
 
-**Tested on a synthetic field.** `python -m wellpilot.synthetic` writes six wells (2015-2020) with planted events through the same ingest, and records what was planted; `DATA_DIR=data/synthetic` points the app, the agent and the eval at it. On five questions the agent named every planted cause: a dead downhole gauge on its day, a step down that was a choke cut (operations, not the reservoir), a well depleting with no water (pressure 280 to 150 bar), and a faster decline after an injector stopped. Its 12-month forecast from after the choke cut came within 5% of the outcome (the whole-history fit: +25%). It also showed a weakness, now fixed: the regime-change detector found steps in smooth declines and overstated real steps (-65% for a planted -40%), and the agent repeated those as facts, which the checker cannot catch because they are in the evidence. A change point now has to leave the smooth Arps curve around it, and each one reports the change across it (4 weeks each side, -41% for the planted -40%) next to the change between the periods.
+**Tested on a synthetic field.** `python -m wellpilot.synthetic` writes six wells (2015-2020) with planted events through the same ingest, and records what was planted; `DATA_DIR=data/synthetic` points the app, the agent and the eval at it. On five questions the agent named every planted cause: a dead downhole gauge on its day, a step down that was a choke cut (operations, not the reservoir), a well depleting with no water (pressure 280 to 150 bar), and a faster decline after an injector stopped. Its 12-month forecast from after the choke cut came within 5% of the outcome (the whole-history fit: +25%). It also showed a weakness, now fixed: the regime-change detector found steps in smooth declines and overstated real steps (-65% for a planted -40%), and the agent repeated those as facts, which the checker cannot catch because they are in the evidence. A change point now has to leave the smooth Arps curve around it, and each one reports the change across it (4 weeks each side, -41% for the planted -40%) next to the change between the periods. Rerun on the fixed detector, the agent called P-3 and P-4 healthy, with stable declines, measured the choke cut as 41% across the change, and forecast P-2 within 5% again (its band from past errors held).
 
 ## Meta models
 
@@ -166,7 +166,7 @@ fly auth login
 fly launch --copy-config --no-deploy        # creates the app; it may pick another name
 fly secrets set BASETEN_API_KEY=...          # the model key, never committed
 fly secrets set OPERATOR_KEY=$(openssl rand -hex 24)   # lifts the public limits for you
-fly secrets set FEATURED_RUNS=cc62fd10242e,44f49414e399,3fc72959335a   # the runs the public site lists and replays
+fly secrets set FEATURED_RUNS=8aef8d548380,e51eada95269,3fc72959335a   # the runs the public site lists and replays
 fly deploy
 ```
 

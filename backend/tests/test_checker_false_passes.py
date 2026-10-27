@@ -157,6 +157,21 @@ def test_a_translation_not_in_the_evidence_is_the_findings_own_words() -> None:
     assert problems and "states a cause" in problems[0]
 
 
+def test_a_translation_inside_the_quote_marks_is_still_the_findings_own_words() -> None:
+    log = corpus_log(F12)
+    eid = next(
+        e.id for e in log if "Maksimum vannkutt 0,80" in json.dumps(e.result, ensure_ascii=False)
+    )
+    invented = (
+        'The PUD sets "Maksimum vannkutt 0,80 [F-12 exceeded it because the injectors drove '
+        'water into the producers]".'
+    )
+
+    problems = check(invented, [eid], [], log)
+
+    assert problems and "states a cause" in problems[0]
+
+
 def summary_problems(summary: str) -> list[str]:
     log = corpus_log(F12)
     finding = Finding(claim="The rate fell.", evidence_ids=["E5"], confidence="fact", numbers=[])

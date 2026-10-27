@@ -56,9 +56,11 @@ _MONTH = (
     r"(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|June?|July?|Aug(?:ust)?|"
     r"Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\.?"
 )
-DAY_MONTH_YEAR = re.compile(rf"\b(\d{{1,2}})(?:st|nd|rd|th)?\s+{_MONTH}\s+(\d{{4}})\b")
-MONTH_DAY_YEAR = re.compile(rf"\b{_MONTH}\s+(\d{{1,2}})(?:st|nd|rd|th)?,?\s+(\d{{4}})\b")
-MONTH_YEAR = re.compile(rf"\b{_MONTH}\s+(\d{{4}})\b")
+# Only years of this or the last century: "Jan 1363" is a month's value, not January 1363.
+_YEAR = r"((?:19|20)\d{2})"
+DAY_MONTH_YEAR = re.compile(rf"\b(\d{{1,2}})(?:st|nd|rd|th)?\s+{_MONTH}\s+{_YEAR}\b")
+MONTH_DAY_YEAR = re.compile(rf"\b{_MONTH}\s+(\d{{1,2}})(?:st|nd|rd|th)?,?\s+{_YEAR}\b")
+MONTH_YEAR = re.compile(rf"\b{_MONTH}\s+{_YEAR}\b")
 THOUSANDS = re.compile(r"(?<=\d),(?=\d{3}\b)")
 SPACED_THOUSANDS = re.compile(r"\b\d{1,3}(?:[ \u00a0\u202f]\d{3})+\b")
 # A number may run straight into a unit ("98765Sm3") or end a sentence, but not run into
@@ -167,6 +169,17 @@ QUOTED = re.compile(
 # finding's; one written freely is checked like the finding's own words.
 QUOTED_CLAIM = re.compile(QUOTED.pattern + r"(\s*(?:\[[^\]]*\]|\([^)]*\)))?")
 MIN_QUOTE_CHARS = 12  # letters and digits; shorter quotes are phrases, not citations
+# A translation written inside the quote marks: 'På det tidspunkt er ... omlag 6 MSm3 [At
+# the time of water breakthrough ...]'. Moved after the closing mark, where translations are
+# read; the text keeps its length, so positions still index it as written. "[...]" is an
+# elision, not a translation.
+INNER_TRANSLATION = re.compile(r"""(\s*)(\[(?!\s*(?:…|\.\.\.)\s*\])[^\[\]]{4,}\])(['"’”»])""")
+
+
+def _translations_outside(text: str) -> str:
+    return INNER_TRANSLATION.sub(lambda m: m[3] + m[1] + m[2], text)
+
+
 # Checked per sentence: a hedge in one sentence does not license a cause in another.
 HEDGE = re.compile(
     r"\b(likely|probabl[ey]|possibly|perhaps|presumabl[ey]|plausibl[ey]|consistent with|"
@@ -442,7 +455,8 @@ def _looked_up(text: str, pool: _Pool, free: set[float]) -> list[str]:
     to 50), a unit's scale or the unit written in the evidence too, and cut or rounded at the
     last digit. For a finding's detail, whose numbers are looked up rather than declared."""
     missing = []
-    for match in WRITTEN_NUMBER.finditer(_mask(QUOTED.sub(" ", _normalize(text)))):
+    quotes_out = QUOTED.sub(" ", _translations_outside(_normalize(text)))
+    for match in WRITTEN_NUMBER.finditer(_mask(quotes_out)):
         written = match.group(0).strip()
         values = [n for european in (False, True) for n in _numbers_in_text(written, european)]
         if not values or all(_free(*n, pool, free) for n in values):
@@ -470,7 +484,9 @@ def _quoted_in(quote: str, pool: _Pool) -> bool:
 
 
 def _missing_quotes(text: str, pool: _Pool) -> list[str]:
-    quotes = [q for q in QUOTED.findall(text) if len(squash(q)) >= MIN_QUOTE_CHARS]
+    quotes = [
+        q for q in QUOTED.findall(_translations_outside(text)) if len(squash(q)) >= MIN_QUOTE_CHARS
+    ]
     return [q for q in quotes if not _quoted_in(q, pool)]
 
 
@@ -484,7 +500,7 @@ def _own_words(text: str, pool: _Pool) -> str:
             return " " + translation
         return " "
 
-    return QUOTED_CLAIM.sub(strip, text)
+    return QUOTED_CLAIM.sub(strip, _translations_outside(text))
 
 
 def _precision(value: float) -> float:
@@ -776,12 +792,27 @@ LINK = re.compile(
 
 
 def _named(text: str, start: int) -> set[str]:
-    """Wells named in the clause around position `start`, else anywhere in the text."""
+    """The wells a number at `start` belongs to, by the nearest that names any:
+    - its part of the sentence (up to the next ", "), with the wells listed before it in the
+      sentence ("F-12, F-14 and F-11 had 0.9, 0.8 and 0.7");
+    - its sentence before it;
+    - the text before its sentence (P-1, named in the first sentence, is still the subject
+      of "water cut stayed near 0.90, and replacement fell after injector I-2 stopped");
+    - anywhere in the text."""
+
+    def wells(part: str) -> set[str]:
+        return {_well_key(m.group(0)) for m in WELL.finditer(part)}
+
     bounds = [0, *(m.end() for m in CLAUSE.finditer(text)), len(text)]
     begin = max(b for b in bounds if b <= start)
     end = min((b for b in bounds if b > start), default=len(text))
-    clause = {_well_key(m.group(0)) for m in WELL.finditer(text[begin:end])}
-    return clause or {_well_key(m.group(0)) for m in WELL.finditer(text)}
+    part_end = text.find(", ", start, end)
+    part_end = end if part_end < 0 else part_end
+    part_begin = text.rfind(", ", begin, start)
+    part_begin = begin if part_begin < 0 else part_begin
+    if wells(text[part_begin:part_end]):
+        return wells(text[begin:part_end])
+    return wells(text[begin:start]) or wells(text[:begin]) or wells(text)
 
 
 def _quantity(blanked: str, start: int, end: int) -> str | None:
@@ -1026,7 +1057,8 @@ def _declared(
             )
 
     problems += _reversed(label, blanked, declared, unused, log, leaves_of)
-    rest = _mask(QUOTED.sub(" ", text))  # numbers inside a quote are checked with the quote
+    # Numbers inside a quote are checked with the quote.
+    rest = _mask(QUOTED.sub(" ", _translations_outside(text)))
     for number in sorted(declared, key=lambda d: -len(d.text)):
         for start, end in reversed(_standalone(rest, number.text)):
             rest = rest[:start] + " " + rest[end:]
@@ -1090,15 +1122,24 @@ def _well_key(name: str) -> str:
     return re.sub(r"\s+", "", name.removeprefix("15/9-")).upper()
 
 
-def _wells_without_evidence(claim: str, cited: list[Evidence]) -> list[str]:
-    """Wells the claim names that none of its evidence is about. Evidence without a well
+def _wells_without_evidence(claim: str, detail: str, cited: list[Evidence]) -> list[str]:
+    """Wells the finding names that none of its evidence is about. Evidence without a well
     argument (SQL, field-wide tools, calculations, report searches without a filter) may
-    hold any well, so it covers every name."""
+    hold any well, so it covers every name. The detail may also name a well the results
+    name (F-12's shut-in "field_wide with F-14"); the claim, what a reader takes away, only
+    wells the evidence is about."""
     if any(e.arguments.get("well") is None for e in cited):
         return []
     about = {_well_key(str(e.arguments["well"])) for e in cited}
+    mentioned = about | {
+        _well_key(m.group(0))
+        for e in cited
+        for m in WELL.finditer(json.dumps(e.result, default=str))
+    }
     named = dict.fromkeys(m.group(0).strip() for m in WELL.finditer(claim))
-    return [w for w in named if _well_key(w) not in about]
+    strangers = [w for w in named if _well_key(w) not in about]
+    in_detail = dict.fromkeys(m.group(0).strip() for m in WELL.finditer(detail))
+    return strangers + [w for w in in_detail if _well_key(w) not in mentioned | set(strangers)]
 
 
 def _unhedged_warned(
@@ -1201,7 +1242,7 @@ def display_spans(
     if not text:
         return []
     spans: list[dict] = []
-    for m in QUOTED.finditer(text):
+    for m in QUOTED.finditer(_translations_outside(text)):
         span = {"kind": "quote", "start": m.start(), "end": m.end()}
         source = next((e.id for e in log or [] if _quoted_in(m.group(1), _Pool([e]))), None)
         if source:
@@ -1328,7 +1369,7 @@ def check_submission(submission: Submission, log: EvidenceLog, question: str = "
                 f"Finding {n} states a cause ('{cause.group(0)}') but is marked fact. The data "
                 "shows timing and size, not causes: mark it inference."
             )
-        strangers = _wells_without_evidence(text, cited)
+        strangers = _wells_without_evidence(finding.claim, finding.detail or "", cited)
         if strangers:
             problems.append(
                 f"Finding {n} names {', '.join(strangers)}, but {ids} "
