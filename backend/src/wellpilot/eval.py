@@ -146,7 +146,46 @@ CASES = [
         mentions=(r"F-12", r"F-14"),
     ),
 ]
-CASES_BY_ID = {c.id: c for c in CASES}
+# The synthetic field (python -m wellpilot.synthetic; run with DATA_DIR=data/synthetic):
+# questions whose answers were planted, so a right answer and a confident wrong one differ.
+SYNTHETIC_CASES = [
+    Case(
+        "syn_screen",
+        "Which wells need attention right now, and why?",
+        tools=("field_screen",),
+        mentions=(r"P-1", r"gauge"),
+        max_steps=10,
+    ),
+    Case(
+        "syn_step",
+        "Why did P-2's oil rate drop in November 2018?",
+        tools=("detect_events",),
+        mentions=(r"2018-11", r"choke"),
+        max_steps=10,
+    ),
+    Case(
+        "syn_depletion",
+        "Is P-3's decline caused by water or by falling reservoir pressure?",
+        mentions=(r"P-3", r"pressure|deplet"),
+        max_steps=10,
+    ),
+    Case(
+        "syn_injector",
+        "Why did P-1's oil decline speed up in late 2019?",
+        mentions=(r"I-2", r"2019-0[89]"),
+        max_steps=12,
+    ),
+    Case(
+        "syn_forecast",
+        "Forecast P-2 oil production for the next 12 months and say how confident the forecast is.",
+        as_of=date(2019, 3, 31),
+        tools=("forecast_production",),
+        mentions=(r"P50|P90|P10",),
+        max_steps=10,
+    ),
+]
+SUITES = {"volve": CASES, "synthetic": SYNTHETIC_CASES}
+CASES_BY_ID = {c.id: c for c in [*CASES, *SYNTHETIC_CASES]}
 
 
 # A number in the summary as a reader meets it; dates, years and well names are not.
@@ -280,16 +319,25 @@ def print_report(results: list[dict], model: str) -> None:
 async def main() -> None:
     parser = argparse.ArgumentParser(description="Run the agent eval (spends tokens).")
     parser.add_argument("--only", action="append", choices=sorted(CASES_BY_ID))
+    parser.add_argument(
+        "--suite",
+        choices=sorted(SUITES),
+        default="volve",
+        help="synthetic: the planted field; run with DATA_DIR=data/synthetic",
+    )
     parser.add_argument("--list", action="store_true", help="print the cases and exit")
     parser.add_argument("--concurrency", type=int, default=2)
     args = parser.parse_args()
-    cases = [CASES_BY_ID[c] for c in args.only] if args.only else CASES
+    cases = [CASES_BY_ID[c] for c in args.only] if args.only else SUITES[args.suite]
     if args.list:
         for c in cases:
             print(f"{c.id}: {c.question}" + (f" (data up to {c.as_of})" if c.as_of else ""))
         return
 
     settings = get_settings()
+    synthetic = (settings.processed_dir / "field.json").exists()
+    if any(c in SYNTHETIC_CASES for c in cases) != synthetic:
+        sys.exit("synthetic cases run on the synthetic field and only there: set DATA_DIR")
     llm = make_llm(settings)
     print(f"provider: {llm.provider}, model: {llm.model}, {len(cases)} cases")
     semaphore = asyncio.Semaphore(args.concurrency)
