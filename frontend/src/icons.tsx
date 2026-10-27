@@ -31,3 +31,10 @@ export const AlarmIcon = () => (
     <path d="M5.8 5.8l4.4 4.4M10.2 5.8l-4.4 4.4" />
   </svg>
 )
+
+export const RedoIcon = () => (
+  <svg {...base}>
+    <path d="M13.5 3.5v3.5H10" />
+    <path d="M13.2 7A5.5 5.5 0 1 0 12 11.6" />
+  </svg>
+)

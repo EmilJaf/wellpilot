@@ -1,8 +1,10 @@
 import type { ReactNode } from 'react'
 import type { RunSummary, Span, StepEvent } from '../api'
-import { AlarmIcon, CheckIcon } from '../icons'
+import { AlarmIcon, CheckIcon, RedoIcon } from '../icons'
 import { brief, compact, describeArgs, toolName } from '../labels'
 import type { RunState } from '../useRun'
+import { corrections } from '../corrections'
+import { CorrectionList } from './Corrections'
 
 /** What the reader clicked: a number (its value marked in the evidence) or a quote (marked
     on the report page it came from). */
@@ -202,6 +204,8 @@ function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSe
   const rounds = final.check_rounds
   const sentBack = rounds.filter((r) => r.length)
   const problems = sentBack.reduce((n, r) => n + r.length, 0)
+  const fixes = corrections(state.steps, final.findings)
+  const history = fixes.length ? <CorrectionList items={fixes} /> : <Rounds rounds={rounds} />
   return (
     <>
       {final.summary && (
@@ -220,7 +224,7 @@ function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSe
               {sentBack.length > 0 &&
                 ` The checker sent ${sentBack.length === 1 ? 'the first answer' : `${sentBack.length} answers`} back with ${problems} ${problems === 1 ? 'problem' : 'problems'}, and the agent fixed ${problems === 1 ? 'it' : 'them'}.`}
             </p>
-            {sentBack.length > 0 && <Rounds rounds={rounds} />}
+            {sentBack.length > 0 && history}
           </div>
         </div>
       ) : (
@@ -239,7 +243,7 @@ function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSe
                       : ' before the agent submitted an answer.'
                   }`}
             </p>
-            {rounds.length > 0 && <Rounds rounds={rounds} />}
+            {rounds.length > 0 && history}
           </div>
         </div>
       )}
@@ -253,6 +257,7 @@ function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSe
       <ol className="findings">
         {final.findings.map((finding, i) => {
           const fact = finding.confidence === 'fact'
+          const fixed = fixes.filter((c) => c.finalIndex === i)
           return (
             <li key={i} className={`finding${selectedFinding === i ? ' is-selected' : ''}`}>
               <div className="finding-head">
@@ -277,6 +282,14 @@ function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSe
               >
                 {bySpans(finding.claim, finding.spans, onSelectEvidence, finding.evidence_ids.find(isReport))}
               </p>
+              {fixed.length > 0 && (
+                <p className="fix-tag">
+                  <RedoIcon />
+                  <span>
+                    <strong>Fixed after the checker sent it back:</strong> {fixed.flatMap((c) => c.changes).join(' ')}
+                  </span>
+                </p>
+              )}
               <p className="sources">
                 <span className="sources-label">Sources</span>
                 {finding.evidence_ids.map((id) => (

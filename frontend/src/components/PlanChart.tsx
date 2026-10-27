@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { column, type Table } from '../api'
+import { useWidth } from '../useWidth'
 
 /** The plan_vs_actual tool's result (also served at /api/field/plan). */
 export type PlanResult = {
@@ -22,17 +23,8 @@ const fmt = (v: number | null) => (v === null ? 'none' : `${v.toFixed(2)} MSm³`
  * P90 to P10, from Table 4.5 of the plan as Muse Spark read it). One axis, one unit.
  */
 export function PlanChart({ result }: { result: PlanResult }) {
-  const host = useRef<HTMLDivElement>(null)
-  const [width, setWidth] = useState(560)
+  const [host, width] = useWidth(560)
   const [hover, setHover] = useState<number | null>(null)
-
-  useEffect(() => {
-    const el = host.current
-    if (!el) return
-    const observer = new ResizeObserver(() => setWidth(Math.max(300, el.clientWidth)))
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [])
 
   const t = result.years
   const at = (row: Table['rows'][number], name: string) => {

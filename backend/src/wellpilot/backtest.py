@@ -30,7 +30,7 @@ import pandas as pd
 
 from wellpilot.agent.loop import run_agent
 from wellpilot.agent.tools import fit_warnings, to_jsonable
-from wellpilot.analysis.decline import fit_decline, forecast
+from wellpilot.analysis.decline import fit_decline, forecast, producing_day_rate
 from wellpilot.config import get_settings
 from wellpilot.data.store import ProductionStore
 
@@ -221,10 +221,104 @@ def summarize(results: pd.DataFrame) -> dict:
     return summary
 
 
+def closer(results: pd.DataFrame, method: str, than: str) -> dict:
+    """In how many of the cases both methods forecast was `method` closer to the actual."""
+    errors = results.pivot_table(index=["well", "cutoff"], columns="method", values="error")
+    if method not in errors or than not in errors:
+        return {"cases": 0, "closer": 0}
+    both = errors[[method, than]].dropna()
+    return {"cases": len(both), "closer": int((both[method].abs() < both[than].abs()).sum())}
+
+
 def same_cases(results: pd.DataFrame, method: str) -> pd.DataFrame:
     """Rows of every method restricted to the cases `method` has, for a fair comparison."""
     keys = results.loc[results["method"] == method, ["well", "cutoff"]]
     return results.merge(keys, on=["well", "cutoff"])
+
+
+def _curve(fit, dates: pd.DatetimeIndex) -> dict:
+    return {
+        "date": [d.date().isoformat() for d in dates],
+        "rate": [round(float(r), 1) for r in fit.rate(dates)],
+    }
+
+
+def case_detail(processed_dir: Path, store: ProductionStore, well: str, cutoff: str) -> dict:
+    """One case for the dashboard: the well's weekly oil rate per producing day up to the
+    end of the forecast year, and each method's fit window and curves, refitted on data up
+    to the cutoff. Fits are deterministic; the P50 volumes and errors are read from the
+    saved results, so they match the summary."""
+    results = pd.read_parquet(processed_dir / RESULTS_FILE)
+    cut = pd.Timestamp(cutoff)
+    rows = results[(results["well"] == well) & (results["cutoff"] == cut)].set_index("method")
+    if rows.empty:
+        raise ValueError(f"no backtest case for {well} with data up to {cutoff}")
+    horizon_end = cut + pd.Timedelta(days=HORIZON_DAYS)
+    daily = _production(store, well)
+    history = daily[daily["date"] <= cut]
+    rates = producing_day_rate(daily[daily["date"] <= horizon_end])
+    days = pd.DataFrame({"date": rates.index, "rate": rates.to_numpy()})
+    # Weekly means dated at their middle day, never mixing days before and after the cut.
+    weekly = (
+        days.groupby(
+            [days["date"].dt.to_period("W").rename("week"), (days["date"] > cut).rename("after")]
+        )
+        .agg(date=("date", "mean"), rate=("rate", "mean"))
+        .sort_values("date")
+    )
+    future = pd.date_range(cut + pd.Timedelta(days=1), horizon_end, freq="7D")
+
+    windows: dict[str, dict] = {
+        "classic": {},
+        "recent_12m": {"start": cut - pd.DateOffset(months=12)},
+    }
+    agent = None
+    path = _agent_cache(processed_dir, Case(well, cut, 0.0))
+    if "agent" in rows.index and path.exists():
+        record = json.loads(path.read_text())
+        run = record["run"]
+        chosen = next(e for e in run["evidence"] if e["id"] == record["forecast_evidence"])
+        args = chosen["arguments"]
+        windows["agent"] = {
+            "start": args.get("start"),
+            "end": args.get("end"),
+            "model": args.get("model", "auto"),
+        }
+        agent = {
+            "question": record["question"],
+            "verified": bool(run["verified"]),
+            "summary": run["summary"],
+            "inferences": [f["claim"] for f in run["findings"] if f["confidence"] == "inference"],
+        }
+
+    methods = []
+    for method, kwargs in windows.items():
+        fit = fit_decline(history, **kwargs).best
+        row = rows.loc[method]
+        methods.append(
+            {
+                "method": method,
+                "model": fit.model,
+                "window_start": fit.t0.date().isoformat(),
+                "window_end": fit.end.date().isoformat(),
+                "fitted": _curve(fit, pd.date_range(fit.t0, fit.end, freq="7D")),
+                "forecast": _curve(fit, future),
+                "p50_sm3": round(float(row["p50"])),
+                "error": round(float(row["error"]), 4),
+            }
+        )
+    return {
+        "well": well,
+        "cutoff": cut.date().isoformat(),
+        "horizon_end": horizon_end.date().isoformat(),
+        "actual_sm3": round(float(rows["actual"].iloc[0])),
+        "rate": {
+            "date": [d.date().isoformat() for d in weekly["date"]],
+            "rate": [round(float(r), 1) for r in weekly["rate"]],
+        },
+        "methods": methods,
+        "agent": agent,
+    }
 
 
 async def run(with_agent: bool, agent_limit: int) -> dict:
@@ -258,6 +352,9 @@ async def run(with_agent: bool, agent_limit: int) -> dict:
     summary = {"all_cases": summarize(results)}
     if (results["method"] == "agent").any():
         summary["agent_cases"] = summarize(same_cases(results, "agent"))
+        summary["agent_closer"] = {
+            than: closer(results, "agent", than) for than in ("classic", "recent_12m")
+        }
     summary["horizon_days"] = HORIZON_DAYS
     summary["cutoffs"] = (
         f"every {STEP_MONTHS} months from {FIRST_CUTOFF_MONTHS} months after first oil"

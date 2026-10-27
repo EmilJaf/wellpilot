@@ -15,7 +15,7 @@ from wellpilot.agent.tools import (
     read_report_page,
     table,
 )
-from wellpilot.backtest import RESULTS_FILE, SUMMARY_FILE
+from wellpilot.backtest import RESULTS_FILE, SUMMARY_FILE, case_detail
 from wellpilot.data.store import ProductionStore
 from wellpilot.ingest.reports import REPORTS_BY_ID, page_dir
 
@@ -115,3 +115,14 @@ def backtest(request: Request) -> dict:
         "summary": json.loads((processed / SUMMARY_FILE).read_text()),
         "results": table(results),
     }
+
+
+@router.get("/backtest/cases/{well}/{cutoff}")
+def backtest_case(well: str, cutoff: date, request: Request) -> dict:
+    processed = request.app.state.runs.processed_dir
+    if not (processed / RESULTS_FILE).exists():
+        raise HTTPException(404, "no backtest yet; run python -m wellpilot.backtest")
+    try:
+        return case_detail(processed, _store(request), well, cutoff.isoformat())
+    except ValueError as e:
+        raise HTTPException(404, str(e)) from None

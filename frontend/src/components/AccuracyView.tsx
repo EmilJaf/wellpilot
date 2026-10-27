@@ -1,0 +1,437 @@
+import { useEffect, useState } from 'react'
+import { api, column, type Backtest, type BacktestCase } from '../api'
+import { CheckIcon } from '../icons'
+import { useWidth } from '../useWidth'
+
+const METHODS: { key: string; label: string }[] = [
+  { key: 'agent', label: 'WellPilot agent' },
+  { key: 'recent_12m', label: 'Decline fit, last 12 months' },
+  { key: 'classic', label: 'Decline fit, whole history' },
+]
+
+const SHORT: Record<string, string> = { agent: 'agent', classic: 'classic', recent_12m: 'last 12 months' }
+
+type Case = { key: string; well: string; cutoff: string; actual: number; error: Record<string, number> }
+
+const signed = (e: number) => `${e >= 0 ? '+' : '−'}${Math.abs(Math.round(e * 100))}%`
+const volume = (sm3: number) => (sm3 >= 1e6 ? `${(sm3 / 1e6).toFixed(2)} MSm³` : `${Math.round(sm3 / 1000)}k Sm³`)
+
+/** One row per forecast (well, cutoff) with each method's error, in the backtest's order. */
+function toCases(backtest: Backtest): Case[] {
+  const t = backtest.results
+  const [well, cutoff, method, actual, error] = ['well', 'cutoff', 'method', 'actual', 'error'].map((c) => column(t, c))
+  const cases = new Map<string, Case>()
+  for (const row of t.rows) {
+    const key = `${row[well]}|${row[cutoff]}`
+    const found = cases.get(key) ?? {
+      key,
+      well: String(row[well]),
+      cutoff: String(row[cutoff]),
+      actual: Number(row[actual]),
+      error: {},
+    }
+    found.error[String(row[method])] = Number(row[error])
+    cases.set(key, found)
+  }
+  return [...cases.values()]
+}
+
+/**
+ * The backtest, told for someone who has never fitted a decline curve: forecasts made at
+ * past dates against what the wells then produced, all of them, then one case up close.
+ */
+export function AccuracyView() {
+  const [data, setData] = useState<{ backtest: Backtest | null; error?: string } | null>(null)
+  const [picked, setPicked] = useState<string | null>(null)
+
+  useEffect(() => {
+    api
+      .backtest()
+      .then((backtest) => setData({ backtest }))
+      .catch((e: Error) => setData({ backtest: null, error: e.message }))
+  }, [])
+
+  if (!data) return <p className="empty">Loading the backtest</p>
+  if (!data.backtest) return <p className="empty">The backtest could not load: {data.error}</p>
+
+  const { summary } = data.backtest
+  const cases = toCases(data.backtest)
+  const compared = cases.filter((c) => 'agent' in c.error && 'classic' in c.error)
+  // Opens on the case where the two differ most; every case is on the strip to compare.
+  const widest = [...compared].sort(
+    (a, b) => Math.abs(b.error.classic) - Math.abs(b.error.agent) - (Math.abs(a.error.classic) - Math.abs(a.error.agent)),
+  )[0]
+  const selected = cases.find((c) => c.key === picked) ?? widest ?? cases[0]
+  const methods = METHODS.filter((m) => summary.all_cases[m.key])
+  const worst = Math.max(...methods.map((m) => summary.all_cases[m.key].median_abs_error))
+  const closer = summary.agent_closer
+
+  return (
+    <div className="accuracy">
+      <h3 className="accuracy-title">How close were the forecasts?</h3>
+      <p className="accuracy-lead">
+        For each producing well, every 6 months: the data is cut at that day, the next 12 months of oil are
+        forecast, and the forecast is compared with what the well actually produced. The tools never return data
+        after the cut. The usual decline fits use a fixed stretch of history; the agent looks at the well and
+        chooses its own.
+      </p>
+
+      <p className="accuracy-label">Median error over {summary.all_cases.classic?.cases ?? cases.length} forecasts</p>
+      <ul className="error-bars">
+        {methods.map((m) => {
+          const error = summary.all_cases[m.key].median_abs_error
+          return (
+            <li key={m.key} className={m.key === 'agent' ? 'is-agent' : undefined}>
+              <span className="error-bar-label">{m.label}</span>
+              <span className="error-bar-track">
+                <span className="error-bar" style={{ width: `${(error / worst) * 100}%` }} />
+                <span className="error-bar-value">{Math.round(error * 100)}%</span>
+              </span>
+            </li>
+          )
+        })}
+      </ul>
+      {closer?.classic && (
+        <p className="accuracy-closer">
+          The agent was closer than the classic fit in <strong>{closer.classic.closer} of {closer.classic.cases}</strong>{' '}
+          forecasts
+          {closer.recent_12m && ` and closer than the last-12-months fit in ${closer.recent_12m.closer} of ${closer.recent_12m.cases}`}
+          . All of them are below, misses included.
+        </p>
+      )}
+
+      <ErrorStrip cases={cases} selected={selected?.key ?? null} onSelect={setPicked} />
+      {selected && <CaseView key={selected.key} entry={selected} />}
+    </div>
+  )
+}
+
+function caseLine(c: Case) {
+  const parts = ['agent', 'classic', 'recent_12m'].filter((m) => m in c.error).map((m) => `${SHORT[m]} ${signed(c.error[m])}`)
+  return `${c.well}, forecast made ${c.cutoff}: actual ${volume(c.actual)} in the next 12 months; ${parts.join(', ')}`
+}
+
+/** Every forecast as a column: the agent's error (filled) and the classic fit's (hollow). */
+function ErrorStrip({ cases, selected, onSelect }: { cases: Case[]; selected: string | null; onSelect: (key: string) => void }) {
+  const [host, width] = useWidth(520)
+  const [hover, setHover] = useState<number | null>(null)
+  const height = 190
+  const pad = { left: 44, right: 8, top: 10, bottom: 38 }
+  const plotW = width - pad.left - pad.right
+  const plotH = height - pad.top - pad.bottom
+  const errors = cases.flatMap((c) => [c.error.agent, c.error.classic]).filter((e) => e !== undefined)
+  const lo = Math.min(-0.5, ...errors) - 0.05
+  const hi = Math.max(0.5, ...errors) + 0.05
+  const yAt = (e: number) => pad.top + plotH * ((hi - e) / (hi - lo))
+
+  // Columns grouped by well, with a gap between wells.
+  const gap = 0.8
+  const groupOf = cases.map((_, i) => cases.slice(1, i + 1).filter((c, j) => c.well !== cases[j].well).length)
+  const step = plotW / (cases.length + (groupOf[groupOf.length - 1] ?? 0) * gap)
+  const xs = cases.map((_, i) => pad.left + step * (i + groupOf[i] * gap + 0.5))
+  const wells = [...new Set(cases.map((c) => c.well))].map((w) => {
+    const at = cases.map((c, i) => (c.well === w ? xs[i] : null)).filter((x): x is number => x !== null)
+    return { well: w, from: at[0], to: at[at.length - 1] }
+  })
+  const ticks = [-0.5, 0, 0.5, 1].filter((v) => v > lo && v < hi)
+  // Each well's years, labelled under the middle of their forecasts.
+  const yearLabels = [...new Set(cases.map((c) => `${c.well}|${c.cutoff.slice(0, 4)}`))].map((key) => {
+    const at = cases.map((c, i) => (`${c.well}|${c.cutoff.slice(0, 4)}` === key ? xs[i] : null)).filter((x): x is number => x !== null)
+    return { key, year: key.slice(-2), x: at.reduce((a, b) => a + b, 0) / at.length }
+  }).reduce<{ key: string; year: string; x: number }[]>(
+    (kept, label) => (kept.length && label.x - kept[kept.length - 1].x < 24 ? kept : [...kept, label]),
+    [],
+  )
+  const shown = hover !== null ? cases[hover] : cases.find((c) => c.key === selected)
+
+  return (
+    <div className="error-strip" ref={host}>
+      <p className="readout">{shown ? caseLine(shown) : 'Hover a forecast to read it; click to see it up close.'}</p>
+      <svg width={width} height={height} role="img" aria-label="Forecast error of every backtest case, agent against the classic fit">
+        {ticks.map((v) => (
+          <g key={v}>
+            <line className={v === 0 ? 'strip-zero' : 'plan-grid'} x1={pad.left} x2={width - pad.right} y1={yAt(v)} y2={yAt(v)} />
+            <text className="plan-axis" x={pad.left - 6} y={yAt(v) + 4} textAnchor="end">
+              {v === 0 ? 'exact' : signed(v)}
+            </text>
+          </g>
+        ))}
+        {cases.map((c, i) =>
+          c.key === selected ? (
+            <rect key="sel" className="strip-selected" x={xs[i] - step / 2} y={pad.top} width={step} height={plotH} />
+          ) : null,
+        )}
+        {cases.map((c, i) => {
+          const { agent, classic } = c.error
+          return (
+            <g key={c.key}>
+              {agent !== undefined && classic !== undefined && (
+                <line className="strip-link" x1={xs[i]} x2={xs[i]} y1={yAt(classic)} y2={yAt(agent)} />
+              )}
+              {classic !== undefined && <circle className="strip-classic" cx={xs[i]} cy={yAt(classic)} r={4} />}
+              {agent !== undefined && <circle className="strip-agent" cx={xs[i]} cy={yAt(agent)} r={4} />}
+            </g>
+          )
+        })}
+        {yearLabels.map((y) => (
+          <text key={y.key} className="plan-axis" x={y.x} y={height - 22} textAnchor="middle">
+            {`'${y.year}`}
+          </text>
+        ))}
+        {wells.map((w) => (
+          <g key={w.well}>
+            <line className="strip-group" x1={w.from - step / 3} x2={w.to + step / 3} y1={height - 14} y2={height - 14} />
+            <text className="strip-well" x={(w.from + w.to) / 2} y={height - 2} textAnchor="middle">
+              {w.well}
+            </text>
+          </g>
+        ))}
+        {cases.map((c, i) => (
+          <rect
+            key={c.key}
+            className="strip-hit"
+            x={xs[i] - step / 2}
+            y={pad.top}
+            width={step}
+            height={plotH}
+            role="button"
+            tabIndex={0}
+            aria-label={caseLine(c)}
+            onMouseEnter={() => setHover(i)}
+            onMouseLeave={() => setHover(null)}
+            onClick={() => onSelect(c.key)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                onSelect(c.key)
+              }
+            }}
+          >
+            <title>{caseLine(c)}</title>
+          </rect>
+        ))}
+      </svg>
+      <p className="chart-key">
+        <span><i className="strip-key strip-key-agent" /> agent</span>
+        <span><i className="strip-key strip-key-classic" /> classic decline fit</span>
+        <span>above the line: forecast too high; below: too low</span>
+      </p>
+    </div>
+  )
+}
+
+/** One forecast up close: the rate history, the cut, each method's window and forecast. */
+function CaseView({ entry }: { entry: Case }) {
+  const [detail, setDetail] = useState<{ value: BacktestCase | null; error?: string } | null>(null)
+
+  useEffect(() => {
+    api
+      .backtestCase(entry.well, entry.cutoff)
+      .then((value) => setDetail({ value }))
+      .catch((e: Error) => setDetail({ value: null, error: e.message }))
+  }, [entry.well, entry.cutoff])
+
+  if (!detail) return <p className="empty">Loading {entry.well} from {entry.cutoff}</p>
+  if (!detail.value) return <p className="empty">This forecast could not load: {detail.error}</p>
+  const d = detail.value
+  const agent = d.methods.find((m) => m.method === 'agent')
+
+  return (
+    <div className="case">
+      <h4 className="case-title">
+        {d.well}, forecast made on {d.cutoff}
+      </h4>
+      <CaseChart detail={d} />
+      {agent && d.agent && (
+        <div className="case-why">
+          <p className="case-why-head">
+            The agent fitted a {agent.model} decline on {agent.window_start} to {agent.window_end}. In its own words:
+          </p>
+          <blockquote>{d.agent.summary}</blockquote>
+          {d.agent.inferences.map((claim) => (
+            <p key={claim} className="case-inference">
+              <span className="pill">Inference</span> {claim}
+            </p>
+          ))}
+          {d.agent.verified && (
+            <p className="case-verified">
+              <CheckIcon /> Its answer passed the checker.
+            </p>
+          )}
+        </div>
+      )}
+      <table className="case-table">
+        <thead>
+          <tr>
+            <th scope="col">Method</th>
+            <th scope="col">Fit window</th>
+            <th scope="col">Model</th>
+            <th scope="col" className="num-col">Forecast</th>
+            <th scope="col" className="num-col">Error</th>
+          </tr>
+        </thead>
+        <tbody>
+          {d.methods.map((m) => (
+            <tr key={m.method}>
+              <th scope="row">{SHORT[m.method]}</th>
+              <td>
+                {m.window_start} to {m.window_end}
+              </td>
+              <td>{m.model}</td>
+              <td className="num-col">{volume(m.p50_sm3)}</td>
+              <td className="num-col">{signed(m.error)}</td>
+            </tr>
+          ))}
+          <tr className="case-actual">
+            <th scope="row">actual</th>
+            <td>
+              {d.cutoff} to {d.horizon_end}
+            </td>
+            <td />
+            <td className="num-col">{volume(d.actual_sm3)}</td>
+            <td />
+          </tr>
+        </tbody>
+      </table>
+      {d.agent && (
+        <details className="case-question">
+          <summary>What the agent was asked</summary>
+          <p>{d.agent.question}</p>
+        </details>
+      )}
+    </div>
+  )
+}
+
+const DAY = 86_400_000
+const time = (iso: string) => Date.parse(`${iso}T00:00:00Z`)
+
+/** Oil rate per producing day on a log scale, with the cut and the two forecasts. */
+function CaseChart({ detail }: { detail: BacktestCase }) {
+  const [host, width] = useWidth(520)
+  const [hover, setHover] = useState<number | null>(null)
+  const height = 240
+  const pad = { left: 44, right: 92, top: 18, bottom: 50 }
+  const plotW = width - pad.left - pad.right
+  const plotH = height - pad.top - pad.bottom
+  const shown = detail.methods.filter((m) => m.method === 'agent' || m.method === 'classic')
+  const t0 = Math.min(time(detail.rate.date[0]), ...shown.map((m) => time(m.window_start)))
+  const t1 = time(detail.horizon_end) + DAY
+  const cut = time(detail.cutoff) + DAY
+  const values = [...detail.rate.rate, ...shown.flatMap((m) => [...m.forecast.rate, ...m.fitted.rate])].filter((v) => v > 0)
+  const lo = Math.log10(Math.min(...values) * 0.85)
+  const hi = Math.log10(Math.max(...values) * 1.15)
+  const xAt = (t: number) => pad.left + (plotW * (t - t0)) / (t1 - t0)
+  const yAt = (v: number) => pad.top + plotH * ((hi - Math.log10(Math.max(v, 1e-9))) / (hi - lo))
+  const path = (dates: string[], rates: number[]) => dates.map((d, i) => `${xAt(time(d))},${yAt(rates[i])}`).join(' ')
+
+  const ticks = [1, 2, 5]
+    .flatMap((m) => [10, 100, 1000, 10000].map((p) => m * p))
+    .filter((v) => Math.log10(v) > lo && Math.log10(v) < hi)
+  const years: number[] = []
+  for (let y = new Date(t0).getUTCFullYear() + 1; Date.UTC(y, 0, 1) < t1; y++) years.push(y)
+
+  const rateDates = detail.rate.date
+  const split = rateDates.findIndex((d) => time(d) >= cut)
+  const before = split < 0 ? rateDates.length : split
+  // Direct labels at the end of each forecast, nudged apart when they would touch.
+  const ends = shown
+    .map((m) => ({ m, y: yAt(m.forecast.rate[m.forecast.rate.length - 1]) }))
+    .sort((a, b) => a.y - b.y)
+  for (let i = 1; i < ends.length; i++) ends[i].y = Math.max(ends[i].y, ends[i - 1].y + 15)
+
+  const at = (dates: string[], rates: number[], t: number) => {
+    let best = -1
+    for (let i = 0; i < dates.length; i++) if (Math.abs(time(dates[i]) - t) <= 4 * DAY) best = i
+    return best >= 0 ? rates[best] : null
+  }
+  const hoverT = hover !== null ? time(rateDates[hover]) : null
+  const readout = hoverT !== null && hover !== null && (
+    <>
+      <strong>week of {rateDates[hover]}</strong>
+      <span>actual {Math.round(detail.rate.rate[hover]).toLocaleString('en')}</span>
+      {shown.map((m) => {
+        const v = hoverT > cut ? at(m.forecast.date, m.forecast.rate, hoverT) : at(m.fitted.date, m.fitted.rate, hoverT)
+        return v !== null ? (
+          <span key={m.method}>
+            {SHORT[m.method]} {Math.round(v).toLocaleString('en')}
+          </span>
+        ) : null
+      })}
+      <span>Sm³ per producing day</span>
+    </>
+  )
+
+  return (
+    <div className="case-chart" ref={host}>
+      <p className="readout">{readout || 'Oil rate per producing day, log scale. Hover to read the weeks.'}</p>
+      <svg
+        width={width}
+        height={height}
+        role="img"
+        aria-label={`${detail.well} oil rate with the forecasts made on ${detail.cutoff}`}
+        onMouseMove={(e) => {
+          const box = e.currentTarget.getBoundingClientRect()
+          const t = t0 + ((e.clientX - box.left - pad.left) / plotW) * (t1 - t0)
+          let best = 0
+          for (let i = 1; i < rateDates.length; i++) {
+            if (Math.abs(time(rateDates[i]) - t) < Math.abs(time(rateDates[best]) - t)) best = i
+          }
+          setHover(t >= t0 && t <= t1 ? best : null)
+        }}
+        onMouseLeave={() => setHover(null)}
+      >
+        <rect className="case-hidden" x={xAt(cut)} y={pad.top} width={xAt(t1) - xAt(cut)} height={plotH} />
+        {ticks.map((v) => (
+          <g key={v}>
+            <line className="plan-grid" x1={pad.left} x2={pad.left + plotW} y1={yAt(v)} y2={yAt(v)} />
+            <text className="plan-axis" x={pad.left - 6} y={yAt(v) + 4} textAnchor="end">
+              {v >= 1000 ? `${v / 1000}k` : v}
+            </text>
+          </g>
+        ))}
+        {years.map((y) => (
+          <text key={y} className="plan-axis" x={xAt(Date.UTC(y, 0, 1))} y={pad.top + plotH + 14} textAnchor="middle">
+            {y}
+          </text>
+        ))}
+        <polyline className="case-actual-line is-past" points={path(rateDates.slice(0, before), detail.rate.rate.slice(0, before))} />
+        <polyline className="case-actual-line" points={path(rateDates.slice(Math.max(0, before - 1)), detail.rate.rate.slice(Math.max(0, before - 1)))} />
+        {shown.map((m) => (
+          <g key={m.method} className={`case-method case-${m.method}`}>
+            <polyline className="case-fitted" points={path(m.fitted.date, m.fitted.rate)} />
+            <polyline className="case-forecast" points={path(m.forecast.date, m.forecast.rate)} />
+          </g>
+        ))}
+        <line className="case-cut" x1={xAt(cut)} x2={xAt(cut)} y1={pad.top - 6} y2={pad.top + plotH} />
+        <text className="plan-note" x={xAt(cut) + 5} y={pad.top + 6}>
+          hidden from the forecasts
+        </text>
+        {ends.map(({ m, y }) => (
+          <text key={m.method} className={`case-end case-end-${m.method}`} x={pad.left + plotW + 6} y={y + 4}>
+            {SHORT[m.method]} {signed(m.error)}
+          </text>
+        ))}
+        {/* each method's fit window, under the axis */}
+        {shown.map((m, i) => {
+          const y = pad.top + plotH + 26 + i * 13
+          return (
+            <g key={m.method} className={`case-window case-${m.method}`}>
+              <line x1={xAt(time(m.window_start))} x2={xAt(time(m.window_end) + DAY)} y1={y} y2={y} />
+              <text x={xAt(time(m.window_end) + DAY) + 6} y={y + 4}>
+                {SHORT[m.method]} window
+              </text>
+            </g>
+          )
+        })}
+        {hoverT !== null && <line className="case-hover" x1={xAt(hoverT)} x2={xAt(hoverT)} y1={pad.top} y2={pad.top + plotH} />}
+      </svg>
+      <p className="chart-key">
+        <span><i className="case-key case-key-actual" /> actual oil, from the data</span>
+        <span><i className="case-key case-key-agent" /> agent's fit and forecast</span>
+        <span><i className="case-key case-key-classic" /> classic fit and forecast</span>
+        <span><i className="key-band case-key-hidden" /> the 12 months forecast</span>
+      </p>
+    </div>
+  )
+}

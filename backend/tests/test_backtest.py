@@ -10,7 +10,18 @@ from openai.types.chat import ChatCompletion
 
 from wellpilot.agent.loop import SUBMIT
 from wellpilot.analysis.decline import DAYS_PER_YEAR, arps_rate
-from wellpilot.backtest import HORIZON_DAYS, Case, agent_row, calibrate, cases, summarize
+from wellpilot.backtest import (
+    HORIZON_DAYS,
+    RESULTS_FILE,
+    Case,
+    agent_row,
+    calibrate,
+    case_detail,
+    cases,
+    closer,
+    decline_methods,
+    summarize,
+)
 from wellpilot.data.store import ProductionStore
 from wellpilot.ingest.production import DAILY_FILE, ISSUE_COLUMNS, ISSUES_FILE
 from wellpilot.llm import LLM
@@ -179,3 +190,46 @@ async def test_agent_forecast_is_read_from_its_evidence_and_cached(processed_dir
     # The agent only ever saw data up to the cutoff.
     system = calls[0]["messages"][0]["content"]
     assert "available only up to 2010-01-31" in system
+
+
+def test_closer_counts_the_cases_where_a_method_is_nearer() -> None:
+    results = pd.DataFrame(
+        {
+            "well": ["F-12"] * 6 + ["F-14"],
+            "cutoff": pd.to_datetime(["2010-01-31"] * 2 + ["2010-07-31"] * 2 + ["2011-01-31"] * 3),
+            "method": ["agent", "classic"] * 2 + ["agent", "classic", "recent_12m"],
+            "error": [0.05, -0.30, -0.40, 0.10, -0.02, 0.02, 0.5],
+        }
+    )
+    results.loc[6, "well"] = "F-12"  # recent_12m only on the third case
+
+    assert closer(results, "agent", "classic") == {"cases": 3, "closer": 1}
+    assert closer(results, "agent", "recent_12m") == {"cases": 1, "closer": 1}
+    assert closer(results, "agent", "missing") == {"cases": 0, "closer": 0}
+
+
+def test_case_detail_shows_each_fit_on_data_up_to_the_cutoff(processed_dir) -> None:
+    store = ProductionStore(processed_dir)
+    found = cases(store)
+    calibrate(pd.DataFrame(decline_methods(store, found))).to_parquet(
+        processed_dir / RESULTS_FILE, index=False
+    )
+
+    detail = case_detail(processed_dir, store, "F-12", "2010-01-31")
+
+    assert detail["cutoff"] == "2010-01-31" and detail["horizon_end"] == "2011-01-31"
+    assert detail["actual_sm3"] == round(found[1].actual_sm3)
+    assert detail["rate"]["date"][-1] <= "2011-01-31"
+    assert [m["method"] for m in detail["methods"]] == ["classic", "recent_12m"]
+    assert detail["agent"] is None  # no cached agent run for this case
+    for method in detail["methods"]:
+        assert method["window_end"] <= "2010-01-31"
+        assert method["fitted"]["date"][-1] <= "2010-01-31"
+        assert method["forecast"]["date"][0] == "2010-02-01"
+        assert method["forecast"]["date"][-1] <= "2011-01-31"
+    recent = detail["methods"][1]
+    assert recent["window_start"] == "2009-01-31"
+    # The synthetic well declines exponentially, so both fits land near the actual.
+    assert all(abs(m["error"]) < 0.1 for m in detail["methods"])
+    with pytest.raises(ValueError, match="no backtest case"):
+        case_detail(processed_dir, store, "F-12", "2010-02-28")

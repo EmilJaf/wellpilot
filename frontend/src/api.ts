@@ -125,6 +125,42 @@ export const api = {
   pageQuotes: (docId: string, page: number) =>
     fetch(`/api/reports/${docId}/pages/${page}/quotes`).then((r) => json<{ quote: string; boxes: number[][] }[]>(r)),
   pageImageUrl: (docId: string, page: number) => `/api/reports/${docId}/pages/${page}/image`,
+  backtest: () => fetch('/api/backtest').then((r) => json<Backtest>(r)),
+  backtestCase: (well: string, cutoff: string) =>
+    fetch(`/api/backtest/cases/${encodeURIComponent(well)}/${cutoff}`).then((r) => json<BacktestCase>(r)),
+}
+
+export type MethodSummary = { cases: number; median_abs_error: number; mean_abs_error: number; median_bias: number }
+
+/** The backtest: 12-month oil forecasts made at past dates, against what the wells then produced. */
+export type Backtest = {
+  summary: {
+    all_cases: Record<string, MethodSummary>
+    agent_closer?: Record<string, { cases: number; closer: number }>
+    horizon_days: number
+  }
+  results: Table
+}
+
+type Curve = { date: string[]; rate: number[] }
+
+export type BacktestCase = {
+  well: string
+  cutoff: string
+  horizon_end: string
+  actual_sm3: number
+  rate: Curve
+  methods: {
+    method: string
+    model: string
+    window_start: string
+    window_end: string
+    fitted: Curve
+    forecast: Curve
+    p50_sm3: number
+    error: number
+  }[]
+  agent: { question: string; verified: boolean; summary: string; inferences: string[] } | null
 }
 
 /**

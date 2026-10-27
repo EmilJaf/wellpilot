@@ -1299,3 +1299,434 @@ code,
 .quote-link:hover {
   text-decoration-color: var(--ink);
 }
+
+/* ---------- forecast accuracy ---------- */
+
+.accuracy {
+  padding: 14px 18px 24px;
+  max-width: 820px;
+}
+
+.accuracy-title {
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.accuracy-lead {
+  margin: 0 0 14px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  max-width: 64ch;
+}
+
+.accuracy-label {
+  margin: 0 0 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+
+.error-bars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.error-bars li {
+  display: grid;
+  grid-template-columns: minmax(150px, 15.5em) minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.error-bars li.is-agent {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.error-bar-track {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.error-bar {
+  height: 14px;
+  border-radius: 0 3px 3px 0;
+  background: var(--rule-strong);
+}
+
+.is-agent .error-bar {
+  background: var(--ink);
+}
+
+.error-bar-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.accuracy-closer {
+  margin: 12px 0 16px;
+  font-size: 14px;
+  line-height: 1.5;
+  max-width: 64ch;
+}
+
+.error-strip svg,
+.case-chart svg {
+  display: block;
+  overflow: visible;
+}
+
+.strip-zero {
+  stroke: var(--ink-3);
+  stroke-width: 1;
+}
+
+.strip-selected {
+  fill: var(--shut-wash);
+}
+
+.strip-link {
+  stroke: var(--rule-strong);
+  stroke-width: 2;
+}
+
+.strip-agent {
+  fill: var(--ink);
+}
+
+.strip-classic {
+  fill: var(--sheet);
+  stroke: var(--ink-3);
+  stroke-width: 1.5;
+}
+
+.strip-hit {
+  fill: transparent;
+  cursor: pointer;
+  outline: none;
+}
+
+.strip-hit:focus-visible {
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+
+.strip-group {
+  stroke: var(--rule-strong);
+  stroke-width: 1;
+}
+
+.strip-well {
+  fill: var(--ink-2);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.strip-key {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.strip-key-agent {
+  background: var(--ink);
+}
+
+.strip-key-classic {
+  border: 1.5px solid var(--ink-3);
+  background: var(--sheet);
+}
+
+.case {
+  margin-top: 22px;
+  padding-top: 14px;
+  border-top: 1px solid var(--rule-strong);
+}
+
+.case-title {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.case-hidden {
+  fill: var(--shut-wash);
+}
+
+.case-cut {
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+
+.case-hover {
+  stroke: var(--ink-3);
+  stroke-width: 1;
+}
+
+.case-actual-line {
+  fill: none;
+  stroke: var(--oil);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.case-actual-line.is-past {
+  stroke-width: 1.25;
+}
+
+.case-method polyline {
+  fill: none;
+  stroke-linejoin: round;
+}
+
+.case-fitted {
+  stroke-width: 1.25;
+}
+
+.case-forecast {
+  stroke-width: 2.5;
+}
+
+.case-agent polyline,
+.case-window.case-agent line {
+  stroke: var(--ink);
+}
+
+.case-classic polyline,
+.case-window.case-classic line {
+  stroke: var(--ink-3);
+  stroke-dasharray: 6 4;
+}
+
+.case-window line {
+  stroke-width: 3;
+}
+
+.case-window.case-classic line {
+  stroke-dasharray: none;
+}
+
+.case-window text {
+  fill: var(--ink-2);
+  font-size: 11.5px;
+}
+
+.case-end {
+  font-size: 12.5px;
+  font-weight: 700;
+  fill: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.case-end-classic {
+  fill: var(--ink-2);
+  font-weight: 600;
+}
+
+.case-key {
+  display: inline-block;
+  width: 16px;
+  height: 0;
+  border-top: 2px solid var(--ink);
+}
+
+.case-key-actual {
+  border-color: var(--oil);
+}
+
+.case-key-classic {
+  border-top: 2px dashed var(--ink-3);
+}
+
+.case-key-hidden {
+  background: var(--shut-wash);
+  border: 1px solid var(--rule);
+}
+
+.case-why {
+  margin-top: 14px;
+}
+
+.case-why-head {
+  margin: 0 0 6px;
+  font-size: 14px;
+}
+
+.case-why blockquote {
+  margin: 0 0 8px;
+  padding: 2px 0 2px 12px;
+  border-left: 3px solid var(--ink);
+  font-size: 14.5px;
+  line-height: 1.5;
+  max-width: 64ch;
+}
+
+.case-inference {
+  margin: 0 0 6px;
+  font-size: 14px;
+  line-height: 1.5;
+  max-width: 64ch;
+}
+
+.case-verified {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 0;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.case-verified svg {
+  width: 16px;
+  height: 16px;
+}
+
+.case-table {
+  width: 100%;
+  margin-top: 14px;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.case-table th,
+.case-table td {
+  padding: 5px 8px 5px 0;
+  border-bottom: 1px solid var(--rule);
+  text-align: left;
+  vertical-align: top;
+}
+
+.case-table thead th {
+  font-weight: 600;
+  color: var(--ink-3);
+  font-size: 12px;
+}
+
+.case-table tbody th {
+  font-weight: 600;
+}
+
+.case-table .num-col {
+  text-align: right;
+}
+
+.case-table .case-actual th,
+.case-table .case-actual td {
+  font-weight: 700;
+  border-bottom: 0;
+}
+
+.case-question {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.case-question summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.case-question p {
+  margin: 6px 0 0;
+  max-width: 64ch;
+  line-height: 1.5;
+}
+
+/* ---------- how the agent fixed what the checker sent back ---------- */
+
+.fixes {
+  margin-top: 8px;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.fixes summary {
+  cursor: pointer;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.fix-round {
+  margin-top: 8px;
+}
+
+.fix-round ol {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 10px;
+}
+
+.verdict .fix-problem,
+.verdict .fix-change,
+.verdict .fix-diff {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.verdict .fix-problem {
+  color: var(--ink);
+}
+
+.verdict .fix-change {
+  color: var(--ink-2);
+}
+
+.fix-diff {
+  margin-top: 4px !important;
+  padding: 6px 8px;
+  border-radius: 4px;
+  background: var(--sheet);
+  border: 1px solid var(--rule);
+  color: var(--ink-2);
+}
+
+.fix-diff del {
+  color: var(--alarm-ink);
+  background: var(--alarm-wash);
+  text-decoration-thickness: 1px;
+}
+
+.fix-diff ins {
+  color: var(--ink);
+  background: var(--canvas);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+.fix-tag {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+
+.fix-tag svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  margin-top: 2px;
+}
+
+.fix-tag strong {
+  color: var(--ink);
+  font-weight: 600;
+}

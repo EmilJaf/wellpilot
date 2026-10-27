@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { api, type RunSummary, type Table } from './api'
 import { AgentLog } from './components/AgentLog'
+import { AccuracyView } from './components/AccuracyView'
 import { Answer, type Focus } from './components/Answer'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { EvidenceView } from './components/EvidenceView'
@@ -43,8 +44,13 @@ export default function App() {
   const [focus, setFocus] = useState<Focus | null>(null)
   const [evidenceAttempt, setEvidenceAttempt] = useState(0)
   const evidencePanel = useRef<HTMLDivElement>(null)
+  // The data column shows one well's daily data, the field against its 2005 plan, or how
+  // close past forecasts came.
+  const [view, setView] = useState<'well' | 'plan' | 'accuracy'>('well')
   const setSelectedEvidence = (id: string | null, clicked?: Focus) => {
     setSelected(id)
+    // The accuracy view has no room for evidence: go back to the data the evidence sits under.
+    if (id) setView((v) => (v === 'accuracy' ? 'well' : v))
     setFocus(clicked ?? null)
     setEvidenceAttempt((n) => n + 1)
     // On a narrow screen the evidence sits below the answer: bring it into view.
@@ -58,8 +64,6 @@ export default function App() {
   const [daily, setDaily] = useState<{ well: string; table: Table | null; error?: string } | null>(null)
   const [markers, setMarkers] = useState<{ key: string; list: Marker[] }>({ key: '', list: [] })
   const [recorded, setRecorded] = useState<RunSummary | null>(null)
-  // The data column shows one well's daily data or the field against its 2005 plan.
-  const [view, setView] = useState<'well' | 'plan'>('well')
   const [plan, setPlan] = useState<{ result: PlanResult | null; error?: string } | null>(null)
 
   useEffect(() => {
@@ -244,6 +248,9 @@ export default function App() {
                 <button type="button" role="tab" aria-selected={view === 'plan'} onClick={() => setView('plan')}>
                   Field vs 2005 plan
                 </button>
+                <button type="button" role="tab" aria-selected={view === 'accuracy'} onClick={() => setView('accuracy')}>
+                  Forecast accuracy
+                </button>
               </div>
               {view === 'well' && (
                 <select
@@ -260,7 +267,7 @@ export default function App() {
                 </select>
               )}
             </div>
-            {view === 'well' ? (
+            {view === 'accuracy' ? null : view === 'well' ? (
               <WellCharts
                 table={daily?.well === well ? daily.table : null}
                 error={daily?.well === well ? daily.error : undefined}
@@ -277,7 +284,11 @@ export default function App() {
               </div>
             )}
             <div className="evidence-scroll" ref={evidencePanel}>
-              <EvidenceView runId={state.id} evidenceId={selectedEvidence} attempt={evidenceAttempt} focus={focus} />
+              {view === 'accuracy' ? (
+                <AccuracyView />
+              ) : (
+                <EvidenceView runId={state.id} evidenceId={selectedEvidence} attempt={evidenceAttempt} focus={focus} />
+              )}
             </div>
           </section>
         </ErrorBoundary>
