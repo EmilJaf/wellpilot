@@ -4,12 +4,22 @@ import { CheckIcon } from '../icons'
 import { useWidth } from '../useWidth'
 
 const METHODS: { key: string; label: string }[] = [
-  { key: 'agent', label: 'WellPilot agent' },
+  { key: 'agent', label: 'WellPilot agent, its own window' },
+  { key: 'recent_3m', label: 'Decline fit, last 3 months' },
+  { key: 'recent_6m', label: 'Decline fit, last 6 months' },
   { key: 'recent_12m', label: 'Decline fit, last 12 months' },
+  { key: 'recent_24m', label: 'Decline fit, last 24 months' },
   { key: 'classic', label: 'Decline fit, whole history' },
 ]
 
-const SHORT: Record<string, string> = { agent: 'agent', classic: 'classic', recent_12m: 'last 12 months' }
+const SHORT: Record<string, string> = {
+  agent: 'agent',
+  classic: 'classic',
+  recent_3m: 'last 3 months',
+  recent_6m: 'last 6 months',
+  recent_12m: 'last 12 months',
+  recent_24m: 'last 24 months',
+}
 
 type Case = { key: string; well: string; cutoff: string; actual: number; error: Record<string, number> }
 
@@ -65,6 +75,25 @@ export function AccuracyView() {
   const methods = METHODS.filter((m) => summary.all_cases[m.key])
   const worst = Math.max(...methods.map((m) => summary.all_cases[m.key].median_abs_error))
   const closer = summary.agent_closer
+  const best = summary.best_fixed_window
+  // How the agent compares with the hindsight bar, in words, from the numbers themselves.
+  const agentStats = summary.all_cases.agent
+  const bestStats = best ? summary.all_cases[best] : undefined
+  const versusBest =
+    agentStats && bestStats
+      ? [
+          agentStats.mean_abs_error < bestStats.mean_abs_error ? 'a lower mean error' : 'a higher mean error',
+          agentStats.misses_over_50pct !== undefined && bestStats.misses_over_50pct !== undefined
+            ? agentStats.misses_over_50pct < bestStats.misses_over_50pct
+              ? 'fewer large misses'
+              : agentStats.misses_over_50pct > bestStats.misses_over_50pct
+                ? 'more large misses'
+                : 'as many large misses'
+            : null,
+        ]
+          .filter(Boolean)
+          .join(' and ')
+      : ''
 
   return (
     <div className="accuracy">
@@ -72,20 +101,31 @@ export function AccuracyView() {
       <p className="accuracy-lead">
         For each producing well, every 6 months: the data is cut at that day, the next 12 months of oil are
         forecast, and the forecast is compared with what the well actually produced. The tools never return data
-        after the cut. The usual decline fits use a fixed stretch of history; the agent looks at the well and
-        chooses its own.
+        after the cut. A decline fit needs a stretch of history to fit on. The quick standard is the whole
+        history; a fixed recent window does better, but which length is best shows only afterwards. The agent
+        looks at each well and chooses its own window.
       </p>
 
-      <p className="accuracy-label">Median error over {summary.all_cases.classic?.cases ?? cases.length} forecasts</p>
+      <p className="accuracy-label">
+        Median error over {summary.all_cases.classic?.cases ?? cases.length} forecasts, then the mean and the forecasts
+        off by more than half
+      </p>
       <ul className="error-bars">
         {methods.map((m) => {
-          const error = summary.all_cases[m.key].median_abs_error
+          const s = summary.all_cases[m.key]
           return (
             <li key={m.key} className={m.key === 'agent' ? 'is-agent' : undefined}>
-              <span className="error-bar-label">{m.label}</span>
+              <span className="error-bar-label">
+                {m.label}
+                {m.key === best && <em className="error-bar-note">best fixed window, known only afterwards</em>}
+              </span>
               <span className="error-bar-track">
-                <span className="error-bar" style={{ width: `${(error / worst) * 100}%` }} />
-                <span className="error-bar-value">{Math.round(error * 100)}%</span>
+                <span className="error-bar" style={{ width: `${(s.median_abs_error / worst) * 100}%` }} />
+                <span className="error-bar-value">{Math.round(s.median_abs_error * 100)}%</span>
+                <span className="error-bar-more">
+                  mean {Math.round(s.mean_abs_error * 100)}%
+                  {s.misses_over_50pct !== undefined && `, ${s.misses_over_50pct} over 50%`}
+                </span>
               </span>
             </li>
           )
@@ -93,10 +133,32 @@ export function AccuracyView() {
       </ul>
       {closer?.classic && (
         <p className="accuracy-closer">
-          The agent was closer than the classic fit in <strong>{closer.classic.closer} of {closer.classic.cases}</strong>{' '}
-          forecasts
-          {closer.recent_12m && ` and closer than the last-12-months fit in ${closer.recent_12m.closer} of ${closer.recent_12m.cases}`}
-          . All of them are below, misses included.
+          The agent was closer than the whole-history fit in{' '}
+          <strong>
+            {closer.classic.closer} of {closer.classic.cases}
+          </strong>{' '}
+          forecasts, cutting the median error from {Math.round((summary.all_cases.classic?.median_abs_error ?? 0) * 100)}% to{' '}
+          {Math.round((agentStats?.median_abs_error ?? 0) * 100)}%.
+          {best && closer[best] && (
+            <>
+              {' '}
+              Against the best fixed window, which nobody could have chosen in advance, it was closer in{' '}
+              {closer[best].closer} of {closer[best].cases}
+              {versusBest && `, with ${versusBest}`}.
+            </>
+          )}{' '}
+          All forecasts are below, misses included.
+        </p>
+      )}
+      {summary.agent_models && (
+        <p className="chart-note-line">
+          The agent’s runs:{' '}
+          {Object.entries(summary.agent_models)
+            .map(([model, n]) =>
+              model === 'not recorded' ? `${n} from before the model was recorded` : `${n} on ${model.replace('meta-models/', '')}`,
+            )
+            .join(', ')}
+          .
         </p>
       )}
 

@@ -135,13 +135,21 @@ export const api = {
 /** The source of the tool function that produced an evidence item. */
 export type ToolCode = { ref: string; same_as_run: boolean; file: string; line: number; source: string }
 
-export type MethodSummary = { cases: number; median_abs_error: number; mean_abs_error: number; median_bias: number }
+export type MethodSummary = {
+  cases: number
+  median_abs_error: number
+  mean_abs_error: number
+  median_bias: number
+  misses_over_50pct?: number
+}
 
 /** The backtest: 12-month oil forecasts made at past dates, against what the wells then produced. */
 export type Backtest = {
   summary: {
     all_cases: Record<string, MethodSummary>
     agent_closer?: Record<string, { cases: number; closer: number }>
+    best_fixed_window?: string
+    agent_models?: Record<string, number>
     horizon_days: number
   }
   results: Table

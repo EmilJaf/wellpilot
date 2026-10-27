@@ -5,7 +5,9 @@ oil), a forecast of the next 365 days of oil from data up to the cutoff only, co
 with the actual volume. Methods:
 
 - classic: Arps (auto model) fitted on the well's whole history, the quick standard.
-- recent_12m: Arps fitted on the last 12 months only.
+- recent_3m, recent_6m, recent_12m, recent_24m: Arps fitted on the last 3, 6, 12 or 24
+  months only. Fixed windows: which one does best is known only after the fact, so the
+  best of them is a hindsight bar for the agent, not a method anyone could have chosen.
 - agent: the WellPilot agent, given data up to the cutoff, picks its own window and
   runs forecast_production; its forecast is read from its evidence. This one calls the
   LLM (spends tokens), so it runs on a subset of cases and is cached per case.
@@ -16,6 +18,7 @@ whose forecast period had ended by the cutoff), and both bands' coverage is repo
 
 Run: uv run python -m wellpilot.backtest          (free)
      uv run python -m wellpilot.backtest --agent  (spends tokens, cached per case)
+     ... --agent --agent-limit 25 --refresh       (reruns cases another model made)
 """
 
 import argparse
@@ -38,6 +41,7 @@ HORIZON_DAYS = 365
 STEP_MONTHS = 6
 FIRST_CUTOFF_MONTHS = 18
 PRODUCERS = ("F-12", "F-14", "F-11", "F-15 D", "F-1 C")
+RECENT_MONTHS = (3, 6, 12, 24)  # fixed fit windows compared with the agent's own choice
 BAND = (0.1, 0.9)  # calibrated P90-P10: the 80% interval
 MIN_PAST_ERRORS = 5  # errors needed before a calibrated band is given
 RESULTS_FILE = "backtest_results.parquet"
@@ -110,8 +114,9 @@ def decline_methods(store: ProductionStore, all_cases: list[Case]) -> list[dict]
     for case in all_cases:
         daily = _production(store, case.well)
         rows.append(_decline_row(case, daily, "classic"))
-        recent = case.cutoff - pd.DateOffset(months=12)
-        rows.append(_decline_row(case, daily, "recent_12m", start=recent))
+        for months in RECENT_MONTHS:
+            start = case.cutoff - pd.DateOffset(months=months)
+            rows.append(_decline_row(case, daily, f"recent_{months}m", start=start))
     return rows
 
 
@@ -120,14 +125,25 @@ def _agent_cache(processed_dir: Path, case: Case) -> Path:
     return processed_dir / "backtest_agent" / name
 
 
+def cached_model(processed_dir: Path, case: Case) -> str | None:
+    """The model a cached agent run was made with (None for runs from before it was kept)."""
+    path = _agent_cache(processed_dir, case)
+    return json.loads(path.read_text()).get("model") if path.exists() else None
+
+
 async def agent_row(
-    llm, processed_dir: Path, case: Case, store: ProductionStore | None = None
+    llm,
+    processed_dir: Path,
+    case: Case,
+    store: ProductionStore | None = None,
+    refresh: bool = False,
 ) -> dict | None:
     """The agent's forecast for a case: its run is cached, and its chosen window and model
     are refitted here on data up to the cutoff, so the forecast covers exactly the same
-    365 days as the other methods. With llm=None only cached runs are used."""
+    365 days as the other methods. With llm=None only cached runs are used; refresh runs
+    the agent again even when a cached run exists."""
     path = _agent_cache(processed_dir, case)
-    if path.exists():
+    if path.exists() and not (refresh and llm is not None):
         record = json.loads(path.read_text())
     elif llm is None:
         return None
@@ -146,6 +162,7 @@ async def agent_row(
         ]
         record = {
             "question": question,
+            "model": llm.model,
             "run": to_jsonable(run.to_dict()),
             "forecast": to_jsonable(forecasts[-1].result) if forecasts else None,
             "forecast_evidence": forecasts[-1].id if forecasts else None,
@@ -165,7 +182,11 @@ async def agent_row(
         end=args.get("end"),
         model=args.get("model", "auto"),
     )
-    return {**row, "verified": bool(record["run"]["verified"])}
+    return {
+        **row,
+        "verified": bool(record["run"]["verified"]),
+        "model": record.get("model") or "not recorded",
+    }
 
 
 def calibrate(results: pd.DataFrame) -> pd.DataFrame:
@@ -209,6 +230,7 @@ def summarize(results: pd.DataFrame) -> dict:
             "cases": len(rows),
             "median_abs_error": float(abs_error.median()),
             "mean_abs_error": float(abs_error.mean()),
+            "misses_over_50pct": int((abs_error > 0.5).sum()),
             "median_bias": float(rows["error"].median()),
             "bootstrap_band_coverage": float(rows["in_bootstrap_band"].mean()),
             "calibrated_band_cases": int(rows["in_calibrated_band"].notna().sum()),
@@ -286,6 +308,7 @@ def case_detail(processed_dir: Path, store: ProductionStore, well: str, cutoff: 
         }
         agent = {
             "question": record["question"],
+            "model": record.get("model"),
             "verified": bool(run["verified"]),
             "summary": run["summary"],
             "inferences": [f["claim"] for f in run["findings"] if f["confidence"] == "inference"],
@@ -321,7 +344,7 @@ def case_detail(processed_dir: Path, store: ProductionStore, well: str, cutoff: 
     }
 
 
-async def run(with_agent: bool, agent_limit: int) -> dict:
+async def run(with_agent: bool, agent_limit: int, refresh: bool = False) -> dict:
     settings = get_settings()
     store = ProductionStore(settings.processed_dir)
     all_cases = cases(store)
@@ -338,11 +361,14 @@ async def run(with_agent: bool, agent_limit: int) -> dict:
     chosen = all_cases[::step][:agent_limit] if with_agent else []
     for case in all_cases:
         cached = _agent_cache(settings.processed_dir, case).exists()
+        # --refresh: cases a different model made are run again on the configured one.
+        stale = bool(llm and refresh and cached)
+        stale = stale and cached_model(settings.processed_dir, case) != llm.model
         if not cached and case not in chosen:
             continue
-        if not cached:
+        if not cached or stale:
             print(f"agent: {case.well} from {case.cutoff.date()}")
-        row = await agent_row(llm, settings.processed_dir, case, store)
+        row = await agent_row(llm, settings.processed_dir, case, store, refresh=stale)
         if row:
             rows.append(row)
         elif not cached:
@@ -353,8 +379,14 @@ async def run(with_agent: bool, agent_limit: int) -> dict:
     if (results["method"] == "agent").any():
         summary["agent_cases"] = summarize(same_cases(results, "agent"))
         summary["agent_closer"] = {
-            than: closer(results, "agent", than) for than in ("classic", "recent_12m")
+            than: closer(results, "agent", than)
+            for than in ("classic", *(f"recent_{m}m" for m in RECENT_MONTHS))
         }
+        agent_rows = results[results["method"] == "agent"]
+        summary["agent_models"] = agent_rows["model"].value_counts().to_dict()
+        fixed = {m: s for m, s in summary["all_cases"].items() if m.startswith("recent_")}
+        # The fixed window that did best over all cases: a bar set with hindsight.
+        summary["best_fixed_window"] = min(fixed, key=lambda m: fixed[m]["median_abs_error"])
     summary["horizon_days"] = HORIZON_DAYS
     summary["cutoffs"] = (
         f"every {STEP_MONTHS} months from {FIRST_CUTOFF_MONTHS} months after first oil"
@@ -368,8 +400,13 @@ def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Backtest 12-month oil forecasts.")
     parser.add_argument("--agent", action="store_true", help="include the LLM agent (tokens)")
     parser.add_argument("--agent-limit", type=int, default=8, help="agent cases to run")
+    parser.add_argument(
+        "--refresh",
+        action="store_true",
+        help="with --agent: run again the cached cases another model made (tokens)",
+    )
     args = parser.parse_args(argv)
-    summary = asyncio.run(run(args.agent, args.agent_limit))
+    summary = asyncio.run(run(args.agent, args.agent_limit, args.refresh))
     for scope in ("all_cases", "agent_cases"):
         if scope not in summary:
             continue

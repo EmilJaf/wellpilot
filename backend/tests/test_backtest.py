@@ -15,6 +15,7 @@ from wellpilot.backtest import (
     RESULTS_FILE,
     Case,
     agent_row,
+    cached_model,
     calibrate,
     case_detail,
     cases,
@@ -181,6 +182,8 @@ async def test_agent_forecast_is_read_from_its_evidence_and_cached(processed_dir
 
     assert row["method"] == "agent"
     assert row["verified"] is True
+    assert row["model"] == "fake"  # the model is kept with the cached run
+    assert cached_model(processed_dir, case) == "fake"  # --refresh reruns other models' cases
     # The agent's chosen window, refitted on data up to the cutoff.
     assert row["window_start"] == pd.Timestamp("2009-01-01")
     assert row["p90"] <= row["p50"] <= row["p10"]
@@ -216,10 +219,12 @@ def test_case_detail_shows_each_fit_on_data_up_to_the_cutoff(processed_dir) -> N
     )
 
     detail = case_detail(processed_dir, store, "F-12", "2010-01-31")
+    methods = set(pd.read_parquet(processed_dir / RESULTS_FILE)["method"])
 
     assert detail["cutoff"] == "2010-01-31" and detail["horizon_end"] == "2011-01-31"
     assert detail["actual_sm3"] == round(found[1].actual_sm3)
     assert detail["rate"]["date"][-1] <= "2011-01-31"
+    assert methods == {"classic", "recent_3m", "recent_6m", "recent_12m", "recent_24m"}
     assert [m["method"] for m in detail["methods"]] == ["classic", "recent_12m"]
     assert detail["agent"] is None  # no cached agent run for this case
     for method in detail["methods"]:

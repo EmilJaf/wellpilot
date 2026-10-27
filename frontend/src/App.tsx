@@ -249,7 +249,7 @@ export default function App() {
                   Well {well}
                 </button>
                 <button type="button" role="tab" aria-selected={view === 'plan'} onClick={() => setView('plan')}>
-                  Field vs 2005 plan
+                  Field vs plan
                 </button>
                 <button type="button" role="tab" aria-selected={view === 'accuracy'} onClick={() => setView('accuracy')}>
                   Forecast accuracy
