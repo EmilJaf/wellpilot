@@ -1109,12 +1109,20 @@ def _suggest(written: list[str], citable: set[str] | None, log: EvidenceLog) -> 
     items = [log.get(i) for i in sorted(citable)] if citable is not None else list(log)
     found = []
     for text in written[:3]:
-        for item in (i for i in items if i is not None):
-            numbers = _Pool([item]).numbers
-            hit = next((n for r in _readings(text) for n in numbers if _reads_as(r, [n])), None)
-            if hit is not None:
-                found.append(f'{{"text": "{text}", "value": {hit:g}, "evidence_id": "{item.id}"}}')
-                break
+        # The value nearest the number as written, so "3 150" is declared as the 3150 the
+        # evidence holds rather than a 3147 that also rounds to it; on a tie, the first item.
+        hits = [
+            (min(abs(n - r[0] * sc) / max(abs(r[0] * sc), 1e-9) for sc in r[2]), k, n, item.id)
+            for k, item in enumerate(i for i in items if i is not None)
+            for n in _Pool([item]).numbers
+            for r in _readings(text)
+            if _reads_as(r, [n])
+        ]
+        if hits:
+            _, _, value, evidence_id = min(hits, key=lambda h: (h[0], h[1]))
+            found.append(
+                f'{{"text": "{text}", "value": {value:g}, "evidence_id": "{evidence_id}"}}'
+            )
     return f" These are in the evidence; declare them as {', '.join(found)}." if found else ""
 
 

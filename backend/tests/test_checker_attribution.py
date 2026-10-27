@@ -260,3 +260,42 @@ def test_a_well_the_result_names_may_be_named() -> None:
 
     assert check("Field-wide, with F-14.") == []
     assert any("names F-11" in p for p in check("Field-wide, with F-11."))
+
+
+def test_the_declaration_hint_names_the_value_nearest_the_number_written() -> None:
+    """Run e8c3374117a8 wrote "3 150 m" undeclared; its log held 3147 (a zone's bottom) and
+    3150 (the plug's depth). Both round to "3 150"; the hint names 3150."""
+    log = EvidenceLog()
+    eid = log.add(
+        "production_log",
+        {"well": "F-12"},
+        {"zones_m": [[3131, 3147]], "below": [{"depth_m": 3150, "water_share": 0.971}]},
+        lambda: None,
+    ).id
+    finding = Finding(
+        claim="F-12's log had 97% of the water entering below 3 150 m.",
+        evidence_ids=[eid],
+        confidence="fact",
+        numbers=[DeclaredNumber(text="97%", value=0.971, evidence_id=eid)],
+    )
+
+    (problem,) = check_submission(Submission(summary="Done.", findings=[finding]), log)
+
+    assert '{"text": "3 150", "value": 3150, "evidence_id": "E1"}' in problem
+
+
+def test_the_hint_for_a_percent_names_the_share_not_a_rate_near_it() -> None:
+    log = EvidenceLog()
+    eid = log.add(
+        "production_monthly",
+        {"well": "F-12"},
+        {"choke_pct": 72.3, "water_cut": 0.7213},
+        lambda: None,
+    ).id
+    finding = Finding(
+        claim="F-12's water cut was 72%.", evidence_ids=[eid], confidence="fact", numbers=[]
+    )
+
+    (problem,) = check_submission(Submission(summary="Done.", findings=[finding]), log)
+
+    assert '"value": 0.7213' in problem
