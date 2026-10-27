@@ -25,7 +25,10 @@ from datetime import UTC, date, datetime
 from pathlib import Path
 
 from wellpilot.agent import corpus
-from wellpilot.agent.checker import CALENDAR_WINDOW, WRITTEN_NUMBER
+from wellpilot.agent.checker import (
+    MAX_CLAIM_NUMBERS,
+    claim_numbers,
+)
 from wellpilot.agent.corpus import CORPUS_DIR
 from wellpilot.agent.loop import AgentRun, run_agent
 from wellpilot.agent.review import review
@@ -224,14 +227,13 @@ def unreadable_numbers(summary: str) -> list[str]:
 # What a finding's claim must not carry: fit statistics belong in its detail, and internal
 # fields (a score, a key name) mean nothing to a reader.
 JARGON = re.compile(r"\br2(?:_log)?\b|r²|\bAIC\b|\bqi\b|\bdi\b|\battention \d|_sm3|_bar\b")
-MAX_CLAIM_NUMBERS = 4  # the prompt asks for at most 3; one more for a rounding of the same
 
 
 def dense_claims(claims: list[str]) -> list[str]:
     """Claims a manager could not follow: jargon, or more numbers than a sentence holds."""
     found = []
     for n, claim in enumerate(claims, start=1):
-        numbers = WRITTEN_NUMBER.findall(CALENDAR_WINDOW.sub(" ", MASK.sub(" ", claim)))
+        numbers = claim_numbers(claim)
         if JARGON.search(claim) or len(numbers) > MAX_CLAIM_NUMBERS:
             found.append(
                 f"finding {n} ({len(numbers)} numbers{', jargon' if JARGON.search(claim) else ''})"

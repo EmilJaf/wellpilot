@@ -38,16 +38,12 @@ def test_a_long_number_is_asked_rounded_with_a_suggestion() -> None:
 def test_numbers_a_reader_takes_in_pass() -> None:
     assert (
         problems(
-            "F-12 made 1 551 Sm3/d at a 72.3% choke, 359k Sm3 in 2011, 1.13 million in all; the "
-            "plan's 9.000 Sm3/d, 13 000 Sm3/d of liquid.",
-            [
-                d("1 551", 1551),
-                d("72.3%", 72.3),
-                d("359k", 359007),
-                d("1.13 million", 1133053),
-                d("9.000", 9000),
-                d("13 000", 13000),
-            ],
+            "F-12 made 1 551 Sm3/d at a 72.3% choke, 359k Sm3 in 2011, 1.13 million in all.",
+            [d("1 551", 1551), d("72.3%", 72.3), d("359k", 359007), d("1.13 million", 1133053)],
+        )
+        + problems(
+            "The plan's 9.000 Sm3/d, 13 000 Sm3/d of liquid.",
+            [d("9.000", 9000), d("13 000", 13000)],
         )
         == []
     )
@@ -91,3 +87,18 @@ def test_the_suggested_rounding_passes_the_checker() -> None:
 
     assert check_submission(submission, log) == []
     assert readability(submission) == []
+
+
+def test_a_claim_with_many_numbers_is_asked_to_move_some_to_its_detail() -> None:
+    """Eval run e8f9b5d63312 wrote nine numbers in one claim; the reader got the point from
+    two. Dates and quotes do not count."""
+    dense = (
+        "At the time of the logs a plug at 3150 m would have shut off ~97% to 100% of water and "
+        "~73% to 81% of oil, while a plug at 3210 m would have shut off only ~33% to 38% of "
+        "water and ~1% of oil."
+    )
+    plain = "The 2014 plug at 3150 m sat below ~97% of the 2010-09-22 water, the 2010 one ~33%."
+
+    found = problems(dense, []) + problems(plain, [])
+
+    assert len(found) == 1 and found[0].startswith("Finding 1: the claim holds 9 numbers")
