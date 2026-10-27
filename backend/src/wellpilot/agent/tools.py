@@ -19,7 +19,7 @@ from typing import Any, Literal
 
 import numpy as np
 import pandas as pd
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from wellpilot.analysis.anomalies import (
     gauge_failures,
@@ -122,6 +122,8 @@ class SqlArgs(BaseModel):
 
 
 class CalcArgs(BaseModel):
+    model_config = ConfigDict(coerce_numbers_to_str=True)  # a bare number evaluates to itself
+
     expression: str = Field(
         description="Arithmetic on numbers taken from evidence, e.g. '0.7532 / 0.0575'. "
         "Operators: + - * / ** and parentheses."
@@ -346,8 +348,13 @@ def _evaluate(node: ast.AST) -> float:
 def calculate(_: ProductionStore, args: CalcArgs) -> dict:
     if len(args.expression) > 200:
         raise ValueError("expression longer than 200 characters")
+    # Thousands grouped with a comma, space or underscore ("1,133,053", "4 050"); any other
+    # comma is a decimal comma, which would silently change the value.
+    expression = re.sub(r"(?<=\d)[,\s\u00a0\u202f_](?=\d{3}\b)", "", args.expression.strip())
+    if "," in expression:
+        raise ValueError("use '.' as the decimal separator (write 0,80 as 0.80)")
     try:
-        tree = ast.parse(args.expression.replace(",", ""), mode="eval")
+        tree = ast.parse(expression, mode="eval")
     except SyntaxError as e:
         raise ValueError(f"cannot parse expression: {e.msg}") from e
     try:

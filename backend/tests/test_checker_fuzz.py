@@ -41,6 +41,8 @@ LARGE: dict[str, Format] = {
     "scientific": lambda v: (f"{v:.3e}", float(f"{v:.3e}")),
     "glued unit": lambda v: (f"{round(v)}Sm3", round(v)),
     "norwegian": lambda v: (f"{round(v):,}".replace(",", "."), round(v)),
+    "MSm3": lambda v: (f"{v / 1e6:.2f} MSm3", round(v / 1e6, 2) * 1e6),
+    "kSm3": lambda v: (f"{v / 1000:.1f} kSm3", round(v / 1000, 1) * 1000),
 }
 # Answers from before declared numbers were read in English only.
 LEGACY = {k: v for k, v in LARGE.items() if k != "norwegian"}

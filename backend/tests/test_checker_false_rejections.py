@@ -78,7 +78,6 @@ GAUGE = "95600d0cf26d-1"
 # A. dates written in words
 
 
-@pending("block 2: dates written with month names")
 def test_A1_day_month_year_in_words_is_a_date_not_a_number() -> None:
     """'12 October 2010' is how an engineer writes a date. Only ISO dates are recognised,
     so 12 and 11 become 'undeclared numbers' although the prompt says dates need no
@@ -93,7 +92,6 @@ def test_A1_day_month_year_in_words_is_a_date_not_a_number() -> None:
     assert check(f, log=log) == []
 
 
-@pending("block 2: dates written with month names")
 def test_A1b_declaring_the_day_number_does_not_help() -> None:
     """If the model obeys the rejection and declares '11', the day is not a number in the
     evidence (dates are excluded from the number pool), so it is rejected again: a loop."""
@@ -106,7 +104,6 @@ def test_A1b_declaring_the_day_number_does_not_help() -> None:
     assert check(f, log=log) == []
 
 
-@pending("block 2: dates written with month names")
 def test_A2_month_day_comma_year() -> None:
     log = corpus_log(F12)
     f = finding(
@@ -254,7 +251,6 @@ def test_C4_hyphenated_windows_control() -> None:
 # D. units and scales
 
 
-@pending("block 2: MSm3 / kSm3 / percent as units")
 def test_D1_MSm3_with_the_full_value_declared() -> None:
     """'4.58 MSm3' is the standard way to write million Sm3 in this field (the PUD uses
     MSm3 throughout). 'million' and 'k' are scales; 'M' is not."""
@@ -266,7 +262,6 @@ def test_D1_MSm3_with_the_full_value_declared() -> None:
     assert check(f, log=log) == []
 
 
-@pending("block 2: MSm3 / kSm3 / percent as units")
 def test_D1b_MSm3_with_the_short_value_declared() -> None:
     log = EvidenceLog()
     eid = add(
@@ -285,7 +280,6 @@ def test_D2_million_control() -> None:
     assert check(f, log=log) == []
 
 
-@pending("block 2: MSm3 / kSm3 / percent as units")
 def test_D3_percent_as_a_word() -> None:
     log = corpus_log(F14)
     f = finding(
@@ -296,7 +290,6 @@ def test_D3_percent_as_a_word() -> None:
     assert check(f, log=log) == []
 
 
-@pending("block 2: MSm3 / kSm3 / percent as units")
 def test_D4_kSm3_glued_unit() -> None:
     log = corpus_log(F14)
     f = finding("P50 cumulative oil 276 kSm3.", ["E7"], [d("276 kSm3", 276078, "E7")])
@@ -330,14 +323,12 @@ def test_E1_dividing_by_1e6_is_a_unit_conversion() -> None:
     assert check(f, log=log) == []
 
 
-@pending("block 2: unit-conversion constants in calculate")
 def test_E2_dividing_by_1000000() -> None:
     log, eid = _with_calc("1133053 / 1000000", 1.133)
     f = finding("That is 1.13 MSm3 of oil.", [eid], [d("1.13", 1.133, eid)])
     assert check(f, log=log) == []
 
 
-@pending("block 2: unit-conversion constants in calculate")
 def test_E3_barrels_conversion() -> None:
     """Sm3 -> bbl is the one conversion an international audience asks for."""
     log, eid = _with_calc("1133053 * 6.2898", 7126682)
@@ -345,7 +336,6 @@ def test_E3_barrels_conversion() -> None:
     assert check(f, log=log) == []
 
 
-@pending("block 2: year arithmetic in calculate")
 def test_E4_year_arithmetic() -> None:
     """2010 - 2008 = 2 years: both years are in E5's dates but dates are not numbers."""
     log, eid = _with_calc("2010 - 2008", 2)
@@ -591,7 +581,6 @@ def test_J1_scientific_notation_copied_from_the_event_summary() -> None:
     assert check(f, log=log) == []
 
 
-@pending("block 2: unicode minus")
 def test_K1_unicode_minus_in_text_ascii_in_declaration() -> None:
     log = corpus_log(F12)
     f = finding("Oil rate change −72% around 2010-07-18.", ["E5"], [d("-72%", -0.7171, "E5")])

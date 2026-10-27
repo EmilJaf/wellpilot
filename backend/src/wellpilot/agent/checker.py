@@ -23,10 +23,12 @@ Known limit: the sign of a change is not checked ("rose 45%" passes against -0.4
 """
 
 import json
+import math
 import re
 from collections.abc import Iterable
 from contextlib import suppress
 from dataclasses import dataclass
+from datetime import date
 from decimal import Decimal
 from functools import lru_cache
 from typing import Any, Literal
@@ -40,20 +42,87 @@ from wellpilot.ingest.reports import REPORTS
 
 WELL = re.compile(r"\b(?:15/9-)?F-\d+(?:\s?[A-Z]\b)?")
 DATE = re.compile(r"\b(\d{4}-\d{2}(?:-\d{2})?)\b")
+# English month names, capitalised ("May 2010" is a month, "may" is not), with a year.
+_MONTH = (
+    r"(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|June?|July?|Aug(?:ust)?|"
+    r"Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\.?"
+)
+DAY_MONTH_YEAR = re.compile(rf"\b(\d{{1,2}})(?:st|nd|rd|th)?\s+{_MONTH}\s+(\d{{4}})\b")
+MONTH_DAY_YEAR = re.compile(rf"\b{_MONTH}\s+(\d{{1,2}})(?:st|nd|rd|th)?,?\s+(\d{{4}})\b")
+MONTH_YEAR = re.compile(rf"\b{_MONTH}\s+(\d{{4}})\b")
 THOUSANDS = re.compile(r"(?<=\d),(?=\d{3}\b)")
 SPACED_THOUSANDS = re.compile(r"\b\d{1,3}(?:[ \u00a0\u202f]\d{3})+\b")
 # A number may run straight into a unit ("98765Sm3") or end a sentence, but not run into
 # more digits.
+# Suffixes that scale a number: "4.58 MSm3", "276 kSm3", "1.2 mill Sm3", "75.6 percent".
 NUMBER = re.compile(
-    r"(?<![\w.])(\d+(?:\.\d+)?(?:[eE][-+]?\d+)?)(?:\s*(%|x\b|×|million\b|k\b))?(?!\d|\.\d)"
+    r"(?<![\w.])(\d+(?:\.\d+)?(?:[eE][-+]?\d+)?)"
+    r"(?:\s*(%|percent\b|pct\b|x\b|×|million\b|mill\b\.?|thousand\b|M(?=Sm)|k(?=Sm)|k\b))?"
+    r"(?!\d|\.\d)"
+)
+SUFFIX_AFTER = re.compile(
+    r"\s*(?:%|percent\b|pct\b|million\b|mill\b\.?|thousand\b|M(?=Sm)|k(?=Sm))"
 )
 SQL_STRING = re.compile(r"'((?:[^']|'')*)'")
-SCALES = {"%": (0.01, 1.0), "million": (1e6,), "k": (1e3,)}
+SCALES = {
+    "%": (0.01, 1.0),
+    "percent": (0.01, 1.0),
+    "pct": (0.01, 1.0),
+    "million": (1e6,),
+    "mill": (1e6,),
+    "mill.": (1e6,),
+    "M": (1e6,),
+    "thousand": (1e3,),
+    "k": (1e3,),
+}
 SMALL_INTEGER = 10  # "3 wells", "2 years": too generic to demand evidence for
-# Years of the indexed reports: the system prompt names "the February 2005 development plan".
+# Years and months of the indexed reports: the system prompt names "the February 2005
+# development plan", so the model may too, citing data evidence only.
 REPORT_YEARS = {float(r.doc_date[:4]) for r in REPORTS}
-# Unit conversions a calculation may use without citing them.
-CONSTANTS = {12.0, 24.0, 30.0, 30.44, 100.0, 1000.0, 365.0, 365.25}
+REPORT_DATES = {r.doc_date for r in REPORTS} | {r.doc_date[:7] for r in REPORTS}
+
+
+def normalize_dates(text: str) -> str:
+    """Dates written with month names as ISO dates, so they are checked as dates: "12
+    October 2010" and "October 12, 2010" become 2010-10-12, "Oct 2010" becomes 2010-10.
+    Impossible days ("31 June 2010") are left as they are. "Mid-2010" stays a year."""
+
+    def iso(year: str, month: str, day: str | None) -> str | None:
+        number = [
+            "jan",
+            "feb",
+            "mar",
+            "apr",
+            "may",
+            "jun",
+            "jul",
+            "aug",
+            "sep",
+            "oct",
+            "nov",
+            "dec",
+        ].index(month[:3].lower()) + 1
+        if day is None:
+            return f"{year}-{number:02d}"
+        try:
+            return date(int(year), number, int(day)).isoformat()
+        except ValueError:
+            return None
+
+    text = DAY_MONTH_YEAR.sub(lambda m: iso(m[3], m[2], m[1]) or m[0], text)
+    text = MONTH_DAY_YEAR.sub(lambda m: iso(m[3], m[1], m[2]) or m[0], text)
+    return MONTH_YEAR.sub(lambda m: iso(m[2], m[1], None) or m[0], text)
+
+
+def _normalize(text: str) -> str:
+    """The claim as the checker reads it: ISO dates, ASCII minus and hyphen."""
+    return normalize_dates(text.replace("\u2212", "-").replace("\u2013", "-"))
+
+
+# Unit conversions a calculation may use without citing them (besides powers of ten): days,
+# hours, weeks and months; barrels per Sm3 and back; cubic feet per Sm3.
+CONSTANTS = {7.0, 12.0, 24.0, 30.0, 30.44, 52.0, 60.0, 365.0, 365.25, 3600.0, 86400.0}
+CONSTANTS |= {6.2898, 0.159, 0.158987, 35.3147}
 # Causes are interpretations: the data shows timing and size, not why.
 CAUSAL = re.compile(
     r"\b(because|caus(?:e|ed|es|ing)|dr(?:ove|ives?|iven|iving)|due to|led to|leads? to|"
@@ -211,7 +280,7 @@ class _Pool:
                         self.numbers.append(abs(float(leaf)))
                 elif isinstance(leaf, str) and leaf not in typed_strings:
                     texts.append(squash(leaf))
-                    self.dates.update(DATE.findall(leaf))
+                    self.dates.update(DATE.findall(normalize_dates(leaf)))
                     # Report text may use either convention, so keep both readings.
                     for european in (False, True):
                         self.numbers.extend(v for v, _, _ in _numbers_in_text(leaf, european))
@@ -226,6 +295,13 @@ class _Pool:
         if len(day) == 10:
             return day in self.dates
         return any(d.startswith(day) for d in self.dates)
+
+
+def _is_constant(value: float) -> bool:
+    """A unit constant: a listed conversion or a power of ten (/1000, /1e6, *100)."""
+    if value in CONSTANTS:
+        return True
+    return value >= 10 and math.isclose(math.log10(value), round(math.log10(value)))
 
 
 @dataclass(frozen=True)
@@ -249,9 +325,12 @@ def _calculations(log: EvidenceLog) -> dict[str, _Calc]:
             continue
         missing, warnings = [], []
         expression = str(item.arguments.get("expression", ""))
+        years = _Pool(earlier).years
         for value, decimals, _ in _numbers_in_text(expression):
-            if value in CONSTANTS or (decimals == 0 and value <= SMALL_INTEGER):
+            if _is_constant(value) or (decimals <= 0 and value <= SMALL_INTEGER):
                 continue
+            if value.is_integer() and str(int(value)) in years:
+                continue  # year arithmetic: "2010 - 2008"
             holders = [e for e in earlier if _Pool([e]).has_number(value, decimals, None)]
             if not holders:
                 missing.append(f"{value:g}")
@@ -277,14 +356,17 @@ def _free(value: float, decimals: int, suffix: str | None, pool: _Pool, free: se
     )
 
 
-def _unsupported(text: str, pool: _Pool, free: set[float]) -> tuple[list[str], list[str]]:
+def _unsupported(
+    text: str, pool: _Pool, free: set[float], free_dates: set[str]
+) -> tuple[list[str], list[str]]:
+    text = _normalize(text)
     numbers = []
     for value, decimals, suffix in _numbers_in_text(_mask(text)):
         if not _free(value, decimals, suffix, pool, free) and not pool.has_number(
             value, decimals, suffix
         ):
             numbers.append(_as_written(value, decimals, suffix))
-    dates = [d for d in DATE.findall(text) if not pool.has_date(d)]
+    dates = [d for d in DATE.findall(text) if d not in free_dates and not pool.has_date(d)]
     return numbers, dates
 
 
@@ -381,6 +463,8 @@ def _declared(
     where it comes from; the only parsing left is spotting digits nobody declared.
     """
     problems = []
+    text = _normalize(text)
+    declared = [d.model_copy(update={"text": _normalize(d.text)}) for d in declared]
     masked = _mask(text)
     # A declaration with no number in the text hides nothing (every written number must be
     # declared anyway), so it costs no correction round; it is only named as a hint below.
@@ -390,7 +474,11 @@ def _declared(
             continue
         where = number.evidence_id
         item = log.get(where)
-        readings = _readings(number.text)
+        # A unit the text writes right after the declared number scales it too: "4.58"
+        # declared, "4.58 MSm3" written.
+        unit = SUFFIX_AFTER.match(masked, _standalone(masked, number.text)[0][1])
+        # (+2 keeps the "Sm" that "M" and "k" need after them)
+        readings = _readings(number.text + (masked[unit.start() : unit.end() + 2] if unit else ""))
         fits = [r for r in readings if _reads_as(r, [number.value])]
         exempt = [n for n in _numbers_in_text(number.text) if _free(*n, pool, free)]
         if fits and exempt:
@@ -414,8 +502,10 @@ def _declared(
                 f"{label}: '{number.text}' comes from {where}, which calculates from "
                 f"{', '.join(calcs[where].unsupported)}; no evidence contains those."
             )
-        elif not any(_reads_as(r, _Pool([item]).numbers) for r in fits):
-            problems.append(f"{label}: '{number.text}' = {number.value:g} is not in {where}.")
+        elif not any(_reads_as(r, (numbers := _Pool([item]).numbers)) for r in fits):
+            nearest = sorted(set(numbers), key=lambda n: abs(n - abs(number.value)))[:3]
+            hint = f" Closest there: {', '.join(f'{n:g}' for n in nearest)}." if nearest else ""
+            problems.append(f"{label}: '{number.text}' = {number.value:g} is not in {where}.{hint}")
 
     rest = _mask(QUOTED.sub(" ", text))  # numbers inside a quote are checked with the quote
     for number in sorted(declared, key=lambda d: -len(d.text)):
@@ -454,6 +544,7 @@ def _question_numbers(question: str) -> set[float]:
 def check_submission(submission: Submission, log: EvidenceLog, question: str = "") -> list[str]:
     """Return problems as sentences for the model; an empty list means accepted."""
     free = _question_numbers(question)
+    free_dates = REPORT_DATES | set(DATE.findall(_normalize(question)))
     calcs = _calculations(log)
     sound = [e for e in log if not (e.id in calcs and calcs[e.id].unsupported)]
     problems = []
@@ -475,7 +566,7 @@ def check_submission(submission: Submission, log: EvidenceLog, question: str = "
                     "Calculate only with numbers that tool results returned."
                 )
         pool = _Pool(e for e in cited if not (e.id in calcs and calcs[e.id].unsupported))
-        numbers, dates = _unsupported(finding.claim, pool, free)
+        numbers, dates = _unsupported(finding.claim, pool, free, free_dates)
         if finding.numbers is not None:
             problems += _declared(
                 f"Finding {n}",
@@ -520,7 +611,7 @@ def check_submission(submission: Submission, log: EvidenceLog, question: str = "
             )
 
     everything = _Pool(sound)
-    numbers, dates = _unsupported(submission.summary, everything, free)
+    numbers, dates = _unsupported(submission.summary, everything, free, free_dates)
     if submission.summary_numbers is not None:
         problems += _declared(
             "Summary",

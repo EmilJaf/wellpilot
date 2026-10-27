@@ -77,3 +77,30 @@ def test_a_literal_echoed_from_the_select_list_is_still_not_evidence() -> None:
 
     assert any("2013-05-17" in p for p in problems)
     assert any("4 321" in p for p in problems)
+
+
+def test_a_date_written_in_words_is_checked_as_a_date() -> None:
+    log = corpus_log(F12)  # E5 holds 2010-07-18 and 2010-10-12, nothing in March 2010
+
+    assert check("The oil rate collapsed in March 2010.", ["E5"], [], log)
+    assert check("The gauge failed on 5 Jun 2010.", ["E5"], [], log)
+    assert check("The gauge failed on October 13, 2010.", ["E5"], [], log)
+    assert check("The plan dates from March 2005.", ["E5"], [], log)  # the PUD is Feb 2005
+
+
+def test_a_scaled_unit_must_still_match() -> None:
+    log = EvidenceLog()
+    eid = add(
+        log, "list_wells", {}, {"columns": ["well", "cum_oil_sm3"], "rows": [["F-12", 4579610]]}
+    )
+
+    assert check("F-12 produced 5.58 MSm3.", [eid], [d("5.58 MSm3", 5580000, eid)], log)
+    assert check("F-12 produced 4.58 kSm3.", [eid], [d("4.58 kSm3", 4580, eid)], log)
+
+
+def test_calculate_constants_are_conversions_not_any_number() -> None:
+    log = corpus_log(F12)
+    for expression in ("1133053 / 1234567", "2010 - 2003"):
+        calc = add(log, "calculate", {"expression": expression}, {"value": 0.918})
+        problems = check("The ratio is 0.918.", [calc], [d("0.918", 0.918, calc)], log)
+        assert any("calculates from" in p for p in problems), expression

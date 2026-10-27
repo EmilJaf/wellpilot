@@ -118,6 +118,21 @@ def test_calculate_is_safe_arithmetic(store) -> None:
     assert "too large" in execute(store, "calculate", '{"expression": "9**999"}')["error"]
 
 
+def test_calculate_reads_grouped_thousands_and_refuses_decimal_commas(store) -> None:
+    def value(expression: str) -> float:
+        return execute(store, "calculate", json.dumps({"expression": expression}))["result"][
+            "value"
+        ]
+
+    assert value(" (292363 - 259265) / 276078 * 100") == 11.99  # leading space, saved run
+    assert value("4 050 / 2") == 2025
+    assert value("1,133,053 / 1830") == 619.15
+    assert execute(store, "calculate", '{"expression": 4050}')["result"]["value"] == 4050
+    assert (
+        "decimal separator" in execute(store, "calculate", '{"expression": "0,80 * 100"}')["error"]
+    )
+
+
 def test_execute_reports_errors_instead_of_raising(store) -> None:
     assert "unknown tool" in execute(store, "nope", "{}")["error"]
     assert "invalid arguments" in execute(store, "production_monthly", '{"wel": "F-12"}')["error"]
