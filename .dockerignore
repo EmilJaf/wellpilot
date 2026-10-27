@@ -1,0 +1,19 @@
+# Never in the image: secrets, private notes, history, raw downloads, local builds.
+.env
+.env.*
+!.env.example
+CLAUDE.local.md
+.claude/
+.git/
+.githooks/
+.idea/
+.vscode/
+data/raw/
+# data/runs stays: the replayed demo runs (FEATURED_RUNS) ship in the image.
+**/__pycache__/
+**/.pytest_cache/
+**/.ruff_cache/
+**/.hypothesis/
+backend/.venv/
+frontend/node_modules/
+frontend/dist/

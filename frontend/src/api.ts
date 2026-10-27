@@ -100,11 +100,21 @@ async function json<T>(response: Response): Promise<T> {
   return response.json() as Promise<T>
 }
 
+/** The operator's key, set once in the browser console (localStorage.operatorKey = '...'): lifts the public limits. */
+function operatorHeader(): Record<string, string> {
+  try {
+    const key = localStorage.getItem('operatorKey')
+    return key ? { 'X-Operator-Key': key } : {}
+  } catch {
+    return {}
+  }
+}
+
 export const api = {
   startRun: (question: string, asOf?: string) =>
     fetch('/api/runs', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...operatorHeader() },
       body: JSON.stringify({ question, as_of: asOf || null }),
     }).then((r) => json<RunSummary>(r)),
   runs: () => fetch('/api/runs').then((r) => json<RunSummary[]>(r)),

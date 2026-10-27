@@ -223,7 +223,9 @@ async def test_model_failure_ends_the_run_with_an_error_event(settings) -> None:
         run = (await client.get(f"/api/runs/{run_id}")).json()
 
     assert events[-1]["type"] == "run_error"
-    assert "model unavailable" in events[-1]["message"]
+    # The stream is public: the error's type, never its message (it may name server paths).
+    assert "RuntimeError" in events[-1]["message"]
+    assert "model unavailable" not in events[-1]["message"]
     assert run["status"] == "error"
 
 
@@ -308,12 +310,50 @@ async def test_runs_are_limited_per_client_and_by_the_daily_budget(settings) -> 
     assert second.status_code == 429
     assert "per hour" in second.json()["detail"]
 
+    # A restart (a new app on the same runs) still counts the 220 tokens spent today.
     broke = settings.model_copy(update={"daily_token_budget": 150})
     async with client_for(create_app(broke, llm_factory=fake_llm)) as client:
-        await run_to_end(client)  # spends 220 tokens
         third = await client.post("/api/runs", json={"question": "Which well again?"})
     assert third.status_code == 429
     assert "budget" in third.json()["detail"]
+
+    # The operator is never locked out by the limits.
+    operated = broke.model_copy(update={"operator_key": "s3cret"})
+    async with client_for(create_app(operated, llm_factory=fake_llm)) as client:
+        wrong = await client.post(
+            "/api/runs", json={"question": "Which well?"}, headers={"x-operator-key": "nope"}
+        )
+        right = await client.post(
+            "/api/runs", json={"question": "Which well?"}, headers={"x-operator-key": "s3cret"}
+        )
+    assert wrong.status_code == 429
+    assert right.status_code == 202
+
+
+async def test_proxy_headers_count_only_from_the_trusted_proxy(settings) -> None:
+    from starlette.requests import Request as StarletteRequest
+
+    from wellpilot.api.runs import client_id
+
+    scope = {
+        "type": "http",
+        "headers": [(b"fly-client-ip", b"1.2.3.4"), (b"x-forwarded-for", b"5.6.7.8, 9.9.9.9")],
+        "client": ("10.0.0.1", 1234),
+    }
+    request = StarletteRequest(scope)
+
+    assert client_id(request, "none") == "10.0.0.1"
+    assert client_id(request, "fly") == "1.2.3.4"
+    assert client_id(request, "xff") == "9.9.9.9"
+
+
+async def test_a_public_deployment_lists_only_featured_runs(settings) -> None:
+    async with client_for(create_app(settings, llm_factory=fake_llm)) as client:
+        await run_to_end(client)
+    public = settings.model_copy(update={"public": True})
+    async with client_for(create_app(public, llm_factory=fake_llm)) as client:
+        listed = (await client.get("/api/runs")).json()
+    assert listed == []
 
 
 async def test_reasoning_above_high_is_refused(settings) -> None:
@@ -362,3 +402,20 @@ async def test_tool_results_with_decimals_do_not_break_a_run(settings) -> None:
 
     assert events[-1]["type"] == "final"
     assert events[2]["tool_calls"][0]["evidence_id"] == "E1"
+
+
+async def test_shutdown_saves_runs_in_flight_as_interrupted(settings) -> None:
+    gate = asyncio.Event()  # never set: the model call hangs
+    app = create_app(settings, llm_factory=lambda: fake_llm(gate=gate))
+    async with client_for(app) as client:
+        started = await client.post("/api/runs", json={"question": "Which well?"})
+        run_id = started.json()["id"]
+        await asyncio.sleep(0.05)
+        saved = json.loads((settings.runs_dir / f"{run_id}.json").read_text())
+        assert saved["status"] == "running"  # on disk from the start
+
+        await app.state.runs.aclose()
+
+    saved = json.loads((settings.runs_dir / f"{run_id}.json").read_text())
+    assert saved["status"] == "error"
+    assert saved["events"][-1]["message"] == "interrupted: the server stopped"

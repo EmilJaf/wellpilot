@@ -41,6 +41,16 @@ class Settings(BaseSettings):
     runs_per_client_per_hour: int = 6
     daily_token_budget: int = 3_000_000  # input + output, all runs, per UTC day
     run_timeout_s: float = 600.0  # a run that takes longer stops with its last answer
+    # Sent as the X-Operator-Key header (the UI reads localStorage.operatorKey), it skips
+    # the per-client and daily limits and may use one extra slot: the demo cannot be locked
+    # out by strangers. Empty disables it.
+    operator_key: str = ""
+    # Which proxy header names the visitor: "fly" trusts Fly-Client-IP, "xff" the last
+    # X-Forwarded-For hop, "none" the socket peer. "auto" is "fly" on Fly, else "none": a
+    # header a visitor can set must not decide their rate limit.
+    trusted_proxy: Literal["auto", "fly", "xff", "none"] = "auto"
+    # A public deployment (true on Fly) lists only featured runs, never every visitor's.
+    public: bool = False
     # Comma-separated run ids listed by GET /api/runs. Empty lists every saved run, which
     # is for development only: in public it would show every visitor's question.
     featured_runs: str = ""

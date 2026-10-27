@@ -10,6 +10,7 @@ by a daily token budget, and by how many can run at once.
 """
 
 import asyncio
+import hmac
 import json
 import logging
 import os
@@ -19,6 +20,7 @@ import time
 import uuid
 from collections import OrderedDict, deque
 from collections.abc import AsyncIterator, Callable
+from contextlib import suppress
 from dataclasses import asdict
 from datetime import UTC, date, datetime
 from pathlib import Path
@@ -176,6 +178,9 @@ class RunManager:
         daily_token_budget: int = 3_000_000,
         run_timeout_s: float | None = 600.0,
         featured: tuple[str, ...] | None = None,
+        public: bool = False,
+        operator_key: str = "",
+        trusted_proxy: str = "none",
     ) -> None:
         self.processed_dir = processed_dir
         self.runs_dir = runs_dir
@@ -185,15 +190,53 @@ class RunManager:
         self.runs_per_client_per_hour = runs_per_client_per_hour
         self.daily_token_budget = daily_token_budget
         self.run_timeout_s = run_timeout_s
-        # None lists every saved run (development); a tuple lists only those, so a public
-        # deployment never shows other visitors' questions.
+        # A tuple lists only those runs. None lists every saved run in development and none
+        # in public, so a public deployment never shows other visitors' questions.
         self.featured = featured
+        self.public = public
+        if public and featured is None:
+            logger.warning("public deployment without FEATURED_RUNS: no run is listed")
+        self.operator_key = operator_key
+        self.trusted_proxy = trusted_proxy
         self.runs: dict[str, RunRecord] = {}
         self._stores: OrderedDict[date | None, ProductionStore] = OrderedDict()
         self._stores_lock = threading.Lock()
         self._tasks: set[asyncio.Task] = set()
         self._starts: dict[str, deque[float]] = {}
-        self._spent: tuple[date, int] = (datetime.now(UTC).date(), 0)
+        # A restart (a deploy, an idle machine stopped) must not reset today's spend.
+        self._spent: tuple[date, int] = (datetime.now(UTC).date(), self._spent_on_disk())
+
+    def _spent_on_disk(self) -> int:
+        """Tokens of the runs saved today (UTC), read from their files."""
+        today = datetime.now(UTC).date().isoformat()
+        spent = 0
+        for path in self.runs_dir.glob("*.json") if self.runs_dir.exists() else []:
+            try:
+                data = json.loads(path.read_text())
+            except (OSError, ValueError):
+                continue
+            if str(data.get("created_at", "")).startswith(today):
+                spent += sum(
+                    e.get("prompt_tokens", 0) + e.get("completion_tokens", 0)
+                    for e in data.get("events", [])
+                    if e.get("type") == "step"
+                )
+        return spent
+
+    def is_operator(self, key: str | None) -> bool:
+        return bool(self.operator_key and key) and hmac.compare_digest(
+            key.encode(), self.operator_key.encode()
+        )
+
+    async def aclose(self) -> None:
+        """On shutdown: stop the runs in flight, which records each as interrupted and saves
+        it. Bounded, to finish inside the platform's kill timeout."""
+        tasks = list(self._tasks)
+        for task in tasks:
+            task.cancel()
+        if tasks:
+            with suppress(TimeoutError):
+                await asyncio.wait_for(asyncio.gather(*tasks, return_exceptions=True), 3)
 
     def store(self, as_of: date | None = None) -> ProductionStore:
         with self._stores_lock:
@@ -212,8 +255,13 @@ class RunManager:
         finished = spent if day == today else 0
         return finished + sum(r.tokens() for r in self.runs.values() if not r.done)
 
-    def _check_limits(self, client: str) -> None:
-        if sum(not r.done for r in self.runs.values()) >= self.max_active:
+    def _check_limits(self, client: str, privileged: bool = False) -> None:
+        active = sum(not r.done for r in self.runs.values())
+        if privileged:  # the operator: one reserved slot, no per-client or daily limit
+            if active > self.max_active:
+                raise Refused("too many runs in progress; try again in a minute")
+            return
+        if active >= self.max_active:
             raise Refused("too many runs in progress; try again in a minute")
         now = time.monotonic()
         starts = self._starts.setdefault(client, deque())
@@ -228,8 +276,10 @@ class RunManager:
             raise Refused("today's demo budget is used up; replay a recorded run instead")
         starts.append(now)
 
-    def start(self, request: RunRequest, client: str = "local") -> RunRecord:
-        self._check_limits(client)
+    def start(
+        self, request: RunRequest, client: str = "local", privileged: bool = False
+    ) -> RunRecord:
+        self._check_limits(client, privileged)
         llm = self.llm_factory()  # raises RuntimeError when no API key is configured
         record = RunRecord(new_run_id(), request.question.strip(), request.as_of)
         self.runs[record.id] = record
@@ -241,6 +291,7 @@ class RunManager:
 
     async def _run(self, record: RunRecord, llm: LLM, reasoning_effort: str) -> None:
         record.start(llm)
+        self._save(record)  # killed outright, the file still says it was running
         try:
             store = await asyncio.to_thread(self.store, record.as_of)
             run: AgentRun = await run_agent(
@@ -259,7 +310,8 @@ class RunManager:
             raise
         except Exception as e:  # any failure ends the run with an error event
             logger.exception("run %s failed", record.id)
-            record.fail(f"{type(e).__name__}: {e}")
+            # The stream is public: the type, not the message, which may name server paths.
+            record.fail(f"the run failed ({type(e).__name__}); see the server log")
         finally:
             self._finish(record)
 
@@ -267,10 +319,16 @@ class RunManager:
         day, spent = self._spent
         today = datetime.now(UTC).date()
         self._spent = (today, (spent if day == today else 0) + record.tokens())
-        record.save(self.runs_dir)
+        self._save(record)
         finished = [r for r in self.runs.values() if r.done]
         for old in finished[:-FINISHED_IN_MEMORY]:
             self.runs.pop(old.id, None)
+
+    def _save(self, record: RunRecord) -> None:
+        try:
+            record.save(self.runs_dir)
+        except OSError:  # a full or read-only disk must not crash the run or the stream
+            logger.exception("could not save run %s", record.id)
 
     def get(self, run_id: str) -> RunRecord:
         if not RUN_ID.match(run_id):
@@ -285,6 +343,8 @@ class RunManager:
     def recent(self, limit: int = 20) -> list[dict]:
         if self.featured is not None:
             ids = list(self.featured)
+        elif self.public:
+            ids = []
         else:
             ids = list(self.runs)
             if self.runs_dir.exists():
@@ -325,20 +385,23 @@ def _record(request: Request, run_id: str) -> RunRecord:
         raise HTTPException(404, f"no run {run_id}") from None
 
 
-def client_id(request: Request) -> str:
-    """The visitor's address. Behind Fly's proxy that is Fly-Client-IP; elsewhere the last
-    X-Forwarded-For hop, which our own proxy appended, or the socket peer."""
-    if ip := request.headers.get("fly-client-ip"):
+def client_id(request: Request, trusted_proxy: str = "none") -> str:
+    """The visitor's address for rate limits. Proxy headers count only from the proxy we
+    run behind: Fly-Client-IP on Fly, the last X-Forwarded-For hop (which our own proxy
+    appended) with "xff". Otherwise a visitor could set them to dodge the limit."""
+    if trusted_proxy == "fly" and (ip := request.headers.get("fly-client-ip")):
         return ip
-    if forwarded := request.headers.get("x-forwarded-for"):
+    if trusted_proxy == "xff" and (forwarded := request.headers.get("x-forwarded-for")):
         return forwarded.split(",")[-1].strip()
     return request.client.host if request.client else "unknown"
 
 
 @router.post("", status_code=202)
 async def start_run(body: RunRequest, request: Request) -> dict:
+    manager = _manager(request)
+    privileged = manager.is_operator(request.headers.get("x-operator-key"))
     try:
-        record = _manager(request).start(body, client_id(request))
+        record = manager.start(body, client_id(request, manager.trusted_proxy), privileged)
     except Refused as e:
         raise HTTPException(429, str(e)) from None
     except RuntimeError as e:
@@ -361,7 +424,7 @@ async def get_run(run_id: str, request: Request) -> dict:
 async def run_events(run_id: str, request: Request) -> EventSourceResponse:
     record = _record(request, run_id)
     last = request.headers.get("last-event-id", "")
-    after = int(last) if last.isdigit() else -1
+    after = int(last) if last.isascii() and last.isdigit() else -1  # "²" is a digit too
     return EventSourceResponse(_manager(request).stream(record, after))
 
 

@@ -127,3 +127,44 @@ def test_well_issues_returns_one_wells_issues_uncapped(processed_dir) -> None:
     assert len(issues) == 2
     assert issues["date"].is_monotonic_increasing
     assert store.well_issues("F-14").empty
+
+
+@pytest.mark.parametrize(
+    "sql,message",
+    [
+        ("SELECT repeat('x', 100000000) AS s FROM range(40)", "not allowed"),
+        ("SELECT lpad('x', 100000000, 'y') AS s", "not allowed"),
+        ("SELECT * FROM duckdb_settings()", "not allowed"),
+        ("SELECT current_setting('home_directory') AS h", "not allowed"),
+        ("SELECT * FROM pragma_database_size()", "not allowed"),
+        (
+            "WITH RECURSIVE t(s) AS (SELECT 'x' UNION ALL SELECT s || s FROM t) SELECT * FROM t",
+            "recursive",
+        ),
+        ("SELECT 1 AS a, 2 AS a", "distinct name"),
+    ],
+)
+def test_agent_sql_refuses_bloat_recursion_and_settings(processed_dir, sql, message) -> None:
+    import resource
+    import time
+
+    store = ProductionStore(processed_dir)
+    before = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    started = time.monotonic()
+
+    with pytest.raises(QueryError, match=message):
+        store.query_untrusted(sql)
+
+    assert time.monotonic() - started < 1
+    grown = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss - before
+    assert grown < 100 * 1024 * 1024  # ru_maxrss is bytes on macOS, KB on Linux: loose either way
+
+
+def test_agent_sql_text_values_are_cut_inside_duckdb(processed_dir) -> None:
+    store = ProductionStore(processed_dir)
+
+    rows = store.query_untrusted("SELECT well, 'x' || well AS tag FROM production_daily").rows
+
+    assert list(rows.columns) == ["well", "tag"] and rows["tag"].str.len().max() <= 2000
+    long = store.query_untrusted("SELECT string_agg(well, ',') AS all_wells FROM production_daily")
+    assert len(long.rows.loc[0, "all_wells"]) <= 2000

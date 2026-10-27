@@ -332,7 +332,7 @@ def forecast_tool(store: ProductionStore, args: ForecastArgs) -> dict:
 
 
 def run_sql(store: ProductionStore, args: SqlArgs) -> dict:
-    result = store.query(args.sql)
+    result = store.query_untrusted(args.sql)
     rows = result.rows
     return {
         **table(rows.head(SQL_ROW_LIMIT)),
