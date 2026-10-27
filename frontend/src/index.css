@@ -1384,7 +1384,13 @@ code,
   gap: 8px;
 }
 
+.error-bar-area {
+  flex: 1;
+  min-width: 48px;
+}
+
 .error-bar {
+  display: block;
   height: 14px;
   border-radius: 0 3px 3px 0;
   background: var(--rule-strong);
@@ -1871,4 +1877,11 @@ code,
   font-size: 15px;
   line-height: 1.5;
   max-width: 62ch;
+}
+
+.verdict .fix-target {
+  margin: 0 0 2px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink);
 }

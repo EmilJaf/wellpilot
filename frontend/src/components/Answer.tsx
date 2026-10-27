@@ -322,7 +322,7 @@ function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSe
                 <p className="fix-tag">
                   <RedoIcon />
                   <span>
-                    <strong>Fixed after the checker sent it back:</strong> {fixed.flatMap((c) => c.changes).join(' ')}
+                    <strong>Fixed after the checker sent it back:</strong> {[...new Set(fixed.flatMap((c) => c.changes))].join(' ')}
                   </span>
                 </p>
               )}

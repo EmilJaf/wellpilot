@@ -43,6 +43,14 @@ export function Diff({ pieces }: { pieces: Piece[] }) {
 /** What the checker caught, attempt by attempt, and what the agent changed each time. */
 export function CorrectionList({ items }: { items: Correction[] }) {
   const attempts = [...new Set(items.map((c) => c.attempt))]
+  // One entry per finding: its problems together, what changed once.
+  const byTarget = (attempt: number) => {
+    const groups = new Map<string, Correction[]>()
+    items
+      .filter((c) => c.attempt === attempt)
+      .forEach((c, i) => groups.set(c.target || `#${i}`, [...(groups.get(c.target || `#${i}`) ?? []), c]))
+    return [...groups.values()]
+  }
   return (
     <details className="fixes">
       <summary>
@@ -52,18 +60,22 @@ export function CorrectionList({ items }: { items: Correction[] }) {
         <div key={attempt} className="fix-round">
           <p className="round-label">Attempt {attempt} was sent back:</p>
           <ol>
-            {items
-              .filter((c) => c.attempt === attempt)
-              .map((c, i) => (
-                <li key={i} title={c.problem}>
-                  <p className="fix-problem">
-                    {c.target && <strong>{c.target}: </strong>}
-                    {problemText(c)}
-                  </p>
-                  {c.changes.length > 0 && <p className="fix-change">{c.changes.join(' ')}</p>}
-                  {c.diff && <Diff pieces={c.diff} />}
+            {byTarget(attempt).map((group, i) => {
+              const changes = [...new Set(group.flatMap((c) => c.changes))]
+              const diff = group.find((c) => c.diff)?.diff
+              return (
+                <li key={i} title={group.map((c) => c.problem).join('\n')}>
+                  {group[0].target && <p className="fix-target">{group[0].target}</p>}
+                  {group.map((c, j) => (
+                    <p key={j} className="fix-problem">
+                      {problemText(c)}
+                    </p>
+                  ))}
+                  {changes.length > 0 && <p className="fix-change">{changes.join(' ')}</p>}
+                  {diff && <Diff pieces={diff} />}
                 </li>
-              ))}
+              )
+            })}
           </ol>
         </div>
       ))}

@@ -120,7 +120,9 @@ export function AccuracyView() {
                 {m.key === best && <em className="error-bar-note">best fixed window, known only afterwards</em>}
               </span>
               <span className="error-bar-track">
-                <span className="error-bar" style={{ width: `${(s.median_abs_error / worst) * 100}%` }} />
+                <span className="error-bar-area">
+                  <span className="error-bar" style={{ width: `${(s.median_abs_error / worst) * 100}%` }} />
+                </span>
                 <span className="error-bar-value">{Math.round(s.median_abs_error * 100)}%</span>
                 <span className="error-bar-more">
                   mean {Math.round(s.mean_abs_error * 100)}%

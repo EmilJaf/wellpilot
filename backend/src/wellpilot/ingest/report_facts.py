@@ -175,6 +175,7 @@ def _is_year(token: str) -> bool:
 # Numbers that are names, not values: section numbers ("4.5.1", "12.1"; the PUD writes
 # decimals with a comma), and numbers after a word that makes them a reference or a label.
 SECTION = re.compile(r"^\d{1,2}(?:\.\d{1,2})+$")
+DOT_LEADER = re.compile(r"(?:\.\s?){4,}\d+")
 REFERENCE_WORDS = {"tabell", "tab", "figur", "fig", "kapittel", "kapitel", "kap", "side"}
 REFERENCE_WORDS |= {"vedlegg", "table", "figure", "chapter", "section", "appendix", "page"}
 LABEL_WORDS = {"p", "pl", "f", "st"}  # P90, licence PL 046, well F-12, survey ST 0202
@@ -197,7 +198,8 @@ def uncovered_numbers(text: str, facts: list[dict], page: int) -> list[str]:
     """Numbers on the page that no fact's quote or statement holds, each shown in a few
     words of context. Years, small integers, the page number and chart axes (four or more
     evenly spaced numbers in a row) are not counted."""
-    tokens = TOKEN.findall(_clean(text))
+    # A contents page's page numbers stand after dot leaders ("Hydrater......28").
+    tokens = TOKEN.findall(_clean(DOT_LEADER.sub(" ", text)))
     covered: set[float] = set()
     for fact in facts:
         for t in TOKEN.findall(_clean(f"{fact['quote']} {fact['statement_en']}")):
@@ -527,6 +529,10 @@ async def run(doc_id: str, page_numbers: list[int], force: bool) -> None:
         f"layer: {checks.get('exact', 0)} exact, {checks.get('tokens', 0)} tokens, "
         f"{checks.get('unverified', 0)} unverified"
     )
+    from wellpilot.ingest.facts_gate import check  # the gate reads what was just written
+
+    problems = check(processed)
+    print("gate passed" if not problems else "GATE FAILED:\n- " + "\n- ".join(problems))
 
 
 def main(argv: list[str] | None = None) -> None:
