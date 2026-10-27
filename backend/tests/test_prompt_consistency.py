@@ -109,3 +109,20 @@ def test_the_submit_tools_example_finding_passes() -> None:
     finding = Finding.model_validate(example)
     assert finding.detail and len(finding.numbers) == 2  # the claim's; the detail's are looked up
     assert check_submission(Submission(summary="Done.", findings=[finding]), log) == []
+
+
+def test_a_question_as_of_a_past_date_names_no_field_and_no_operator() -> None:
+    """The model may have read about Volve; asked as of 2010, what it read about the years
+    after must not be invited in. The present-day prompt names the field."""
+    from datetime import date
+    from pathlib import Path
+
+    from wellpilot.agent.loop import system_prompt
+    from wellpilot.data.store import ProductionStore
+
+    processed = Path(__file__).parent / "fixtures" / "processed"
+    past = system_prompt(ProductionStore(processed, as_of=date(2010, 12, 31)))
+    now = system_prompt(ProductionStore(processed))
+
+    assert "Volve" not in past and "Equinor" not in past
+    assert "Volve" in now

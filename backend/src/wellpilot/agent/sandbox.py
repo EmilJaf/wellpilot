@@ -151,6 +151,7 @@ class SandboxPool:
     LIFETIME_S = 3600
     MAX_AGE_S = 2700
     KEEP_WARM_EVERY_S = 300
+    RETRY_AFTER_S = 600  # after a failed start (Modal down, credits gone), runs go without
 
     def __init__(self, processed_dir: Path) -> None:
         import modal
@@ -164,17 +165,29 @@ class SandboxPool:
                 )
         self._image = image.add_local_file(sandbox_runner.__file__, RUNNER_PATH, copy=True)
         self._warm: asyncio.Task[ModalSandbox] | None = None
+        self._failed_at: float | None = None
+
+    @property
+    def available(self) -> bool:
+        """Offer run_python? Not for a while after a sandbox failed to start, so the agent
+        is not handed a tool whose every call fails."""
+        return self._failed_at is None or time.monotonic() - self._failed_at > self.RETRY_AFTER_S
 
     async def _start(self) -> ModalSandbox:
-        app = await self._modal.App.lookup.aio(self.APP, create_if_missing=True)
-        sandbox = await self._modal.Sandbox.create.aio(
-            app=app,
-            image=self._image,
-            timeout=self.LIFETIME_S,
-            block_network=True,
-            cpu=1.0,
-            memory=1024,
-        )
+        try:
+            app = await self._modal.App.lookup.aio(self.APP, create_if_missing=True)
+            sandbox = await self._modal.Sandbox.create.aio(
+                app=app,
+                image=self._image,
+                timeout=self.LIFETIME_S,
+                block_network=True,
+                cpu=1.0,
+                memory=1024,
+            )
+        except Exception:
+            self._failed_at = time.monotonic()
+            raise
+        self._failed_at = None
         return ModalSandbox(sandbox)
 
     def warm(self) -> None:

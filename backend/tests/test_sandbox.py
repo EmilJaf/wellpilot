@@ -184,6 +184,8 @@ def test_the_loop_offers_run_python_only_with_a_sandbox_and_limits_it(box) -> No
 class Pool:
     """The run manager's pool, handing out local stand-ins."""
 
+    available = True
+
     def __init__(self, root: Path) -> None:
         self.root, self.taken = root, []
 
@@ -245,3 +247,25 @@ async def test_a_run_through_the_api_gets_a_sandbox_and_closes_it(tmp_path, monk
     assert evidence["result"]["rows_read"] > 1000
     assert len(pool.taken) == 1 and pool.taken[0].closed
     assert health["python"] is True
+
+
+async def test_after_a_failed_start_the_tool_is_not_offered_for_a_while(monkeypatch) -> None:
+    """Modal down or the credits gone: runs go without run_python instead of being handed a
+    tool whose every call fails; it is offered again after RETRY_AFTER_S."""
+    from types import SimpleNamespace
+
+    from wellpilot.agent.sandbox import SandboxPool
+
+    pool = SandboxPool(PROCESSED)
+
+    async def refused(*_, **__):
+        raise RuntimeError("no credits")
+
+    pool._modal = SimpleNamespace(App=SimpleNamespace(lookup=SimpleNamespace(aio=refused)))
+    assert pool.available
+    with pytest.raises(RuntimeError):
+        await pool._start()
+
+    assert not pool.available
+    monkeypatch.setattr(SandboxPool, "RETRY_AFTER_S", 0)
+    assert pool.available

@@ -316,9 +316,9 @@ def describe_wells(store: ProductionStore) -> str:
     )
 
 
-def describe_reports(store: ProductionStore, note: str = "") -> str:
+def describe_reports(store: ProductionStore, note: str = "", unnamed: bool = False) -> str:
     """The reports the store holds (an as-of store hides those issued later), and how to
-    use them; a field without reports is told so."""
+    use them; a field without reports is told so. unnamed: titles without the field's name."""
     if "report_pages" not in store.tables:
         return "No reports are indexed: the report and plan tools have nothing to read."
     ids = store.query("SELECT DISTINCT doc_id FROM report_pages ORDER BY doc_id DESC").rows
@@ -326,7 +326,8 @@ def describe_reports(store: ProductionStore, note: str = "") -> str:
         return "No reports are indexed yet."
     language = {"no": "Norwegian", "en": "English"}
     listed = "; ".join(
-        f"{r.title} (doc_id {r.doc_id}, {r.doc_date[:7]}, {language.get(r.language, r.language)})"
+        f"{r.title.replace('Volve', 'the field') if unnamed else r.title} (doc_id {r.doc_id}, "
+        f"{r.doc_date[:7]}, {language.get(r.language, r.language)})"
         for r in (REPORTS_BY_ID[d] for d in ids["doc_id"])
     )
     return f"Reports are indexed too: {listed}. {note}".strip()
@@ -359,15 +360,25 @@ def describe_field(store: ProductionStore) -> dict:
     return {**VOLVE, **json.loads(path.read_text())} if path.exists() else VOLVE
 
 
+# A question asked as of a past date names no field and no operator: the field is a public
+# dataset a model may have read about, and what it read about the years after the date
+# must not stand in for the data. (Well names and the plan still identify it to a model that
+# knows it; memory_probe measures what the model knows without tools, and the synthetic
+# field is a test it cannot have read about.)
+UNNAMED = {"name": "field in this data", "drive": "The field is a waterflood."}
+
+
 def system_prompt(store: ProductionStore) -> str:
     as_of = store.as_of
     note = f"\n\nData is available only up to {as_of.isoformat()}." if as_of else ""
     field = describe_field(store)
+    unnamed = as_of is not None and field["name"] == VOLVE["name"]
+    shown = {**field, **UNNAMED} if unnamed else field
     return SYSTEM_PROMPT.format(
-        field=field["name"],
-        drive=field["drive"],
+        field=shown["name"],
+        drive=shown["drive"],
         wells=describe_wells(store),
-        reports=describe_reports(store, field.get("reports_note", "")),
+        reports=describe_reports(store, field.get("reports_note", ""), unnamed),
         as_of_note=note,
     )
 

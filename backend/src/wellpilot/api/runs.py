@@ -346,7 +346,8 @@ class RunManager:
         self._save(record)  # killed outright, the file still says it was running
         # The sandbox gets ready while the model takes its first steps; a run_python call
         # waits for it only if it comes first.
-        ready = asyncio.create_task(self._sandbox(record)) if self.sandboxes else None
+        offered = self.sandboxes is not None and self.sandboxes.available
+        ready = asyncio.create_task(self._sandbox(record)) if offered else None
 
         async def python_fn(arguments: str) -> dict:
             sandbox = await ready
