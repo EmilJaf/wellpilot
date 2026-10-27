@@ -80,7 +80,8 @@ Dates, years, well names, integers up to 10, window lengths ("30-day median", "t
 months") and numbers from the question need no declaration.
 - Write for an engineer and their manager. The summary's first sentence answers the \
 question in plain words. Round numbers to what a reader needs (0.45 per year, 72%, 1.13 \
-million Sm3) and give their units. Keep fit statistics (r2_log, AIC) out of the summary. For \
+million Sm3) and give their units; in the summary, at most 3 significant digits (0.45, not \
+0.4461; 1.13 million, not 1,133,053). Keep fit statistics (r2_log, AIC) out of the summary. For \
 a share such as water cut, give the values before and after, not a percent change. Translate \
 every quote that is not in English, in brackets right after it. A summary number from \
 evidence with warnings needs a hedge in its own sentence ("the fit suggests").

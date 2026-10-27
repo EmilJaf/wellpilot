@@ -101,3 +101,15 @@ def test_the_cases_cover_every_promise() -> None:
     assert {"look_at_page", "field_vs_design", "forecast_production", "detect_events"} <= tools
     assert any(c.as_of for c in CASES)  # one forecast made with data cut off
     assert len({c.id for c in CASES}) == len(CASES)
+
+
+def test_summary_numbers_are_read_as_a_reader_meets_them() -> None:
+    from wellpilot.eval import unreadable_numbers
+
+    summary = (
+        "F-12 fell from 4,050 to 1,146 Sm3/d on 2010-07-18 (-72%), declining 0.4461 per "
+        'year after 1,133,053 Sm3; the plan said "Platåraten på 9.000 Sm3 /d" in 2005, '
+        "and 0.45 per year or 1.13 million Sm3 read fine."
+    )
+
+    assert unreadable_numbers(summary) == ["0.4461", "1,133,053"]

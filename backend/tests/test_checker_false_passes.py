@@ -292,3 +292,38 @@ def test_document_references_are_names_not_numbers() -> None:
 
     assert check(claim, ["E5"], [], log) == []
     assert check("The plan shows 4.2 Sm3/d.", ["E5"], [], log)  # a bare value still counts
+
+
+MONTHLY = {
+    "columns": ["month", "water_cut", "oil_sm3"],
+    "rows": [["2009-06", 0.0197, 120000], ["2012-06", 0.85, 30000]],
+}
+
+
+def test_a_table_value_tied_to_a_date_must_be_in_that_dates_row() -> None:
+    """The AI judge's probe: 0.85 as F-12's water cut in 2009-06 (it was 0.0197) used to
+    pass because 0.85 is somewhere in the monthly table."""
+    log = EvidenceLog()
+    eid = add(log, "production_monthly", {"well": "F-12"}, MONTHLY)
+    wrong = [d("0.85", 0.85, eid)]
+
+    problems = check("F-12's water cut was 0.85 in 2009-06.", [eid], wrong, log)
+    right = check("F-12's water cut was 0.85 in 2012-06.", [eid], wrong, log)
+
+    assert problems and "not in its 2009-06 row" in problems[0]
+    assert right == []
+
+
+def test_a_row_tie_is_judged_only_when_it_is_unambiguous() -> None:
+    log = EvidenceLog()
+    eid = add(log, "production_monthly", {"well": "F-12"}, MONTHLY)
+    cut = [d("0.85", 0.85, eid)]
+
+    # A comma ends the number's clause; the date belongs to the next one.
+    assert check("Water cut reached 0.85, in 2009-06 it had been low.", [eid], cut, log) == []
+    # A range of dates is no one row; a day is not a month's row; a missing month is not judged.
+    assert check("Water cut was 0.85 in 2009-06 to 2012-06.", [eid], cut, log) == []
+    day = check("Water cut was 0.85 on 2009-06-15.", [eid], cut, log)
+    assert not any("row" in p for p in day)  # (the day itself is not in E1: another rule)
+    missing = check("Water cut was 0.85 in 2011-03.", [eid], cut, log)
+    assert not any("row" in p for p in missing)

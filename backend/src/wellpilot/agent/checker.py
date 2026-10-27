@@ -524,6 +524,66 @@ def _mask(text: str) -> str:
     return REFERENCE.sub(" ", CALENDAR_WINDOW.sub(" ", DATE.sub(" ", WELL.sub(" ", text))))
 
 
+# A number the text ties to a month or day: "0.85 in 2009-06", "1 146 Sm3/d on 2010-07-18".
+TIED = (
+    r"(?:\s*(?:[^\W\d]+/?[^\W\d]*|%)){0,3}?"  # a unit or two ("Sm3/d", "%"); no comma
+    r"\s+(?:in|on|at|during|by|for)\s+(\d{4}-\d{2}(?:-\d{2})?)\b"
+    r"(?!\s*(?:to|until|through|and|-|–)\s*\d{4})"  # a range of dates is no one row
+)
+DATE_COLUMNS = {"month", "date", "day", "week", "period"}
+
+
+def _mask_keep_dates(text: str) -> str:
+    """Well names, windows and references blanked, dates kept: the text for tying numbers
+    to the dates next to them."""
+    return REFERENCE.sub(" ", CALENDAR_WINDOW.sub(" ", WELL.sub(" ", text)))
+
+
+def _tables(value: Any) -> Iterable[dict]:
+    """Column-wise tables anywhere in a tool result."""
+    if isinstance(value, dict):
+        if isinstance(value.get("columns"), list) and isinstance(value.get("rows"), list):
+            yield value
+        for v in value.values():
+            yield from _tables(v)
+    elif isinstance(value, list):
+        for v in value:
+            yield from _tables(v)
+
+
+def _row_mismatch(
+    text: str, written: str, readings: list[Reading], item: Evidence
+) -> tuple[str, str] | None:
+    """(date, what that row holds) when the text ties a number to a date whose table row in
+    the evidence does not hold it. The number is in the evidence (checked before); this
+    catches it read off the wrong row. A date with no row in the table is not judged."""
+    for _, end in _standalone(text, written):
+        tied = re.match(TIED, text[end:])
+        if not tied:
+            continue
+        when = tied.group(1)
+        for table in _tables(item.result):
+            columns = [str(c).lower() for c in table["columns"]]
+            key = next((i for i, c in enumerate(columns) if c in DATE_COLUMNS), None)
+            if key is None:
+                continue
+            # The same grain only: a day against a daily row, a month against a monthly one.
+            rows = [r for r in table["rows"] if str(r[key])[:10] == when]
+            if len(rows) != 1:
+                continue  # no row, or several (a month tied in a daily table): not judged
+            values = [
+                float(v) for v in rows[0] if isinstance(v, int | float) and not isinstance(v, bool)
+            ]
+            if not any(_reads_as(r, values) for r in readings):
+                held = ", ".join(
+                    f"{c} {v}"
+                    for c, v in zip(table["columns"], rows[0], strict=False)
+                    if v is not None
+                )
+                return when, held[:200]
+    return None
+
+
 def _as_written(value: float, decimals: int, suffix: str | None) -> str:
     return f"{value:.{max(decimals, 0)}f}{suffix or ''}"
 
@@ -550,6 +610,7 @@ def _declared(
     # A declaration with no number in the text hides nothing (every written number must be
     # declared anyway), so it costs no correction round; it is only named as a hint below.
     unused = [d for d in declared if not _standalone(masked, d.text)]
+    masked_dates = _mask_keep_dates(text)
     for number in declared:
         if number in unused:
             continue
@@ -587,6 +648,11 @@ def _declared(
             nearest = sorted(set(numbers), key=lambda n: abs(n - abs(number.value)))[:3]
             hint = f" Closest there: {', '.join(f'{n:g}' for n in nearest)}." if nearest else ""
             problems.append(f"{label}: '{number.text}' = {number.value:g} is not in {where}.{hint}")
+        elif (wrong_row := _row_mismatch(masked_dates, number.text, fits, item)) is not None:
+            problems.append(
+                f"{label}: '{number.text}' is in {where}, but not in its {wrong_row[0]} row, "
+                f"which the text ties it to; that row has {wrong_row[1]}."
+            )
 
     rest = _mask(QUOTED.sub(" ", text))  # numbers inside a quote are checked with the quote
     for number in sorted(declared, key=lambda d: -len(d.text)):

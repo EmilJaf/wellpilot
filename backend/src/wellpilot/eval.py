@@ -114,6 +114,25 @@ CASES = [
 CASES_BY_ID = {c.id: c for c in CASES}
 
 
+# A number in the summary as a reader meets it; dates, years and well names are not.
+SUMMARY_NUMBER = re.compile(r"(?<![\w.-])\d[\d,]*(?:\.\d+)?")
+MASK = re.compile(r"\b\d{4}-\d{2}(?:-\d{2})?\b|\bF-\d+\b|[\"“][^\"”]*[\"”]|\b(?:19|20)\d{2}\b")
+
+
+def unreadable_numbers(summary: str) -> list[str]:
+    """Summary numbers with more than 3 significant digits, other than whole numbers under
+    10,000 ("4,050" reads fine, "1,133,053" and "0.4461" do not)."""
+    found = []
+    for match in SUMMARY_NUMBER.finditer(MASK.sub(" ", summary)):
+        written = match.group(0).rstrip(",")
+        digits = written.replace(",", "")
+        whole = "." not in digits
+        significant = digits.replace(".", "").lstrip("0").rstrip("0" if whole else "")
+        if len(significant) > 3 and not (whole and float(digits) < 10_000):
+            found.append(written)
+    return found
+
+
 def cost(run: AgentRun) -> float:
     tokens_in, tokens_out = run.total_tokens
     return tokens_in * PRICE_IN + tokens_out * PRICE_OUT
@@ -134,6 +153,8 @@ def score(case: Case, run: AgentRun) -> list[tuple[str, bool, str]]:
     for pattern in case.mentions:
         found = re.search(pattern, answer, re.IGNORECASE)
         checks.append((f"says /{pattern}/", bool(found), found.group(0) if found else ""))
+    long = unreadable_numbers(run.summary or "")
+    checks.append(("summary numbers <= 3 significant digits", not long, ", ".join(long)))
     steps = len(run.steps)
     checks.append((f"<= {case.max_steps} steps", steps <= case.max_steps, str(steps)))
     spent = cost(run)
