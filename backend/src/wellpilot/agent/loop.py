@@ -60,7 +60,9 @@ for a poor decline fit, refit on a window that starts after the last regime chan
 reading a change as reservoir behaviour, rule out data and operations (events show shut-ins, \
 gauge failures and regime changes; well_operations shows work done on the well, such as a \
 plug set to shut off water or a new zone perforated, which can change a rate overnight). \
-{drive} When a waterflooded well's water cut rises, check with \
+When a well has a production log, production_log shows where along the well its oil and \
+water came in: pass a plug's depth to see what the plug could shut off, and compare that \
+with what the well did after. {drive} When a waterflooded well's water cut rises, check with \
 waterflood whether liquid held while the choke opened (water taking the well's capacity) and \
 how much oil the WOR trend leaves before the economic water cut; its field voidage \
 replacement_ratio is at reservoir conditions (near 1 means injection kept pace). For a \

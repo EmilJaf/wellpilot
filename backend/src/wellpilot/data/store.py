@@ -19,6 +19,7 @@ import pandas as pd
 
 from wellpilot.ingest.operations import OPERATIONS_FILE, STEPS_FILE
 from wellpilot.ingest.production import DAILY_FILE, ISSUES_FILE
+from wellpilot.ingest.production_logs import LOGS_FILE
 from wellpilot.ingest.report_facts import FACTS_FILE, SUMMARIES_FILE
 from wellpilot.ingest.reports import PAGES_FILE, REPORTS_BY_ID
 
@@ -29,9 +30,13 @@ REPORT_TABLES = {
     "report_facts": FACTS_FILE,
     "report_summaries": SUMMARIES_FILE,
 }
-# Present once the daily-report ingest has run: well work by day, cut at as_of like
-# production (a report is known from the day its work was done).
-OPERATION_TABLES = {"well_operations": OPERATIONS_FILE, "well_operation_steps": STEPS_FILE}
+# Present once the daily-report and production-log ingests have run: well work by day and
+# the logs run in the wells, cut at as_of like production (known from the day of the work).
+OPERATION_TABLES = {
+    "well_operations": OPERATIONS_FILE,
+    "well_operation_steps": STEPS_FILE,
+    "production_logs": LOGS_FILE,
+}
 
 logger = logging.getLogger(__name__)
 

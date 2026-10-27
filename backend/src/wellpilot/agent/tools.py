@@ -39,6 +39,7 @@ from wellpilot.analysis.decline import (
 from wellpilot.analysis.screen import screen
 from wellpilot.analysis.waterflood import waterflood
 from wellpilot.data.store import ProductionStore, QueryError
+from wellpilot.ingest.production_logs import SURVEYS_BY_WELL, inflow, inflow_below
 from wellpilot.ingest.report_facts import Topic
 from wellpilot.ingest.reports import REPORTS_BY_ID
 from wellpilot.llm import json_schema
@@ -877,6 +878,84 @@ def well_operations(store: ProductionStore, args: OperationsArgs) -> dict:
     }
 
 
+class LogArgs(WellArgs):
+    below_m: list[float] = Field(
+        default_factory=list,
+        max_length=6,
+        description="Depths in m MD (e.g. a plug's depth from well_operations): the share of "
+        "each pass's oil and water entering below each.",
+    )
+
+
+PROFILE_STEP_M = 10.0
+
+
+def production_log(store: ProductionStore, args: LogArgs) -> dict:
+    """Where along the well the oil and the water came in, from its production log."""
+    _check_well(store, args.well)
+    if "production_logs" not in store.tables:
+        raise ValueError("no production logs are loaded")
+    logs = store.query(
+        "SELECT survey, date, pass, depth_m, oil, water FROM production_logs "
+        "WHERE well = ? AND pass != 'shut-in' ORDER BY pass, depth_m",
+        [args.well],
+    ).rows
+    if logs.empty:
+        known = store.query("SELECT DISTINCT well FROM production_logs ORDER BY well").rows
+        held = ", ".join(known["well"]) or "none"
+        raise ValueError(f"no production log for {args.well} in the data; logs exist for: {held}")
+    survey = SURVEYS_BY_WELL[args.well]
+    passes, profiles = [], {}  # flowing passes, logged at the well's surface rates
+    for name, log in logs.groupby("pass", sort=False):
+        shares = inflow(log, PROFILE_STEP_M)
+        profiles[name] = {row[0]: row[1:] for row in shares.pop("from_below")["rows"]}
+        below = []
+        for depth in args.below_m:
+            share = inflow_below(log, depth)
+            if share is not None:
+                below.append({"depth_m": depth, **share})
+        surface = survey.surface_sm3_per_day.get(name)
+        passes.append(
+            {"pass": name, "surface_liquid_sm3_per_day": surface, **shares, "below": below}
+        )
+    depths = sorted(set.intersection(*(set(p) for p in profiles.values())))
+    names = list(profiles)
+    profile = pd.DataFrame(
+        [[d, *[v for n in names for v in profiles[n][d]]] for d in depths],
+        columns=[
+            "depth_m",
+            *[f"{n.split()[0]}_{phase}_share" for n in names for phase in ("oil", "water")],
+        ],
+    )
+    day = pd.Timestamp(survey.date)
+    month = store.query(
+        "SELECT median(water_cut) AS water_cut, median(oil_sm3 * 24 / on_stream_hrs) AS oil_rate "
+        "FROM production_daily WHERE well = ? AND date BETWEEN ? AND ? AND on_stream_hrs >= 12",
+        [args.well, day - pd.Timedelta(days=30), day - pd.Timedelta(days=1)],
+    ).rows.iloc[0]
+    return to_jsonable(
+        {
+            "well": args.well,
+            "survey": survey.survey,
+            "date": survey.date,
+            "source": f"interpreted production log, LAS files ({survey.source})",
+            "passes": passes,
+            "profile_from_below": table(profile),
+            "production_30_days_before": {
+                "water_cut": month["water_cut"],
+                "oil_sm3_per_producing_day": month["oil_rate"],
+            },
+            "note": "A production log measures the flow passing each depth while the well "
+            "flows; going up, it grows past each zone that produces. A share at a depth is "
+            "the part of the pass's oil or water entering below that depth (1 at the bottom of "
+            "the well's inflow, 0 above the top zone). comes_in_from_m to to_m holds 90% of "
+            "each phase's inflow. The file's rates have no units, so only shares are given. A "
+            "plug set at a depth shuts off what enters below it: the shares below say what it "
+            "could remove. The passes were run at two surface rates (from the daily report).",
+        }
+    )
+
+
 def waterflood_tool(store: ProductionStore, args: WindowArgs) -> dict:
     _check_well(store, args.well)
     result = waterflood(store, args.well, args.start, args.end)
@@ -1039,6 +1118,17 @@ TOOLS = [
         "(YYYY-MM-DD) bound the dates; 'day' returns every operation line of one report.",
         OperationsArgs,
         well_operations,
+    ),
+    Tool(
+        "production_log",
+        "Where along a well the oil and the water came in, from a production log (PLT) run "
+        "in it: for each flowing pass, the depths each phase enters between, the share of "
+        "each entering below every 10 m, and below depths you give (a plug's depth from "
+        "well_operations shows what that plug could shut off). Use it to explain a water "
+        "shut-off or a new perforation, or why a well makes water. Logs exist only for some "
+        "wells; the error names them.",
+        LogArgs,
+        production_log,
     ),
     Tool(
         "read_report_page",
