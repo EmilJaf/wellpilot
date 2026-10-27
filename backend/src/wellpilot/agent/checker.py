@@ -618,22 +618,29 @@ def _row_mismatch(
     """(date, what that row holds) when the text ties a number to a date whose table row in
     the evidence does not hold it. The number is in the evidence (checked before); this
     catches it read off the wrong row. A date with no row in the table is not judged."""
-    for _, end in _standalone(text, written):
+    for start, end in _standalone(text, written):
         tied = re.match(TIED, text[end:])
         if not tied:
             continue
         when = tied.group(1)
+        # "Cut to 40% in 2018-11": a level reached by a change during the month, whose row
+        # averages the days before and after it; the next row holds it too.
+        reached = bool(re.search(r"\bto\s*$", text[:start]))
         for table in _tables(item.result):
             columns = [str(c).lower() for c in table["columns"]]
             key = next((i for i, c in enumerate(columns) if c in DATE_COLUMNS), None)
             if key is None:
                 continue
             # The same grain only: a day against a daily row, a month against a monthly one.
-            rows = [r for r in table["rows"] if str(r[key])[:10] == when]
-            if len(rows) != 1:
+            at = [i for i, r in enumerate(table["rows"]) if str(r[key])[:10] == when]
+            if len(at) != 1:
                 continue  # no row, or several (a month tied in a daily table): not judged
+            rows = table["rows"][at[0] : at[0] + (2 if reached else 1)]
             values = [
-                float(v) for v in rows[0] if isinstance(v, int | float) and not isinstance(v, bool)
+                float(v)
+                for row in rows
+                for v in row
+                if isinstance(v, int | float) and not isinstance(v, bool)
             ]
             if not any(_reads_as(r, values) for r in readings):
                 held = ", ".join(
@@ -694,13 +701,12 @@ def _leaves(item: Evidence) -> list[_Leaf]:
         if isinstance(node, dict) and isinstance(node.get("columns"), list):
             columns = [str(c).lower() for c in node["columns"]]
             at_well = columns.index("well") if "well" in columns else None
-            dated = [i for i, c in enumerate(columns) if c in DATE_COLUMNS]
             for row in node.get("rows") or []:
                 row_well = str(row[at_well]) if at_well is not None and row[at_well] else well
-                row_days = frozenset(str(row[i])[:10] for i in dated if row[i] is not None)
                 rid = next(records)
+                # A table row is no event: its date tie is _row_mismatch's, so no dates here.
                 for column, value in zip(columns, row, strict=False):
-                    leaf(value, (*keys[-1:], column, *kinds), row_well, rid, row_days)
+                    leaf(value, (*keys[-1:], column, *kinds), row_well, rid, frozenset())
         elif isinstance(node, dict):
             here = node["well"] if isinstance(node.get("well"), str) else well
             kinds = kinds + tuple(

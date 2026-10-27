@@ -150,3 +150,24 @@ def test_several_calculations_in_one_call_are_checked_one_by_one() -> None:
     )
 
     assert check_submission(Submission(summary="Done.", findings=[finding]), log) == []
+
+
+def test_a_level_reached_during_a_month_may_stand_in_the_next_row() -> None:
+    """Run cf597aa90554 (synthetic field): "the choke was cut to 40% in 2018-11". November's
+    monthly row averages the days before and after the cut (48%); December holds 40."""
+    log = EvidenceLog()
+    table = {
+        "columns": ["month", "choke_pct", "oil_rate_per_producing_day"],
+        "rows": [["2018-10", 70.0, 785.0], ["2018-11", 48.2, 512.0], ["2018-12", 40.0, 445.0]],
+    }
+    eid = log.add("production_monthly", {"well": "P-2"}, table, lambda: None).id
+
+    def check(claim: str, text: str, value: float) -> list[str]:
+        finding = Finding(
+            claim=claim, evidence_ids=[eid], confidence="fact", numbers=[d(text, value, eid)]
+        )
+        return check_submission(Submission(summary="Done.", findings=[finding]), log)
+
+    assert check("P-2's choke was cut to 40% in 2018-11.", "40%", 40) == []
+    assert check("P-2's oil rate fell to 512 Sm3/d in 2018-11.", "512", 512) == []
+    assert check("P-2's choke was at 40% in 2018-11.", "40%", 40)  # a level, not a change
