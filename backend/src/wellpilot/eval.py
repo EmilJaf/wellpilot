@@ -44,7 +44,7 @@ class Case:
     tools: tuple[str, ...] = ()  # each must be called successfully
     any_tools: tuple[str, ...] = ()  # at least one of these must be
     mentions: tuple[str, ...] = ()  # regexes the answer (summary and findings) must match
-    max_steps: int = 10
+    max_steps: int = 12
     max_cost: float = 0.30
 
 
@@ -144,15 +144,18 @@ MASK = re.compile(r"\b\d{4}-\d{2}(?:-\d{2})?\b|\bF-\d+\b|[\"“][^\"”]*[\"”]
 
 
 def unreadable_numbers(summary: str) -> list[str]:
-    """Summary numbers with more than 3 significant digits, other than whole numbers under
-    10,000 ("4,050" reads fine, "1,133,053" and "0.4461" do not)."""
+    """Summary numbers with more than 3 significant digits that read as noise: a whole
+    number of 10,000 or more ("1,133,053") or a decimal under 10 ("0.4461"). "4,050" and
+    "10.04" read fine."""
     found = []
     for match in SUMMARY_NUMBER.finditer(MASK.sub(" ", summary)):
         written = match.group(0).rstrip(",")
         digits = written.replace(",", "")
         whole = "." not in digits
         significant = digits.replace(".", "").lstrip("0").rstrip("0" if whole else "")
-        if len(significant) > 3 and not (whole and float(digits) < 10_000):
+        value = float(digits)
+        noisy = value >= 10_000 if whole else value < 10
+        if len(significant) > 3 and noisy:
             found.append(written)
     return found
 

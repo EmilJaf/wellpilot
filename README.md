@@ -17,9 +17,10 @@ WellPilot turns that into one question, answered in about a minute for roughly $
 
 ## What it does
 
-1. **Plans and runs real analysis.** The agent writes a short plan, then calls deterministic tools over the data: monthly production, event detection (regime changes, water-cut crossings, shut-ins, dead gauges), Arps decline fits and forecasts with uncertainty bands, read-only SQL, arithmetic, a search of report facts, the field against the plan's forecast and design limits, and a look at a report page image when only the picture holds the answer.
-2. **Checks itself before answering.** A deterministic checker reads the submitted answer. Every declared number must be in the evidence it cites, at the precision written; every date and quote must be there word for word; a finding that states a cause, or rests on a poor fit, must be marked an inference; a summary figure from a poor fit must be hedged. Problems go back to the model, which fixes them and resubmits. The UI shows each round and what changed.
-3. **Lets you trace every number.** Click a number in the answer to open the tool result with that value marked; click a Norwegian quote to see the plan page with the passage outlined; open the tool's source code, hashed at run time.
+1. **Plans and runs real analysis.** The agent writes a short plan, then calls deterministic tools over the data: monthly production, event detection (regime changes, water-cut crossings, shut-ins, dead gauges), Arps decline fits and forecasts with ranges calibrated on past errors, waterflood diagnostics (WOR against cumulative oil, liquid and choke, injection support), a screen of every well, read-only SQL, arithmetic, a search of report facts, the field against the plan's forecast and design limits, and a look at a report page image when only the picture holds the answer.
+2. **Starts from the whole field.** The first screen ranks every well by what needs attention on any date: a dead downhole gauge, water cut past the platform's design limit, a steep decline, long shut-ins, a step down in rate.
+3. **Checks itself before answering.** A deterministic checker reads the submitted answer. Every declared number must be in the evidence it cites, at the precision written; every date and quote must be there word for word; a finding that states a cause, or rests on a poor fit, must be marked an inference; a summary figure from a poor fit must be hedged. Problems go back to the model, which fixes them and resubmits. The UI shows each round and what changed.
+4. **Lets you trace every number.** Click a number in the answer to open the tool result with that value marked; click a Norwegian quote to see the plan page with the passage outlined; open the tool's source code, hashed at run time.
 
 ## What it found in Volve
 
@@ -28,6 +29,8 @@ From the recorded runs and the data tabs (all reproducible with the tools in thi
 - **A dead gauge, not a collapsing reservoir.** F-12's downhole pressure reads 0 from 2010-10-12 to the end of the data: 2095 days, 1830 of them flowing and producing 1,133,053 Sm3 of oil. A naive reading is a pressure collapse; the agent rules it out.
 - **Water broke through as the plan said.** The 2005 plan expects injection water to break through "etter omlag 2 år" (after about 2 years). F-12's water cut passed 5% on 2009-10-31, 20.6 months after first oil, and its oil rate stepped down from 4,050 to 1,146 Sm3/d around 2010-07-18.
 - **The field hit its design water cut when the plan expected it to close.** The plan's facility limit is "Maksimum vannkutt 0,80". The field as a whole reached 0.80 in June 2012 and was at or above it in 27 months from then on; liquid peaked at 11,438 Sm3/d, under the 13,000 Sm3/d capacity.
+- **Water, not pressure.** From 2010 to 2014 F-12's liquid rate held near 5,000 Sm3/d while its choke opened from about 53% to 100% and water cut rose from 0.57 to 0.96, and the field injected more water than it produced every year: the oil fell because water took the well's capacity. With data to the end of 2012, the WOR trend left 165k Sm3 before a 0.90 water cut and 560k before 0.95; the well went on to make about 444k.
+- **A report only a picture can answer.** F-11 B's completion report (filed under F-12 in the Volve data) keeps its survey tables and the completion's time-depth chart as images: the chart ends the job on 23.07.2013, and the production data shows F-11's first oil the next day.
 - **The field outlived its plan.** The plan's P50 forecast was 11.34 million Sm3 by 2012. The field produced 10.04 million Sm3 by 2016, 2.48 million of it after the plan's last year, from wells drilled later (F-11, F-15 D, F-1 C) and an injector turned producer (F-5).
 
 ## How accurate are its forecasts?
@@ -43,7 +46,9 @@ A rolling backtest: for each producer, every 6 months, the data is cut at that d
 | Decline fit, last 12 months | 21.0% | 29.4% | 6 |
 | Decline fit, whole history (the quick standard) | 27.6% | 39.5% | 8 |
 
-The agent halves the error of the whole-history fit and is closer in 16 of 25 forecasts. Against the best fixed window, which is only known after the fact, it is about even (closer in 14 of 25) with a lower mean error and fewer large misses. 25 overlapping forecasts from three wells are too few for a significance claim, and the forecasts' uncertainty bands are too narrow (an 80% band held the actual in 24% of the agent's forecasts); the app says so. All 25 agent runs were made with Muse Spark Open on Baseten (23 verified by the checker; 2.4M input and 0.19M output tokens, about $3.80 in total).
+Uncertainty: a range from the fit's scatter (bootstrap) held the actual volume in 24% of the agent's forecasts. Each forecast now also reports a range built from the errors of forecasts made the same way from earlier dates; over the backtest it held the actual in 72% (13 of 18 forecasts with enough history), against an 80% goal.
+
+The agent halves the error of the whole-history fit and is closer in 16 of 25 forecasts. Against the best fixed window, which is only known after the fact, it is about even (closer in 14 of 25) with a lower mean error and fewer large misses. 25 overlapping forecasts from three wells are too few for a significance claim. All 25 agent runs were made with Muse Spark Open on Baseten (23 verified by the checker; 2.4M input and 0.19M output tokens, about $3.80 in total).
 
 ## How it works
 
@@ -61,16 +66,19 @@ flowchart LR
 ```
 
 - **Data:** Volve daily production (xlsx) is cleaned into Parquet: zeros in pressure and temperature columns become missing, 228 days absent from the sheet are restored as zero-production days, and every change is logged. The 2005 development plan (PDF, Norwegian) is rendered page by page to PNG plus text. At ingest Muse Spark Open reads every page image and extracts structured facts with verbatim quotes; a deterministic review then checks each page the way the agent's answers are checked (quotes not on the page word for word, numbers no fact covers, a page of text with no facts) and sends the problems back until the model fixes them. Result: 512 facts, 507 quotes verbatim on the page, none unverified; each quote is located on the page image.
-- **Tools** (`backend/src/wellpilot/agent/tools.py`, `vision.py`): `list_wells`, `production_monthly`, `detect_events`, `fit_decline`, `forecast_production`, `run_sql` (one read-only SELECT, sandboxed), `calculate`, `search_reports`, `read_report_page`, `plan_vs_actual`, `field_vs_design`, `look_at_page`. Each successful call becomes evidence with its arguments, result, warnings and a hash of the tool's source.
+- **Reports:** the 2005 development plan (Norwegian, 53 pages) and F-11 B's final well report on its completion (English, 64 pages, 28 of them pictures: survey tables, a time-depth chart, a wellhead schematic). Pages that are pictures are marked at render time; their facts carry 'image' quotes, and the agent can read them itself with `look_at_page`.
+- **Tools** (`backend/src/wellpilot/agent/tools.py`, `vision.py`): `list_wells`, `production_monthly`, `detect_events`, `fit_decline`, `forecast_production`, `waterflood`, `field_screen`, `run_sql` (one read-only SELECT, sandboxed), `calculate`, `search_reports`, `read_report_page`, `plan_vs_actual`, `field_vs_design`, `look_at_page`. Each successful call becomes evidence with its arguments, result, warnings and a hash of the tool's source.
 - **Checker** (`backend/src/wellpilot/agent/checker.py`): numbers are declared by the model (`{text, value, evidence_id}`) rather than parsed from prose; English and Norwegian number formats, unit scales and dates written in words are handled. It is tested with property-based fuzzing over 10 number formats, a corpus of real submissions replayed in CI, and a table of probes for false rejections and false passes.
-- **What the checker does not check:** whether the reasoning holds, the direction of a change, or which row of a table a number came from. That is why every number is one click from its source.
+- A number the text ties to a date ("0.85 in 2009-06") must stand in that date's row of the cited table.
+- **What the checker does not check:** whether the reasoning holds, or the direction of a change. That is why every number is one click from its source.
+- **Quality gates:** `python -m wellpilot.ingest.facts_gate` (free) checks the report facts: the plan's table rows, the design limits, the key quotes verbatim, no unverified quote, quotes located on their pages. `python -m wellpilot.eval` runs real questions through the agent and checks each answer: verified, the right tools called, the facts any correct answer contains, a step and cost budget.
 - **Backend:** Python 3.13, FastAPI, Server-Sent Events, DuckDB, pandas, scipy, ruptures, pypdfium2. Runs are background tasks saved as JSON and replayable. 275 tests.
 - **Frontend:** React, TypeScript, Vite, uPlot, hand-written SVG charts. A control-room palette after ISA-101: grey by default, colour only for meaning (oil green, water blue, amber caution, red alarm).
 
 ## Meta models
 
 - **Muse Spark Open** (`meta-models/muse-spark-open-1026` on Baseten) is the agent: tool calling with parallel calls, structured submissions, and its visible reasoning streamed to the UI per step. It also reads report page images during a run (`look_at_page`, JSON-schema output).
-- **Muse Spark Open also reads every report page at ingest** (vision plus JSON-schema output), corrected by the review rounds above. So the whole pipeline, ingest, agent and backtest, runs on the open-weight model. Muse Spark on the Meta Model API is a drop-in alternative: the same OpenAI-compatible client serves both providers and `LLM_PROVIDER` switches them.
+- **Muse Spark Open also reads every report page at ingest**, both documents, (vision plus JSON-schema output), corrected by the review rounds above. So the whole pipeline, ingest, agent and backtest, runs on the open-weight model. Muse Spark on the Meta Model API is a drop-in alternative: the same OpenAI-compatible client serves both providers and `LLM_PROVIDER` switches them.
 - Why open weights matter here: production data and well reports are an operator's most guarded data. An open-weight model can run on the operator's own hardware with this same code.
 
 ## Built during the hackathon
@@ -102,7 +110,8 @@ pnpm dev                                     # UI on :5173, proxies /api to :800
 
 Data: download these files from the Volve dataset:
 - `Production_data/Volve production data.xlsx` into `data/raw/production/`;
-- `Reports/Volve PUD .pdf` into `data/raw/reports/Volve_PUD.pdf`.
+- `Reports/Volve PUD .pdf` into `data/raw/reports/Volve_PUD.pdf`;
+- `Well_logs/14.DIV. REPORTS/15_9-F-12/COMPLETION_REPORT_3.PDF` (F-11 B's completion report) into `data/raw/reports/F11B_Completion_FWR.pdf`.
 
 Then build the processed data:
 

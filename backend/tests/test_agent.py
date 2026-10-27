@@ -524,6 +524,16 @@ async def test_a_run_without_an_answer_by_step_8_is_told_to_submit(store) -> Non
     assert not any("Submit your findings now" in m for m in said[:7] + said[8:])
 
 
+async def test_past_step_10_without_an_answer_only_submit_is_offered(store) -> None:
+    llm, completions = fake_llm([completion(tool_calls=[("list_wells", {})])])
+
+    await run_agent("Loop", llm, store, max_steps=14)
+
+    offered = [[t["function"]["name"] for t in r["tools"]] for r in completions.requests]
+    assert "list_wells" in offered[8] and offered[9] == [SUBMIT]  # steps 9 and 10
+    assert "Only submit_findings is available" in completions.requests[9]["messages"][-1]["content"]
+
+
 async def test_tool_calls_per_step_are_capped(store) -> None:
     from wellpilot.agent.loop import MAX_CALLS_PER_STEP
 

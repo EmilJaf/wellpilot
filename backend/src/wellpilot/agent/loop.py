@@ -99,6 +99,11 @@ NUDGE = (
 )
 NUDGE_FIX = "Fix the problems the checker listed and call submit_findings again."
 SUBMIT_BY = 8  # a run with no submission by this step is told to submit, keeping steps to fix
+SUBMIT_ONLY = 10  # still none: only submit_findings is offered until the checker answers
+SUBMIT_ONLY_NOTE = (
+    "Only submit_findings is available now: submit your answer with the evidence you have. "
+    "When the checker replies, every tool is available again to fix what it lists."
+)
 SUBMIT_NOW = (
     "You have gathered evidence for several steps. Submit your findings now with "
     "submit_findings: the checker may send them back, and fixing takes steps too."
@@ -391,6 +396,11 @@ async def run_agent(
             messages.append({"role": "user", "content": TWO_STEPS_LEFT})
         elif index == SUBMIT_BY and not check_rounds and max_steps > SUBMIT_BY + 2:
             messages.append({"role": "user", "content": SUBMIT_NOW})
+        # Calculating one number per step can use every step; past SUBMIT_ONLY without an
+        # answer the model may only submit, which leaves steps for the checker's corrections.
+        forced = index >= SUBMIT_ONLY and not check_rounds and max_steps > SUBMIT_ONLY + 1
+        if forced and index == SUBMIT_ONLY:
+            messages.append({"role": "user", "content": SUBMIT_ONLY_NOTE})
         emit({"type": "llm_call", "step": index})
         started = time.monotonic()
         try:
@@ -401,7 +411,7 @@ async def run_agent(
                 llm.client.chat.completions.create(
                     model=llm.model,
                     messages=messages,
-                    tools=tools,
+                    tools=[submit_tool_schema()] if forced else tools,
                     **({"reasoning_effort": effort} if effort else {}),
                 ),
                 remaining,

@@ -484,7 +484,8 @@ GROUP_BEFORE = re.compile(r"(?:^|[^\w.,])\d{1,3}[ \u00a0\u202f]$")
 # months", "365 days after the cutoff") describe a method, not the data, so they need no
 # declaring. Any other duration ("45-day shut-in", "30 days of shut-in") does.
 CALENDAR_WINDOW = re.compile(
-    r"\b(?:12|24|30|365)[-\s](?:month|hour|day)\b|\b(?:12\s+months|24\s+hours|365\s+days)\b"
+    r"\b(?:12|24|30|90|180|365)[-\s](?:month|hour|day)\b"
+    r"|\b(?:12\s+months|24\s+hours|(?:90|180|365)\s+days)\b"
 )
 DECIMAL_COMMA = re.compile(r"\d,\d{1,2}(?!\d)")
 DOTTED_THOUSANDS = re.compile(r"[1-9]\d{0,2}(?:\.\d{3})+")

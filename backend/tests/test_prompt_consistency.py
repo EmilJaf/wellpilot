@@ -52,6 +52,7 @@ CLAUSES = [
     ("well names", "15/9-F-12 stepped down.", ""),
     ("integers up to 10", "F-12 is one of 3 producers checked in 2 steps.", ""),
     ("window lengths", "The 30-day median and the next 12 months both show it.", ""),
+    ("window lengths", "Its oil fell over the last 90 days and the 180-day shut-in count.", ""),
     ("numbers from the question", "Over the 400 days after 2010-07-18 it fell.", "the 400 days"),
 ]
 
