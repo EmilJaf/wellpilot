@@ -151,7 +151,9 @@ CASES_BY_ID = {c.id: c for c in CASES}
 
 # A number in the summary as a reader meets it; dates, years and well names are not.
 SUMMARY_NUMBER = re.compile(r"(?<![\w.-])\d[\d,]*(?:\.\d+)?")
-MASK = re.compile(r"\b\d{4}-\d{2}(?:-\d{2})?\b|\bF-\d+\b|[\"“][^\"”]*[\"”]|\b(?:19|20)\d{2}\b")
+MASK = re.compile(
+    r"\b\d{4}-\d{2}(?:-\d{2})?\b|\b[A-Z]{1,3}-\d+\b|[\"“][^\"”]*[\"”]|\b(?:19|20)\d{2}\b"
+)
 
 
 def unreadable_numbers(summary: str) -> list[str]:

@@ -48,7 +48,8 @@ from wellpilot.agent.evidence import Evidence, EvidenceLog
 from wellpilot.ingest.report_facts import squash
 from wellpilot.ingest.reports import REPORTS
 
-WELL = re.compile(r"\b(?:15/9-)?F-\d+(?:\s?[A-Z]\b)?")
+# A well name: Volve's "F-12", "15/9-F-11 B", "F-1 C", or another field's "P-1", "INJ-2".
+WELL = re.compile(r"\b(?:15/9-)?[A-Z]{1,3}-\d+(?:\s?[A-Z]\b)?")
 DATE = re.compile(r"\b(\d{4}-\d{2}(?:-\d{2})?)\b")
 # English month names, capitalised ("May 2010" is a month, "may" is not), with a year.
 _MONTH = (

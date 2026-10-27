@@ -43,19 +43,8 @@ PREVIEW_CHARS = 300
 MAX_REASONING_CHARS = 6000  # Muse Spark Open's visible reasoning, per step, in the stream
 
 SYSTEM_PROMPT = """\
-You are WellPilot, an analysis agent for petroleum engineers working on the Volve oil \
-field (Norwegian North Sea, operated by Equinor). {wells} Reports are indexed too: \
-{reports}. Use search_reports to compare what happened with what was planned \
-(plan_vs_actual gives the field's production against the plan's forecast, by calendar \
-year and by year of production, since the plan assumed first oil a year before the field \
-started; field_vs_design gives the field against the plan's design limits), and quote the \
-original wording with an English translation. Prefer facts whose quote_check is "exact". \
-Facts were extracted from the text and tables; to read a figure, such as the plan's \
-forecast curve, look at the page yourself with look_at_page. The plan's limits and \
-capacities are for the whole field and platform: compare them with field totals from \
-field_vs_design, never with one well's numbers. The maximum water cut is a share at full \
-liquid rate: the field reaching it means it ran at the design water cut; only a rate over \
-its capacity (water handling, liquid, oil, injection) means it exceeded the design.
+You are WellPilot, an analysis agent for petroleum engineers working on the {field}. \
+{wells} {reports}
 
 How you work:
 - Start with a short numbered plan, then call tools. Get every number from a tool; never \
@@ -64,7 +53,7 @@ invent or estimate a number you have not computed.
 - Check results before concluding. Tool warnings mean a result is not trustworthy as is: \
 for a poor decline fit, refit on a window that starts after the last regime change. Before \
 reading a change as reservoir behaviour, rule out data and operations (events show shut-ins, \
-gauge failures and regime changes). Volve is a waterflood: when water cut rises, check with \
+gauge failures and regime changes). {drive} When a waterflooded well's water cut rises, check with \
 waterflood whether liquid held while the choke opened (water taking the well's capacity) and \
 how much oil the WOR trend leaves before the economic water cut; its field voidage \
 replacement_ratio is at reservoir conditions (near 1 means injection kept pace). For a \
@@ -136,6 +125,7 @@ TEXT_SUBMISSION = (
     "Your reply held a submission as text, so it was checked as a submit_findings call. "
     "The checker's reply: {payload}. Send answers with the submit_findings tool."
 )
+FIELD_FILE = "field.json"  # optional, beside the processed data: {"name", "drive"}
 FENCE = re.compile(r"^```(?:json)?\s*|\s*```$")
 
 
@@ -310,23 +300,59 @@ def describe_wells(store: ProductionStore) -> str:
     )
 
 
-def describe_reports(store: ProductionStore) -> str:
-    """The reports the store holds (an as-of store hides those issued later)."""
+def describe_reports(store: ProductionStore, note: str = "") -> str:
+    """The reports the store holds (an as-of store hides those issued later), and how to
+    use them; a field without reports is told so."""
     if "report_pages" not in store.tables:
-        return "none yet"
+        return "No reports are indexed: the report and plan tools have nothing to read."
     ids = store.query("SELECT DISTINCT doc_id FROM report_pages ORDER BY doc_id DESC").rows
+    if ids.empty:
+        return "No reports are indexed yet."
     language = {"no": "Norwegian", "en": "English"}
-    return "; ".join(
+    listed = "; ".join(
         f"{r.title} (doc_id {r.doc_id}, {r.doc_date[:7]}, {language.get(r.language, r.language)})"
         for r in (REPORTS_BY_ID[d] for d in ids["doc_id"])
     )
+    return f"Reports are indexed too: {listed}. {note}".strip()
+
+
+VOLVE = {
+    "name": "Volve oil field (Norwegian North Sea, operated by Equinor)",
+    "drive": "Volve is a waterflood.",
+    "reports_note": (
+        "Use search_reports to compare what happened with what was planned (plan_vs_actual "
+        "gives the field's production against the plan's forecast, by calendar year and by "
+        "year of production, since the plan assumed first oil a year before the field "
+        "started; field_vs_design gives the field against the plan's design limits), and "
+        "quote the original wording with an English translation. Prefer facts whose "
+        'quote_check is "exact". Facts were extracted from the text and tables; to read a '
+        "figure, such as the plan's forecast curve, look at the page yourself with "
+        "look_at_page. The plan's limits and capacities are for the whole field and "
+        "platform: compare them with field totals from field_vs_design, never with one "
+        "well's numbers. The maximum water cut is a share at full liquid rate: the field "
+        "reaching it means it ran at the design water cut; only a rate over its capacity "
+        "(water handling, liquid, oil, injection) means it exceeded the design."
+    ),
+}
+
+
+def describe_field(store: ProductionStore) -> dict:
+    """What the prompt says about the field: field.json beside the processed data (a
+    synthetic field, another operator's), else Volve."""
+    path = store.processed_dir / FIELD_FILE
+    return {**VOLVE, **json.loads(path.read_text())} if path.exists() else VOLVE
 
 
 def system_prompt(store: ProductionStore) -> str:
     as_of = store.as_of
     note = f"\n\nData is available only up to {as_of.isoformat()}." if as_of else ""
+    field = describe_field(store)
     return SYSTEM_PROMPT.format(
-        wells=describe_wells(store), reports=describe_reports(store), as_of_note=note
+        field=field["name"],
+        drive=field["drive"],
+        wells=describe_wells(store),
+        reports=describe_reports(store, field.get("reports_note", "")),
+        as_of_note=note,
     )
 
 

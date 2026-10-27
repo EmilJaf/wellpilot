@@ -44,9 +44,9 @@ export function datesIn(text: string): string[] {
   return [...new Set(text.match(/\b\d{4}-\d{2}(?:-\d{2})?\b/g) ?? [])]
 }
 
-/** Wells named in a text, e.g. "F-12", "F-15 D". */
+/** Wells named in a text, e.g. "F-12", "F-15 D", "P-3". */
 export function wellsIn(text: string): string[] {
-  return [...new Set(text.match(/\bF-\d+(?: [A-D]\b)?/g) ?? [])]
+  return [...new Set(text.match(/\b[A-Z]{1,3}-\d+(?: [A-D]\b)?/g) ?? [])]
 }
 
 export const compact = (n: number) =>
