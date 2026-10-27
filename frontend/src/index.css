@@ -1368,6 +1368,29 @@ code,
   color: var(--ink-3);
 }
 
+/* what each Meta model did for this answer: one quiet line under the status */
+.meta-line {
+  margin: 8px 0 14px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
+.meta-line-label {
+  color: var(--ink-3);
+  font-weight: 600;
+  font-stretch: var(--narrow);
+}
+
+.meta-line strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.meta-chip {
+  margin-left: 3px;
+}
+
 /* two Meta models on one picture: Muse's reading against SAM's measurement */
 .cross-lead {
   color: var(--ink-2);

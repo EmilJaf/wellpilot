@@ -68,6 +68,20 @@ export type FinalEvent = {
   steps: number
   tokens: { input: number; output: number }
   evidence: EvidenceMeta[]
+  /** What each Meta model did for this answer. */
+  meta_models?: MetaModels
+}
+
+export type MetaModels = {
+  muse: {
+    model: string | null
+    steps: number
+    tool_calls: number
+    reasoning_shown: boolean
+    pages: string[]
+    second_opinion: string | null
+  }
+  sam: { figures: { evidence_id: string; agreed: number; compared: number }[]; logs: string[] }
 }
 
 export type RunEvent = { seq: number } & (

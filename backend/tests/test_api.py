@@ -582,3 +582,18 @@ async def test_a_run_is_saved_with_the_models_numbers_exact(settings) -> None:
     )
     assert submitted["arguments"]["findings"][0]["numbers"][0]["value"] == 60.0001
     assert saved["result"]["findings"][0]["numbers"][0]["value"] == 60.0001
+
+
+async def test_an_answer_says_what_each_meta_model_did(settings) -> None:
+    """The line under the status: the model, its steps and tool calls; saved runs get it
+    on load."""
+    async with client_for(create_app(settings, llm_factory=fake_llm)) as client:
+        run_id, events = await run_to_end(client)
+    restarted = create_app(settings, llm_factory=fake_llm)
+    async with client_for(restarted) as client:
+        saved = (await client.get(f"/api/runs/{run_id}")).json()
+
+    live = events[-1]["meta_models"]
+    assert live["muse"]["model"] == "fake" and live["muse"]["tool_calls"] >= 1
+    assert live["sam"] == {"figures": [], "logs": []}
+    assert saved["result"]["meta_models"] == live

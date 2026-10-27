@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { RunSummary, Span, StepEvent } from '../api'
+import type { MetaModels, RunSummary, Span, StepEvent } from '../api'
 import { AlarmIcon, CheckIcon, RedoIcon } from '../icons'
 import { plainProblem, compact, describeArgs, toolName } from '../labels'
 import type { RunState } from '../useRun'
@@ -237,6 +237,55 @@ function Live({ steps, thinking, asOf }: { steps: StepEvent[]; thinking: number 
   )
 }
 
+const MODEL_NAMES: Record<string, string> = {
+  'meta-models/muse-spark-open-1026': 'Muse Spark Open',
+  'muse-spark-1.3': 'Muse Spark',
+  'muse-spark-1.1': 'Muse Spark',
+}
+
+/** One line on what each Meta model did for this answer, its evidence a click away. */
+function MetaLine({ m, open }: { m: MetaModels; open: (id: string) => void }) {
+  const chip = (id: string) => (
+    <button key={id} type="button" className="evidence-chip meta-chip" onClick={() => open(id)}>
+      {id}
+    </button>
+  )
+  const parts: ReactNode[] = [
+    <span key="muse">
+      <strong>{MODEL_NAMES[m.muse.model ?? ''] ?? m.muse.model}</strong> planned and ran {m.muse.tool_calls} tool calls
+      over {m.muse.steps} steps{m.muse.reasoning_shown && ', its reasoning in the log'}
+      {m.muse.pages.length > 0 && <>, looked at a report page {m.muse.pages.map(chip)}</>}
+      {m.muse.second_opinion && <>, and gave its answer a second opinion</>}
+    </span>,
+  ]
+  const sam: ReactNode[] = []
+  for (const f of m.sam.figures)
+    sam.push(
+      <span key={f.evidence_id}>
+        measured the chart on that page and agreed with the reading on {f.agreed} of {f.compared} {chip(f.evidence_id)}
+      </span>,
+    )
+  if (m.sam.logs.length)
+    sam.push(<span key="logs">read F-12&rsquo;s 2009 production log off its plots {m.sam.logs.map(chip)}</span>)
+  if (sam.length)
+    parts.push(
+      <span key="sam">
+        ; <strong>SAM 3.1</strong>{' '}
+        {sam.map((s, i) => (
+          <span key={i}>
+            {i > 0 && ', and '}
+            {s}
+          </span>
+        ))}
+      </span>,
+    )
+  return (
+    <p className="meta-line">
+      <span className="meta-line-label">Meta models in this answer:</span> {parts}.
+    </p>
+  )
+}
+
 function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSelectEvidence, revealed, onReveal, wells }: Props) {
   const final = state.final!
   const tools = Object.fromEntries(final.evidence.map((e) => [e.id, e.tool]))
@@ -299,6 +348,8 @@ function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSe
           {rounds.length > 0 && sentBack.length > 0 && history}
         </details>
       </div>
+
+      {final.meta_models && <MetaLine m={final.meta_models} open={onSelectEvidence} />}
 
       {state.asOf && (
         <div className="past">

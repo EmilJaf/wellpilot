@@ -39,6 +39,7 @@ from wellpilot.agent.tools import to_jsonable
 from wellpilot.data.store import ProductionStore
 from wellpilot.hindsight import hindsight
 from wellpilot.llm import LLM
+from wellpilot.meta_models import meta_models
 
 logger = logging.getLogger(__name__)
 RUN_ID = re.compile(r"^[0-9a-f]{12}$")
@@ -158,6 +159,7 @@ class RunRecord:
     def complete(self, run: AgentRun) -> None:
         self.evidence = {e.id: _record_of(asdict(e)) for e in run.evidence}
         self.result = _record_of(run.to_dict())
+        self.result["meta_models"] = meta_models(self.events, self.evidence)
         self.status = "done"
         self.emit({"type": "final", **self.result})
 
@@ -188,9 +190,11 @@ class RunRecord:
         log = EvidenceLog.restore(record.evidence.values())
         if record.result is not None:
             with_spans(record.result, log)
+            record.result["meta_models"] = meta_models(record.events, record.evidence)
         for event in record.events:
             if event.get("type") == "final":
                 with_spans(event, log)
+                event["meta_models"] = meta_models(record.events, record.evidence)
         if record.status == "running":
             # Saved mid-run by a process that then stopped: it will never finish.
             record.status = "error"
