@@ -76,6 +76,7 @@ def _forecast_hindsight(
         ],
         "classic_warned": bool(fit_warnings(classic_fit)),
         "agent_range": {"p90": reported["p90"], "p10": reported["p10"]},
+        "p50_by_model": result.get("p50_by_model_sm3"),  # what each Arps model would say
         "calibrated_band": (
             {
                 "p90": band["p90"],

@@ -49,6 +49,15 @@ export function HindsightView({ runId }: { runId: string }) {
               <strong>{volume(f.actual_sm3)}</strong>: the forecast was <strong>{signed(agent.error)}</strong>. The classic
               decline fit over the whole history, made the same day, said {volume(classic.p50_sm3)} ({signed(classic.error)}).
             </p>
+            {f.p50_by_model && Object.keys(f.p50_by_model).length > 1 && (
+              <p className="hindsight-models">
+                On the same window the three Arps models said{' '}
+                {Object.entries(f.p50_by_model)
+                  .map(([model, p50]) => `${volume(p50)} (${model}, ${signed(p50 / f.actual_sm3 - 1)})`)
+                  .join(', ')}
+                : the choice of model is part of the uncertainty.
+              </p>
+            )}
             {band && (
               <p className={`hindsight-band${band.holds_actual ? '' : ' is-miss'}`}>
                 {band.holds_actual && <CheckIcon />}

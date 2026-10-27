@@ -2352,3 +2352,9 @@ code,
   color: var(--ink-3);
   font-weight: 400;
 }
+
+.hindsight-models {
+  margin: 0 0 8px;
+  color: var(--ink-2);
+  max-width: 68ch;
+}

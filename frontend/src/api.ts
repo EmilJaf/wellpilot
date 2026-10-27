@@ -199,6 +199,7 @@ export type Hindsight = {
     data_ends: string | null
     classic_warned: boolean
     agent_range: { p90: number; p10: number }
+    p50_by_model?: Record<string, number> | null
     calibrated_band: { p90: number; p10: number; holds_actual: boolean } | null
   })[]
   wells: {
