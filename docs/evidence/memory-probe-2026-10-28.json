@@ -1,0 +1,35 @@
+{
+ "model": "meta-models/muse-spark-open-1026",
+ "results": [
+  {
+   "question": "How much oil did well F-12 (15/9-F-12) of the Volve field in the Norwegian North Sea produce in 2011, in standard cubic metres? Give your best number.",
+   "data_says": "about 340,000 Sm3 in 2011",
+   "answer": "I don't have a verified 2011 annual production volume for Volve well 15/9-F-12 in standard cubic metres in my memory, and I will not guess a number.\n\nYou can get the official figure from:\n\n* Norwegian Offshore Directorate - FactPages / NPD FactMaps - production data per well, reported monthly in Sm3 - search for field \"Volve\" 15/9 and wellbore 15/9-F-12\n* The Equinor Volve open dataset released in 2018, which contains daily/monthly production volumes including `15_9-F-12` - see the production files in the Volve Data Village\n\nIf you pull the monthly oil volumes for 01.01.2011 to 31.12.2011 for that wellbore and sum them you will get the annual total in Sm3.",
+   "tokens": 765
+  },
+  {
+   "question": "What happened to the downhole pressure gauge of Volve well F-12 in 2010?",
+   "data_says": "it read 0 from 2010-10-12 to the end of the data: a dead gauge",
+   "answer": " I don't have verified information about a specific event involving the downhole pressure gauge of Volve well F-12 in 2010 in my training data, and I don't want to guess at the details or numbers.\n\nThe Volve field dataset is publicly available, so that level of operational detail would likely be documented in:\n\n* Equinor's Volve Data Village reports and daily production / completion reports\n* The Norwegian Petroleum Directorate NPD FactPages / DISKOS for well 15/9-F-12\n* Well history and gauge data files included in the open Volve dataset\n\nIf you can share a report or data file reference, I can help interpret it, or I can give you general background on the Volve wells and their pressure monitoring systems.",
+   "tokens": 827
+  },
+  {
+   "question": "What work was done on Volve well F-12 in November 2014, and what did the well do after?",
+   "data_says": "a plug at 3150 m and a new zone perforated (3126.2-3130.7 m MD); water cut 0.97 to about 0.3, oil about 180 to 860 Sm3/d",
+   "answer": " I don't have verified information about the specific work done on Volve well F-12 in November 2014 and its subsequent performance in my knowledge base, and I don't have browsing capability to look up that operational record.\n\nI don't want to guess or provide unconfirmed details on that well activity.\n\nIf you need to confirm this, the best public sources to check would be:\n\n* The Norwegian Offshore Directorate - formerly Norwegian Petroleum Directorate - FactPages and DISKOS records for Volve, wellbore 15/9-F-12\n* Equinor Volve field reports and well history, as operator of Volve\n* The Volve Data Village dataset released by Equinor, which contains production and well data for the field\n\nIf you have a report, daily drilling report, or production data snippet for F-12 you would like help interpreting, you can paste it here and I can help summarize what it says.",
+   "tokens": 629
+  },
+  {
+   "question": "What were Volve well F-12's oil rate and water cut at the end of 2012?",
+   "data_says": "about 610 Sm3/d of oil per producing day at a water cut of 0.88 (Nov-Dec 2012)",
+   "answer": " I don't have the exact oil rate and water cut for Volve well F-12 at the end of 2012 memorized, and I don't want to guess at the numbers.\n\nThe Volve field data was made public by Equinor, so that specific well history is available in the open Volve dataset, which includes daily production, GOR, water cut, pressures and other well data. You can find F-12's historical rates there by filtering the production data for well F-12 around December 2012.",
+   "tokens": 722
+  },
+  {
+   "question": "When did the Volve field stop producing, and how much oil did it produce in total?",
+   "data_says": "shut down in September 2016; about 10 million Sm3 (63 million barrels)",
+   "answer": " The Volve Field in the Norwegian North Sea — Block 15/9 — stopped producing in **September 2016**.\n\n* **First oil:** February 2008\n* **Shutdown / cessation of production:** 15 September 2016, after just over 8 years on production, operated at the time by Statoil, now Equinor. The field was then decommissioned in 2017-2018, and Equinor subsequently released the full subsurface and production dataset as open data.\n\n* **Total production:** Approximately **10 million Sm3 of oil**, equivalent to about **62-63 million barrels**.\n\nThat was well above the original estimate at plan for development and included the Maureen Formation. In addition the field produced about 2-3 billion Sm3 of gas/gas liquids during the same period.\n\nAll figures are reported by the Norwegian Petroleum Directorate, NPD, and Equinor. Reported totals vary slightly by source due to rounding and whether condensate/NGL are included, but 63 million bbl / 10 million Sm3 oil is the published final figure for Volve.",
+   "tokens": 952
+  }
+ ]
+}
