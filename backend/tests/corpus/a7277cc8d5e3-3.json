@@ -6,12 +6,10 @@
   "question": "Why did well F-12 decline faster after 2010? Compare with the 2005 development plan."
  },
  "to_review": false,
- "note": "Confused by the false rejections, the model declared '9000' though its text says '9.000' (in the quote and the bracketed translation). Rejecting it is right: the declared text is not in the claim and '9.000' outside the quote is undeclared.",
+ "note": "Confused by the false rejections, the model declared '9000' though its text says '9.000' (in the quote and the bracketed translation). Rejecting it is right: the declared text is not in the claim and '9.000' outside the quote is undeclared. Oct 27 evening: the plan's dotted thousands ('9.000') written again after a declared '9 000' or '9000' read as that number; the rejection was false, so the verdict changed on purpose.",
  "expected": {
-  "accepted": false,
-  "flagged": [
-   "Finding 4"
-  ]
+  "accepted": true,
+  "flagged": []
  },
  "submission": {
   "summary": "F-12 oil rate fell 72% around 2010-07-18 from 4 050 to 1 146 Sm3/d as water cut rose from 0.029 to 0.513 and then to 0.814, consistent with the 2005 PUD mechanism “Produksjonen avtar grunnet økende vannrate.” [Production declines due to increasing water rate.] Water breakthrough at 21 months was close to the planned 2 years, but the well stayed on decline below the plan’s economic cut-off of 2 100 Sm3/d.",

@@ -487,6 +487,7 @@ CALENDAR_WINDOW = re.compile(
     r"\b(?:12|24|30|365)[-\s](?:month|hour|day)\b|\b(?:12\s+months|24\s+hours|365\s+days)\b"
 )
 DECIMAL_COMMA = re.compile(r"\d,\d{1,2}(?!\d)")
+DOTTED_THOUSANDS = re.compile(r"[1-9]\d{0,2}(?:\.\d{3})+")
 # A reference to a part of a document names it; its digits are no value to declare:
 # "Figure 4.2", "Tabell 4.5", "section 4.5.1", "§ 4.5.1", "page 23", "p. 23", "pages 23-25".
 REFERENCE = re.compile(
@@ -597,11 +598,12 @@ def _declared(
     # in the translation after a quote): it was checked once, it needs no second entry.
     def exact(text: str) -> set[float]:
         """A number as written, percent as a fraction: "94 %" and "94%" are 0.94, "0,80" and
-        "80%" are 0.8; no rounding, so "2%" is not a declared "1.77%"."""
-        return {
-            round(v / 100 if suffix == "%" else v, 9)
-            for v, _, suffix in _numbers_in_text(text, bool(DECIMAL_COMMA.search(text)))
-        }
+        "80%" are 0.8; no rounding, so "2%" is not a declared "1.77%". Dotted thousands as
+        the plan writes them ("9.000") also read as the whole number; "0.100" does not."""
+        readings = _numbers_in_text(text, bool(DECIMAL_COMMA.search(text)))
+        if DOTTED_THOUSANDS.fullmatch(text.strip()):
+            readings += _numbers_in_text(text, True)
+        return {round(v / 100 if suffix == "%" else v, 9) for v, _, suffix in readings}
 
     declared_values = set().union(*(exact(d.text) for d in declared)) if declared else set()
     for match in WRITTEN_NUMBER.finditer(rest):
@@ -611,7 +613,9 @@ def _declared(
         if values and all(_free(*n, pool, free) for n in values):
             continue
         # Read as written: a Norwegian reading counts only with a decimal comma ("0,80").
-        if exact(written) and exact(written) <= declared_values:
+        if exact(written) & declared_values and (
+            exact(written) <= declared_values or DOTTED_THOUSANDS.fullmatch(written)
+        ):
             continue
         if values and written not in leftover:
             leftover.append(written)

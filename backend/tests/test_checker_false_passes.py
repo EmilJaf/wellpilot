@@ -274,7 +274,11 @@ def test_a_declared_value_written_again_must_read_the_same() -> None:
         "Each made 1.77% of the oil, less than 2%.", ["E5"], [d("1.77%", 0.0177, "E5")], log
     )
 
+    plateau = [d("9 000", 9000, "E5")]
+    translated = check("A plateau of 9 000 Sm3/d [9.000 Sm3/d in the plan].", ["E5"], plateau, log)
+
     assert any("undeclared number(s) 75%" in p for p in later)
+    assert not any("undeclared" in p for p in translated)  # the plan's 9.000 is 9 000
     assert any("undeclared number(s) 2%" in p for p in rounded)  # a bound, not 1.77% rounded
     assert any("undeclared number(s) 0.072" in p for p in norwegian)
 
