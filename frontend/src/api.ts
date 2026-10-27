@@ -26,11 +26,17 @@ export type StepEvent = {
 
 export type DeclaredNumber = { text: string; value: number; evidence_id: string }
 
+/** Where to mark a text, computed by the backend checker's own rules (positions index the text as written). */
+export type Span =
+  | { kind: 'quote'; start: number; end: number }
+  | { kind: 'number'; start: number; end: number; value: number; evidence_id: string }
+
 export type Finding = {
   claim: string
   evidence_ids: string[]
   confidence: 'fact' | 'inference'
   numbers?: DeclaredNumber[] | null
+  spans?: Span[]
 }
 
 export type EvidenceMeta = {
@@ -49,6 +55,7 @@ export type FinalEvent = {
   question: string
   summary: string | null
   summary_numbers?: DeclaredNumber[]
+  summary_spans?: Span[]
   findings: Finding[]
   verified: boolean
   finished: boolean

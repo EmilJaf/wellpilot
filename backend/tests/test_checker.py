@@ -1,3 +1,5 @@
+import copy
+
 from wellpilot.agent.checker import DeclaredNumber, Finding, Submission, check_submission
 from wellpilot.agent.evidence import EvidenceLog, code_ref
 
@@ -492,3 +494,50 @@ def test_summary_numbers_are_declared_too() -> None:
 
     assert good == []
     assert "Summary: undeclared number(s) 55%" in bad[0]
+
+
+def test_display_spans_mark_what_the_checker_read() -> None:
+    from wellpilot.agent.checker import display_spans
+
+    claim = "F-12 fell 72% on 12 October 2010; the plan says “Maksimum vannkutt 0,80” for 2 years."
+    numbers = [
+        DeclaredNumber(text="72%", value=0.72, evidence_id="E1"),
+        DeclaredNumber(text="12", value=12, evidence_id="E1"),  # only in the well and the date
+        DeclaredNumber(text="0,80", value=0.8, evidence_id="E2"),
+        DeclaredNumber(text="2", value=2, evidence_id="E2"),
+    ]
+
+    spans = display_spans(claim, numbers)
+
+    marked = [(claim[s["start"] : s["end"]], s["kind"], s.get("evidence_id")) for s in spans]
+    assert marked == [
+        ("72%", "number", "E1"),
+        ("“Maksimum vannkutt 0,80”", "quote", None),
+        ("0,80", "number", "E2"),
+        ("2", "number", "E2"),
+    ]
+
+
+def test_runs_saved_before_spans_get_them_on_load() -> None:
+    from wellpilot.api.runs import RunRecord
+
+    finding = {"claim": "Rate 4 050 Sm3/d.", "evidence_ids": ["E1"], "confidence": "fact"}
+    finding["numbers"] = [{"text": "4 050", "value": 4050, "evidence_id": "E1"}]
+    result = {"summary": "Done.", "summary_numbers": [], "findings": [finding]}
+    record = RunRecord.from_file(
+        {
+            "id": "0123456789ab",
+            "question": "Rate?",
+            "as_of": None,
+            "created_at": "2026-10-27T00:00:00+00:00",
+            "status": "done",
+            "events": [{"seq": 0, "type": "final", **copy.deepcopy(result)}],
+            "result": result,
+            "evidence": {},
+        }
+    )
+
+    for answer in (record.result, record.events[0]):
+        spans = answer["findings"][0]["spans"]
+        assert [(s["start"], s["end"]) for s in spans] == [(5, 10)]
+        assert answer["summary_spans"] == []

@@ -605,6 +605,50 @@ def _question_numbers(question: str) -> set[float]:
     return named | REPORT_YEARS
 
 
+def _blank(text: str, *patterns: re.Pattern) -> str:
+    """The text with each match turned into spaces of the same length: positions kept."""
+    for pattern in patterns:
+        text = pattern.sub(lambda m: " " * len(m.group(0)), text)
+    return text
+
+
+def display_spans(text: str | None, numbers: list[DeclaredNumber] | None) -> list[dict]:
+    """Where the answer panel marks the text, by the checker's own rules: each quoted
+    passage, and each declared number where it stands as a whole number (not inside a
+    date, a well name or a window), with the evidence it came from. Positions index the
+    text as written, so the UI only slices; it re-implements no rule."""
+    if not text:
+        return []
+    spans: list[dict] = [
+        {"kind": "quote", "start": m.start(), "end": m.end()} for m in QUOTED.finditer(text)
+    ]
+    plain = text.replace("\u2212", "-").replace("\u2013", "-")  # same length
+    masked = _blank(plain, DATE, WELL, CALENDAR_WINDOW, DAY_MONTH_YEAR, MONTH_DAY_YEAR, MONTH_YEAR)
+    declared: dict[str, list[DeclaredNumber]] = {}
+    for number in numbers or []:
+        written = number.text.replace("\u2212", "-").replace("\u2013", "-")
+        declared.setdefault(written, []).append(number)
+    taken: list[tuple[int, int]] = []
+    for written in sorted(declared, key=len, reverse=True):  # "2 100" before "2"
+        # The same text declared twice: its occurrences take the declarations in order.
+        options = declared[written]
+        for i, (start, end) in enumerate(_standalone(masked, written)):
+            if any(start < e and end > s for s, e in taken):
+                continue
+            taken.append((start, end))
+            number = options[min(i, len(options) - 1)]
+            spans.append(
+                {
+                    "kind": "number",
+                    "start": start,
+                    "end": end,
+                    "value": number.value,
+                    "evidence_id": number.evidence_id,
+                }
+            )
+    return sorted(spans, key=lambda s: (s["start"], s["kind"] != "quote"))
+
+
 def check_submission(submission: Submission, log: EvidenceLog, question: str = "") -> list[str]:
     """Return problems as sentences for the model; an empty list means accepted."""
     free = _question_numbers(question)

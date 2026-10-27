@@ -17,7 +17,13 @@ import openai
 import pandas as pd
 from pydantic import ValidationError
 
-from wellpilot.agent.checker import DeclaredNumber, Finding, Submission, check_submission
+from wellpilot.agent.checker import (
+    DeclaredNumber,
+    Finding,
+    Submission,
+    check_submission,
+    display_spans,
+)
 from wellpilot.agent.evidence import Evidence, EvidenceLog
 from wellpilot.agent.tools import TOOLS_BY_NAME, execute, tool_schemas
 from wellpilot.data.store import ProductionStore
@@ -168,21 +174,38 @@ class AgentRun:
     def to_dict(self) -> dict:
         """The answer and an index of its evidence (results are served separately)."""
         tokens_in, tokens_out = self.total_tokens
-        return {
-            "question": self.question,
-            "summary": self.summary,
-            "findings": [f.model_dump() for f in self.findings],
-            "summary_numbers": [n.model_dump() for n in self.summary_numbers],
-            "verified": self.verified,
-            "finished": self.finished,
-            "stopped": self.stopped,
-            "check_rounds": self.check_rounds,
-            "steps": len(self.steps),
-            "tokens": {"input": tokens_in, "output": tokens_out},
-            "evidence": [
-                {k: v for k, v in asdict(e).items() if k != "result"} for e in self.evidence
-            ],
-        }
+        return with_spans(
+            {
+                "question": self.question,
+                "summary": self.summary,
+                "findings": [f.model_dump() for f in self.findings],
+                "summary_numbers": [n.model_dump() for n in self.summary_numbers],
+                "verified": self.verified,
+                "finished": self.finished,
+                "stopped": self.stopped,
+                "check_rounds": self.check_rounds,
+                "steps": len(self.steps),
+                "tokens": {"input": tokens_in, "output": tokens_out},
+                "evidence": [
+                    {k: v for k, v in asdict(e).items() if k != "result"} for e in self.evidence
+                ],
+            }
+        )
+
+
+def with_spans(result: dict) -> dict:
+    """Add the display spans of the summary and each finding to a result (also to one saved
+    before spans existed, so replays mark numbers by the same rules)."""
+
+    def numbers(raw: list | None) -> list[DeclaredNumber]:
+        return [DeclaredNumber.model_validate(n) for n in raw or []]
+
+    result["summary_spans"] = display_spans(
+        result.get("summary"), numbers(result.get("summary_numbers"))
+    )
+    for finding in result.get("findings", []):
+        finding["spans"] = display_spans(finding.get("claim"), numbers(finding.get("numbers")))
+    return result
 
 
 def _reasoning(message: Any) -> str | None:

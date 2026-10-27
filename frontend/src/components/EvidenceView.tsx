@@ -148,6 +148,7 @@ function Facts({ result }: { result: SearchResult }) {
   const table = result.facts
   if (!table) return result.pages ? <DataTable table={result.pages} /> : null
   const at = (row: Table['rows'][number], name: string) => row[table.columns.indexOf(name)]
+  if (!table.rows.length) return <p className="empty">No report facts matched this search.</p>
   return (
     <>
       {Object.entries(result.documents).map(([id, doc]) => (
@@ -165,11 +166,15 @@ function Facts({ result }: { result: SearchResult }) {
               <span className="fact-source">
                 Page {page}, {String(at(row, 'source'))}{' '}
                 <span className={`check-badge${check === 'unverified' ? ' check-badge-unverified' : ''}`}>
-                  {check === 'exact' ? 'quote found on the page' : check === 'tokens' ? 'all words found on the page' : 'quote not found on the page'}
+                  {check === 'exact'
+                    ? 'quote found on the page'
+                    : check === 'tokens'
+                      ? 'words found on the page out of order; quote not shown'
+                      : 'quote not found on the page; not shown'}
                 </span>
               </span>
               <div>{String(at(row, 'statement_en'))}</div>
-              <p className="fact-quote" lang="no">{String(at(row, 'quote'))}</p>
+              {at(row, 'quote') !== null && <p className="fact-quote" lang="no">{String(at(row, 'quote'))}</p>}
               <button type="button" className="link-button" onClick={() => setOpen(open === i ? null : i)}>
                 {open === i ? 'Hide page' : `Show page ${page}`}
               </button>

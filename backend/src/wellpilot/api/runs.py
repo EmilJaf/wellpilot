@@ -29,7 +29,7 @@ from pydantic import BaseModel, Field
 from sse_starlette import EventSourceResponse
 
 from wellpilot.agent.evidence import EvidenceLog
-from wellpilot.agent.loop import AgentRun, run_agent
+from wellpilot.agent.loop import AgentRun, run_agent, with_spans
 from wellpilot.agent.tools import to_jsonable
 from wellpilot.data.store import ProductionStore
 from wellpilot.llm import LLM
@@ -146,6 +146,12 @@ class RunRecord:
         record.events = data["events"]
         record.result = data["result"]
         record.evidence = data["evidence"]
+        # Runs saved before display spans existed get them now, by today's rules.
+        if record.result is not None:
+            with_spans(record.result)
+        for event in record.events:
+            if event.get("type") == "final":
+                with_spans(event)
         if record.status == "running":
             # Saved mid-run by a process that then stopped: it will never finish.
             record.status = "error"

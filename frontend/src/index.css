@@ -601,9 +601,22 @@ button.marker.marker-fact {
   background: var(--ink);
 }
 
-.claim q {
+.claim q,
+.summary q {
   font-style: italic;
   quotes: "“" "”" "‘" "’";
+}
+
+.credits {
+  padding: 8px 16px 12px;
+  color: var(--ink-3);
+  font-size: 12px;
+  line-height: 1.5;
+  max-width: 110ch;
+}
+
+.credits a {
+  color: inherit;
 }
 
 .chips {
