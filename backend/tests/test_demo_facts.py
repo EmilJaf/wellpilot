@@ -167,7 +167,7 @@ def test_waterflood_diagnostics_for_f12_at_the_end_of_2012() -> None:
     cols = result["by_year"]["columns"]
     voidage = result["field_voidage"]
 
-    assert fit["r2"] == pytest.approx(0.92, abs=0.01) and result["warnings"] == []
+    assert fit["r2"] == pytest.approx(0.92, abs=0.01) and result["no_trend"] is None
     assert limits[0.8]["already_passed"]
     assert limits[0.9]["remaining_oil_sm3"] == pytest.approx(164_702, rel=0.01)
     assert limits[0.95]["remaining_oil_sm3"] == pytest.approx(560_299, rel=0.01)
@@ -175,3 +175,18 @@ def test_waterflood_diagnostics_for_f12_at_the_end_of_2012() -> None:
     assert 4_900 < years[2011][cols.index("liquid_rate_sm3_per_day")] < 5_300
     ratio = voidage["columns"].index("replacement_ratio")
     assert all(r[ratio] > 1 for r in voidage["rows"])
+
+
+def test_a_poor_wor_trend_is_left_out_and_its_tables_carry_no_warning() -> None:
+    """Over F-12's whole life its last 36 months of WOR (2013-05 to 2016-08) do not rise: no
+    projection, and liquid and choke by year stay plain data (run 7e187f965639's first
+    answer had to hedge "5 130 Sm3/d" because a fit warning covered the whole result)."""
+    import json as _json
+
+    from wellpilot.agent.tools import execute
+
+    data = execute(ProductionStore(PROCESSED), "waterflood", _json.dumps({"well": "F-12"}))[
+        "result"
+    ]
+    assert data["wor_fit"] is None and "WOR is not rising" in data["no_trend"]
+    assert "warnings" not in data and data["by_year"]["rows"]

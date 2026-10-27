@@ -15,7 +15,9 @@ because the reservoir runs out of pressure. Three classic views show that:
   surface volumes: water injected over oil plus water produced; no formation volume
   factors or gas, so a ratio, not a reservoir balance).
 
-Every number comes from the production data; the fit carries warnings when it is poor.
+Every number comes from the production data. A poor WOR trend is not returned at all, only
+the reason ("no_trend"): the tables beside it are plain data, and a warning on the result
+would make every one of them read as uncertain.
 """
 
 import numpy as np
@@ -50,7 +52,8 @@ def _monthly(daily: pd.DataFrame) -> pd.DataFrame:
     return monthly.drop(columns="hours").reset_index()
 
 
-def _wor_fit(monthly: pd.DataFrame, start=None, end=None) -> tuple[dict | None, list[str]]:
+def _wor_fit(monthly: pd.DataFrame, start=None, end=None) -> tuple[dict | None, str | None]:
+    """The trend extended to each water-cut limit, or None and why there is none."""
     window = monthly[monthly["wor"] >= MIN_WOR]
     if start is not None:
         window = window[window["month"] >= pd.Timestamp(start)]
@@ -58,36 +61,34 @@ def _wor_fit(monthly: pd.DataFrame, start=None, end=None) -> tuple[dict | None, 
         window = window[window["month"] <= pd.Timestamp(end)]
     window = window.tail(FIT_MONTHS)
     if len(window) < MIN_FIT_MONTHS:
-        return None, [
+        return None, (
             f"too few months with WOR >= {MIN_WOR:g} (water cut 0.5) to fit a trend: "
             f"{len(window)}, need {MIN_FIT_MONTHS}"
-        ]
+        )
     x = window["cum_oil_sm3"].to_numpy()
     y = np.log10(window["wor"].to_numpy())
     slope, intercept = np.polyfit(x, y, 1)
     fitted = intercept + slope * x
     r2 = 1 - ((y - fitted) ** 2).sum() / max(((y - y.mean()) ** 2).sum(), 1e-12)
+    span = (
+        f"{str(window['month'].iloc[0].date())[:7]} to {str(window['month'].iloc[-1].date())[:7]}"
+    )
+    if slope <= 0:
+        return None, f"WOR is not rising with cumulative oil on {span}: no limit can be projected"
+    if r2 < 0.5:
+        return None, f"no reliable WOR trend on {span}: r2 {r2:.2f} < 0.5"
     np_now = float(monthly["cum_oil_sm3"].iloc[-1])
     wor_now = float(monthly["wor"].iloc[-1])
-    warnings = []
-    if r2 < 0.5:
-        warnings.append(f"poor WOR trend: r2 {r2:.2f} < 0.5; the remaining oil is not reliable")
-    if slope <= 0:
-        warnings.append("WOR is not rising with cumulative oil: no limit can be projected")
     limits = []
     for cut in WATER_CUT_LIMITS:
         wor_limit = cut / (1 - cut)
-        if slope > 0:
-            np_limit = (np.log10(wor_limit) - intercept) / slope
-            remaining = max(0.0, np_limit - np_now)
-        else:
-            np_limit, remaining = None, None
+        np_limit = (np.log10(wor_limit) - intercept) / slope
         limits.append(
             {
                 "water_cut": cut,
                 "wor": round(wor_limit, 2),
                 "cum_oil_at_limit_sm3": np_limit,
-                "remaining_oil_sm3": remaining,
+                "remaining_oil_sm3": max(0.0, np_limit - np_now),
                 "already_passed": bool(wor_now >= wor_limit),
             }
         )
@@ -101,7 +102,7 @@ def _wor_fit(monthly: pd.DataFrame, start=None, end=None) -> tuple[dict | None, 
         "cum_oil_now_sm3": np_now,
         "wor_now": wor_now,
         "to_limits": limits,
-    }, warnings
+    }, None
 
 
 def _field_voidage(store: ProductionStore) -> pd.DataFrame:
@@ -119,7 +120,7 @@ def waterflood(store: ProductionStore, well: str, start=None, end=None) -> dict:
     monthly = _monthly(store.well_daily(well))
     if monthly.empty:
         raise ValueError(f"{well} produced no oil in the data")
-    fit, warnings = _wor_fit(monthly, start, end)
+    fit, no_trend = _wor_fit(monthly, start, end)
     by_year = (
         monthly.assign(year=monthly["month"].dt.year)
         .groupby("year")
@@ -138,6 +139,7 @@ def waterflood(store: ProductionStore, well: str, start=None, end=None) -> dict:
             ["month", "cum_oil_sm3", "wor", "water_cut", "liquid_rate_sm3_per_day", "choke_pct"]
         ],
         "wor_fit": fit,
+        "no_trend": no_trend,
         "by_year": by_year,
         "field_voidage": _field_voidage(store),
         "notes": (
@@ -145,5 +147,4 @@ def waterflood(store: ProductionStore, well: str, start=None, end=None) -> dict:
             f"on up to {FIT_MONTHS} recent months with WOR >= {MIN_WOR:g}. Voidage is "
             "approximated with surface volumes (no formation volume factors, no gas)."
         ),
-        "warnings": warnings,
     }

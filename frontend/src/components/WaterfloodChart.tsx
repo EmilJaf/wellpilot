@@ -24,6 +24,7 @@ export type WaterfloodResult = {
     wor_now: number
     to_limits: Limit[]
   } | null
+  no_trend: string | null
   by_year: Table
   field_voidage: Table
   notes: string
@@ -130,9 +131,10 @@ export function WaterfloodChart({ result }: { result: WaterfloodResult }) {
       </svg>
       <p className="chart-key">
         <span><i className="strip-key strip-key-water" /> a month</span>
-        <span><i className="case-key" /> the fitted trend, extended</span>
-        <span><i className="case-key design-key-limit" /> economic water cut</span>
+        {fit && <span><i className="case-key" /> the fitted trend, extended</span>}
+        {fit && <span><i className="case-key design-key-limit" /> economic water cut</span>}
       </p>
+      {result.no_trend && <p className="plan-summary">No trend projected: {result.no_trend}.</p>}
       {fit && (
         <p className="plan-summary">
           Trend fitted on {fit.window_start} to {fit.window_end} (r² {fit.r2.toFixed(2)}). Oil left before the

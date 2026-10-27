@@ -823,7 +823,8 @@ TOOLS = [
         "oil left before each), liquid rate, choke and water cut by year, and the field's "
         "injection against production by year. On a waterflood, oil often falls because water "
         "takes the well's capacity, not because pressure is lost: use this alongside the "
-        "decline fit. Optional start/end (YYYY-MM-DD) bound the trend window.",
+        "decline fit. Optional start/end (YYYY-MM-DD) bound the trend window. Without a "
+        "reliable trend, wor_fit is null and no_trend says why; the tables are still data.",
         WindowArgs,
         waterflood_tool,
     ),
