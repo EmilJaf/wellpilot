@@ -1083,6 +1083,15 @@ button.evidence-chip[aria-pressed="true"] {
   background: var(--shut-wash);
 }
 
+.key-work {
+  display: inline-block;
+  width: 0;
+  height: 12px;
+  border-left: 1.5px dashed var(--ink);
+  margin: 0 6px;
+  vertical-align: -2px;
+}
+
 .key-gauge {
   background: var(--caution-wash);
   box-shadow: inset 2px 0 0 var(--caution);
@@ -1681,6 +1690,95 @@ code,
 .case-key-hidden {
   background: var(--shut-wash);
   border: 1px solid var(--rule);
+}
+
+/* ---------- the field's history: the screen replayed month by month ---------- */
+.timeline {
+  padding: 14px 18px 24px;
+}
+
+.timeline svg {
+  display: block;
+  overflow: visible;
+}
+
+.timeline-readout {
+  min-height: 3.2em;
+}
+
+.timeline-row {
+  cursor: pointer;
+}
+
+.timeline-hit,
+.timeline-hit-work {
+  fill: transparent;
+}
+
+.timeline-row:hover .timeline-hit {
+  fill: var(--future-wash);
+}
+
+.timeline-well {
+  font-size: 13px;
+  font-weight: 700;
+  fill: var(--ink);
+}
+
+.timeline-sub {
+  font-size: 11.5px;
+  fill: var(--ink-3);
+}
+
+.timeline-oil {
+  fill: none;
+  stroke: var(--oil);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+
+.timeline-issue.is-alarm {
+  fill: var(--alarm);
+}
+
+.timeline-issue.is-caution {
+  fill: var(--caution);
+}
+
+.timeline-work line {
+  stroke: var(--ink);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.timeline-work path {
+  fill: var(--ink);
+}
+
+.timeline-asof line {
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+
+.timeline-asof text {
+  font-size: 11.5px;
+  font-weight: 600;
+  fill: var(--ink);
+}
+
+.timeline-key {
+  display: inline-block;
+  width: 16px;
+  height: 6px;
+  vertical-align: 1px;
+}
+
+.timeline-key.is-alarm {
+  background: var(--alarm);
+}
+
+.timeline-key.is-caution {
+  background: var(--caution);
 }
 
 /* ---------- the forecast film: every forecast of a well, in order ---------- */

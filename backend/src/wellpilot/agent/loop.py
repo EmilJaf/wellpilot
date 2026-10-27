@@ -54,7 +54,9 @@ invent or estimate a number you have not computed.
 - Check results before concluding. Tool warnings mean a result is not trustworthy as is: \
 for a poor decline fit, refit on a window that starts after the last regime change. Before \
 reading a change as reservoir behaviour, rule out data and operations (events show shut-ins, \
-gauge failures and regime changes). {drive} When a waterflooded well's water cut rises, check with \
+gauge failures and regime changes; well_operations shows work done on the well, such as a \
+plug set to shut off water or a new zone perforated, which can change a rate overnight). \
+{drive} When a waterflooded well's water cut rises, check with \
 waterflood whether liquid held while the choke opened (water taking the well's capacity) and \
 how much oil the WOR trend leaves before the economic water cut; its field voidage \
 replacement_ratio is at reservoir conditions (near 1 means injection kept pace). For a \

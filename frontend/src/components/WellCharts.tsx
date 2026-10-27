@@ -5,7 +5,7 @@ import { column, type Table } from '../api'
 export type Marker = {
   at: string // ISO date
   until?: string // ISO date, for a band
-  kind: 'regime' | 'crossing' | 'gauge' | 'shut_in' | 'hidden'
+  kind: 'regime' | 'crossing' | 'gauge' | 'shut_in' | 'hidden' | 'work'
   track: TrackKey | 'all'
   label?: string
 }
@@ -135,6 +135,9 @@ export function WellCharts({ table, error, markers, highlights, onSelect }: Prop
       <p className="chart-key">
         <span><i className="key-line" /> step change or threshold the agent found</span>
         <span><i className="key-band key-shut" /> well shut in</span>
+        {markers.some((m) => m.kind === 'work') && (
+          <span><i className="key-work" /> work on the well, from its daily reports</span>
+        )}
         <span><i className="key-band key-gauge" /> dead pressure gauge</span>
         <span><i className="key-rule" /> date in the selected finding</span>
         {markers.some((m) => m.kind === 'hidden') && (
@@ -297,6 +300,33 @@ function drawOverlay(u: uPlot, key: TrackKey, markers: Marker[], highlights: str
         // Keep the label in view when zoomed inside the band.
         ctx.fillStyle = css('--caution-ink')
         ctx.fillText(m.label, Math.max(x0, left) + 6 * ratio, top + 4 * ratio)
+      }
+    } else if (m.kind === 'work') {
+      // Work done on the well (from its daily reports): a dashed rule and, on the oil
+      // track, a triangle with what was done.
+      ctx.strokeStyle = css('--ink')
+      ctx.lineWidth = ratio
+      ctx.setLineDash([3 * ratio, 3 * ratio])
+      ctx.beginPath()
+      ctx.moveTo(Math.round(x0) + 0.5, top)
+      ctx.lineTo(Math.round(x0) + 0.5, top + height)
+      ctx.stroke()
+      ctx.setLineDash([])
+      if (key === 'oil') {
+        const s = 5 * ratio
+        ctx.fillStyle = css('--ink')
+        ctx.beginPath()
+        ctx.moveTo(x0 - s, top)
+        ctx.lineTo(x0 + s, top)
+        ctx.lineTo(x0, top + s * 1.4)
+        ctx.closePath()
+        ctx.fill()
+        if (m.label) {
+          // Near the right edge the label goes to the left of the mark.
+          const w = ctx.measureText(m.label).width
+          const fits = x0 + 7 * ratio + w < left + width
+          ctx.fillText(m.label, fits ? x0 + 7 * ratio : x0 - 7 * ratio - w, top + 2 * ratio)
+        }
       }
     } else if (m.kind === 'crossing') {
       // A threshold crossing: a short tick down from the top edge.

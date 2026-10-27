@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { api, type RunSummary, type Table } from './api'
+import { api, type OperationJob, type RunSummary, type Table } from './api'
 import { AgentLog } from './components/AgentLog'
+import { FieldTimeline } from './components/FieldTimeline'
 import { AccuracyView } from './components/AccuracyView'
 import { DesignChart, type DesignResult } from './components/DesignChart'
 import { FieldScreen } from './components/FieldScreen'
@@ -31,6 +32,17 @@ type EventRow = { kind: string; signal: string; start: string; end: string | nul
 
 const NO_MARKERS: Marker[] = []
 
+/** A job on the well in a few words, from what its reports say was done. */
+function workLabel(job: OperationJob): string {
+  const text = job.summaries.map((s) => s.summary).join(' ')
+  const done = [
+    /\bplug\b/i.test(text) && 'plug',
+    (job.perforations.length > 0 || /perforat/i.test(text)) && 'perforation',
+    /\bPLT\b|production log/i.test(text) && 'production log',
+  ].filter(Boolean)
+  return done.length ? `${done.join(', ')} (${job.start})` : `well work (${job.start})`
+}
+
 function toMarkers(events: EventRow[]): Marker[] {
   return events.flatMap((e): Marker[] => {
     if (e.kind === 'gauge_failure' && e.end) {
@@ -56,7 +68,7 @@ export default function App() {
   // The data column shows one well's daily data, the field against its 2005 plan, or how
   // close past forecasts came.
   // A first visit opens on the field screen; a shared run opens on its well.
-  const [view, setView] = useState<'screen' | 'well' | 'plan' | 'accuracy' | 'hindsight'>(() =>
+  const [view, setView] = useState<'screen' | 'history' | 'well' | 'plan' | 'accuracy' | 'hindsight'>(() =>
     new URLSearchParams(window.location.search).get('run') ? 'well' : 'screen',
   )
   // The reader can fold the charts away to give the evidence the whole column.
@@ -87,6 +99,7 @@ export default function App() {
   const recording = useRef<Recording | null>(null)
   const [wells, setWells] = useState<string[]>([])
   const [daily, setDaily] = useState<{ well: string; table: Table | null; error?: string } | null>(null)
+  const [work, setWork] = useState<{ key: string; list: Marker[] }>({ key: '', list: [] })
   const [markers, setMarkers] = useState<{ key: string; list: Marker[] }>({ key: '', list: [] })
   const [recorded, setRecorded] = useState<RunSummary | null>(null)
   const [plan, setPlan] = useState<{ result: PlanResult | null; design: DesignResult | null; error?: string } | null>(null)
@@ -173,6 +186,21 @@ export default function App() {
       .daily(well, end)
       .then((table) => current && setDaily({ well, table }))
       .catch((e: Error) => current && setDaily({ well, table: null, error: e.message }))
+    // Work done on the well after first oil (plugs, perforations, logs), as chart marks;
+    // drilling is before production and stays off the charts.
+    api
+      .operations(well, end)
+      .then(
+        (ops) =>
+          current &&
+          setWork({
+            key: `${well}|${end}`,
+            list: ops.jobs
+              .filter((j) => j.kind === 'workover')
+              .map((j) => ({ at: j.start, kind: 'work' as const, track: 'all' as const, label: workLabel(j) })),
+          }),
+      )
+      .catch(() => current && setWork({ key: `${well}|${end}`, list: [] }))
     return () => {
       current = false
     }
@@ -207,11 +235,13 @@ export default function App() {
   // Stable arrays, so the charts redraw only when a selection or the markers change.
   const highlights = useMemo(() => (finding ? datesIn(finding.claim) : []), [finding])
   const markersKey = eventsEvidence ? `${state.id}/${eventsEvidence}` : ''
+  const workKey = `${well}|${pastDate && !revealed ? pastDate : null}`
   const chartMarkers = useMemo(() => {
-    const list = markersKey && markers.key === markersKey ? markers.list : NO_MARKERS
+    const events = markersKey && markers.key === markersKey ? markers.list : NO_MARKERS
+    const list = work.key === workKey && work.list.length ? [...events, ...work.list] : events
     if (!(revealed && pastDate)) return list
     return [...list, { at: pastDate, kind: 'hidden' as const, track: 'all' as const, label: `Hidden from the agent after ${pastDate}` }]
-  }, [markersKey, markers, revealed, pastDate])
+  }, [markersKey, markers, revealed, pastDate, work, workKey])
 
   const reset = () => {
     setSelectedEvidence(null)
@@ -385,6 +415,9 @@ export default function App() {
                 <button type="button" role="tab" aria-selected={view === 'screen'} onClick={() => setView('screen')}>
                   All wells
                 </button>
+                <button type="button" role="tab" aria-selected={view === 'history'} onClick={() => setView('history')}>
+                  History
+                </button>
                 <button type="button" role="tab" aria-selected={view === 'well'} onClick={() => setView('well')}>
                   Well {well}
                 </button>
@@ -443,6 +476,14 @@ export default function App() {
               {view === 'screen' ? (
                 <FieldScreen
                   asOf={pastDate ?? ''}
+                  onOpenWell={(w) => {
+                    setPickedWell(w)
+                    setView('well')
+                  }}
+                />
+              ) : view === 'history' ? (
+                <FieldTimeline
+                  asOf={pastDate}
                   onOpenWell={(w) => {
                     setPickedWell(w)
                     setView('well')

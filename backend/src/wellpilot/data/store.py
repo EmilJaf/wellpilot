@@ -17,6 +17,7 @@ from pathlib import Path
 import duckdb
 import pandas as pd
 
+from wellpilot.ingest.operations import OPERATIONS_FILE, STEPS_FILE
 from wellpilot.ingest.production import DAILY_FILE, ISSUES_FILE
 from wellpilot.ingest.report_facts import FACTS_FILE, SUMMARIES_FILE
 from wellpilot.ingest.reports import PAGES_FILE, REPORTS_BY_ID
@@ -28,6 +29,9 @@ REPORT_TABLES = {
     "report_facts": FACTS_FILE,
     "report_summaries": SUMMARIES_FILE,
 }
+# Present once the daily-report ingest has run: well work by day, cut at as_of like
+# production (a report is known from the day its work was done).
+OPERATION_TABLES = {"well_operations": OPERATIONS_FILE, "well_operation_steps": STEPS_FILE}
 
 logger = logging.getLogger(__name__)
 
@@ -83,6 +87,13 @@ class ProductionStore:
             if as_of is not None:
                 issued = frame["doc_id"].map(lambda d: REPORTS_BY_ID[d].doc_date)
                 frame = frame[issued <= as_of.isoformat()]
+            self._load(table, frame)
+        for table, file in OPERATION_TABLES.items():
+            if not (processed_dir / file).exists():
+                continue
+            frame = pd.read_parquet(processed_dir / file)
+            if as_of is not None:
+                frame = frame[frame["date"] <= pd.Timestamp(as_of)]
             self._load(table, frame)
         self._con.execute("SET temp_directory = ''")  # nothing spills to disk
         self._con.execute("SET enable_external_access = false")

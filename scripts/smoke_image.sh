@@ -29,6 +29,8 @@ check "quotes located on the page"   sh -c "curl -sf $URL/api/reports/volve_pud/
 check "field vs the 2005 plan"       sh -c "curl -sf $URL/api/field/plan | grep -q 'plan_p50_msm3'"
 check "a backtest case up close"     sh -c "curl -sf $URL/api/backtest/cases/F-12/2010-02-28 | grep -q '\"agent\": *{'"
 check "the forecast film"            sh -c "curl -sf $URL/api/backtest/film/F-12 | grep -q '\"frames\"'"
+check "the field's history"          sh -c "curl -sf $URL/api/field/timeline | grep -q '\"replayed\"'"
+check "work on F-12 from its reports" sh -c "curl -sf $URL/api/wells/F-12/operations | grep -q '3150 m'"
 check "field against design limits"  sh -c "curl -sf $URL/api/field/design | grep -q 'Maksimum vannkutt'"
 check "a tool's source code"         sh -c "curl -sf $URL/api/code/wellpilot.agent.tools.detect_events@0 | grep -q 'def detect_events'"
 check "no key: a run is refused 503" sh -c "[ \$(curl -s -o /dev/null -w '%{http_code}' -X POST -H 'content-type: application/json' -d '{\"question\":\"Which well produced most?\"}' $URL/api/runs) = 503 ]"

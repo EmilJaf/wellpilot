@@ -130,6 +130,10 @@ export const api = {
   // With `end`, only the days up to it: what an agent cut at that date could see.
   daily: (well: string, end?: string | null) =>
     fetch(`/api/wells/${encodeURIComponent(well)}/daily${end ? `?end=${end}` : ''}`).then((r) => json<Table>(r)),
+  timeline: () => fetch('/api/field/timeline').then((r) => json<Timeline>(r)),
+  // The well's daily-report jobs; with `end`, only those done by then.
+  operations: (well: string, end?: string | null) =>
+    fetch(`/api/wells/${encodeURIComponent(well)}/operations${end ? `?end=${end}` : ''}`).then((r) => json<Operations>(r)),
   pageQuotes: (docId: string, page: number) =>
     fetch(`/api/reports/${docId}/pages/${page}/quotes`).then((r) => json<{ quote: string; boxes: number[][] }[]>(r)),
   pageImageUrl: (docId: string, page: number) => `/api/reports/${docId}/pages/${page}/image`,
@@ -154,6 +158,40 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(edit),
     }).then((r) => json<CheckResult>(r)),
+}
+
+/** Work done on a well, from its daily drilling and well-work reports. */
+export type OperationJob = {
+  start: string
+  end: string
+  kind: 'drilling' | 'completion' | 'workover' | 'other'
+  report_days: number
+  contractor: string
+  perforations: string[]
+  summaries: { date: string; summary: string }[]
+}
+
+export type Operations = { well: string; jobs: OperationJob[] }
+
+/** The field screen replayed month by month, with each producer's rate and its wells' work. */
+export type Timeline = {
+  months: [string, string]
+  replayed: number
+  wells: {
+    well: string
+    first_oil: string
+    oil_sm3: number
+    oil_rate: { month: string[]; rate: number[] }
+    issues: {
+      kind: string
+      level: 'alarm' | 'caution' | 'note'
+      first_flagged: string
+      since: string | null
+      cleared: string | null
+      text: string
+    }[]
+    work: { start: string; end: string; perforations: string[]; summary: string }[]
+  }[]
 }
 
 export type Health = {

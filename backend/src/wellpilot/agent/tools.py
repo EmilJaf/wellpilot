@@ -779,6 +779,104 @@ def field_screen(store: ProductionStore, _: NoArgs) -> dict:
     return to_jsonable(screen(store))
 
 
+class OperationsArgs(WindowArgs):
+    day: date | None = Field(
+        None, description="One report day, YYYY-MM-DD: every line of that day's operations."
+    )
+
+
+GAP_DAYS = 3  # reports this close together belong to one job
+
+
+def well_operations(store: ProductionStore, args: OperationsArgs) -> dict:
+    """The well's daily drilling and well-work reports, grouped into jobs."""
+    _check_well(store, args.well)
+    if "well_operations" not in store.tables:
+        raise ValueError("no daily operation reports are loaded")
+    if args.day is not None:
+        lines = store.query(
+            'SELECT start, "end", depth_mmd, activity, sub_activity, remark '
+            "FROM well_operation_steps WHERE well = ? AND date = ? ORDER BY start",
+            [args.well, pd.Timestamp(args.day)],
+        ).rows
+        day = store.query(
+            "SELECT summary, planned, perforations FROM well_operations "
+            "WHERE well = ? AND date = ?",
+            [args.well, pd.Timestamp(args.day)],
+        ).rows
+        if day.empty:
+            raise ValueError(f"no report for {args.well} on {args.day}")
+        return {
+            "well": args.well,
+            "day": args.day.isoformat(),
+            **{k: v for k, v in day.iloc[0].items() if v},
+            "operations": table(lines),
+        }
+    where, params = ["well = ?"], [args.well]
+    if args.start:
+        where.append("date >= ?")
+        params.append(pd.Timestamp(args.start))
+    if args.end:
+        where.append("date <= ?")
+        params.append(pd.Timestamp(args.end))
+    days = store.query(
+        "SELECT date, contractor, summary, activities, perforations FROM well_operations "
+        f"WHERE {' AND '.join(where)} ORDER BY date",
+        params,
+    ).rows
+    jobs: list[dict] = []
+    for _, row in days.iterrows():
+        last = jobs[-1] if jobs else None
+        if last and (row["date"] - pd.Timestamp(last["end"])).days <= GAP_DAYS:
+            job = last
+        else:
+            job = {"start": row["date"], "days": [], "activities": set(), "contractors": set()}
+            jobs.append(job)
+        job["end"] = row["date"].date().isoformat()
+        job["days"].append(row)
+        job["activities"] |= {a.strip() for a in str(row["activities"]).split(",") if a.strip()}
+        if row["contractor"]:
+            job["contractors"].add(row["contractor"])
+    out = []
+    for job in jobs:
+        # What a job was: plug and abandonment ends a well; then drilling, completion, work
+        # on a producing well. Report codes as written ("plug abandon").
+        kinds = {
+            "plug abandon": "abandonment",
+            "drilling": "drilling",
+            "completion": "completion",
+            "workover": "workover",
+        }
+        kind = next((v for k, v in kinds.items() if k in job["activities"]), "other")
+        days_ = job["days"]
+        # A drilling job runs for months; its first and last days say what it was.
+        shown = days_ if kind != "drilling" or len(days_) <= 6 else [*days_[:3], *days_[-3:]]
+        out.append(
+            {
+                "start": job["start"].date().isoformat(),
+                "end": job["end"],
+                "kind": kind,
+                "report_days": len(days_),
+                "contractor": ", ".join(sorted(job["contractors"])),
+                "perforations": [d["perforations"] for d in days_ if d["perforations"]],
+                "summaries": [
+                    {"date": d["date"].date().isoformat(), "summary": d["summary"]}
+                    for d in shown
+                    if d["summary"]
+                ],
+            }
+        )
+    return {
+        "well": args.well,
+        "jobs": out,
+        "note": "Daily reports exist for drilling and for work on the well (wireline, plugs, "
+        "perforations, production logs), not for days of normal production. A job's date is "
+        "the day the work was done; kind is drilling, completion, workover (work on a "
+        "producing or injecting well) or abandonment. Ask for one day to see every operation "
+        "line.",
+    }
+
+
 def waterflood_tool(store: ProductionStore, args: WindowArgs) -> dict:
     _check_well(store, args.well)
     result = waterflood(store, args.well, args.start, args.end)
@@ -930,6 +1028,17 @@ TOOLS = [
         "field, not with one well.",
         NoArgs,
         field_vs_design,
+    ),
+    Tool(
+        "well_operations",
+        "What was done to a well, from its daily drilling and well-work reports: drilling, "
+        "completion and later jobs such as a plug set to shut off water, a new zone "
+        "perforated or a production log, grouped into jobs with each day's summary and "
+        "perforated intervals. A sudden change in a well's rate or water cut often follows "
+        "such a job: check here before reading it as reservoir behaviour. Optional start/end "
+        "(YYYY-MM-DD) bound the dates; 'day' returns every operation line of one report.",
+        OperationsArgs,
+        well_operations,
     ),
     Tool(
         "read_report_page",

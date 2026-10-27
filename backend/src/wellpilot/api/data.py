@@ -12,6 +12,7 @@ from wellpilot.agent.evidence import code_ref
 from wellpilot.agent.tools import (
     TOOLS,
     NoArgs,
+    OperationsArgs,
     ReportPageArgs,
     field_screen,
     field_vs_design,
@@ -19,8 +20,10 @@ from wellpilot.agent.tools import (
     plan_vs_actual,
     read_report_page,
     table,
+    well_operations,
 )
 from wellpilot.agent.vision import VISION_TOOL
+from wellpilot.analysis.timeline import TIMELINE_FILE
 from wellpilot.backtest import RESULTS_FILE, SUMMARY_FILE, case_detail, film
 from wellpilot.data.store import ProductionStore
 from wellpilot.ingest.reports import REPORTS_BY_ID, page_dir
@@ -106,6 +109,29 @@ def well_daily(
     hours = daily["on_stream_hrs"]
     daily["oil_rate_per_producing_day"] = (daily["oil_sm3"] * 24 / hours).where(hours >= 12)
     return table(daily[DAILY_COLUMNS])
+
+
+@router.get("/field/timeline")
+def field_timeline(request: Request) -> dict:
+    """The field screen replayed month by month, with each producer's oil rate and the work
+    done on its wells (built by python -m wellpilot.analysis.timeline)."""
+    path = request.app.state.runs.processed_dir / TIMELINE_FILE
+    if not path.exists():
+        raise HTTPException(404, "no timeline yet; run python -m wellpilot.analysis.timeline")
+    return json.loads(path.read_text())
+
+
+@router.get("/wells/{well}/operations")
+def well_operation_jobs(well: str, request: Request, end: date | None = None) -> dict:
+    """The well's daily-report jobs (drilling, completion, work on the well), as the
+    well_operations tool gives them; `end` hides later ones, as for the daily data."""
+    store = request.app.state.runs.store(end)
+    if "well_operations" not in store.tables:
+        return {"well": well, "jobs": []}
+    try:
+        return well_operations(store, OperationsArgs(well=well))
+    except ValueError as e:
+        raise HTTPException(404, str(e)) from None
 
 
 @router.get("/reports/{doc_id}/pages/{page}")
