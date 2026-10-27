@@ -1,19 +1,43 @@
 # WellPilot
 
-An AI agent for production and reservoir engineers. Ask why a well changed; it works the answer out on the field's own data and reports, and every number, date and quote in its answer is checked against the tool result it came from before you see it.
+**Ask why an oil well changed. An AI agent works it out from the field's own data and reports, and a checker verifies every number in its answer before you see it.**
 
-It runs on **Muse Spark Open**, Meta's open-weight model, so an operator can host it next to well data that never leaves the company. This demo uses Equinor's open Volve field (Norwegian North Sea, 2008-2016).
+![Given data only up to the end of 2010, the agent forecast F-12's 2011 oil within 6%; the textbook decline fit was 102% too high](frontend/public/og.png)
 
-**Try the time machine.** Set a past date and the agent answers as of that day, with no data after it. Then "Show what happened next" opens the rest. As of 2010-12-31 it picks F-12 as the well that needs attention first (a dead downhole gauge, a rate 55% lower since water broke through) and forecasts its 2011 oil; the reveal sets that forecast against what the well produced and against the textbook decline fit made the same day.
+Oil wells produce less over time, and engineers have to tell why (the reservoir running out, water flooding in, a broken sensor, work done on the well) and what comes next. Today that takes hours across production databases, PDF reports and spreadsheets. WellPilot answers in about a minute, on Meta's open-weight model Muse Spark Open, and every number in its answer links to the data and the code that produced it.
 
 - Live demo: _link added at deploy_
 - Demo video: _link added at submission_
 
-Built for the Meta Global AI Developer Hackathon (Oct 26 - Nov 4, 2026), Indie track, "Push the Frontier".
+Built for the Meta Global AI Developer Hackathon (Oct 26 - Nov 4, 2026), Indie track, "Push the Frontier". The data is Equinor's open Volve field (Norwegian North Sea, 2008-2016).
 
-## Things to try
+## The story in five steps
 
-- **The time machine.** The first example asks as of 2010-12-31; after the answer, "Show what happened next" sets its forecast against the year that followed.
+1. **Go back to the end of 2010.** The first example asks the agent which wells need attention, with the data cut at 2010-12-31: it cannot see anything later.
+2. **It finds F-12, and a broken sensor rather than a dying reservoir.** F-12's downhole pressure reads zero from 2010-10-12, while its oil and water flow on smoothly: the gauge died, not the reservoir. Its rate fell as injection water broke through, about two years after first oil, as the 2005 development plan expected.
+3. **It forecasts 2011.** 359,000 m³ of oil, with a range from its own past errors. "Show what happened next" opens the rest: F-12 made 340,000 (+6%, inside the range). The textbook decline fit, made the same day, said 685,000 (+102%).
+4. **Click any number.** It opens the exact tool result it came from, the value marked, with the Python that produced it.
+5. **Try to fool the checker.** Change a number, add a cause, give the value to another well, and the checker sends it back, citing the source. Or let the model try: it wrote 36 false versions of verified answers; the checker caught 30, and the four real holes it found are closed.
+
+## Could the model just remember Volve?
+
+Volve is a public dataset, and a model may have read about it. Three things keep the time machine honest:
+
+- **The tools never return data after the chosen date** (tested), and a question asked as of a past date does not name the field or its operator in the prompt. Well names and the 2005 plan would still identify it to a model that knows Volve well.
+- **We asked the model what it remembers**, with no tools and no data: `python -m wellpilot.memory_probe` puts five questions about F-12's later years and the field's end to Muse Spark Open and sets each answer beside the data. _Result added after the run._
+- **A field no model can have read about.** `python -m wellpilot.synthetic` generates six wells with known causes planted in them (a dead gauge, a choke cut, depletion, an injector stopping), run through the same ingest, tools and agent. The agent named every planted cause, and its 12-month forecast after the choke cut came within 5% of the outcome, where the textbook fit was 25% off.
+
+## Terms
+
+- **m³, Sm³/d:** oil and water in standard cubic metres (1 m³ is about 6.3 barrels), per day.
+- **Water cut:** the share of water in the liquid a well produces; 0.80 means four parts water to one of oil.
+- **Decline curve (Arps):** the textbook curve engineers fit to a well's falling rate to forecast it.
+- **Production log (PLT):** a tool run down a flowing well that measures where along it the oil and the water come in.
+- **Range (P90 to P10):** the low and high ends a forecast expects the outcome between, eight times in ten.
+
+<details>
+<summary><strong>More to try</strong>: the well along its depth, the model writing its own code, the plan's chart read by SAM 3.1, voice, and more</summary>
+
 - **Try to fool the checker.** Under any finished answer, change a finding (a number, a cause, the fact label, a well name, a quote) and press "Check again". The checker runs on the run's saved tool results, with no model involved, and says what it caught: "'1 815' is not in its source, E1. The closest values in that result are 1 551, ...".
 - **Watch the forecasts in order.** On the Accuracy tab, a slider runs through every forecast made for F-12 (12 of them, 2009-2015) on fixed axes: the agent's window and forecast, the textbook fit's, and what the well then produced, with a running median error for both. It shows the December 2014 restart that no method saw.
 - **Drag to ask.** Drag across a span on the well chart; a chip offers "Ask what happened to F-12 between ... and ...", which fills the ask bar with the dates.
@@ -24,6 +48,8 @@ Built for the Meta Global AI Developer Hackathon (Oct 26 - Nov 4, 2026), Indie t
 - **A second opinion.** After the checker accepts an answer, the same model reads it as a senior reservoir engineer and questions the reasoning, which the checker does not check. The agent gets one chance to settle the points with its tools; if its revision does not pass the checker, the checked answer stands.
 - **The plan's curve, read off its picture.** The 2005 plan draws its expected oil rate only in a figure. SAM 3.1, Meta's segmentation model, finds the curve from the words "magenta line"; the axes are calibrated on the figure's gridlines, and a colour trace of the same pixels checks the reading. SAM's curve and the colour trace agree within 10 Sm3/d (median). The drawn plateau is 8,464 Sm3/d for 19 months (2008-03 to 2009-09): the 19 months the plan's text gives, and its 9,000 Sm3/d plateau rate times the 94% regularity it assumed for its profiles (8,460). The Plan tab sets that curve against what the field produced.
 - **Ask by voice.** The microphone button records up to 15 seconds; the same open-weight model transcribes it (Muse Spark Open takes audio as it takes page images) and the question lands in the ask bar for you to check before sending.
+
+</details>
 
 ## Who it is for
 
@@ -96,7 +122,7 @@ flowchart LR
 - A number the text ties to a date ("0.85 in 2009-06", "55% on 2010-05-02") must stand in that date's row or event. A number found in its evidence must not be held there only for another well, as another quantity, or with the opposite sign; a "from X to Y" must run the way the evidence's change does.
 - **What the checker does not check:** meaning. "Pressure collapsed to 0" would pass when the evidence says the gauge reads 0; whether the reasoning holds is for the reader, and that is why every number is one click from its source.
 - **Quality gates:** `python -m wellpilot.ingest.facts_gate` (free) checks the report facts: the plan's table rows, the design limits, the key quotes verbatim, no unverified quote, quotes located on their pages. `python -m wellpilot.eval` runs 12 real questions through the agent and checks each answer: verified, the right tools called, the facts any correct answer contains, claims in plain words, a step and cost budget. Latest runs (Oct 27, Muse Spark Open): all 12 answers verified; 6 pass every check, the others go over a step or cost budget or write a claim with more than four numbers.
-- **Backend:** Python 3.13, FastAPI, Server-Sent Events, DuckDB, pandas, scipy, ruptures, pypdfium2. Runs are background tasks saved as JSON and replayable. 529 tests, including three featured runs replayed in CI.
+- **Backend:** Python 3.13, FastAPI, Server-Sent Events, DuckDB, pandas, scipy, ruptures, pypdfium2. Runs are background tasks saved as JSON and replayable. About 560 tests, including the featured runs replayed in CI.
 - **Frontend:** React, TypeScript, Vite, uPlot, hand-written SVG charts. A control-room palette after ISA-101: grey by default, colour only for meaning (oil green, water blue, amber caution, red alarm).
 
 ## Running it on another field
