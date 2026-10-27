@@ -30,6 +30,14 @@ from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 from sse_starlette import EventSourceResponse
 
+from wellpilot.agent.checker import (
+    DeclaredNumber,
+    Finding,
+    Submission,
+    check_submission,
+    display_spans,
+)
+from wellpilot.agent.edits import redeclare
 from wellpilot.agent.evidence import EvidenceLog
 from wellpilot.agent.loop import AgentRun, run_agent, with_spans
 from wellpilot.agent.tools import to_jsonable
@@ -48,6 +56,19 @@ class RunRequest(BaseModel):
     as_of: date | None = Field(None, description="Hide data after this day (backtests).")
     # xhigh and max are left out on purpose: they multiply a public run's cost.
     reasoning: Literal["minimal", "low", "medium", "high"] | None = None
+
+
+class EditedFinding(BaseModel):
+    index: int = Field(ge=1, le=50, description="1-based, as the answer numbers them")
+    claim: str = Field(min_length=1, max_length=2000)
+    confidence: Literal["fact", "inference"]
+
+
+class CheckRequest(BaseModel):
+    """A reader's edit of a finished answer, to be checked like the agent's submission."""
+
+    findings: list[EditedFinding] = Field(default_factory=list, max_length=10)
+    summary: str | None = Field(None, max_length=3000)
 
 
 def new_run_id() -> str:
@@ -449,6 +470,60 @@ def run_hindsight(run_id: str, request: Request) -> dict:
         return hindsight(run, manager.store(None), manager.store(record.as_of))
     except ValueError as e:
         raise HTTPException(404, str(e)) from None
+
+
+@router.post("/{run_id}/check")
+def check_edit(run_id: str, body: CheckRequest, request: Request) -> dict:
+    """The checker on a reader's edit of a finished answer, against the run's saved
+    evidence: no model call. Declared numbers are carried to the edited text (a replaced
+    number is checked as written, with the agent's evidence id). Only the edited parts'
+    problems come back, so an unedited finding never changes the verdict."""
+    record = _record(request, run_id)
+    if not record.done:
+        raise HTTPException(409, "the run is still going")
+    result = record.result or {}
+    if not result.get("findings"):
+        raise HTTPException(409, "the run has no answer to edit")
+    findings = [Finding.model_validate(f) for f in result["findings"]]
+    edited: set[int] = set()
+    for edit in body.findings:
+        if edit.index > len(findings):
+            raise HTTPException(422, f"the answer has no finding {edit.index}")
+        original = findings[edit.index - 1]
+        findings[edit.index - 1] = original.model_copy(
+            update={
+                "claim": edit.claim,
+                "confidence": edit.confidence,
+                "numbers": redeclare(original.claim, original.numbers, edit.claim),
+            }
+        )
+        edited.add(edit.index)
+    summary_numbers = [
+        DeclaredNumber.model_validate(n) for n in result.get("summary_numbers") or []
+    ]
+    summary = result.get("summary") or ""
+    if body.summary is not None:
+        summary_numbers = redeclare(summary, summary_numbers, body.summary) or []
+        summary = body.summary
+    log = EvidenceLog.restore(record.evidence.values())
+    submission = Submission(summary=summary, findings=findings, summary_numbers=summary_numbers)
+    problems = check_submission(submission, log, record.question)
+    labels = {f"Finding {n}" for n in edited} | ({"Summary"} if body.summary is not None else set())
+    problems = [p for p in problems if any(p.startswith(label) for label in labels)]
+    checked = []
+    for n in sorted(edited):
+        finding = findings[n - 1]
+        cited = EvidenceLog.restore(asdict(e) for e in log if e.id in set(finding.evidence_ids))
+        checked.append(
+            {
+                "index": n,
+                "claim": finding.claim,
+                "confidence": finding.confidence,
+                "numbers": [d.model_dump() for d in finding.numbers or []],
+                "spans": display_spans(finding.claim, finding.numbers, cited),
+            }
+        )
+    return {"accepted": not problems, "problems": problems, "findings": checked}
 
 
 @router.get("/{run_id}/evidence/{evidence_id}")

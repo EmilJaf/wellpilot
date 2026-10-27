@@ -2332,6 +2332,80 @@ code,
   line-height: 1.5;
 }
 
+/* ---------- try to fool the checker: edit a finding, check it again ---------- */
+.fool {
+  margin-top: 28px;
+  padding-top: 16px;
+  border-top: 1px solid var(--rule);
+}
+
+.fool-lead {
+  margin: 4px 0 10px;
+  color: var(--ink-2);
+  font-size: 14px;
+  line-height: 1.5;
+  max-width: 62ch;
+}
+
+.fool-pick {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.fool-pick select {
+  font: inherit;
+  padding: 2px 6px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 4px;
+  background: var(--sheet);
+  color: var(--ink);
+}
+
+.fool textarea {
+  display: block;
+  width: 100%;
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.5;
+  padding: 8px 12px;
+  border: 1px solid #8f99a3;
+  border-radius: 6px;
+  background: var(--sheet);
+  color: var(--ink);
+  resize: vertical;
+}
+
+.fool textarea:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: -1px;
+}
+
+.fool-tricks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+  margin: 8px 0 10px;
+  font-size: 13.5px;
+}
+
+.fool-actions {
+  margin-bottom: 10px;
+}
+
+.fool-result .flag {
+  margin-left: 0;
+  font-size: 14px;
+}
+
+.fool-closest {
+  color: var(--ink-2);
+}
+
 .plan-aligned {
   margin-top: 16px;
 }

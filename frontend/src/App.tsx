@@ -290,6 +290,7 @@ export default function App() {
             onReplay={replay}
             revealed={revealed}
             onReveal={canReveal ? reveal : undefined}
+            wells={wells}
           />
         </ErrorBoundary>
 

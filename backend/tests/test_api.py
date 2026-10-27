@@ -228,6 +228,58 @@ async def test_too_many_active_runs_is_429(settings) -> None:
     assert second.status_code == 429
 
 
+async def test_a_readers_edit_is_checked_against_the_runs_evidence(settings) -> None:
+    """ "Try to fool the checker": the finding is edited and checked again, with no model
+    call. A changed number is checked as written; a cause on a fact is caught; the
+    unedited text is accepted again."""
+    async with client_for(create_app(settings, llm_factory=fake_llm)) as client:
+        run_id, _ = await run_to_end(client)
+
+        async def check(claim: str, confidence: str = "fact") -> dict:
+            response = await client.post(
+                f"/api/runs/{run_id}/check",
+                json={"findings": [{"index": 1, "claim": claim, "confidence": confidence}]},
+            )
+            assert response.status_code == 200, response.text
+            return response.json()
+
+        same = await check("F-12 produced on 60 days.")
+        number = await check("F-12 produced on 61 days.")
+        cause = await check("F-12 produced on 60 days because the choke was opened.")
+        hedged = await check("F-12 produced on 60 days because the choke was opened.", "inference")
+        missing = await client.post(
+            f"/api/runs/{run_id}/check",
+            json={"findings": [{"index": 4, "claim": "Nothing.", "confidence": "fact"}]},
+        )
+
+    assert same["accepted"] and same["problems"] == []
+    assert same["findings"][0]["spans"][0]["evidence_id"] == "E1"
+    assert not number["accepted"] and "'61' = 61 is not in E1" in number["problems"][0]
+    assert number["findings"][0]["numbers"] == [{"text": "61", "value": 61, "evidence_id": "E1"}]
+    assert any("states a cause" in p for p in cause["problems"])
+    assert hedged["accepted"]
+    assert missing.status_code == 422 and "no finding 4" in missing.json()["detail"]
+
+
+async def test_an_edit_waits_for_the_run_to_end(settings) -> None:
+    gate = asyncio.Event()
+    app = create_app(settings, llm_factory=lambda: fake_llm(gate=gate))
+    async with client_for(app) as client:
+        started = await client.post("/api/runs", json={"question": "First question"})
+        run_id = started.json()["id"]
+        early = await client.post(
+            f"/api/runs/{run_id}/check",
+            json={"findings": [{"index": 1, "claim": "Edited.", "confidence": "fact"}]},
+        )
+        gate.set()
+        await client.get(f"/api/runs/{run_id}/events")
+        late = await client.post(f"/api/runs/{run_id}/check", json={"summary": "F-12 made 70."})
+
+    assert early.status_code == 409
+    assert late.status_code == 200 and not late.json()["accepted"]
+    assert late.json()["problems"][0].startswith("Summary")
+
+
 async def test_model_failure_ends_the_run_with_an_error_event(settings) -> None:
     async with client_for(create_app(settings, llm_factory=lambda: fake_llm(fail=True))) as client:
         run_id, events = await run_to_end(client)

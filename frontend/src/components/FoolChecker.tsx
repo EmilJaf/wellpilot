@@ -1,0 +1,218 @@
+import { useState } from 'react'
+import { api, type CheckResult, type Finding } from '../api'
+import { AlarmIcon, CheckIcon } from '../icons'
+import { plainProblem } from '../labels'
+import { wordDiff } from '../corrections'
+import { Diff } from './Corrections'
+
+/**
+ * "Try to fool the checker": the reader edits one finding of a finished answer and the
+ * deterministic checker runs again on the run's saved tool results, with no model call.
+ * The quick tricks apply the classic ways an answer goes wrong; the textarea takes any edit.
+ */
+export function FoolChecker({
+  runId,
+  findings,
+  selectedFinding,
+  wells,
+}: {
+  runId: string
+  findings: Finding[]
+  selectedFinding: number | null
+  wells: string[]
+}) {
+  const [index, setIndex] = useState(selectedFinding ?? 0)
+  const original = findings[index] ?? findings[0]
+  const [claim, setClaim] = useState(original.claim)
+  const [confidence, setConfidence] = useState(original.confidence)
+  const [result, setResult] = useState<{ value?: CheckResult; error?: string; claim: string } | null>(null)
+  const [checking, setChecking] = useState(false)
+
+  // Following the selection: picking a finding in the answer brings it into the editor
+  // (state adjusted during render, so no effect runs after the paint).
+  const [followed, setFollowed] = useState(selectedFinding)
+  if (selectedFinding !== followed) {
+    setFollowed(selectedFinding)
+    if (selectedFinding !== null && selectedFinding < findings.length) pick(selectedFinding)
+  }
+
+  function pick(i: number) {
+    setIndex(i)
+    setClaim(findings[i].claim)
+    setConfidence(findings[i].confidence)
+    setResult(null)
+  }
+
+  function reset() {
+    setClaim(original.claim)
+    setConfidence(original.confidence)
+    setResult(null)
+  }
+
+  const numberSpans = (original.spans ?? []).filter((s) => s.kind === 'number')
+  const quoteSpan = (original.spans ?? []).find((s) => s.kind === 'quote')
+  const wellName = claim.match(/\b(?:15\/9-)?[A-Z]{1,3}-\d+(?:\s?[A-Z]\b)?/)?.[0]
+  const otherWell = wellName && [...wells, 'F-14', 'F-12'].find((w) => w !== wellName && w !== wellName.replace(/^15\/9-/, ''))
+
+  const tricks: { label: string; apply: () => void; show: boolean }[] = [
+    {
+      label: 'Change a number',
+      show: numberSpans.length > 0 && claim === original.claim,
+      apply: () => {
+        const span = numberSpans[0]
+        const text = original.claim.slice(span.start, span.end)
+        setClaim(original.claim.slice(0, span.start) + bumped(text) + original.claim.slice(span.end))
+      },
+    },
+    {
+      label: 'Add a cause',
+      show: !/\bbecause\b/.test(claim),
+      apply: () => setClaim(claim.replace(/\.?\s*$/, '') + ' because the injectors pushed water into the well.'),
+    },
+    { label: 'Call it a fact', show: confidence === 'inference', apply: () => setConfidence('fact') },
+    {
+      label: 'Name another well',
+      show: Boolean(wellName && otherWell),
+      apply: () => wellName && otherWell && setClaim(claim.replace(wellName, otherWell)),
+    },
+    {
+      label: 'Misquote',
+      show: Boolean(quoteSpan) && claim === original.claim,
+      apply: () => {
+        if (!quoteSpan) return
+        const quote = original.claim.slice(quoteSpan.start, quoteSpan.end)
+        // Drop the quote's last word, keeping its closing mark.
+        const misquoted = quote.replace(/\s+\S+(\s*[”"’'»])$/u, '$1')
+        setClaim(original.claim.slice(0, quoteSpan.start) + misquoted + original.claim.slice(quoteSpan.end))
+      },
+    },
+  ]
+
+  async function check() {
+    setChecking(true)
+    const edited = claim
+    try {
+      const value = await api.check(runId, { findings: [{ index: index + 1, claim: edited, confidence }] })
+      setResult({ value, claim: edited })
+    } catch (e) {
+      setResult({ error: (e as Error).message, claim: edited })
+    } finally {
+      setChecking(false)
+    }
+  }
+
+  const changed = claim !== original.claim || confidence !== original.confidence
+  const onlyLabel = claim === original.claim && confidence === 'fact' && original.confidence === 'inference'
+
+  return (
+    <section className="fool" aria-label="Try to fool the checker">
+      <h3 className="section-label">Try to fool the checker</h3>
+      <p className="fool-lead">
+        Change a finding and press Check again. The checker runs on this run's saved tool results; no model is
+        involved.
+      </p>
+      <div className="fool-pick">
+        <label>
+          Finding{' '}
+          <select value={index} onChange={(e) => pick(Number(e.target.value))}>
+            {findings.map((_, i) => (
+              <option key={i} value={i}>
+                {String(i + 1).padStart(2, '0')}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button
+          type="button"
+          className={`pill pill-button${confidence === 'fact' ? ' pill-fact' : ''}`}
+          onClick={() => setConfidence(confidence === 'fact' ? 'inference' : 'fact')}
+          title="Switch between fact and inference"
+        >
+          {confidence === 'fact' ? 'Fact' : 'Inference'}
+        </button>
+      </div>
+      <textarea
+        aria-label="The finding, to edit"
+        value={claim}
+        rows={3}
+        onChange={(e) => setClaim(e.target.value)}
+      />
+      <p className="fool-tricks">
+        <span className="suggestions-label">Try</span>
+        {tricks
+          .filter((t) => t.show)
+          .map((t) => (
+            <button key={t.label} type="button" className="link-button" onClick={t.apply}>
+              {t.label}
+            </button>
+          ))}
+        {changed && (
+          <button type="button" className="link-button" onClick={reset}>
+            Reset
+          </button>
+        )}
+      </p>
+      <div className="fool-actions">
+        <button type="button" className="primary-button" onClick={check} disabled={checking || !claim.trim()}>
+          {checking ? 'Checking' : 'Check again'}
+        </button>
+      </div>
+      {result && result.claim === claim && (
+        <div className="fool-result" aria-live="polite">
+          {result.error ? (
+            <div className="flag flag-alarm">
+              <AlarmIcon />
+              <span>The check could not run: {result.error}</span>
+            </div>
+          ) : result.value?.accepted ? (
+            <div className="flag flag-ok">
+              <CheckIcon />
+              <span>
+                Accepted: every number, date and quote in this version is in its sources.
+                {onlyLabel &&
+                  ' Fact or inference is judged by warnings on the evidence and causal wording; a plain claim on clean evidence may carry either label.'}
+              </span>
+            </div>
+          ) : (
+            <div className="flag flag-alarm">
+              <AlarmIcon />
+              <div>
+                <strong>Sent back with {result.value!.problems.length === 1 ? 'one problem' : `${result.value!.problems.length} problems`}.</strong>
+                <ul>
+                  {result.value!.problems.map((p, i) => (
+                    <li key={i}>
+                      {plainProblem(p).replace(/^Finding \d+:?\s*/, '')}
+                      {closest(p) && <span className="fool-closest"> {closest(p)}</span>}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+          {claim !== original.claim && <Diff pieces={wordDiff(original.claim, claim)} />}
+        </div>
+      )}
+    </section>
+  )
+}
+
+/** The checker's hint on a number that is not in its source: the nearest values there. */
+function closest(problem: string): string | null {
+  const m = problem.match(/Closest there: ([^]*?)\.(?:\s|$)/)
+  return m ? `The closest values in that result are ${m[1]}.` : null
+}
+
+/** The number as written, about 17% higher, in the same style: "1 551" -> "1 815", "69%" -> "81%", "0.45" -> "0.53". */
+function bumped(text: string): string {
+  const m = text.match(/^(\d[\d   ,]*)(?:([.,])(\d+))?(.*)$/)
+  if (!m) return text
+  const [, whole, point, fraction, rest] = m
+  const sep = whole.match(/[   ,]/)?.[0]
+  const value = Number(whole.replace(/[   ,]/g, '') + (fraction ? `.${fraction}` : ''))
+  const raised = value * 1.17
+  const decimals = fraction?.length ?? 0
+  let out = raised.toFixed(decimals)
+  if (point && fraction) out = out.replace('.', point)
+  if (sep) out = out.replace(/\B(?=(\d{3})+(?!\d))/g, sep)
+  return out + rest
+}

@@ -5,6 +5,7 @@ import { plainProblem, compact, describeArgs, toolName } from '../labels'
 import type { RunState } from '../useRun'
 import { corrections } from '../corrections'
 import { CorrectionList } from './Corrections'
+import { FoolChecker } from './FoolChecker'
 
 /** What the reader clicked: a number (its value marked in the evidence) or a quote (marked
     on the report page it came from). */
@@ -20,6 +21,7 @@ type Props = {
   onReplay: (runId: string) => void
   revealed: boolean
   onReveal?: () => void // a run made with data up to a past date: show what happened next
+  wells: string[] // the field's wells, for the editor's "name another well" trick
 }
 
 /**
@@ -235,7 +237,7 @@ function Live({ steps, thinking, asOf }: { steps: StepEvent[]; thinking: number 
   )
 }
 
-function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSelectEvidence, revealed, onReveal }: Props) {
+function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSelectEvidence, revealed, onReveal, wells }: Props) {
   const final = state.final!
   const tools = Object.fromEntries(final.evidence.map((e) => [e.id, e.tool]))
   const isReport = (id: string) => tools[id] === 'search_reports' || tools[id] === 'read_report_page'
@@ -390,6 +392,10 @@ function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSe
           )
         })}
       </ol>
+
+      {state.id && final.findings.length > 0 && (
+        <FoolChecker key={state.id} runId={state.id} findings={final.findings} selectedFinding={selectedFinding} wells={wells} />
+      )}
     </>
   )
 }

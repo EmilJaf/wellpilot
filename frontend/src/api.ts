@@ -93,7 +93,10 @@ async function json<T>(response: Response): Promise<T> {
       const body = await response.json()
       if (typeof body?.detail === 'string') detail = body.detail
       // FastAPI validation errors are a list; say what to fix instead of dumping it.
-      else if (response.status === 422) detail = 'Ask a question of at least 5 characters.'
+      else if (response.status === 422) {
+        const field = body?.detail?.[0]?.loc?.at(-1)
+        detail = field === 'question' ? 'Ask a question of at least 5 characters.' : `The request was not valid (${field ?? 'body'}).`
+      }
     } catch {
       // keep the status line
     }
@@ -135,6 +138,24 @@ export const api = {
   hindsight: (runId: string) => fetch(`/api/runs/${runId}/hindsight`).then((r) => json<Hindsight>(r)),
   backtestCase: (well: string, cutoff: string) =>
     fetch(`/api/backtest/cases/${encodeURIComponent(well)}/${cutoff}`).then((r) => json<BacktestCase>(r)),
+  // A reader's edit of a finished answer, checked against the run's saved evidence (no model call).
+  check: (runId: string, edit: CheckRequest) =>
+    fetch(`/api/runs/${runId}/check`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(edit),
+    }).then((r) => json<CheckResult>(r)),
+}
+
+export type CheckRequest = {
+  findings: { index: number; claim: string; confidence: 'fact' | 'inference' }[]
+  summary?: string
+}
+
+export type CheckResult = {
+  accepted: boolean
+  problems: string[]
+  findings: { index: number; claim: string; confidence: 'fact' | 'inference'; numbers: DeclaredNumber[]; spans: Span[] }[]
 }
 
 /** The source of the tool function that produced an evidence item. */
