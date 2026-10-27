@@ -1,0 +1,5918 @@
+{
+ "source": {
+  "run": "a03fb8f8648a",
+  "submission": 2,
+  "model": "meta-models/muse-spark-open-1026",
+  "question": "Why did F-12's oil rate jump after the December 2014 shutdown?"
+ },
+ "to_review": false,
+ "note": "",
+ "expected": {
+  "accepted": true,
+  "flagged": []
+ },
+ "submission": {
+  "summary": "F-12's oil rate jumped about 4.7 times after the 32-day December 2014 shut-in, most likely because its water cut collapsed from 96% to 31% while the choke was cut to about 30%. Liquid fell from about 4,920 Sm3/d to 1,250 Sm3/d yet oil rose from 185 Sm3/d to 860 Sm3/d, consistent with water no longer taking the well's capacity.",
+  "findings": [
+   {
+    "claim": "F-12 was shut in 32 days from 2014-11-30 to 2014-12-31 and restarted with oil up 366% to 860 Sm3/d from 185 Sm3/d.",
+    "detail": "detect_events F-12 shut_in 2014-11-30 to 2014-12-31, days 32, rate_before 184.54 -> rate_after 859.51 Sm3/d, relative_change 3.66, field_wide with F-1 C, F-15 D; daily 2014-11-20 oil 184.03 water 4746 choke 100.0 vs 2015-01-02 oil 782.75 water 226.18 choke 26.5",
+    "evidence_ids": [
+     "E2",
+     "E6"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "32 days",
+      "value": 32,
+      "evidence_id": "E2"
+     },
+     {
+      "text": "366%",
+      "value": 3.66,
+      "evidence_id": "E2"
+     },
+     {
+      "text": "860",
+      "value": 859.51,
+      "evidence_id": "E2"
+     },
+     {
+      "text": "185",
+      "value": 184.54,
+      "evidence_id": "E2"
+     }
+    ]
+   },
+   {
+    "claim": "The jump was a water-cut collapse at lower choke and liquid: water cut 96% to 31% while monthly liquid fell to 1,250 Sm3/d from 4,920 Sm3/d and choke to 30% from 97%.",
+    "detail": "production_monthly 2014-11: water_cut 0.9623, choke_pct 96.52, monthly liquid proxy 4923 at choke 100.0; 2015-01: water_cut 0.3107, choke_pct 30.33, liquid 1251 at 30.28 choke, oil_rate_per_producing_day 185.7 -> 862.38; daily confirms choke 100.0 -> 26.5, water_cut 0.9627 -> 0.2242, liquid ~4980 -> ~1009 Sm3/d; by_year water_cut 0.9634 in 2014 -> 0.6416 in 2015",
+    "evidence_ids": [
+     "E5",
+     "E6",
+     "E4"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "96%",
+      "value": 0.9623,
+      "evidence_id": "E5"
+     },
+     {
+      "text": "31%",
+      "value": 0.3107,
+      "evidence_id": "E5"
+     },
+     {
+      "text": "1,250",
+      "value": 1251,
+      "evidence_id": "E4"
+     },
+     {
+      "text": "4,920",
+      "value": 4923,
+      "evidence_id": "E4"
+     },
+     {
+      "text": "30%",
+      "value": 30.28,
+      "evidence_id": "E4"
+     },
+     {
+      "text": "97%",
+      "value": 0.9653,
+      "evidence_id": "E4"
+     }
+    ]
+   },
+   {
+    "claim": "This was not a field pressure surge: field voidage replacement was about 1.0 and F-14's rate showed no jump, staying about 305 Sm3/d.",
+    "detail": "waterflood 2014 field voidage replacement_ratio 1.02, 2015 0.9995 near 1 means injection kept pace at reservoir conditions (Bo 1.385); F-14 production_monthly 2014-11 oil_rate_per_producing_day 351.83 water_cut 0.9087 -> 2014-12 313.11 -> 2015-01 304.82 water_cut 0.9124 flat, production on 30/30/31 days",
+    "evidence_ids": [
+     "E4",
+     "E10"
+    ],
+    "confidence": "inference",
+    "numbers": [
+     {
+      "text": "1.0",
+      "value": 0.984,
+      "evidence_id": "E10"
+     },
+     {
+      "text": "305",
+      "value": 304.82,
+      "evidence_id": "E10"
+     },
+     {
+      "text": "1.02",
+      "value": 1.02,
+      "evidence_id": "E4"
+     }
+    ]
+   }
+  ],
+  "summary_numbers": [
+   {
+    "text": "4.7 times",
+    "value": 4.66,
+    "evidence_id": "E14"
+   },
+   {
+    "text": "32-day",
+    "value": 32,
+    "evidence_id": "E2"
+   },
+   {
+    "text": "96%",
+    "value": 0.9623,
+    "evidence_id": "E5"
+   },
+   {
+    "text": "31%",
+    "value": 0.3107,
+    "evidence_id": "E5"
+   },
+   {
+    "text": "30%",
+    "value": 30.28,
+    "evidence_id": "E4"
+   },
+   {
+    "text": "4,920",
+    "value": 4923,
+    "evidence_id": "E4"
+   },
+   {
+    "text": "1,250",
+    "value": 1251,
+    "evidence_id": "E4"
+   },
+   {
+    "text": "185",
+    "value": 184.54,
+    "evidence_id": "E2"
+   },
+   {
+    "text": "860",
+    "value": 859.51,
+    "evidence_id": "E2"
+   }
+  ]
+ },
+ "evidence": [
+  {
+   "id": "E1",
+   "tool": "list_wells",
+   "arguments": {},
+   "result": {
+    "columns": [
+     "well",
+     "well_types",
+     "first_oil",
+     "last_date",
+     "cum_oil_sm3",
+     "cum_water_sm3",
+     "cum_water_injected_sm3",
+     "producing_days"
+    ],
+    "rows": [
+     [
+      "F-1 C",
+      "OP/WI",
+      "2014-04-22",
+      "2016-04-21",
+      177709,
+      207302,
+      null,
+      438
+     ],
+     [
+      "F-11",
+      "OP",
+      "2013-07-24",
+      "2016-09-17",
+      1147849,
+      1090806,
+      0.0,
+      1122
+     ],
+     [
+      "F-12",
+      "OP",
+      "2008-02-12",
+      "2016-09-17",
+      4579610,
+      6833792,
+      0.0,
+      2838
+     ],
+     [
+      "F-14",
+      "OP",
+      "2008-07-13",
+      "2016-09-17",
+      3942233,
+      7121310,
+      0.0,
+      2724
+     ],
+     [
+      "F-15 D",
+      "OP",
+      "2014-01-16",
+      "2016-09-17",
+      148519,
+      52366,
+      0.0,
+      769
+     ],
+     [
+      "F-4",
+      "WI",
+      null,
+      "2016-12-01",
+      0.0,
+      0.0,
+      16240727,
+      0
+     ],
+     [
+      "F-5",
+      "OP/WI",
+      "2016-04-20",
+      "2016-09-18",
+      41161,
+      13533,
+      14089406,
+      129
+     ]
+    ]
+   },
+   "code": "wellpilot.agent.tools.list_wells@67bd47cfcdd1",
+   "created_at": "2026-10-27T15:24:37+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E2",
+   "tool": "detect_events",
+   "arguments": {
+    "well": "F-12"
+   },
+   "result": [
+    {
+     "kind": "threshold_crossing",
+     "signal": "water_cut",
+     "start": "2009-10-31",
+     "end": null,
+     "summary": "30-day median water_cut first goes above 0.05 on 2009-10-31, 21 months after first oil.",
+     "details": {
+      "threshold": 0.05,
+      "direction": "above",
+      "window_days": 30,
+      "median_at_crossing": 0.05795,
+      "first_oil": "2008-02-12",
+      "months_after_first_oil": 20.6
+     }
+    },
+    {
+     "kind": "regime_change",
+     "signal": "water_cut",
+     "start": "2010-02-14",
+     "end": null,
+     "summary": "water_cut shifts around 2010-02-14: weekly mean 0.029 -> 0.513 (+0.48).",
+     "details": {
+      "before_mean": 0.02896,
+      "after_mean": 0.5134,
+      "change": 0.4845,
+      "before_from": "2008-02-17",
+      "after_to": "2010-10-17"
+     }
+    },
+    {
+     "kind": "threshold_crossing",
+     "signal": "water_cut",
+     "start": "2010-06-04",
+     "end": null,
+     "summary": "30-day median water_cut first goes above 0.5 on 2010-06-04, 28 months after first oil.",
+     "details": {
+      "threshold": 0.5,
+      "direction": "above",
+      "window_days": 30,
+      "median_at_crossing": 0.5011,
+      "first_oil": "2008-02-12",
+      "months_after_first_oil": 27.69
+     }
+    },
+    {
+     "kind": "regime_change",
+     "signal": "oil_rate",
+     "start": "2010-07-18",
+     "end": null,
+     "summary": "oil_rate shifts around 2010-07-18: weekly mean 4,050 -> 1,146 (-72%).",
+     "details": {
+      "before_mean": 4050,
+      "after_mean": 1146,
+      "relative_change": -0.7171,
+      "before_from": "2008-02-17",
+      "after_to": "2012-12-02"
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2010-08-16",
+     "end": "2010-08-27",
+     "summary": "Shut in for 12 days from 2010-08-16. Oil rate 1,821 -> 2,000 Sm3/d (+10%) after restart. Same time as F-14.",
+     "details": {
+      "days": 12,
+      "rate_before": 1821,
+      "rate_after": 2000,
+      "relative_change": 0.09864,
+      "field_wide": true,
+      "also_shut_in": [
+       "F-14"
+      ]
+     }
+    },
+    {
+     "kind": "gauge_failure",
+     "signal": "bhp_bar",
+     "start": "2010-10-12",
+     "end": "2016-09-17",
+     "summary": "bhp_bar reads 0 on 2095 days from 2010-10-12 to 2016-09-17 while the well kept flowing on 1830 days (1,133,053 Sm3 oil): a sensor failure, not a pressure collapse. Last good reading: 253.9 on 2010-10-11.",
+     "details": {
+      "zero_days": 2095,
+      "flowing_days": 1830,
+      "oil_sm3_during": 1133053,
+      "last_good_date": "2010-10-11",
+      "last_good_value": 253.85
+     }
+    },
+    {
+     "kind": "regime_change",
+     "signal": "water_cut",
+     "start": "2010-10-24",
+     "end": null,
+     "summary": "water_cut shifts around 2010-10-24: weekly mean 0.513 -> 0.814 (+0.30).",
+     "details": {
+      "before_mean": 0.5134,
+      "after_mean": 0.8141,
+      "change": 0.3006,
+      "before_from": "2010-02-14",
+      "after_to": "2016-08-14"
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2011-06-21",
+     "end": "2011-06-30",
+     "summary": "Shut in for 10 days from 2011-06-21. Oil rate 1,144 -> 1,364 Sm3/d (+19%) after restart. Same time as F-14.",
+     "details": {
+      "days": 10,
+      "rate_before": 1144,
+      "rate_after": 1364,
+      "relative_change": 0.192,
+      "field_wide": true,
+      "also_shut_in": [
+       "F-14"
+      ]
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2011-10-16",
+     "end": "2011-11-04",
+     "summary": "Shut in for 20 days from 2011-10-16. Oil rate 955 -> 1,158 Sm3/d (+21%) after restart. Same time as F-14.",
+     "details": {
+      "days": 20,
+      "rate_before": 955.08,
+      "rate_after": 1158,
+      "relative_change": 0.212,
+      "field_wide": true,
+      "also_shut_in": [
+       "F-14"
+      ]
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2012-01-03",
+     "end": "2012-01-13",
+     "summary": "Shut in for 11 days from 2012-01-03. Oil rate 1,063 -> 1,028 Sm3/d (-3%) after restart. Same time as F-14.",
+     "details": {
+      "days": 11,
+      "rate_before": 1063,
+      "rate_after": 1028,
+      "relative_change": -0.03307,
+      "field_wide": true,
+      "also_shut_in": [
+       "F-14"
+      ]
+     }
+    },
+    {
+     "kind": "threshold_crossing",
+     "signal": "water_cut",
+     "start": "2012-02-14",
+     "end": null,
+     "summary": "30-day median water_cut first goes above 0.8 on 2012-02-14, 48 months after first oil.",
+     "details": {
+      "threshold": 0.8,
+      "direction": "above",
+      "window_days": 30,
+      "median_at_crossing": 0.8008,
+      "first_oil": "2008-02-12",
+      "months_after_first_oil": 48.06
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2012-08-14",
+     "end": "2012-09-28",
+     "summary": "Shut in for 46 days from 2012-08-14. Oil rate 691 -> 728 Sm3/d (+5%) after restart. Same time as F-14.",
+     "details": {
+      "days": 46,
+      "rate_before": 690.65,
+      "rate_after": 727.78,
+      "relative_change": 0.05376,
+      "field_wide": true,
+      "also_shut_in": [
+       "F-14"
+      ]
+     }
+    },
+    {
+     "kind": "regime_change",
+     "signal": "oil_rate",
+     "start": "2012-12-09",
+     "end": null,
+     "summary": "oil_rate shifts around 2012-12-09: weekly mean 1,146 -> 384 (-66%).",
+     "details": {
+      "before_mean": 1146,
+      "after_mean": 383.91,
+      "relative_change": -0.6649,
+      "before_from": "2010-07-18",
+      "after_to": "2016-08-14"
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2013-03-12",
+     "end": "2013-03-24",
+     "summary": "Shut in for 13 days from 2013-03-12. Oil rate 531 -> 572 Sm3/d (+8%) after restart.",
+     "details": {
+      "days": 13,
+      "rate_before": 531.21,
+      "rate_after": 571.67,
+      "relative_change": 0.07618,
+      "field_wide": false,
+      "also_shut_in": []
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2014-05-16",
+     "end": "2014-05-24",
+     "summary": "Shut in for 9 days from 2014-05-16. Oil rate 194 -> 193 Sm3/d (-1%) after restart.",
+     "details": {
+      "days": 9,
+      "rate_before": 194.26,
+      "rate_after": 192.67,
+      "relative_change": -0.008185,
+      "field_wide": false,
+      "also_shut_in": []
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2014-11-30",
+     "end": "2014-12-31",
+     "summary": "Shut in for 32 days from 2014-11-30. Oil rate 185 -> 860 Sm3/d (+366%) after restart. Same time as F-1 C, F-15 D.",
+     "details": {
+      "days": 32,
+      "rate_before": 184.54,
+      "rate_after": 859.51,
+      "relative_change": 3.66,
+      "field_wide": true,
+      "also_shut_in": [
+       "F-1 C",
+       "F-15 D"
+      ]
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2016-08-13",
+     "end": "2016-09-17",
+     "summary": "Shut in for 36 days from 2016-08-13. Same time as F-14, F-15 D, F-5.",
+     "details": {
+      "days": 36,
+      "rate_before": 128.63,
+      "rate_after": null,
+      "relative_change": null,
+      "field_wide": true,
+      "also_shut_in": [
+       "F-14",
+       "F-15 D",
+       "F-5"
+      ]
+     }
+    }
+   ],
+   "code": "wellpilot.agent.tools.detect_events@0c5c334ef787",
+   "created_at": "2026-10-27T15:24:38+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E3",
+   "tool": "field_screen",
+   "arguments": {},
+   "result": {
+    "as_of": "2016-09-17",
+    "window_days": 90,
+    "field_oil_sm3": 10037081,
+    "wells": [
+     {
+      "well": "F-11",
+      "role": "producer",
+      "first_oil": "2013-07-24",
+      "cum_oil_sm3": 1147849,
+      "share_of_field_oil": 0.1144,
+      "cum_water_injected_sm3": 0.0,
+      "oil_rate_sm3_per_day": 481.56,
+      "water_cut": 0.8459,
+      "uptime": 0.9907,
+      "oil_rate_change_90d": -0.03297,
+      "level": "caution",
+      "issues": [
+       {
+        "level": "caution",
+        "kind": "water_cut",
+        "since": "2016-05-02",
+        "text": "water cut above 0.80 (now 0.85); the platform was designed for 0.80"
+       },
+       {
+        "level": "caution",
+        "kind": "step_down",
+        "since": "2016-03-27",
+        "text": "oil rate stepped down 60%, weekly mean 1,259 -> 509 Sm3/d"
+       }
+      ]
+     },
+     {
+      "well": "F-5",
+      "role": "producer",
+      "first_oil": "2016-04-20",
+      "cum_oil_sm3": 41161,
+      "share_of_field_oil": 0.004101,
+      "cum_water_injected_sm3": 14089406,
+      "oil_rate_sm3_per_day": 334.41,
+      "water_cut": 0.2056,
+      "uptime": 0.7135,
+      "oil_rate_change_90d": 0.08348,
+      "level": "caution",
+      "issues": [
+       {
+        "level": "caution",
+        "kind": "shut_in",
+        "since": null,
+        "text": "31 days shut in over the last 180"
+       }
+      ]
+     },
+     {
+      "well": "F-12",
+      "role": "producer",
+      "first_oil": "2008-02-12",
+      "cum_oil_sm3": 4579610,
+      "share_of_field_oil": 0.4563,
+      "cum_water_injected_sm3": 0.0,
+      "oil_rate_sm3_per_day": 143.87,
+      "water_cut": 0.8694,
+      "uptime": 0.5804,
+      "oil_rate_change_90d": -0.27,
+      "level": "note",
+      "issues": [
+       {
+        "level": "note",
+        "kind": "stopped",
+        "since": "2016-08-12",
+        "text": "no oil since then"
+       }
+      ]
+     },
+     {
+      "well": "F-14",
+      "role": "producer",
+      "first_oil": "2008-07-13",
+      "cum_oil_sm3": 3942233,
+      "share_of_field_oil": 0.3928,
+      "cum_water_injected_sm3": 0.0,
+      "oil_rate_sm3_per_day": 103.05,
+      "water_cut": 0.9667,
+      "uptime": 0.2617,
+      "oil_rate_change_90d": -0.005645,
+      "level": "note",
+      "issues": [
+       {
+        "level": "note",
+        "kind": "stopped",
+        "since": "2016-07-13",
+        "text": "no oil since then"
+       }
+      ]
+     },
+     {
+      "well": "F-1 C",
+      "role": "producer",
+      "first_oil": "2014-04-22",
+      "cum_oil_sm3": 177709,
+      "share_of_field_oil": 0.01771,
+      "cum_water_injected_sm3": 0.0,
+      "oil_rate_sm3_per_day": null,
+      "water_cut": null,
+      "uptime": null,
+      "oil_rate_change_90d": null,
+      "level": "note",
+      "issues": [
+       {
+        "level": "note",
+        "kind": "stopped",
+        "since": "2016-04-06",
+        "text": "no oil since then"
+       }
+      ]
+     },
+     {
+      "well": "F-15 D",
+      "role": "producer",
+      "first_oil": "2014-01-16",
+      "cum_oil_sm3": 148519,
+      "share_of_field_oil": 0.0148,
+      "cum_water_injected_sm3": 0.0,
+      "oil_rate_sm3_per_day": 144.95,
+      "water_cut": 0.5851,
+      "uptime": 0.1863,
+      "oil_rate_change_90d": -0.1216,
+      "level": "note",
+      "issues": [
+       {
+        "level": "note",
+        "kind": "stopped",
+        "since": "2016-07-06",
+        "text": "no oil since then"
+       }
+      ]
+     },
+     {
+      "well": "F-4",
+      "role": "injector",
+      "first_oil": null,
+      "cum_oil_sm3": 0.0,
+      "share_of_field_oil": 0.0,
+      "cum_water_injected_sm3": 16240727,
+      "water_inj_sm3_per_day": 2957,
+      "level": null,
+      "issues": []
+     }
+    ],
+    "levels": "alarm: act now; caution: watch; note: for the record"
+   },
+   "code": "wellpilot.agent.tools.field_screen@f53b60160989",
+   "created_at": "2026-10-27T15:24:38+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E4",
+   "tool": "waterflood",
+   "arguments": {
+    "well": "F-12"
+   },
+   "result": {
+    "well": "F-12",
+    "monthly": {
+     "columns": [
+      "month",
+      "cum_oil_sm3",
+      "wor",
+      "water_cut",
+      "liquid_rate_sm3_per_day",
+      "choke_pct"
+     ],
+     "rows": [
+      [
+       "2008-02",
+       49091,
+       0.008405,
+       0.008335,
+       2922,
+       30.31
+      ],
+      [
+       "2008-03",
+       132452,
+       0.0003289,
+       0.0003288,
+       3055,
+       31.37
+      ],
+      [
+       "2008-04",
+       206985,
+       0.006658,
+       0.006614,
+       2934,
+       31.62
+      ],
+      [
+       "2008-05",
+       332463,
+       0.1297,
+       0.1148,
+       4750,
+       39.7
+      ],
+      [
+       "2008-06",
+       476250,
+       0.003299,
+       0.003288,
+       5122,
+       43.41
+      ],
+      [
+       "2008-07",
+       591245,
+       0.002522,
+       0.002516,
+       3893,
+       42.46
+      ],
+      [
+       "2008-08",
+       689067,
+       0.003621,
+       0.003608,
+       3502,
+       40.23
+      ],
+      [
+       "2008-09",
+       766734,
+       0.002426,
+       0.00242,
+       3290,
+       45.03
+      ],
+      [
+       "2008-10",
+       861091,
+       0.006614,
+       0.00657,
+       3091,
+       41.85
+      ],
+      [
+       "2008-11",
+       1007007,
+       0.01638,
+       0.01612,
+       4994,
+       67.77
+      ],
+      [
+       "2008-12",
+       1173447,
+       0.006028,
+       0.005992,
+       5401,
+       63.25
+      ],
+      [
+       "2009-01",
+       1327124,
+       0.002536,
+       0.00253,
+       4991,
+       51.99
+      ],
+      [
+       "2009-02",
+       1449029,
+       0.0,
+       0.0,
+       4458,
+       50.27
+      ],
+      [
+       "2009-03",
+       1541988,
+       0.0,
+       0.0,
+       4406,
+       50.71
+      ],
+      [
+       "2009-04",
+       1692943,
+       0.008256,
+       0.008188,
+       5079,
+       66.1
+      ],
+      [
+       "2009-05",
+       1833982,
+       0.02203,
+       0.02155,
+       4976,
+       62.84
+      ],
+      [
+       "2009-06",
+       1966412,
+       0.02008,
+       0.01968,
+       4532,
+       69.08
+      ],
+      [
+       "2009-07",
+       2072517,
+       0.031,
+       0.03007,
+       3538,
+       50.82
+      ],
+      [
+       "2009-08",
+       2184931,
+       0.04469,
+       0.04278,
+       4785,
+       67.53
+      ],
+      [
+       "2009-09",
+       2275030,
+       0.02481,
+       0.02421,
+       4493,
+       58.67
+      ],
+      [
+       "2009-10",
+       2401970,
+       0.05367,
+       0.05094,
+       4695,
+       54.01
+      ],
+      [
+       "2009-11",
+       2537986,
+       0.08298,
+       0.07662,
+       5009,
+       61.08
+      ],
+      [
+       "2009-12",
+       2695987,
+       0.1096,
+       0.0988,
+       5776,
+       72.08
+      ],
+      [
+       "2010-01",
+       2845646,
+       0.202,
+       0.168,
+       5817,
+       75.14
+      ],
+      [
+       "2010-02",
+       2948672,
+       0.4195,
+       0.2955,
+       5766,
+       72.3
+      ],
+      [
+       "2010-03",
+       3050244,
+       0.5316,
+       0.3471,
+       5765,
+       77.99
+      ],
+      [
+       "2010-04",
+       3136497,
+       0.7883,
+       0.4408,
+       5244,
+       79.24
+      ],
+      [
+       "2010-05",
+       3213611,
+       0.9653,
+       0.4912,
+       4961,
+       57.92
+      ],
+      [
+       "2010-06",
+       3283228,
+       1.2,
+       0.5446,
+       5116,
+       51.48
+      ],
+      [
+       "2010-07",
+       3347268,
+       1.48,
+       0.5975,
+       5144,
+       51.27
+      ],
+      [
+       "2010-08",
+       3377385,
+       1.82,
+       0.6453,
+       4767,
+       51.01
+      ],
+      [
+       "2010-09",
+       3428698,
+       1.74,
+       0.6354,
+       5239,
+       51.51
+      ],
+      [
+       "2010-10",
+       3480129,
+       1.94,
+       0.6593,
+       4877,
+       53.12
+      ],
+      [
+       "2010-11",
+       3524597,
+       2.3,
+       0.6969,
+       5100,
+       53.23
+      ],
+      [
+       "2010-12",
+       3569815,
+       2.46,
+       0.7112,
+       5068,
+       50.92
+      ],
+      [
+       "2011-01",
+       3614562,
+       2.61,
+       0.7232,
+       5217,
+       50.81
+      ],
+      [
+       "2011-02",
+       3643719,
+       2.92,
+       0.7452,
+       4928,
+       54.0
+      ],
+      [
+       "2011-03",
+       3681114,
+       3.03,
+       0.7517,
+       4953,
+       60.79
+      ],
+      [
+       "2011-04",
+       3718934,
+       3.07,
+       0.7544,
+       5149,
+       83.94
+      ],
+      [
+       "2011-05",
+       3756139,
+       3.21,
+       0.7627,
+       5112,
+       86.3
+      ],
+      [
+       "2011-06",
+       3778165,
+       3.39,
+       0.772,
+       5004,
+       89.94
+      ],
+      [
+       "2011-07",
+       3790627,
+       2.56,
+       0.719,
+       4340,
+       78.07
+      ],
+      [
+       "2011-08",
+       3827007,
+       2.72,
+       0.7313,
+       4987,
+       94.83
+      ],
+      [
+       "2011-09",
+       3857006,
+       3.68,
+       0.7864,
+       4768,
+       76.15
+      ],
+      [
+       "2011-10",
+       3869654,
+       4.18,
+       0.807,
+       4829,
+       70.04
+      ],
+      [
+       "2011-11",
+       3891443,
+       3.48,
+       0.7767,
+       5098,
+       78.32
+      ],
+      [
+       "2011-12",
+       3909533,
+       3.58,
+       0.7814,
+       4676,
+       59.19
+      ],
+      [
+       "2012-01",
+       3927751,
+       3.51,
+       0.778,
+       4929,
+       66.26
+      ],
+      [
+       "2012-02",
+       3955113,
+       4.9,
+       0.8304,
+       5621,
+       100.0
+      ],
+      [
+       "2012-03",
+       3981793,
+       5.33,
+       0.842,
+       5474,
+       100.0
+      ],
+      [
+       "2012-04",
+       4005882,
+       5.73,
+       0.8515,
+       5481,
+       100.0
+      ],
+      [
+       "2012-05",
+       4028297,
+       6.25,
+       0.8622,
+       5291,
+       100.0
+      ],
+      [
+       "2012-06",
+       4049184,
+       6.42,
+       0.8652,
+       5229,
+       100.0
+      ],
+      [
+       "2012-07",
+       4070391,
+       6.61,
+       0.8686,
+       5206,
+       100.0
+      ],
+      [
+       "2012-08",
+       4079389,
+       6.14,
+       0.8599,
+       5342,
+       100.0
+      ],
+      [
+       "2012-09",
+       4080403,
+       4.45,
+       0.8165,
+       4914,
+       98.36
+      ],
+      [
+       "2012-10",
+       4100016,
+       6.19,
+       0.8608,
+       5543,
+       98.4
+      ],
+      [
+       "2012-11",
+       4119035,
+       7.09,
+       0.8764,
+       5131,
+       98.72
+      ],
+      [
+       "2012-12",
+       4135356,
+       8.07,
+       0.8897,
+       5072,
+       98.84
+      ],
+      [
+       "2013-01",
+       4152764,
+       8.03,
+       0.8893,
+       5071,
+       99.16
+      ],
+      [
+       "2013-02",
+       4167852,
+       8.37,
+       0.8933,
+       5050,
+       99.2
+      ],
+      [
+       "2013-03",
+       4174157,
+       9.06,
+       0.9006,
+       4946,
+       98.26
+      ],
+      [
+       "2013-04",
+       4186509,
+       8.33,
+       0.8929,
+       5389,
+       99.73
+      ],
+      [
+       "2013-05",
+       4202822,
+       9.02,
+       0.9002,
+       5360,
+       99.76
+      ],
+      [
+       "2013-06",
+       4214722,
+       9.46,
+       0.9044,
+       5271,
+       100.0
+      ],
+      [
+       "2013-07",
+       4226583,
+       9.46,
+       0.9044,
+       5121,
+       99.97
+      ],
+      [
+       "2013-08",
+       4241730,
+       10.1,
+       0.9099,
+       5866,
+       100.0
+      ],
+      [
+       "2013-09",
+       4250954,
+       11.35,
+       0.919,
+       4633,
+       93.84
+      ],
+      [
+       "2013-10",
+       4259259,
+       16.56,
+       0.9431,
+       5147,
+       99.51
+      ],
+      [
+       "2013-11",
+       4266430,
+       17.15,
+       0.9449,
+       4816,
+       99.62
+      ],
+      [
+       "2013-12",
+       4273509,
+       17.78,
+       0.9467,
+       5037,
+       99.6
+      ],
+      [
+       "2014-01",
+       4278506,
+       17.42,
+       0.9457,
+       4543,
+       99.04
+      ],
+      [
+       "2014-02",
+       4284608,
+       18.08,
+       0.9476,
+       4972,
+       100.0
+      ],
+      [
+       "2014-03",
+       4291443,
+       18.63,
+       0.9491,
+       4904,
+       100.0
+      ],
+      [
+       "2014-04",
+       4297335,
+       23.96,
+       0.9599,
+       5092,
+       99.89
+      ],
+      [
+       "2014-05",
+       4300573,
+       27.41,
+       0.9648,
+       5166,
+       99.84
+      ],
+      [
+       "2014-06",
+       4306324,
+       26.44,
+       0.9636,
+       5354,
+       100.0
+      ],
+      [
+       "2014-07",
+       4312116,
+       26.3,
+       0.9634,
+       5106,
+       100.0
+      ],
+      [
+       "2014-08",
+       4316565,
+       28.47,
+       0.9661,
+       5302,
+       100.0
+      ],
+      [
+       "2014-09",
+       4321627,
+       29.51,
+       0.9672,
+       5404,
+       100.0
+      ],
+      [
+       "2014-10",
+       4327013,
+       28.85,
+       0.9665,
+       5179,
+       100.0
+      ],
+      [
+       "2014-11",
+       4331508,
+       25.51,
+       0.9623,
+       4923,
+       100.0
+      ],
+      [
+       "2015-01",
+       4357220,
+       0.4507,
+       0.3107,
+       1251,
+       30.28
+      ],
+      [
+       "2015-02",
+       4376799,
+       0.772,
+       0.4357,
+       1337,
+       33.2
+      ],
+      [
+       "2015-03",
+       4396140,
+       0.9956,
+       0.4989,
+       1393,
+       34.88
+      ],
+      [
+       "2015-04",
+       4415937,
+       1.05,
+       0.5125,
+       1353,
+       35.19
+      ],
+      [
+       "2015-05",
+       4432933,
+       1.48,
+       0.5972,
+       1361,
+       35.19
+      ],
+      [
+       "2015-06",
+       4452470,
+       1.68,
+       0.6274,
+       1774,
+       100.0
+      ],
+      [
+       "2015-07",
+       4471627,
+       1.9,
+       0.6557,
+       1795,
+       100.0
+      ],
+      [
+       "2015-08",
+       4485100,
+       2.35,
+       0.7013,
+       1700,
+       100.0
+      ],
+      [
+       "2015-09",
+       4497595,
+       2.81,
+       0.7373,
+       1587,
+       100.0
+      ],
+      [
+       "2015-10",
+       4509484,
+       3.21,
+       0.7624,
+       1626,
+       100.0
+      ],
+      [
+       "2015-11",
+       4520853,
+       3.31,
+       0.7681,
+       1636,
+       100.0
+      ],
+      [
+       "2015-12",
+       4531709,
+       3.43,
+       0.7745,
+       1580,
+       100.0
+      ],
+      [
+       "2016-01",
+       4541204,
+       4.1,
+       0.8041,
+       1579,
+       100.0
+      ],
+      [
+       "2016-02",
+       4548848,
+       4.61,
+       0.8218,
+       1480,
+       100.0
+      ],
+      [
+       "2016-03",
+       4556208,
+       5.5,
+       0.8462,
+       1546,
+       100.0
+      ],
+      [
+       "2016-04",
+       4562360,
+       6.03,
+       0.8578,
+       1445,
+       100.0
+      ],
+      [
+       "2016-05",
+       4568225,
+       6.16,
+       0.8604,
+       1362,
+       100.0
+      ],
+      [
+       "2016-06",
+       4573634,
+       6.4,
+       0.8648,
+       1366,
+       100.0
+      ],
+      [
+       "2016-07",
+       4578168,
+       6.6,
+       0.8685,
+       1176,
+       40.29
+      ],
+      [
+       "2016-08",
+       4579610,
+       7.58,
+       0.8835,
+       1039,
+       30.26
+      ]
+     ]
+    },
+    "wor_fit": null,
+    "no_trend": "WOR is not rising with cumulative oil on 2013-05 to 2016-08: no limit can be projected",
+    "by_year": {
+     "columns": [
+      "year",
+      "liquid_rate_sm3_per_day",
+      "choke_pct",
+      "water_cut",
+      "oil_sm3"
+     ],
+     "rows": [
+      [
+       2008,
+       3502,
+       41.85,
+       0.005992,
+       1173447
+      ],
+      [
+       2009,
+       4740,
+       59.88,
+       0.02288,
+       1522541
+      ],
+      [
+       2010,
+       5130,
+       53.17,
+       0.5711,
+       873828
+      ],
+      [
+       2011,
+       4970,
+       77.11,
+       0.7586,
+       339718
+      ],
+      [
+       2012,
+       5260,
+       100.0,
+       0.8604,
+       225822
+      ],
+      [
+       2013,
+       5096,
+       99.61,
+       0.9044,
+       138154
+      ],
+      [
+       2014,
+       5106,
+       100.0,
+       0.9634,
+       57999
+      ],
+      [
+       2015,
+       1583,
+       100.0,
+       0.6416,
+       200201
+      ],
+      [
+       2016,
+       1405,
+       100.0,
+       0.8591,
+       47900
+      ]
+     ]
+    },
+    "field_voidage": {
+     "columns": [
+      "year",
+      "injected_sm3",
+      "oil_sm3",
+      "water_sm3",
+      "replacement_ratio",
+      "replacement_ratio_low",
+      "replacement_ratio_high",
+      "surface_ratio"
+     ],
+     "rows": [
+      [
+       2008,
+       2417770,
+       1764375,
+       23523,
+       0.98,
+       0.9055,
+       1.07,
+       1.35
+      ],
+      [
+       2009,
+       4392198,
+       2684392,
+       232105,
+       1.11,
+       1.03,
+       1.21,
+       1.51
+      ],
+      [
+       2010,
+       4569394,
+       1689903,
+       1887595,
+       1.08,
+       1.03,
+       1.13,
+       1.28
+      ],
+      [
+       2011,
+       3442446,
+       847965,
+       2190640,
+       1.02,
+       0.9942,
+       1.05,
+       1.13
+      ],
+      [
+       2012,
+       2975214,
+       574206,
+       2110119,
+       1.02,
+       1.0,
+       1.05,
+       1.11
+      ],
+      [
+       2013,
+       3453761,
+       558013,
+       2576366,
+       1.03,
+       1.01,
+       1.05,
+       1.1
+      ],
+      [
+       2014,
+       3825493,
+       743107,
+       2716071,
+       1.02,
+       0.9986,
+       1.05,
+       1.11
+      ],
+      [
+       2015,
+       3201627,
+       861749,
+       2009826,
+       0.9995,
+       0.9695,
+       1.03,
+       1.11
+      ],
+      [
+       2016,
+       2052229,
+       313370,
+       1572866,
+       1.02,
+       1.0,
+       1.04,
+       1.09
+      ]
+     ]
+    },
+    "notes": "WOR = water/oil by month; the trend is log10(WOR) against cumulative oil, fitted on up to 36 recent months with WOR >= 1. field_voidage: replacement_ratio is injection over voidage at reservoir conditions (Bo 1.385 m3/Sm3 from PUD p.20, low/high with Bo 1.5/1.27; Bw 1; above the bubble point, so no free gas); surface_ratio is the same in surface volumes, which overstates replacement."
+   },
+   "code": "wellpilot.agent.tools.waterflood_tool@c2104a9650c2",
+   "created_at": "2026-10-27T15:24:38+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E5",
+   "tool": "production_monthly",
+   "arguments": {
+    "well": "F-12",
+    "start": "2014-01-01",
+    "end": "2015-12-31"
+   },
+   "result": {
+    "columns": [
+     "month",
+     "days",
+     "producing_days",
+     "oil_sm3",
+     "water_sm3",
+     "gas_sm3",
+     "water_injected_sm3",
+     "water_cut",
+     "uptime",
+     "oil_rate_per_producing_day",
+     "bhp_bar",
+     "whp_bar",
+     "choke_pct"
+    ],
+    "rows": [
+     [
+      "2014-01",
+      31,
+      25,
+      4997,
+      87030,
+      766196,
+      0.0,
+      0.9457,
+      0.6534,
+      246.71,
+      null,
+      35.8,
+      81.59
+     ],
+     [
+      "2014-02",
+      28,
+      26,
+      6101,
+      110298,
+      921967,
+      0.0,
+      0.9476,
+      0.8362,
+      260.6,
+      null,
+      33.19,
+      95.88
+     ],
+     [
+      "2014-03",
+      31,
+      31,
+      6836,
+      127351,
+      1036071,
+      null,
+      0.9491,
+      0.8827,
+      249.81,
+      null,
+      33.1,
+      94.44
+     ],
+     [
+      "2014-04",
+      30,
+      30,
+      5892,
+      141145,
+      883605,
+      null,
+      0.9599,
+      0.9625,
+      204.05,
+      null,
+      34.74,
+      87.87
+     ],
+     [
+      "2014-05",
+      31,
+      20,
+      3238,
+      88748,
+      469664,
+      null,
+      0.9648,
+      0.5744,
+      181.84,
+      null,
+      32.58,
+      92.52
+     ],
+     [
+      "2014-06",
+      30,
+      30,
+      5751,
+      152035,
+      846734,
+      null,
+      0.9636,
+      0.9824,
+      195.14,
+      null,
+      32.4,
+      97.02
+     ],
+     [
+      "2014-07",
+      31,
+      31,
+      5792,
+      152314,
+      864046,
+      null,
+      0.9634,
+      0.9989,
+      187.04,
+      null,
+      32.62,
+      98.13
+     ],
+     [
+      "2014-08",
+      31,
+      26,
+      4448,
+      126629,
+      704538,
+      null,
+      0.9661,
+      0.7975,
+      179.93,
+      null,
+      32.38,
+      98.28
+     ],
+     [
+      "2014-09",
+      30,
+      30,
+      5063,
+      149376,
+      803971,
+      null,
+      0.9672,
+      0.9525,
+      177.16,
+      null,
+      32.55,
+      97.1
+     ],
+     [
+      "2014-10",
+      31,
+      31,
+      5386,
+      155366,
+      833121,
+      null,
+      0.9665,
+      1.0,
+      173.5,
+      null,
+      32.71,
+      99.16
+     ],
+     [
+      "2014-11",
+      30,
+      26,
+      4495,
+      114661,
+      700998,
+      null,
+      0.9623,
+      0.8069,
+      185.7,
+      null,
+      34.61,
+      96.52
+     ],
+     [
+      "2014-12",
+      31,
+      0,
+      0.0,
+      0.0,
+      0.0,
+      null,
+      null,
+      0.0,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2015-01",
+      31,
+      31,
+      25713,
+      11588,
+      3780459,
+      null,
+      0.3107,
+      0.9618,
+      862.38,
+      null,
+      70.96,
+      30.33
+     ],
+     [
+      "2015-02",
+      28,
+      28,
+      19579,
+      15115,
+      2960674,
+      null,
+      0.4357,
+      0.9268,
+      754.48,
+      null,
+      56.02,
+      33.78
+     ],
+     [
+      "2015-03",
+      31,
+      29,
+      19341,
+      19256,
+      2853433,
+      null,
+      0.4989,
+      0.894,
+      697.91,
+      null,
+      52.16,
+      34.64
+     ],
+     [
+      "2015-04",
+      30,
+      30,
+      19797,
+      20808,
+      2889395,
+      null,
+      0.5125,
+      1.0,
+      659.89,
+      null,
+      48.19,
+      35.13
+     ],
+     [
+      "2015-05",
+      31,
+      31,
+      16996,
+      25201,
+      2479620,
+      null,
+      0.5972,
+      1.0,
+      548.27,
+      null,
+      46.3,
+      35.12
+     ],
+     [
+      "2015-06",
+      30,
+      30,
+      19536,
+      32903,
+      2859707,
+      null,
+      0.6274,
+      0.9852,
+      661.02,
+      null,
+      32.22,
+      81.03
+     ],
+     [
+      "2015-07",
+      31,
+      31,
+      19157,
+      36481,
+      2846821,
+      null,
+      0.6557,
+      1.0,
+      617.98,
+      null,
+      29.52,
+      99.87
+     ],
+     [
+      "2015-08",
+      31,
+      27,
+      13473,
+      31629,
+      2047121,
+      null,
+      0.7013,
+      0.8558,
+      507.88,
+      null,
+      29.42,
+      97.93
+     ],
+     [
+      "2015-09",
+      30,
+      30,
+      12495,
+      35065,
+      1888049,
+      null,
+      0.7373,
+      0.9991,
+      416.87,
+      null,
+      29.63,
+      98.82
+     ],
+     [
+      "2015-10",
+      31,
+      31,
+      11889,
+      38151,
+      1821328,
+      null,
+      0.7624,
+      0.9928,
+      386.27,
+      null,
+      27.09,
+      98.58
+     ],
+     [
+      "2015-11",
+      30,
+      30,
+      11369,
+      37662,
+      1748311,
+      null,
+      0.7681,
+      0.9993,
+      379.25,
+      null,
+      27.41,
+      99.73
+     ],
+     [
+      "2015-12",
+      31,
+      31,
+      10856,
+      37288,
+      1662453,
+      null,
+      0.7745,
+      0.983,
+      356.26,
+      null,
+      27.05,
+      99.86
+     ]
+    ]
+   },
+   "code": "wellpilot.agent.tools.production_monthly@c841520578bb",
+   "created_at": "2026-10-27T15:24:42+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E6",
+   "tool": "run_sql",
+   "arguments": {
+    "sql": "SELECT date, well, on_stream_hrs, oil_sm3, water_sm3, water_cut, choke_pct, liquid_rate_proxy FROM\n (SELECT date, well, on_stream_hrs, oil_sm3, water_sm3, water_cut, choke_pct, (oil_sm3+water_sm3) as liquid_rate_proxy FROM production_daily WHERE well='F-12' AND date BETWEEN '2014-11-01' AND '2015-02-28' ORDER BY date)\n LIMIT 200"
+   },
+   "result": {
+    "columns": [
+     "date",
+     "well",
+     "on_stream_hrs",
+     "oil_sm3",
+     "water_sm3",
+     "water_cut",
+     "choke_pct",
+     "liquid_rate_proxy"
+    ],
+    "rows": [
+     [
+      "2014-11-01",
+      "F-12",
+      24.0,
+      177.31,
+      4803,
+      0.9644,
+      100.0,
+      4980
+     ],
+     [
+      "2014-11-02",
+      "F-12",
+      24.0,
+      180.04,
+      4895,
+      0.9645,
+      100.0,
+      5075
+     ],
+     [
+      "2014-11-03",
+      "F-12",
+      24.0,
+      190.44,
+      4758,
+      0.9615,
+      100.0,
+      4948
+     ],
+     [
+      "2014-11-04",
+      "F-12",
+      24.0,
+      187.73,
+      4786,
+      0.9623,
+      100.0,
+      4974
+     ],
+     [
+      "2014-11-05",
+      "F-12",
+      24.0,
+      185.04,
+      4786,
+      0.9628,
+      100.0,
+      4971
+     ],
+     [
+      "2014-11-06",
+      "F-12",
+      24.0,
+      185.14,
+      4783,
+      0.9627,
+      100.0,
+      4968
+     ],
+     [
+      "2014-11-07",
+      "F-12",
+      24.0,
+      189.55,
+      4772,
+      0.9618,
+      100.0,
+      4961
+     ],
+     [
+      "2014-11-08",
+      "F-12",
+      24.0,
+      189.18,
+      5064,
+      0.964,
+      100.0,
+      5253
+     ],
+     [
+      "2014-11-09",
+      "F-12",
+      24.0,
+      187.68,
+      5127,
+      0.9647,
+      100.0,
+      5314
+     ],
+     [
+      "2014-11-10",
+      "F-12",
+      24.0,
+      179.26,
+      4988,
+      0.9653,
+      100.0,
+      5167
+     ],
+     [
+      "2014-11-11",
+      "F-12",
+      24.0,
+      186.41,
+      5103,
+      0.9648,
+      100.0,
+      5289
+     ],
+     [
+      "2014-11-12",
+      "F-12",
+      24.0,
+      187.16,
+      4901,
+      0.9632,
+      100.0,
+      5088
+     ],
+     [
+      "2014-11-13",
+      "F-12",
+      24.0,
+      184.54,
+      4812,
+      0.9631,
+      100.0,
+      4996
+     ],
+     [
+      "2014-11-14",
+      "F-12",
+      24.0,
+      184.34,
+      4812,
+      0.9631,
+      100.0,
+      4997
+     ],
+     [
+      "2014-11-15",
+      "F-12",
+      24.0,
+      186.2,
+      4795,
+      0.9626,
+      100.0,
+      4981
+     ],
+     [
+      "2014-11-16",
+      "F-12",
+      24.0,
+      183.7,
+      4869,
+      0.9636,
+      100.0,
+      5053
+     ],
+     [
+      "2014-11-17",
+      "F-12",
+      24.0,
+      181.31,
+      4966,
+      0.9648,
+      100.0,
+      5148
+     ],
+     [
+      "2014-11-18",
+      "F-12",
+      24.0,
+      186.42,
+      4912,
+      0.9634,
+      100.0,
+      5099
+     ],
+     [
+      "2014-11-19",
+      "F-12",
+      24.0,
+      181.77,
+      4799,
+      0.9635,
+      100.0,
+      4981
+     ],
+     [
+      "2014-11-20",
+      "F-12",
+      24.0,
+      184.03,
+      4746,
+      0.9627,
+      100.0,
+      4930
+     ],
+     [
+      "2014-11-21",
+      "F-12",
+      24.0,
+      183.0,
+      4719,
+      0.9627,
+      100.0,
+      4902
+     ],
+     [
+      "2014-11-22",
+      "F-12",
+      24.0,
+      182.72,
+      4716,
+      0.9627,
+      100.0,
+      4899
+     ],
+     [
+      "2014-11-23",
+      "F-12",
+      24.0,
+      176.44,
+      4710,
+      0.9639,
+      100.0,
+      4886
+     ],
+     [
+      "2014-11-24",
+      "F-12",
+      8.94,
+      50.87,
+      1376,
+      0.9644,
+      36.98,
+      1427
+     ],
+     [
+      "2014-11-25",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.21,
+      0.0
+     ],
+     [
+      "2014-11-26",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.9631,
+      0.0
+     ],
+     [
+      "2014-11-27",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.7393,
+      0.0
+     ],
+     [
+      "2014-11-28",
+      "F-12",
+      5.78,
+      58.69,
+      836.01,
+      0.9344,
+      30.87,
+      894.7
+     ],
+     [
+      "2014-11-29",
+      "F-12",
+      14.22,
+      146.09,
+      828.47,
+      0.8501,
+      16.58,
+      974.56
+     ],
+     [
+      "2014-11-30",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.01,
+      0.0
+     ],
+     [
+      "2014-12-01",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.9958,
+      0.0
+     ],
+     [
+      "2014-12-02",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.9881,
+      0.0
+     ],
+     [
+      "2014-12-03",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.9938,
+      0.0
+     ],
+     [
+      "2014-12-04",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.06,
+      0.0
+     ],
+     [
+      "2014-12-05",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.18,
+      0.0
+     ],
+     [
+      "2014-12-06",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.24,
+      0.0
+     ],
+     [
+      "2014-12-07",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.27,
+      0.0
+     ],
+     [
+      "2014-12-08",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.34,
+      0.0
+     ],
+     [
+      "2014-12-09",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.32,
+      0.0
+     ],
+     [
+      "2014-12-10",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.3,
+      0.0
+     ],
+     [
+      "2014-12-11",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.3,
+      0.0
+     ],
+     [
+      "2014-12-12",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.26,
+      0.0
+     ],
+     [
+      "2014-12-13",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.29,
+      0.0
+     ],
+     [
+      "2014-12-14",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.27,
+      0.0
+     ],
+     [
+      "2014-12-15",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.29,
+      0.0
+     ],
+     [
+      "2014-12-16",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.0,
+      0.0
+     ],
+     [
+      "2014-12-17",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.0,
+      0.0
+     ],
+     [
+      "2014-12-18",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.0,
+      0.0
+     ],
+     [
+      "2014-12-19",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.0,
+      0.0
+     ],
+     [
+      "2014-12-20",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.0,
+      0.0
+     ],
+     [
+      "2014-12-21",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.0,
+      0.0
+     ],
+     [
+      "2014-12-22",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.0,
+      0.0
+     ],
+     [
+      "2014-12-23",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.25,
+      0.0
+     ],
+     [
+      "2014-12-24",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.33,
+      0.0
+     ],
+     [
+      "2014-12-25",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.19,
+      0.0
+     ],
+     [
+      "2014-12-26",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.15,
+      0.0
+     ],
+     [
+      "2014-12-27",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.17,
+      0.0
+     ],
+     [
+      "2014-12-28",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.15,
+      0.0
+     ],
+     [
+      "2014-12-29",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.15,
+      0.0
+     ],
+     [
+      "2014-12-30",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.15,
+      0.0
+     ],
+     [
+      "2014-12-31",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.14,
+      0.0
+     ],
+     [
+      "2015-01-01",
+      "F-12",
+      9.5,
+      14.94,
+      251.95,
+      0.944,
+      7.94,
+      266.89
+     ],
+     [
+      "2015-01-02",
+      "F-12",
+      24.0,
+      782.75,
+      226.18,
+      0.2242,
+      26.5,
+      1009
+     ],
+     [
+      "2015-01-03",
+      "F-12",
+      24.0,
+      871.14,
+      237.97,
+      0.2146,
+      27.87,
+      1109
+     ],
+     [
+      "2015-01-04",
+      "F-12",
+      24.0,
+      855.13,
+      237.93,
+      0.2177,
+      27.86,
+      1093
+     ],
+     [
+      "2015-01-05",
+      "F-12",
+      24.0,
+      838.83,
+      235.74,
+      0.2194,
+      27.84,
+      1075
+     ],
+     [
+      "2015-01-06",
+      "F-12",
+      24.0,
+      834.13,
+      239.98,
+      0.2234,
+      28.28,
+      1074
+     ],
+     [
+      "2015-01-07",
+      "F-12",
+      24.0,
+      859.23,
+      238.0,
+      0.2169,
+      28.31,
+      1097
+     ],
+     [
+      "2015-01-08",
+      "F-12",
+      24.0,
+      829.95,
+      234.26,
+      0.2201,
+      28.32,
+      1064
+     ],
+     [
+      "2015-01-09",
+      "F-12",
+      15.67,
+      532.53,
+      179.11,
+      0.2517,
+      20.46,
+      711.64
+     ],
+     [
+      "2015-01-10",
+      "F-12",
+      20.42,
+      786.25,
+      245.21,
+      0.2377,
+      25.64,
+      1031
+     ],
+     [
+      "2015-01-11",
+      "F-12",
+      24.0,
+      1070,
+      340.95,
+      0.2417,
+      36.2,
+      1411
+     ],
+     [
+      "2015-01-12",
+      "F-12",
+      24.0,
+      859.51,
+      254.88,
+      0.2287,
+      30.26,
+      1114
+     ],
+     [
+      "2015-01-13",
+      "F-12",
+      24.0,
+      865.58,
+      255.41,
+      0.2278,
+      30.19,
+      1121
+     ],
+     [
+      "2015-01-14",
+      "F-12",
+      24.0,
+      775.25,
+      247.41,
+      0.2419,
+      30.25,
+      1023
+     ],
+     [
+      "2015-01-15",
+      "F-12",
+      24.0,
+      827.2,
+      457.43,
+      0.3561,
+      30.25,
+      1285
+     ],
+     [
+      "2015-01-16",
+      "F-12",
+      24.0,
+      839.36,
+      439.91,
+      0.3439,
+      30.27,
+      1279
+     ],
+     [
+      "2015-01-17",
+      "F-12",
+      24.0,
+      776.66,
+      419.25,
+      0.3506,
+      30.29,
+      1196
+     ],
+     [
+      "2015-01-18",
+      "F-12",
+      24.0,
+      819.66,
+      419.38,
+      0.3385,
+      30.29,
+      1239
+     ],
+     [
+      "2015-01-19",
+      "F-12",
+      24.0,
+      829.23,
+      423.32,
+      0.338,
+      30.29,
+      1253
+     ],
+     [
+      "2015-01-20",
+      "F-12",
+      22.0,
+      767.76,
+      472.87,
+      0.3812,
+      28.22,
+      1241
+     ],
+     [
+      "2015-01-21",
+      "F-12",
+      24.0,
+      948.12,
+      538.49,
+      0.3622,
+      32.55,
+      1487
+     ],
+     [
+      "2015-01-22",
+      "F-12",
+      24.0,
+      944.39,
+      510.55,
+      0.3509,
+      33.33,
+      1455
+     ],
+     [
+      "2015-01-23",
+      "F-12",
+      24.0,
+      924.64,
+      493.6,
+      0.348,
+      33.08,
+      1418
+     ],
+     [
+      "2015-01-24",
+      "F-12",
+      24.0,
+      902.12,
+      478.8,
+      0.3467,
+      32.4,
+      1381
+     ],
+     [
+      "2015-01-25",
+      "F-12",
+      24.0,
+      890.65,
+      479.03,
+      0.3497,
+      32.44,
+      1370
+     ],
+     [
+      "2015-01-26",
+      "F-12",
+      24.0,
+      886.77,
+      474.38,
+      0.3485,
+      32.43,
+      1361
+     ],
+     [
+      "2015-01-27",
+      "F-12",
+      24.0,
+      943.93,
+      637.54,
+      0.4031,
+      33.17,
+      1581
+     ],
+     [
+      "2015-01-28",
+      "F-12",
+      24.0,
+      927.74,
+      475.45,
+      0.3388,
+      33.2,
+      1403
+     ],
+     [
+      "2015-01-29",
+      "F-12",
+      24.0,
+      925.05,
+      472.87,
+      0.3383,
+      33.2,
+      1398
+     ],
+     [
+      "2015-01-30",
+      "F-12",
+      24.0,
+      898.87,
+      452.6,
+      0.3349,
+      33.19,
+      1351
+     ],
+     [
+      "2015-01-31",
+      "F-12",
+      24.0,
+      885.57,
+      517.77,
+      0.369,
+      33.19,
+      1403
+     ],
+     [
+      "2015-02-01",
+      "F-12",
+      24.0,
+      913.75,
+      532.07,
+      0.368,
+      33.22,
+      1446
+     ],
+     [
+      "2015-02-02",
+      "F-12",
+      24.0,
+      875.95,
+      449.13,
+      0.3389,
+      33.22,
+      1325
+     ],
+     [
+      "2015-02-03",
+      "F-12",
+      24.0,
+      873.07,
+      764.48,
+      0.4668,
+      33.23,
+      1638
+     ],
+     [
+      "2015-02-04",
+      "F-12",
+      16.11,
+      554.0,
+      479.84,
+      0.4641,
+      35.01,
+      1034
+     ],
+     [
+      "2015-02-05",
+      "F-12",
+      2.23,
+      89.29,
+      36.34,
+      0.2893,
+      28.97,
+      125.63
+     ],
+     [
+      "2015-02-06",
+      "F-12",
+      24.0,
+      1162,
+      746.56,
+      0.3911,
+      59.62,
+      1909
+     ],
+     [
+      "2015-02-07",
+      "F-12",
+      24.0,
+      810.62,
+      451.09,
+      0.3575,
+      33.34,
+      1262
+     ],
+     [
+      "2015-02-08",
+      "F-12",
+      17.11,
+      433.41,
+      239.72,
+      0.3561,
+      24.18,
+      673.13
+     ],
+     [
+      "2015-02-09",
+      "F-12",
+      11.97,
+      381.15,
+      184.76,
+      0.3265,
+      26.44,
+      565.91
+     ],
+     [
+      "2015-02-10",
+      "F-12",
+      24.0,
+      812.31,
+      524.67,
+      0.3924,
+      33.18,
+      1337
+     ],
+     [
+      "2015-02-11",
+      "F-12",
+      24.0,
+      708.94,
+      604.37,
+      0.4602,
+      33.22,
+      1313
+     ],
+     [
+      "2015-02-12",
+      "F-12",
+      24.0,
+      697.18,
+      597.27,
+      0.4614,
+      33.22,
+      1294
+     ],
+     [
+      "2015-02-13",
+      "F-12",
+      24.0,
+      710.02,
+      600.36,
+      0.4582,
+      32.8,
+      1310
+     ],
+     [
+      "2015-02-14",
+      "F-12",
+      24.0,
+      706.05,
+      610.41,
+      0.4637,
+      33.32,
+      1316
+     ],
+     [
+      "2015-02-15",
+      "F-12",
+      24.0,
+      704.3,
+      606.41,
+      0.4627,
+      32.56,
+      1311
+     ],
+     [
+      "2015-02-16",
+      "F-12",
+      24.0,
+      702.34,
+      568.78,
+      0.4475,
+      33.27,
+      1271
+     ],
+     [
+      "2015-02-17",
+      "F-12",
+      24.0,
+      683.84,
+      574.13,
+      0.4564,
+      31.14,
+      1258
+     ],
+     [
+      "2015-02-18",
+      "F-12",
+      24.0,
+      716.3,
+      551.18,
+      0.4349,
+      33.29,
+      1267
+     ],
+     [
+      "2015-02-19",
+      "F-12",
+      24.0,
+      724.37,
+      561.76,
+      0.4368,
+      33.28,
+      1286
+     ],
+     [
+      "2015-02-20",
+      "F-12",
+      24.0,
+      706.94,
+      636.68,
+      0.4739,
+      33.25,
+      1344
+     ],
+     [
+      "2015-02-21",
+      "F-12",
+      24.0,
+      689.52,
+      607.17,
+      0.4682,
+      33.14,
+      1297
+     ],
+     [
+      "2015-02-22",
+      "F-12",
+      24.0,
+      717.38,
+      596.07,
+      0.4538,
+      33.19,
+      1313
+     ],
+     [
+      "2015-02-23",
+      "F-12",
+      24.0,
+      716.15,
+      560.52,
+      0.439,
+      33.18,
+      1277
+     ],
+     [
+      "2015-02-24",
+      "F-12",
+      24.0,
+      699.15,
+      572.94,
+      0.4504,
+      33.09,
+      1272
+     ],
+     [
+      "2015-02-25",
+      "F-12",
+      24.0,
+      705.72,
+      578.13,
+      0.4503,
+      33.08,
+      1284
+     ],
+     [
+      "2015-02-26",
+      "F-12",
+      24.0,
+      704.86,
+      526.68,
+      0.4277,
+      33.08,
+      1232
+     ],
+     [
+      "2015-02-27",
+      "F-12",
+      24.0,
+      709.02,
+      694.76,
+      0.4949,
+      33.11,
+      1404
+     ],
+     [
+      "2015-02-28",
+      "F-12",
+      23.38,
+      670.85,
+      659.22,
+      0.4956,
+      32.11,
+      1330
+     ]
+    ],
+    "row_count": 120,
+    "truncated": false
+   },
+   "code": "wellpilot.agent.tools.run_sql@50068378f8ca",
+   "created_at": "2026-10-27T15:24:42+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E7",
+   "tool": "production_monthly",
+   "arguments": {
+    "well": "F-11",
+    "start": "2014-11-01",
+    "end": "2015-02-28"
+   },
+   "result": {
+    "columns": [
+     "month",
+     "days",
+     "producing_days",
+     "oil_sm3",
+     "water_sm3",
+     "gas_sm3",
+     "water_injected_sm3",
+     "water_cut",
+     "uptime",
+     "oil_rate_per_producing_day",
+     "bhp_bar",
+     "whp_bar",
+     "choke_pct"
+    ],
+    "rows": [
+     [
+      "2014-11",
+      30,
+      30,
+      26612,
+      9404,
+      4153116,
+      null,
+      0.2611,
+      0.9617,
+      922.42,
+      226.59,
+      54.84,
+      10.34
+     ],
+     [
+      "2014-12",
+      31,
+      31,
+      8548,
+      3079,
+      1413112,
+      null,
+      0.2648,
+      0.9864,
+      279.55,
+      283.1,
+      79.77,
+      4.25
+     ],
+     [
+      "2015-01",
+      31,
+      30,
+      29562,
+      13861,
+      4358979,
+      null,
+      0.3192,
+      0.9521,
+      1002,
+      225.06,
+      53.19,
+      11.25
+     ],
+     [
+      "2015-02",
+      28,
+      28,
+      25347,
+      14061,
+      3836074,
+      null,
+      0.3568,
+      0.9407,
+      962.3,
+      210.31,
+      44.87,
+      15.5
+     ]
+    ]
+   },
+   "code": "wellpilot.agent.tools.production_monthly@c841520578bb",
+   "created_at": "2026-10-27T15:24:42+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E8",
+   "tool": "search_reports",
+   "arguments": {
+    "query": "F-12 workover intervention water shut off",
+    "well": "F-12",
+    "limit": 10
+   },
+   "result": {
+    "documents": {},
+    "facts": {
+     "columns": [
+      "doc_id",
+      "page",
+      "topic",
+      "source",
+      "statement_en",
+      "quote",
+      "quote_check",
+      "wells"
+     ],
+     "rows": []
+    }
+   },
+   "code": "wellpilot.agent.tools.search_reports@5907b6347b0e",
+   "created_at": "2026-10-27T15:24:45+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E9",
+   "tool": "run_sql",
+   "arguments": {
+    "sql": "SELECT date, well, on_stream_hrs, oil_sm3, water_sm3, water_cut, choke_pct, bhp_bar, whp_bar FROM production_daily WHERE well IN ('F-12','F-11','F-14','F-15 D','F-1 C') AND date BETWEEN '2014-11-20' AND '2015-01-15' ORDER BY date, well LIMIT 200"
+   },
+   "result": {
+    "columns": [
+     "date",
+     "well",
+     "on_stream_hrs",
+     "oil_sm3",
+     "water_sm3",
+     "water_cut",
+     "choke_pct",
+     "bhp_bar",
+     "whp_bar"
+    ],
+    "rows": [
+     [
+      "2014-11-20",
+      "F-1 C",
+      24.0,
+      285.32,
+      302.5,
+      0.5146,
+      50.94,
+      220.0,
+      36.44
+     ],
+     [
+      "2014-11-20",
+      "F-11",
+      24.0,
+      989.16,
+      354.02,
+      0.2636,
+      11.21,
+      219.05,
+      51.41
+     ],
+     [
+      "2014-11-20",
+      "F-12",
+      24.0,
+      184.03,
+      4746,
+      0.9627,
+      100.0,
+      null,
+      32.07
+     ],
+     [
+      "2014-11-20",
+      "F-14",
+      24.0,
+      358.38,
+      3691,
+      0.9115,
+      100.0,
+      260.3,
+      30.28
+     ],
+     [
+      "2014-11-20",
+      "F-15 D",
+      24.0,
+      189.11,
+      10.14,
+      0.05089,
+      11.05,
+      200.42,
+      39.77
+     ],
+     [
+      "2014-11-21",
+      "F-1 C",
+      24.0,
+      283.6,
+      300.66,
+      0.5146,
+      50.93,
+      220.1,
+      35.99
+     ],
+     [
+      "2014-11-21",
+      "F-11",
+      24.0,
+      981.25,
+      351.17,
+      0.2636,
+      11.19,
+      218.83,
+      51.27
+     ],
+     [
+      "2014-11-21",
+      "F-12",
+      24.0,
+      183.0,
+      4719,
+      0.9627,
+      100.0,
+      null,
+      31.97
+     ],
+     [
+      "2014-11-21",
+      "F-14",
+      24.0,
+      356.36,
+      3670,
+      0.9115,
+      100.0,
+      259.32,
+      29.52
+     ],
+     [
+      "2014-11-21",
+      "F-15 D",
+      24.0,
+      187.96,
+      10.08,
+      0.0509,
+      11.03,
+      200.37,
+      39.72
+     ],
+     [
+      "2014-11-22",
+      "F-1 C",
+      24.0,
+      283.17,
+      300.48,
+      0.5148,
+      50.93,
+      219.92,
+      35.93
+     ],
+     [
+      "2014-11-22",
+      "F-11",
+      24.0,
+      980.88,
+      351.37,
+      0.2637,
+      11.2,
+      218.55,
+      51.08
+     ],
+     [
+      "2014-11-22",
+      "F-12",
+      24.0,
+      182.72,
+      4716,
+      0.9627,
+      100.0,
+      null,
+      32.22
+     ],
+     [
+      "2014-11-22",
+      "F-14",
+      24.0,
+      355.82,
+      3668,
+      0.9116,
+      100.0,
+      259.36,
+      29.46
+     ],
+     [
+      "2014-11-22",
+      "F-15 D",
+      24.0,
+      187.72,
+      10.07,
+      0.05091,
+      11.04,
+      200.24,
+      39.65
+     ],
+     [
+      "2014-11-23",
+      "F-1 C",
+      24.0,
+      272.89,
+      299.46,
+      0.5232,
+      50.85,
+      221.06,
+      34.65
+     ],
+     [
+      "2014-11-23",
+      "F-11",
+      24.0,
+      944.45,
+      349.86,
+      0.2703,
+      11.17,
+      218.52,
+      51.16
+     ],
+     [
+      "2014-11-23",
+      "F-12",
+      24.0,
+      176.44,
+      4710,
+      0.9639,
+      100.0,
+      null,
+      31.89
+     ],
+     [
+      "2014-11-23",
+      "F-14",
+      24.0,
+      343.6,
+      3663,
+      0.9142,
+      100.0,
+      259.21,
+      29.56
+     ],
+     [
+      "2014-11-23",
+      "F-15 D",
+      24.0,
+      181.04,
+      10.05,
+      0.05259,
+      10.99,
+      199.82,
+      39.61
+     ],
+     [
+      "2014-11-24",
+      "F-1 C",
+      15.78,
+      0.0,
+      0.0,
+      null,
+      26.53,
+      229.95,
+      28.38
+     ],
+     [
+      "2014-11-24",
+      "F-11",
+      24.0,
+      981.97,
+      368.76,
+      0.273,
+      11.17,
+      219.46,
+      51.35
+     ],
+     [
+      "2014-11-24",
+      "F-12",
+      8.94,
+      50.87,
+      1376,
+      0.9644,
+      36.98,
+      null,
+      32.5
+     ],
+     [
+      "2014-11-24",
+      "F-14",
+      24.0,
+      357.14,
+      3860,
+      0.9153,
+      100.0,
+      260.32,
+      30.25
+     ],
+     [
+      "2014-11-24",
+      "F-15 D",
+      24.0,
+      188.01,
+      6.21,
+      0.03197,
+      10.96,
+      200.59,
+      39.49
+     ],
+     [
+      "2014-11-25",
+      "F-1 C",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.0,
+      244.41,
+      49.11
+     ],
+     [
+      "2014-11-25",
+      "F-11",
+      24.0,
+      861.08,
+      292.87,
+      0.2538,
+      10.54,
+      223.27,
+      53.88
+     ],
+     [
+      "2014-11-25",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.21,
+      null,
+      20.69
+     ],
+     [
+      "2014-11-25",
+      "F-14",
+      24.0,
+      340.37,
+      3331,
+      0.9073,
+      100.0,
+      260.96,
+      30.75
+     ],
+     [
+      "2014-11-25",
+      "F-15 D",
+      21.38,
+      150.52,
+      4.51,
+      0.02909,
+      9.71,
+      200.75,
+      39.47
+     ],
+     [
+      "2014-11-26",
+      "F-1 C",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.2604,
+      246.39,
+      68.66
+     ],
+     [
+      "2014-11-26",
+      "F-11",
+      24.0,
+      300.43,
+      111.22,
+      0.2702,
+      5.02,
+      263.13,
+      71.57
+     ],
+     [
+      "2014-11-26",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.9631,
+      null,
+      31.62
+     ],
+     [
+      "2014-11-26",
+      "F-14",
+      24.0,
+      305.37,
+      3253,
+      0.9142,
+      100.0,
+      261.06,
+      31.49
+     ],
+     [
+      "2014-11-26",
+      "F-15 D",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.27,
+      242.85,
+      75.46
+     ],
+     [
+      "2014-11-27",
+      "F-1 C",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      7.33,
+      252.37,
+      7.18
+     ],
+     [
+      "2014-11-27",
+      "F-11",
+      24.0,
+      315.64,
+      111.14,
+      0.2604,
+      5.01,
+      266.03,
+      71.71
+     ],
+     [
+      "2014-11-27",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.7393,
+      null,
+      19.1
+     ],
+     [
+      "2014-11-27",
+      "F-14",
+      24.0,
+      321.38,
+      3257,
+      0.9102,
+      100.0,
+      261.9,
+      31.47
+     ],
+     [
+      "2014-11-27",
+      "F-15 D",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.23,
+      253.14,
+      81.83
+     ],
+     [
+      "2014-11-28",
+      "F-1 C",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.04934,
+      264.58,
+      45.88
+     ],
+     [
+      "2014-11-28",
+      "F-11",
+      20.73,
+      517.82,
+      102.38,
+      0.1651,
+      4.61,
+      267.08,
+      72.48
+     ],
+     [
+      "2014-11-28",
+      "F-12",
+      5.78,
+      58.69,
+      836.01,
+      0.9344,
+      30.87,
+      null,
+      50.51
+     ],
+     [
+      "2014-11-28",
+      "F-14",
+      22.06,
+      400.77,
+      2280,
+      0.8505,
+      70.65,
+      266.18,
+      35.04
+     ],
+     [
+      "2014-11-28",
+      "F-15 D",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.2,
+      257.44,
+      84.27
+     ],
+     [
+      "2014-11-29",
+      "F-1 C",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.04686,
+      268.79,
+      81.15
+     ],
+     [
+      "2014-11-29",
+      "F-11",
+      10.44,
+      271.57,
+      21.37,
+      0.07295,
+      2.45,
+      276.48,
+      82.42
+     ],
+     [
+      "2014-11-29",
+      "F-12",
+      14.22,
+      146.09,
+      828.47,
+      0.8501,
+      16.58,
+      null,
+      83.15
+     ],
+     [
+      "2014-11-29",
+      "F-14",
+      14.94,
+      336.44,
+      762.02,
+      0.6937,
+      45.26,
+      273.24,
+      38.55
+     ],
+     [
+      "2014-11-29",
+      "F-15 D",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.18,
+      260.9,
+      86.31
+     ],
+     [
+      "2014-11-30",
+      "F-1 C",
+      12.0,
+      1.26,
+      1.23,
+      0.494,
+      35.12,
+      247.36,
+      38.62
+     ],
+     [
+      "2014-11-30",
+      "F-11",
+      13.23,
+      146.81,
+      48.19,
+      0.2471,
+      2.76,
+      278.33,
+      73.9
+     ],
+     [
+      "2014-11-30",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.01,
+      null,
+      127.71
+     ],
+     [
+      "2014-11-30",
+      "F-14",
+      23.5,
+      321.67,
+      3038,
+      0.9043,
+      70.69,
+      266.43,
+      34.99
+     ],
+     [
+      "2014-11-30",
+      "F-15 D",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.15,
+      263.96,
+      88.2
+     ],
+     [
+      "2014-12-01",
+      "F-1 C",
+      13.5,
+      120.29,
+      183.44,
+      0.604,
+      56.64,
+      255.41,
+      6.54
+     ],
+     [
+      "2014-12-01",
+      "F-11",
+      17.77,
+      130.07,
+      66.95,
+      0.3398,
+      3.6,
+      279.24,
+      75.54
+     ],
+     [
+      "2014-12-01",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.9958,
+      null,
+      130.91
+     ],
+     [
+      "2014-12-01",
+      "F-14",
+      24.0,
+      198.35,
+      2938,
+      0.9368,
+      82.46,
+      263.72,
+      33.17
+     ],
+     [
+      "2014-12-01",
+      "F-15 D",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.15,
+      266.75,
+      89.99
+     ],
+     [
+      "2014-12-02",
+      "F-1 C",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.2791,
+      261.05,
+      37.45
+     ],
+     [
+      "2014-12-02",
+      "F-11",
+      24.0,
+      207.03,
+      90.63,
+      0.3045,
+      4.18,
+      281.35,
+      73.59
+     ],
+     [
+      "2014-12-02",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.9881,
+      null,
+      132.89
+     ],
+     [
+      "2014-12-02",
+      "F-14",
+      24.0,
+      253.04,
+      3188,
+      0.9265,
+      100.0,
+      262.05,
+      31.69
+     ],
+     [
+      "2014-12-02",
+      "F-15 D",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.11,
+      269.33,
+      91.68
+     ],
+     [
+      "2014-12-03",
+      "F-1 C",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.2587,
+      262.68,
+      50.41
+     ],
+     [
+      "2014-12-03",
+      "F-11",
+      24.0,
+      193.28,
+      81.5,
+      0.2966,
+      3.76,
+      282.76,
+      74.65
+     ],
+     [
+      "2014-12-03",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.9938,
+      null,
+      134.43
+     ],
+     [
+      "2014-12-03",
+      "F-14",
+      24.0,
+      262.77,
+      3189,
+      0.9239,
+      100.0,
+      261.98,
+      31.72
+     ],
+     [
+      "2014-12-03",
+      "F-15 D",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.03,
+      271.72,
+      93.29
+     ],
+     [
+      "2014-12-04",
+      "F-1 C",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      9.27,
+      264.25,
+      63.53
+     ],
+     [
+      "2014-12-04",
+      "F-11",
+      23.17,
+      379.68,
+      137.2,
+      0.2654,
+      4.68,
+      274.92,
+      71.8
+     ],
+     [
+      "2014-12-04",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.06,
+      null,
+      135.7
+     ],
+     [
+      "2014-12-04",
+      "F-14",
+      23.33,
+      282.43,
+      2937,
+      0.9123,
+      72.49,
+      267.56,
+      36.42
+     ],
+     [
+      "2014-12-04",
+      "F-15 D",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.03,
+      273.95,
+      94.81
+     ],
+     [
+      "2014-12-05",
+      "F-1 C",
+      14.0,
+      0.0,
+      0.0,
+      null,
+      27.03,
+      257.45,
+      73.79
+     ],
+     [
+      "2014-12-05",
+      "F-11",
+      24.0,
+      421.41,
+      96.92,
+      0.187,
+      3.11,
+      282.36,
+      78.65
+     ],
+     [
+      "2014-12-05",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.18,
+      null,
+      136.02
+     ],
+     [
+      "2014-12-05",
+      "F-14",
+      24.0,
+      483.94,
+      3203,
+      0.8687,
+      73.69,
+      265.19,
+      34.83
+     ],
+     [
+      "2014-12-05",
+      "F-15 D",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.9984,
+      276.05,
+      96.23
+     ],
+     [
+      "2014-12-06",
+      "F-1 C",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.02195,
+      270.0,
+      7.77
+     ],
+     [
+      "2014-12-06",
+      "F-11",
+      24.0,
+      266.7,
+      89.38,
+      0.251,
+      4.01,
+      276.67,
+      76.28
+     ],
+     [
+      "2014-12-06",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.24,
+      null,
+      136.15
+     ],
+     [
+      "2014-12-06",
+      "F-14",
+      24.0,
+      339.06,
+      3270,
+      0.9061,
+      100.0,
+      261.7,
+      31.75
+     ],
+     [
+      "2014-12-06",
+      "F-15 D",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.9349,
+      278.04,
+      97.63
+     ],
+     [
+      "2014-12-07",
+      "F-1 C",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.02231,
+      275.95,
+      0.07228
+     ],
+     [
+      "2014-12-07",
+      "F-11",
+      24.0,
+      222.63,
+      79.77,
+      0.2638,
+      3.68,
+      282.35,
+      78.57
+     ],
+     [
+      "2014-12-07",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.27,
+      null,
+      136.22
+     ],
+     [
+      "2014-12-07",
+      "F-14",
+      24.0,
+      310.03,
+      3197,
+      0.9116,
+      100.0,
+      261.79,
+      31.77
+     ],
+     [
+      "2014-12-07",
+      "F-15 D",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.9355,
+      279.91,
+      98.93
+     ],
+     [
+      "2014-12-08",
+      "F-1 C",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.0245,
+      278.69,
+      0.1593
+     ],
+     [
+      "2014-12-08",
+      "F-11",
+      24.0,
+      202.47,
+      76.24,
+      0.2735,
+      3.52,
+      285.54,
+      78.98
+     ],
+     [
+      "2014-12-08",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.34,
+      null,
+      136.27
+     ],
+     [
+      "2014-12-08",
+      "F-14",
+      24.0,
+      295.37,
+      3201,
+      0.9155,
+      100.0,
+      261.78,
+      31.79
+     ],
+     [
+      "2014-12-08",
+      "F-15 D",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.9483,
+      281.68,
+      100.14
+     ],
+     [
+      "2014-12-09",
+      "F-1 C",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.0122,
+      281.01,
+      0.2618
+     ],
+     [
+      "2014-12-09",
+      "F-11",
+      24.0,
+      208.3,
+      76.94,
+      0.2697,
+      3.53,
+      284.82,
+      79.02
+     ],
+     [
+      "2014-12-09",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.32,
+      null,
+      136.44
+     ],
+     [
+      "2014-12-09",
+      "F-14",
+      24.0,
+      302.9,
+      3220,
+      0.914,
+      100.0,
+      261.74,
+      31.75
+     ],
+     [
+      "2014-12-09",
+      "F-15 D",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.9428,
+      283.35,
+      101.35
+     ],
+     [
+      "2014-12-10",
+      "F-1 C",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.006667,
+      283.1,
+      0.4615
+     ],
+     [
+      "2014-12-10",
+      "F-11",
+      24.0,
+      290.89,
+      104.27,
+      0.2639,
+      4.73,
+      279.1,
+      78.78
+     ],
+     [
+      "2014-12-10",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.3,
+      null,
+      136.61
+     ],
+     [
+      "2014-12-10",
+      "F-14",
+      24.0,
+      313.84,
+      3237,
+      0.9116,
+      100.0,
+      261.69,
+      31.77
+     ],
+     [
+      "2014-12-10",
+      "F-15 D",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.9405,
+      284.94,
+      102.48
+     ],
+     [
+      "2014-12-11",
+      "F-1 C",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.01673,
+      285.06,
+      0.5185
+     ],
+     [
+      "2014-12-11",
+      "F-11",
+      24.0,
+      192.29,
+      75.87,
+      0.2829,
+      3.5,
+      289.74,
+      80.6
+     ],
+     [
+      "2014-12-11",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.3,
+      null,
+      136.59
+     ],
+     [
+      "2014-12-11",
+      "F-14",
+      24.0,
+      281.74,
+      3199,
+      0.9191,
+      100.0,
+      261.68,
+      31.79
+     ],
+     [
+      "2014-12-11",
+      "F-15 D",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.9826,
+      286.45,
+      103.53
+     ],
+     [
+      "2014-12-12",
+      "F-1 C",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.01967,
+      286.9,
+      0.5703
+     ],
+     [
+      "2014-12-12",
+      "F-11",
+      24.0,
+      233.23,
+      71.16,
+      0.2338,
+      3.52,
+      284.82,
+      80.64
+     ],
+     [
+      "2014-12-12",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.26,
+      null,
+      136.51
+     ],
+     [
+      "2014-12-12",
+      "F-14",
+      24.0,
+      331.51,
+      2911,
+      0.8978,
+      97.92,
+      261.51,
+      31.79
+     ],
+     [
+      "2014-12-12",
+      "F-15 D",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.938,
+      287.87,
+      104.54
+     ],
+     [
+      "2014-12-13",
+      "F-1 C",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.0301,
+      288.62,
+      0.611
+     ],
+     [
+      "2014-12-13",
+      "F-11",
+      24.0,
+      191.55,
+      67.46,
+      0.2605,
+      3.45,
+      289.48,
+      81.36
+     ],
+     [
+      "2014-12-13",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.29,
+      null,
+      136.36
+     ],
+     [
+      "2014-12-13",
+      "F-14",
+      24.0,
+      277.88,
+      2816,
+      0.9102,
+      97.92,
+      261.51,
+      31.79
+     ],
+     [
+      "2014-12-13",
+      "F-15 D",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.0,
+      289.23,
+      105.52
+     ],
+     [
+      "2014-12-14",
+      "F-1 C",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.02155,
+      290.25,
+      0.7248
+     ],
+     [
+      "2014-12-14",
+      "F-11",
+      24.0,
+      300.44,
+      104.24,
+      0.2576,
+      4.56,
+      279.97,
+      79.39
+     ],
+     [
+      "2014-12-14",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.27,
+      null,
+      136.31
+     ],
+     [
+      "2014-12-14",
+      "F-14",
+      24.0,
+      328.13,
+      3276,
+      0.909,
+      97.92,
+      261.47,
+      31.73
+     ],
+     [
+      "2014-12-14",
+      "F-15 D",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.8766,
+      290.53,
+      106.53
+     ],
+     [
+      "2014-12-15",
+      "F-1 C",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.04302,
+      291.85,
+      0.6803
+     ],
+     [
+      "2014-12-15",
+      "F-11",
+      24.0,
+      272.5,
+      103.98,
+      0.2762,
+      4.42,
+      284.27,
+      80.78
+     ],
+     [
+      "2014-12-15",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.29,
+      null,
+      136.06
+     ],
+     [
+      "2014-12-15",
+      "F-14",
+      24.0,
+      306.76,
+      3368,
+      0.9165,
+      97.92,
+      261.47,
+      31.81
+     ],
+     [
+      "2014-12-15",
+      "F-15 D",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.9692,
+      291.78,
+      107.37
+     ],
+     [
+      "2014-12-16",
+      "F-1 C",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.0,
+      293.31,
+      0.6636
+     ],
+     [
+      "2014-12-16",
+      "F-11",
+      24.0,
+      285.71,
+      102.17,
+      0.2634,
+      4.49,
+      282.14,
+      80.63
+     ],
+     [
+      "2014-12-16",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.0,
+      null,
+      135.99
+     ],
+     [
+      "2014-12-16",
+      "F-14",
+      24.0,
+      324.63,
+      3341,
+      0.9114,
+      100.0,
+      261.49,
+      31.81
+     ],
+     [
+      "2014-12-16",
+      "F-15 D",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.0,
+      292.99,
+      108.26
+     ],
+     [
+      "2014-12-17",
+      "F-1 C",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.0,
+      294.71,
+      0.6878
+     ],
+     [
+      "2014-12-17",
+      "F-11",
+      24.0,
+      295.77,
+      102.11,
+      0.2566,
+      4.52,
+      281.62,
+      79.95
+     ],
+     [
+      "2014-12-17",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.0,
+      null,
+      136.03
+     ],
+     [
+      "2014-12-17",
+      "F-14",
+      24.0,
+      333.97,
+      3318,
+      0.9086,
+      100.0,
+      261.52,
+      31.8
+     ],
+     [
+      "2014-12-17",
+      "F-15 D",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.0,
+      294.14,
+      109.17
+     ],
+     [
+      "2014-12-18",
+      "F-1 C",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.0,
+      296.07,
+      0.7186
+     ],
+     [
+      "2014-12-18",
+      "F-11",
+      22.08,
+      358.41,
+      131.92,
+      0.269,
+      4.73,
+      275.24,
+      77.28
+     ],
+     [
+      "2014-12-18",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.0,
+      null,
+      136.13
+     ],
+     [
+      "2014-12-18",
+      "F-14",
+      22.33,
+      278.73,
+      2952,
+      0.9137,
+      75.49,
+      264.65,
+      34.07
+     ],
+     [
+      "2014-12-18",
+      "F-15 D",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.0,
+      295.24,
+      110.04
+     ],
+     [
+      "2014-12-19",
+      "F-1 C",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.0,
+      297.34,
+      0.7365
+     ],
+     [
+      "2014-12-19",
+      "F-11",
+      23.33,
+      362.87,
+      138.89,
+      0.2768,
+      5.19,
+      278.89,
+      80.07
+     ],
+     [
+      "2014-12-19",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.0,
+      null,
+      136.16
+     ],
+     [
+      "2014-12-19",
+      "F-14",
+      23.67,
+      278.82,
+      3071,
+      0.9168,
+      80.43,
+      264.44,
+      34.14
+     ],
+     [
+      "2014-12-19",
+      "F-15 D",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.0,
+      296.29,
+      110.79
+     ],
+     [
+      "2014-12-20",
+      "F-1 C",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.0,
+      298.52,
+      0.7189
+     ],
+     [
+      "2014-12-20",
+      "F-11",
+      24.0,
+      317.56,
+      111.74,
+      0.2603,
+      4.8,
+      280.99,
+      80.25
+     ],
+     [
+      "2014-12-20",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.0,
+      null,
+      136.14
+     ],
+     [
+      "2014-12-20",
+      "F-14",
+      24.0,
+      329.27,
+      3334,
+      0.9101,
+      97.92,
+      261.62,
+      31.89
+     ],
+     [
+      "2014-12-20",
+      "F-15 D",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.0,
+      297.28,
+      111.53
+     ],
+     [
+      "2014-12-21",
+      "F-1 C",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.003784,
+      299.67,
+      0.748
+     ],
+     [
+      "2014-12-21",
+      "F-11",
+      24.0,
+      284.18,
+      102.43,
+      0.2649,
+      4.54,
+      284.0,
+      81.8
+     ],
+     [
+      "2014-12-21",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.0,
+      null,
+      136.27
+     ],
+     [
+      "2014-12-21",
+      "F-14",
+      24.0,
+      319.65,
+      3316,
+      0.9121,
+      100.0,
+      261.67,
+      31.9
+     ],
+     [
+      "2014-12-21",
+      "F-15 D",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.0,
+      298.25,
+      112.29
+     ],
+     [
+      "2014-12-22",
+      "F-1 C",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.0006648,
+      300.79,
+      0.7415
+     ],
+     [
+      "2014-12-22",
+      "F-11",
+      24.0,
+      273.16,
+      102.59,
+      0.273,
+      4.45,
+      286.25,
+      81.98
+     ],
+     [
+      "2014-12-22",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.0,
+      null,
+      136.38
+     ],
+     [
+      "2014-12-22",
+      "F-14",
+      24.0,
+      305.35,
+      3300,
+      0.9153,
+      97.92,
+      261.73,
+      31.88
+     ],
+     [
+      "2014-12-22",
+      "F-15 D",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.0,
+      299.13,
+      112.96
+     ],
+     [
+      "2014-12-23",
+      "F-1 C",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.0001998,
+      301.9,
+      0.739
+     ],
+     [
+      "2014-12-23",
+      "F-11",
+      24.0,
+      275.81,
+      101.59,
+      0.2692,
+      4.5,
+      286.14,
+      82.13
+     ],
+     [
+      "2014-12-23",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.25,
+      null,
+      136.52
+     ],
+     [
+      "2014-12-23",
+      "F-14",
+      24.0,
+      312.7,
+      3315,
+      0.9138,
+      100.0,
+      261.73,
+      31.9
+     ],
+     [
+      "2014-12-23",
+      "F-15 D",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.6547,
+      300.0,
+      113.59
+     ],
+     [
+      "2014-12-24",
+      "F-1 C",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.0002067,
+      302.91,
+      0.7406
+     ],
+     [
+      "2014-12-24",
+      "F-11",
+      24.0,
+      277.21,
+      102.51,
+      0.27,
+      4.53,
+      286.16,
+      82.25
+     ],
+     [
+      "2014-12-24",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.33,
+      null,
+      136.67
+     ],
+     [
+      "2014-12-24",
+      "F-14",
+      24.0,
+      312.55,
+      3326,
+      0.9141,
+      100.0,
+      261.76,
+      31.97
+     ],
+     [
+      "2014-12-24",
+      "F-15 D",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.689,
+      300.83,
+      114.19
+     ],
+     [
+      "2014-12-25",
+      "F-1 C",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.0,
+      303.89,
+      0.733
+     ],
+     [
+      "2014-12-25",
+      "F-11",
+      24.0,
+      284.56,
+      103.76,
+      0.2672,
+      4.56,
+      286.02,
+      82.43
+     ],
+     [
+      "2014-12-25",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.19,
+      null,
+      136.79
+     ],
+     [
+      "2014-12-25",
+      "F-14",
+      24.0,
+      318.56,
+      3343,
+      0.913,
+      100.0,
+      261.79,
+      32.0
+     ],
+     [
+      "2014-12-25",
+      "F-15 D",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.6831,
+      301.64,
+      114.76
+     ],
+     [
+      "2014-12-26",
+      "F-1 C",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.0009681,
+      304.88,
+      0.7364
+     ],
+     [
+      "2014-12-26",
+      "F-11",
+      24.0,
+      291.27,
+      103.21,
+      0.2616,
+      4.55,
+      286.4,
+      82.61
+     ],
+     [
+      "2014-12-26",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.15,
+      null,
+      136.98
+     ],
+     [
+      "2014-12-26",
+      "F-14",
+      24.0,
+      326.73,
+      3332,
+      0.9107,
+      100.0,
+      261.84,
+      31.99
+     ],
+     [
+      "2014-12-26",
+      "F-15 D",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.6919,
+      302.41,
+      115.39
+     ],
+     [
+      "2014-12-27",
+      "F-1 C",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.026,
+      305.81,
+      0.7327
+     ],
+     [
+      "2014-12-27",
+      "F-11",
+      24.0,
+      284.48,
+      106.41,
+      0.2722,
+      4.62,
+      285.71,
+      82.59
+     ],
+     [
+      "2014-12-27",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.17,
+      null,
+      137.15
+     ],
+     [
+      "2014-12-27",
+      "F-14",
+      24.0,
+      314.02,
+      3380,
+      0.915,
+      100.0,
+      261.91,
+      31.91
+     ],
+     [
+      "2014-12-27",
+      "F-15 D",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.7266,
+      303.17,
+      115.96
+     ],
+     [
+      "2014-12-28",
+      "F-1 C",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.01608,
+      306.7,
+      0.7215
+     ],
+     [
+      "2014-12-28",
+      "F-11",
+      24.0,
+      280.53,
+      104.36,
+      0.2711,
+      4.48,
+      286.95,
+      83.1
+     ],
+     [
+      "2014-12-28",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.15,
+      null,
+      137.31
+     ],
+     [
+      "2014-12-28",
+      "F-14",
+      24.0,
+      319.75,
+      3423,
+      0.9146,
+      100.0,
+      262.02,
+      32.0
+     ],
+     [
+      "2014-12-28",
+      "F-15 D",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.6521,
+      303.9,
+      116.53
+     ],
+     [
+      "2014-12-29",
+      "F-1 C",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.0,
+      307.49,
+      13.91
+     ],
+     [
+      "2014-12-29",
+      "F-11",
+      23.5,
+      330.5,
+      130.37,
+      0.2829,
+      4.63,
+      285.57,
+      83.05
+     ],
+     [
+      "2014-12-29",
+      "F-12",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      1.15,
+      null,
+      135.67
+     ],
+     [
+      "2014-12-29",
+      "F-14",
+      23.5,
+      292.71,
+      3323,
+      0.919,
+      83.28,
+      265.05,
+      34.09
+     ],
+     [
+      "2014-12-29",
+      "F-15 D",
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.6153,
+      304.61,
+      117.09
+     ]
+    ],
+    "row_count": 200,
+    "truncated": false
+   },
+   "code": "wellpilot.agent.tools.run_sql@50068378f8ca",
+   "created_at": "2026-10-27T15:24:45+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E10",
+   "tool": "production_monthly",
+   "arguments": {
+    "well": "F-14",
+    "start": "2014-11-01",
+    "end": "2015-02-28"
+   },
+   "result": {
+    "columns": [
+     "month",
+     "days",
+     "producing_days",
+     "oil_sm3",
+     "water_sm3",
+     "gas_sm3",
+     "water_injected_sm3",
+     "water_cut",
+     "uptime",
+     "oil_rate_per_producing_day",
+     "bhp_bar",
+     "whp_bar",
+     "choke_pct"
+    ],
+    "rows": [
+     [
+      "2014-11",
+      30,
+      30,
+      10386,
+      103385,
+      1643093,
+      null,
+      0.9087,
+      0.984,
+      351.83,
+      260.82,
+      30.45,
+      96.15
+     ],
+     [
+      "2014-12",
+      31,
+      31,
+      9665,
+      100255,
+      1601950,
+      null,
+      0.9121,
+      0.9957,
+      313.11,
+      262.43,
+      32.36,
+      95.33
+     ],
+     [
+      "2015-01",
+      31,
+      31,
+      9121,
+      95025,
+      1357133,
+      null,
+      0.9124,
+      0.9652,
+      304.82,
+      263.83,
+      31.9,
+      93.48
+     ],
+     [
+      "2015-02",
+      28,
+      28,
+      7179,
+      91844,
+      1092571,
+      null,
+      0.9275,
+      0.9748,
+      263.02,
+      263.41,
+      31.0,
+      96.26
+     ]
+    ]
+   },
+   "code": "wellpilot.agent.tools.production_monthly@c841520578bb",
+   "created_at": "2026-10-27T15:24:45+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E11",
+   "tool": "calculate",
+   "arguments": {
+    "expressions": [
+     "859.51-184.54",
+     "859.51/184.54"
+    ]
+   },
+   "result": {
+    "results": [
+     {
+      "expression": "859.51-184.54",
+      "value": 674.97
+     },
+     {
+      "expression": "859.51/184.54",
+      "value": 4.66
+     }
+    ]
+   },
+   "code": "wellpilot.agent.tools.calculate@5c1d806d8f4d",
+   "created_at": "2026-10-27T15:24:51+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E12",
+   "tool": "calculate",
+   "arguments": {
+    "expressions": [
+     "0.9623-0.3107",
+     "5092-1251",
+     "5106-1583"
+    ]
+   },
+   "result": {
+    "results": [
+     {
+      "expression": "0.9623-0.3107",
+      "value": 0.6516
+     },
+     {
+      "expression": "5092-1251",
+      "value": 3841
+     },
+     {
+      "expression": "5106-1583",
+      "value": 3523
+     }
+    ]
+   },
+   "code": "wellpilot.agent.tools.calculate@5c1d806d8f4d",
+   "created_at": "2026-10-27T15:24:55+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E13",
+   "tool": "calculate",
+   "arguments": {
+    "expressions": [
+     "0.3107*100",
+     "0.9623*100",
+     "4923-1251",
+     "100-30.28"
+    ]
+   },
+   "result": {
+    "results": [
+     {
+      "expression": "0.3107*100",
+      "value": 31.07
+     },
+     {
+      "expression": "0.9623*100",
+      "value": 96.23
+     },
+     {
+      "expression": "4923-1251",
+      "value": 3672
+     },
+     {
+      "expression": "100-30.28",
+      "value": 69.72
+     }
+    ]
+   },
+   "code": "wellpilot.agent.tools.calculate@5c1d806d8f4d",
+   "created_at": "2026-10-27T15:25:03+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E14",
+   "tool": "calculate",
+   "arguments": {
+    "expressions": [
+     "859.51/184.54",
+     "184.54*3.66",
+     "0.9623-0.3107"
+    ]
+   },
+   "result": {
+    "results": [
+     {
+      "expression": "859.51/184.54",
+      "value": 4.66
+     },
+     {
+      "expression": "184.54*3.66",
+      "value": 675.42
+     },
+     {
+      "expression": "0.9623-0.3107",
+      "value": 0.6516
+     }
+    ]
+   },
+   "code": "wellpilot.agent.tools.calculate@5c1d806d8f4d",
+   "created_at": "2026-10-27T15:25:14+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E15",
+   "tool": "calculate",
+   "arguments": {
+    "expressions": [
+     "185*1",
+     "860/185"
+    ]
+   },
+   "result": {
+    "results": [
+     {
+      "expression": "185*1",
+      "value": 185.0
+     },
+     {
+      "expression": "860/185",
+      "value": 4.65
+     }
+    ]
+   },
+   "code": "wellpilot.agent.tools.calculate@5c1d806d8f4d",
+   "created_at": "2026-10-27T15:25:27+00:00",
+   "warnings": []
+  }
+ ]
+}

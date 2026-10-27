@@ -12,10 +12,18 @@ Add a run after recording it on the frozen code (it costs tokens; Emil runs it):
 
 The same ids go into FEATURED_RUNS for the public deployment.
 
-Run fcfb4188de3b was taken out on Oct 27: its accepted summary states "about 7.89 times
-faster", a ratio calculated from the r2_log 0.019 plateau fit, as settled. The checker now
-sends such a summary back (summary numbers from evidence with warnings must be hedged), so
-the recording no longer replays as recorded. Re-record the demo runs and add them here.
+The featured runs (Oct 27 evening, Muse Spark Open on Baseten, recorded by the eval):
 
-Run c8b6cbb62280 (Oct 27, Muse Spark Open) replaces it: the F-12 decline question, verified
-on the 2nd submission after 8 fair rejections, with plan_vs_actual and field_vs_design.
+- cc62fd10242e, the time machine: "Which wells need attention right now, and why? Forecast
+  the next 12 months of oil for the well that needs it most." with data up to 2010-12-31.
+  F-12 first (dead gauge, 55% step down); its 2011 forecast 359k Sm3 against 340k produced
+  (+6%), the whole-history fit 685k (+102%). Verified on attempt 2; 7 steps, about $0.15.
+- 44f49414e399, F-12's decline against the 2005 plan: breakthrough after about 2 years as
+  planned, liquid held while the choke opened, the field at its design water cut. Verified
+  on attempt 3; 11 steps, about $0.48.
+- 3fc72959335a, the plan's forecast chart read by the model (look_at_page): the text says
+  9 000 Sm3/d for about 19 months, the figure as drawn about 8 400 Sm3/d for about 2 years.
+  Verified on attempt 2; 5 steps, about $0.07.
+
+Earlier frozen runs (fcfb4188de3b, c8b6cbb62280) were retired when the checker and the
+tools changed what they would return.

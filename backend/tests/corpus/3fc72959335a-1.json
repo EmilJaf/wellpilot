@@ -1,0 +1,501 @@
+{
+ "source": {
+  "run": "3fc72959335a",
+  "submission": 1,
+  "model": "meta-models/muse-spark-open-1026",
+  "question": "What oil plateau rate and duration does the forecast figure on page 23 of the 2005 development plan show?"
+ },
+ "to_review": true,
+ "note": "",
+ "expected": {
+  "accepted": false,
+  "flagged": [
+   "Finding 1",
+   "Summary"
+  ]
+ },
+ "submission": {
+  "summary": "The forecast figure on PUD page 23 (Figur 4.2) shows an oil plateau drawn at about 8 400 Sm3/d for about 2 years, while the accompanying text and table on the same page state the planned plateau as 9 000 Sm3/d for about 19 months (about 1.58 years).",
+  "findings": [
+   {
+    "claim": "The PUD text and design table on page 23 state the planned plateau rate as 9 000 Sm3/d lasting about 19 months.",
+    "detail": "Table Tabell 4.3 field limits row 'Oljekapasitet' = 9000 Sm3/d. Text Section 4.5.1 exact quote: 'Platåraten på 9.000 Sm3 /d vil vare om lag 19 måneder.' [The plateau rate of 9,000 Sm3/d will last about 19 months.] After a start-up period of about 1 year the field will produce at plateau rate; 19 months = 1.58 years.",
+    "evidence_ids": [
+     "E1",
+     "E2",
+     "E3",
+     "E4"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "9 000",
+      "value": 9000,
+      "evidence_id": "E2"
+     },
+     {
+      "text": "19 months",
+      "value": 19,
+      "evidence_id": "E2"
+     },
+     {
+      "text": "1.58 years",
+      "value": 1.58,
+      "evidence_id": "E4"
+     }
+    ]
+   },
+   {
+    "claim": "As drawn, the forecast curve Figur 4.2 on page 23 shows the plateau at about 8 400 Sm3/d for about 2 years from about 2008 to mid-2010.",
+    "detail": "Figure Figur 4.2 'Volve oljerate og kumulativ produksjon' pink oil-rate curve: left axis 0-9000 Sm3/d. Curve drawn visibly below 9000 grid line, best reading ~8400-8500 Sm3/d, approximate. X-axis År 2007-2017, plateau flat from approx 2008 to just before 2011, approx 2 years (~24 months), approx 5 months longer than 19-month text value. Warning: read from page image, not data, values are approximate.",
+    "evidence_ids": [
+     "E1",
+     "E4"
+    ],
+    "confidence": "inference",
+    "numbers": [
+     {
+      "text": "8 400",
+      "value": 8400,
+      "evidence_id": "E1"
+     },
+     {
+      "text": "2 years",
+      "value": 2,
+      "evidence_id": "E1"
+     },
+     {
+      "text": "5 months",
+      "value": 5,
+      "evidence_id": "E4"
+     }
+    ]
+   }
+  ],
+  "summary_numbers": [
+   {
+    "text": "8 400",
+    "value": 8400,
+    "evidence_id": "E1"
+   },
+   {
+    "text": "2 years",
+    "value": 2,
+    "evidence_id": "E1"
+   },
+   {
+    "text": "9 000",
+    "value": 9000,
+    "evidence_id": "E2"
+   },
+   {
+    "text": "19 months",
+    "value": 19,
+    "evidence_id": "E2"
+   },
+   {
+    "text": "1.58 years",
+    "value": 1.58,
+    "evidence_id": "E4"
+   }
+  ]
+ },
+ "evidence": [
+  {
+   "id": "E1",
+   "tool": "look_at_page",
+   "arguments": {
+    "doc_id": "volve_pud",
+    "page": 23,
+    "question": "What oil plateau rate and duration does the forecast figure on page 23 show? Read the oil rate in Sm3/d the forecast curve shows at plateau, and the years/duration it stays at plateau."
+   },
+   "result": {
+    "document": "Plan for utbygging og drift av Volve (PUD, plan for development and operation)",
+    "doc_id": "volve_pud",
+    "page": 23,
+    "question": "What oil plateau rate and duration does the forecast figure on page 23 show? Read the oil rate in Sm3/d the forecast curve shows at plateau, and the years/duration it stays at plateau.",
+    "answer": "Page 23 shows two different `plateau' numbers for Volve oil rate.",
+    "readings": [
+     {
+      "label": "Felt begrensning - Oljekapasitet (design capacity) - Tabell 4.3, table centre left page",
+      "value": 9000,
+      "unit": "Sm3/d",
+      "where": "table Tabell 4.3 - Felt begrensninger - row `Oljekapasitet'"
+     },
+     {
+      "label": "Prognose for oljeproduksjon - Platårate i teksten - Kap. 4.5.1, text right middle page",
+      "value": 9000,
+      "unit": "Sm3/d",
+      "where": "text Section 4.5.1 `Prognose for oljeproduksjon' paragraph 2: `Platåråten på 9.000 Sm3/d vil vare om lag 19 måneder'"
+     },
+     {
+      "label": "Prognose for oljeproduksjon - Platå varighet i teksten",
+      "value": 19.0,
+      "unit": "måneder ~ 1.6 år, ca. 1 år etter oppstart ca. 2008-2009",
+      "where": "text Section 4.5.1, same sentence"
+     },
+     {
+      "label": "Forecast curve - Oljerate plateau as DRAWN - Figur 4.2, figure bottom centre page: `Figur 4.2 - Volve oljerate og kumulativ produksjon' - pink curve `oljerate' - left y-axis Sm3/d vs x-axis År",
+      "value": 8400,
+      "unit": "Sm3/d",
+      "where": "figure Figur 4.2, pink `oljerate' plateau. Axis is 0-9000 Sm3/d left. Curve drawn at ~ 8400-8600 Sm3/d, visibly BELOW the 9000 Sm3/d grid line. Best reading ~ 8400-8500 Sm3/d. No numeric label printed on curve - value must be read off left axis."
+     },
+     {
+      "label": "Forecast curve - Platå varighet/duration as DRAWN - Figur 4.2, same pink plateau",
+      "value": 2.0,
+      "unit": "år, ca. 24 måneder, ca. 2008 til midt 2010. Visually from ~ early 2008 to ~ mid 2010 on x-axis `År'.",
+      "where": "figure Figur 4.2, x-axis `År' 2007-2017. Pink plateau is flat from approx tick `2008' to just before tick `2011' (the drop at ~ 2010-2010.5). No duration label printed in figure - duration must be estimated off x-axis. Text value 19 måneder is NOT drawn in figure."
+     }
+    ],
+    "read_by": "meta-models/muse-spark-open-1026",
+    "warnings": [
+     "read from the page image by the model, not from data: values are approximate readings (a figure's scale, a scan); treat conclusions from them as inferences"
+    ]
+   },
+   "code": "wellpilot.agent.vision.look_at_page@c7a6d5c6a549",
+   "created_at": "2026-10-27T15:23:07+00:00",
+   "warnings": [
+    "read from the page image by the model, not from data: values are approximate readings (a figure's scale, a scan); treat conclusions from them as inferences"
+   ]
+  },
+  {
+   "id": "E2",
+   "tool": "read_report_page",
+   "arguments": {
+    "doc_id": "volve_pud",
+    "page": 23
+   },
+   "result": {
+    "document": {
+     "title": "Plan for utbygging og drift av Volve (PUD, plan for development and operation)",
+     "issued": "2005-02-01"
+    },
+    "page": 23,
+    "pages": 53,
+    "text": "Plan for utbygging og drift av Volve Februar 2005 23 regularitet på 94 % er lagt til grunn for beregning av produksjonsprofilene. Gassløft er inkludert for å sikre oppstart av brønner etter vedlikehold og sikrer produksjonen hvis kommunikasjonen i reservoaret er dårligere enn antatt. Tabell 4.3 - Felt begrensninger Antatt produksjonsstart mars.2007 Væskekapasitet 13000 Sm3 /d Oljekapasitet 9000 Sm3 /d Gass kapasitet 1,5 M Sm3 /d Vanninjeksjons kapasitet 16000 Sm3 /d Maksimum vannkutt 0,80 Maks gassløft rate 0,45 MSm3 /d Antatt produksjonsstart mars 2007 er basert på kontrakten med Maersk. På grunn av værrisiko ved utslep kan produksjonsstart bli utsatt.. Tabell 4.4 - Brønn begrensninger Oljerate 2500-4500 Sm3 /d Minimum Oljerate 100 Sm3 /d Minimum brønnhodetrykk 40 bar Maks gassløft rate 0,15 MSm3/d 4.5.1 Prognose for oljeproduksjon Feltet vil bli startet opp når første brønn er klargjort og etter en oppstartsperiode på ca. 1 år vil feltetprodusere på platårate. Platåraten på 9.000 Sm3 /d vil vare om lag 19 måneder. Produksjonen avtar grunnet økende vannrate. Kumulativ oljeproduksjon inntil minimum økonomisk rate på 2.100 Sm3 /d (gitt Volve oljepris på 18,7 USD/fat) nås er 11,4 MSm3 . Oljerate og kumulativ produksjon er vist i figur 4.2. Denne er basert på forventet produksjon (snitt) estimert fra usikkerhetsstudiet, se kapitel 4.6. Figur 4.2 - Volve oljerate og kumulativ produksjon 4.5.2 Prognose for vannproduksjon Vannproduksjonen kommer først og fremst fra injeksjonsvannet som bryter gjennom i brønnene etter omlag 2 år. På det tidspunkt er kumulativ oljeproduksjon omlag 6 MSm3 . Behovet for vann fra Utsira-formasjonen for injeksjon er ca 12.000 Sm3 /d. Når vannproduksjonen øker, reduseres behovet for Utsiravann. Produsert vann og injisert vann er vist i figur 4.3.",
+    "image": "reports/volve_pud/p023.png",
+    "summary_en": "Page 23 of the Volve PUD presents field and well constraints (Tabell 4.3 and 4.4), assumed production start March 2007, and forecasts for oil production and water production including plateau rate, cumulative volume, economic cutoff, and figure 4.2 for oil rate and cumulative production.",
+    "facts": {
+     "columns": [
+      "topic",
+      "source",
+      "statement_en",
+      "quote",
+      "quote_check",
+      "wells"
+     ],
+     "rows": [
+      [
+       "facility_limits",
+       "table",
+       "The assumed production start for the Volve field is mars.2007.",
+       "Antatt produksjonsstart mars.2007",
+       "exact",
+       ""
+      ],
+      [
+       "facility_limits",
+       "table",
+       "The field liquid capacity is 13000 Sm3/d.",
+       "Væskekapasitet 13000 Sm3 /d",
+       "exact",
+       ""
+      ],
+      [
+       "facility_limits",
+       "table",
+       "The field oil capacity is 9000 Sm3/d.",
+       "Oljekapasitet 9000 Sm3 /d",
+       "exact",
+       ""
+      ],
+      [
+       "facility_limits",
+       "table",
+       "The field gas capacity is 1,5 M Sm3/d.",
+       "Gass kapasitet 1,5 M Sm3 /d",
+       "exact",
+       ""
+      ],
+      [
+       "facility_limits",
+       "table",
+       "The field water injection capacity is 16000 Sm3/d.",
+       "Vanninjeksjons kapasitet 16000 Sm3 /d",
+       "exact",
+       ""
+      ],
+      [
+       "facility_limits",
+       "table",
+       "The field maximum water cut is 0,80.",
+       "Maksimum vannkutt 0,80",
+       "exact",
+       ""
+      ],
+      [
+       "facility_limits",
+       "table",
+       "The field maximum gas lift rate is 0,45 MSm3/d.",
+       "Maks gassløft rate 0,45 MSm3 /d",
+       "exact",
+       ""
+      ],
+      [
+       "facility_limits",
+       "table",
+       "The well oil rate limit is 2500-4500 Sm3/d.",
+       "Oljerate 2500-4500 Sm3 /d",
+       "exact",
+       ""
+      ],
+      [
+       "facility_limits",
+       "table",
+       "The well minimum oil rate is 100 Sm3/d.",
+       "Minimum Oljerate 100 Sm3 /d",
+       "exact",
+       ""
+      ],
+      [
+       "facility_limits",
+       "table",
+       "The well minimum wellhead pressure is 40 bar.",
+       "Minimum brønnhodetrykk 40 bar",
+       "exact",
+       ""
+      ],
+      [
+       "facility_limits",
+       "table",
+       "The well maximum gas lift rate is 0,15 MSm3/d.",
+       "Maks gassløft rate 0,15 MSm3/d",
+       "exact",
+       ""
+      ],
+      [
+       "production_forecast",
+       "text",
+       "A regularity of 94% is assumed as basis for calculation of the production profiles.",
+       "regularitet på 94 % er lagt til grunn for beregning av produksjonsprofilene.",
+       "exact",
+       ""
+      ],
+      [
+       "facility_limits",
+       "text",
+       "Gas lift is included to ensure start-up of wells after maintenance and to secure production if reservoir communication is worse than assumed.",
+       null,
+       "tokens",
+       ""
+      ],
+      [
+       "schedule",
+       "text",
+       "The assumed production start in march 2007 is based on the contract with Maersk and may be postponed due to weather risk at offloading.",
+       "Antatt produksjonsstart mars 2007 er basert på kontrakten med Maersk. På grunn av værrisiko ved utslep kan produksjonsstart bli utsatt..",
+       "exact",
+       ""
+      ],
+      [
+       "production_forecast",
+       "text",
+       "The field will start up when the first well is completed and after a start-up period of about 1 year it will produce at plateau rate.",
+       "Feltet vil bli startet opp når første brønn er klargjort og etter en oppstartsperiode på ca. 1 år vil feltetprodusere på platårate.",
+       "exact",
+       ""
+      ],
+      [
+       "production_forecast",
+       "text",
+       "The plateau rate of 9.000 Sm3/d will last about 19 months.",
+       "Platåraten på 9.000 Sm3 /d vil vare om lag 19 måneder.",
+       "exact",
+       ""
+      ],
+      [
+       "production_forecast",
+       "text",
+       "Cumulative oil production until the minimum economic rate of 2.100 Sm3/d at a Volve oil price of 18,7 USD/fat is 11,4 MSm3.",
+       "Kumulativ oljeproduksjon inntil minimum økonomisk rate på 2.100 Sm3 /d (gitt Volve oljepris på 18,7 USD/fat) nås er 11,4 MSm3",
+       "exact",
+       ""
+      ],
+      [
+       "production_forecast",
+       "figure",
+       "Figure 4.2 shows Volve oil rate and cumulative production versus year from 2007 to 2017, with oil rate on left axis in Sm3/d and cumulative oil in mill Sm3 on right axis.",
+       "Figur 4.2 - Volve oljerate og kumulativ produksjon",
+       "exact",
+       ""
+      ],
+      [
+       "water",
+       "text",
+       "Water production comes primarily from injection water that breaks through in the wells after about 2 years.",
+       "Vannproduksjonen kommer først og fremst fra injeksjonsvannet som bryter gjennom i brønnene etter omlag 2 år.",
+       "exact",
+       ""
+      ],
+      [
+       "water",
+       "text",
+       "At the time of water breakthrough the cumulative oil production is about 6 MSm3.",
+       "På det tidspunkt er kumulativ oljeproduksjon omlag 6 MSm3",
+       "exact",
+       ""
+      ],
+      [
+       "injection",
+       "text",
+       "The need for water from the Utsira formation for injection is about 12.000 Sm3/d, decreasing as water production increases.",
+       "Behovet for vann fra Utsira-formasjonen for injeksjon er ca 12.000 Sm3 /d. Når vannproduksjonen øker, reduseres behovet for Utsiravann.",
+       "exact",
+       ""
+      ]
+     ]
+    }
+   },
+   "code": "wellpilot.agent.tools.read_report_page@d467451f92da",
+   "created_at": "2026-10-27T15:23:07+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E3",
+   "tool": "search_reports",
+   "arguments": {
+    "query": "plateau rate 9000 Sm3/d 19 months"
+   },
+   "result": {
+    "documents": {
+     "volve_pud": {
+      "title": "Plan for utbygging og drift av Volve (PUD, plan for development and operation)",
+      "issued": "2005-02-01"
+     }
+    },
+    "facts": {
+     "columns": [
+      "doc_id",
+      "page",
+      "topic",
+      "source",
+      "statement_en",
+      "quote",
+      "quote_check",
+      "wells"
+     ],
+     "rows": [
+      [
+       "volve_pud",
+       23,
+       "production_forecast",
+       "text",
+       "The plateau rate of 9.000 Sm3/d will last about 19 months.",
+       "Platåraten på 9.000 Sm3 /d vil vare om lag 19 måneder.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       24,
+       "production_forecast",
+       "figure",
+       "Figure 4.4 shows the gas production rate in mill Sm3/d versus year from 2007 to 2017, with a plateau around 1.2 MSm3/d in 2008-2010.",
+       "Figur 4.4 - Gassproduksjons rate",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       49,
+       "facility_limits",
+       "table",
+       "The operator's annual operating cost at plateau rate for Logistics (helicopter, supply etc.) is 31 million NOK 2005 per 12 months production.",
+       "Logistikk (helikopter, forsyning etc.) | 31",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       49,
+       "facility_limits",
+       "table",
+       "The operator's annual operating cost at plateau rate for the operator's operating organization is 37 million NOK 2005 per 12 months production.",
+       "Operatørens driftsorganisasjon | 37",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       49,
+       "facility_limits",
+       "table",
+       "The operator's annual operating cost at plateau rate for production chemicals is 12 million NOK 2005 per 12 months production.",
+       "Produksjonskjemikalier | 12",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       49,
+       "facility_limits",
+       "table",
+       "The operator's annual operating cost at plateau rate for well intervention costs is 27 million NOK 2005 per 12 months production.",
+       "Brønn intervensjonskostnader | 27",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       49,
+       "facility_limits",
+       "table",
+       "The operator's annual operating cost at plateau rate for Co2-fee / Nox fee is 19 million NOK 2005 per 12 months production.",
+       "Co2 – avgift / Nox avgift | 19",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       49,
+       "facility_limits",
+       "table",
+       "The operator's annual operating cost at plateau rate for Miscellaneous is 29 million NOK 2005 per 12 months production.",
+       "Diverse | 29",
+       "exact",
+       ""
+      ]
+     ]
+    }
+   },
+   "code": "wellpilot.agent.tools.search_reports@5907b6347b0e",
+   "created_at": "2026-10-27T15:23:11+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E4",
+   "tool": "calculate",
+   "arguments": {
+    "expressions": [
+     "19/12",
+     "24-19"
+    ]
+   },
+   "result": {
+    "results": [
+     {
+      "expression": "19/12",
+      "value": 1.58
+     },
+     {
+      "expression": "24-19",
+      "value": 5.0
+     }
+    ]
+   },
+   "code": "wellpilot.agent.tools.calculate@5c1d806d8f4d",
+   "created_at": "2026-10-27T15:23:15+00:00",
+   "warnings": []
+  }
+ ]
+}
