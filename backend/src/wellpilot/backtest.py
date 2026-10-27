@@ -388,6 +388,56 @@ def case_detail(processed_dir: Path, store: ProductionStore, well: str, cutoff: 
     }
 
 
+_FILMS: dict[tuple[str, str], dict] = {}  # (processed_dir, well) -> film; the data never changes
+
+
+def film(processed_dir: Path, store: ProductionStore, well: str) -> dict:
+    """Every forecast made for one well, in cutoff order, for the accuracy tab's film: one
+    weekly rate series over the well's life and, per cutoff, the agent's and the classic
+    fit's windows, curves, volumes and errors, with the agent's range from past errors where
+    the backtest had one. Built once per well and kept: about 0.3 s for 12 cutoffs."""
+    key = (str(processed_dir), well)
+    if key in _FILMS:
+        return _FILMS[key]
+    results = pd.read_parquet(processed_dir / RESULTS_FILE)
+    rows = results[results["well"] == well]
+    if rows.empty:
+        raise ValueError(f"no backtest cases for {well}")
+    daily = _production(store, well)
+    end = daily["date"].max()
+    frames = []
+    for cut in sorted(rows["cutoff"].unique()):
+        cutoff = pd.Timestamp(cut).date().isoformat()
+        detail = case_detail(processed_dir, store, well, cutoff)
+        agent_row = rows[(rows["cutoff"] == cut) & (rows["method"] == "agent")]
+        band = None
+        if not agent_row.empty and pd.notna(agent_row["calibrated_low"].iloc[0]):
+            low = float(agent_row["calibrated_low"].iloc[0])
+            high = float(agent_row["calibrated_high"].iloc[0])
+            band = {
+                "low": round(low),
+                "high": round(high),
+                "holds": low <= detail["actual_sm3"] <= high,
+            }
+        frames.append(
+            {
+                "cutoff": detail["cutoff"],
+                "horizon_end": detail["horizon_end"],
+                "actual_sm3": detail["actual_sm3"],
+                "methods": [m for m in detail["methods"] if m["method"] in ("agent", "classic")],
+                "band": band,
+                "agent": detail["agent"],
+            }
+        )
+    _FILMS[key] = {
+        "well": well,
+        "rate": weekly_rate(daily, end, end),
+        "data_ends": end.date().isoformat(),
+        "frames": frames,
+    }
+    return _FILMS[key]
+
+
 async def run(with_agent: bool, agent_limit: int, refresh: bool = False) -> dict:
     settings = get_settings()
     store = ProductionStore(settings.processed_dir)

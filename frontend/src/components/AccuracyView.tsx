@@ -3,6 +3,7 @@ import { api, column, type Backtest, type BacktestCase } from '../api'
 import { CheckIcon } from '../icons'
 import { SHORT, signed, volume } from '../labels'
 import { useWidth } from '../useWidth'
+import { ForecastFilm } from './ForecastFilm'
 
 const METHODS: { key: string; label: string }[] = [
   { key: 'agent', label: 'WellPilot agent, its own window' },
@@ -61,6 +62,10 @@ export function AccuracyView() {
     (a, b) => Math.abs(b.error.classic) - Math.abs(b.error.agent) - (Math.abs(a.error.classic) - Math.abs(a.error.agent)),
   )[0]
   const selected = cases.find((c) => c.key === picked) ?? widest ?? cases[0]
+  // The film runs over wells with enough forecasts to tell a story; the biggest producer first.
+  const counts = new Map<string, number>()
+  for (const c of compared) counts.set(c.well, (counts.get(c.well) ?? 0) + 1)
+  const filmWells = [...counts].filter(([, n]) => n >= 3).sort((a, b) => b[1] - a[1]).map(([w]) => w)
   const methods = METHODS.filter((m) => summary.all_cases[m.key])
   const worst = Math.max(...methods.map((m) => summary.all_cases[m.key].median_abs_error))
   const closer = summary.agent_closer
@@ -166,6 +171,8 @@ export function AccuracyView() {
           .
         </p>
       )}
+
+      {filmWells.length > 0 && <ForecastFilm wells={filmWells} initial={filmWells[0]} />}
 
       <ErrorStrip cases={cases} selected={selected?.key ?? null} onSelect={setPicked} />
       {selected && <CaseView key={selected.key} entry={selected} />}
@@ -376,8 +383,12 @@ function CaseView({ entry }: { entry: Case }) {
 const DAY = 86_400_000
 const time = (iso: string) => Date.parse(`${iso}T00:00:00Z`)
 
-/** Oil rate per producing day on a log scale, with the cut and the two forecasts. */
-export function CaseChart({ detail }: { detail: BacktestCase }) {
+/** Fixed axes for a film: x in ms since the epoch, y in log10 of the rate. */
+export type Domain = { x: [number, number]; y: [number, number] }
+
+/** Oil rate per producing day on a log scale, with the cut and the two forecasts. With a
+    domain the axes are fixed (the film); without it they fit this case. */
+export function CaseChart({ detail, domain }: { detail: BacktestCase; domain?: Domain }) {
   const [host, width] = useWidth(520)
   const [hover, setHover] = useState<number | null>(null)
   const height = 240
@@ -385,12 +396,13 @@ export function CaseChart({ detail }: { detail: BacktestCase }) {
   const plotW = width - pad.left - pad.right
   const plotH = height - pad.top - pad.bottom
   const shown = detail.methods.filter((m) => m.method === 'agent' || m.method === 'classic')
-  const t0 = Math.min(time(detail.rate.date[0]), ...shown.map((m) => time(m.window_start)))
-  const t1 = time(detail.horizon_end) + DAY
+  const t0 = domain?.x[0] ?? Math.min(time(detail.rate.date[0]), ...shown.map((m) => time(m.window_start)))
+  const t1 = domain?.x[1] ?? time(detail.horizon_end) + DAY
   const cut = time(detail.cutoff) + DAY
   const values = [...detail.rate.rate, ...shown.flatMap((m) => [...m.forecast.rate, ...m.fitted.rate])].filter((v) => v > 0)
-  const lo = Math.log10(Math.min(...values) * 0.85)
-  const hi = Math.log10(Math.max(...values) * 1.15)
+  const lo = domain?.y[0] ?? Math.log10(Math.min(...values) * 0.85)
+  const hi = domain?.y[1] ?? Math.log10(Math.max(...values) * 1.15)
+  const horizon = time(detail.horizon_end) + DAY
   const xAt = (t: number) => pad.left + (plotW * (t - t0)) / (t1 - t0)
   const yAt = (v: number) => pad.top + plotH * ((hi - Math.log10(Math.max(v, 1e-9))) / (hi - lo))
   const path = (dates: string[], rates: number[]) => dates.map((d, i) => `${xAt(time(d))},${yAt(rates[i])}`).join(' ')
@@ -404,6 +416,9 @@ export function CaseChart({ detail }: { detail: BacktestCase }) {
   const rateDates = detail.rate.date
   const split = rateDates.findIndex((d) => time(d) >= cut)
   const before = split < 0 ? rateDates.length : split
+  // A film's rate series runs on past the forecast year; what comes after is drawn faint.
+  const later = rateDates.findIndex((d) => time(d) > horizon)
+  const afterEnd = later < 0 ? rateDates.length : later
   // Direct labels at the end of each forecast, nudged apart when they would touch.
   const ends = shown
     .map((m) => ({ m, y: yAt(m.forecast.rate[m.forecast.rate.length - 1]) }))
@@ -451,7 +466,7 @@ export function CaseChart({ detail }: { detail: BacktestCase }) {
         }}
         onMouseLeave={() => setHover(null)}
       >
-        <rect className="case-hidden" x={xAt(cut)} y={pad.top} width={xAt(t1) - xAt(cut)} height={plotH} />
+        <rect className="case-hidden" x={xAt(cut)} y={pad.top} width={xAt(horizon) - xAt(cut)} height={plotH} />
         {ticks.map((v) => (
           <g key={v}>
             <line className="plan-grid" x1={pad.left} x2={pad.left + plotW} y1={yAt(v)} y2={yAt(v)} />
@@ -466,7 +481,13 @@ export function CaseChart({ detail }: { detail: BacktestCase }) {
           </text>
         ))}
         <polyline className="case-actual-line is-past" points={path(rateDates.slice(0, before), detail.rate.rate.slice(0, before))} />
-        <polyline className="case-actual-line" points={path(rateDates.slice(Math.max(0, before - 1)), detail.rate.rate.slice(Math.max(0, before - 1)))} />
+        <polyline
+          className="case-actual-line"
+          points={path(rateDates.slice(Math.max(0, before - 1), afterEnd), detail.rate.rate.slice(Math.max(0, before - 1), afterEnd))}
+        />
+        {afterEnd < rateDates.length && (
+          <polyline className="case-actual-line is-later" points={path(rateDates.slice(afterEnd - 1), detail.rate.rate.slice(afterEnd - 1))} />
+        )}
         {shown.map((m) => (
           <g key={m.method} className={`case-method case-${m.method}`}>
             <polyline className="case-fitted" points={path(m.fitted.date, m.fitted.rate)} />

@@ -1533,6 +1533,11 @@ code,
   stroke-width: 1.25;
 }
 
+.case-actual-line.is-later {
+  stroke-width: 1.25;
+  opacity: 0.35;
+}
+
 .case-method polyline {
   fill: none;
   stroke-linejoin: round;
@@ -1600,6 +1605,85 @@ code,
 .case-key-hidden {
   background: var(--shut-wash);
   border: 1px solid var(--rule);
+}
+
+/* ---------- the forecast film: every forecast of a well, in order ---------- */
+.film {
+  margin-top: 22px;
+  padding-top: 14px;
+  border-top: 1px solid var(--rule-strong);
+}
+
+.film-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 4px 0 10px;
+}
+
+.film-play {
+  min-width: 92px;
+  padding: 6px 14px;
+  border: 1.5px solid var(--ink);
+  border-radius: 6px;
+  background: var(--sheet);
+  color: var(--ink);
+  font-weight: 650;
+}
+
+.film-play[aria-pressed="true"] {
+  background: var(--ink);
+  color: var(--sheet);
+}
+
+.film-slider {
+  flex: 1;
+  display: flex;
+  min-width: 0;
+}
+
+.film-slider input[type="range"] {
+  width: 100%;
+  accent-color: var(--ink);
+}
+
+.film-count {
+  font-size: 13px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.film-caption {
+  margin: 0 0 6px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  max-width: 72ch;
+  min-height: 3.1em;
+}
+
+.film-caption strong {
+  color: var(--ink);
+}
+
+.film-band svg {
+  vertical-align: -2px;
+  margin-right: 2px;
+}
+
+.film-band.is-miss {
+  color: var(--caution-ink);
+}
+
+.film-score {
+  margin: 6px 0 0;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.film-score strong {
+  color: var(--ink);
 }
 
 .case-why {

@@ -21,7 +21,7 @@ from wellpilot.agent.tools import (
     table,
 )
 from wellpilot.agent.vision import VISION_TOOL
-from wellpilot.backtest import RESULTS_FILE, SUMMARY_FILE, case_detail
+from wellpilot.backtest import RESULTS_FILE, SUMMARY_FILE, case_detail, film
 from wellpilot.data.store import ProductionStore
 from wellpilot.ingest.reports import REPORTS_BY_ID, page_dir
 
@@ -155,6 +155,18 @@ def backtest(request: Request) -> dict:
         "summary": json.loads((processed / SUMMARY_FILE).read_text()),
         "results": table(results),
     }
+
+
+@router.get("/backtest/film/{well}")
+def backtest_film(well: str, request: Request) -> dict:
+    """Every forecast made for a well, in cutoff order, for the accuracy tab's film."""
+    processed = request.app.state.runs.processed_dir
+    if not (processed / RESULTS_FILE).exists():
+        raise HTTPException(404, "no backtest yet; run python -m wellpilot.backtest")
+    try:
+        return film(processed, _store(request), well)
+    except ValueError as e:
+        raise HTTPException(404, str(e)) from None
 
 
 @router.get("/backtest/cases/{well}/{cutoff}")

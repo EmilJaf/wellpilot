@@ -138,6 +138,7 @@ export const api = {
   hindsight: (runId: string) => fetch(`/api/runs/${runId}/hindsight`).then((r) => json<Hindsight>(r)),
   backtestCase: (well: string, cutoff: string) =>
     fetch(`/api/backtest/cases/${encodeURIComponent(well)}/${cutoff}`).then((r) => json<BacktestCase>(r)),
+  film: (well: string) => fetch(`/api/backtest/film/${encodeURIComponent(well)}`).then((r) => json<Film>(r)),
   // A reader's edit of a finished answer, checked against the run's saved evidence (no model call).
   check: (runId: string, edit: CheckRequest) =>
     fetch(`/api/runs/${runId}/check`, {
@@ -209,6 +210,21 @@ export type BacktestCase = {
     inferences: string[]
     window_asked?: (string | null)[]
   } | null
+}
+
+/** Every forecast made for one well, in cutoff order, on one rate series: the accuracy tab's film. */
+export type Film = {
+  well: string
+  rate: Curve
+  data_ends: string
+  frames: {
+    cutoff: string
+    horizon_end: string
+    actual_sm3: number
+    methods: BacktestCase['methods']
+    band: { low: number; high: number; holds: boolean } | null
+    agent: BacktestCase['agent']
+  }[]
 }
 
 /** A run made with data up to a past date, against what happened next. */

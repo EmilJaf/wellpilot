@@ -21,6 +21,7 @@ from wellpilot.backtest import (
     cases,
     closer,
     decline_methods,
+    film,
     summarize,
 )
 from wellpilot.data.store import ProductionStore
@@ -268,3 +269,24 @@ def test_the_agent_is_scored_on_the_forecast_its_answer_cites() -> None:
     uncited = {**record, "run": {**record["run"], "findings": [], "summary_numbers": []}}
     last = _answer_forecast(uncited)
     assert last["id"] == "E5" and _agent_model(uncited, last) == "hyperbolic"
+
+
+def test_the_film_holds_every_cutoff_of_a_well_in_order(processed_dir) -> None:
+    store = ProductionStore(processed_dir)
+    found = cases(store)
+    calibrate(pd.DataFrame(decline_methods(store, found))).to_parquet(
+        processed_dir / RESULTS_FILE, index=False
+    )
+
+    reel = film(processed_dir, store, "F-12")
+    cutoffs = sorted(c.cutoff.date().isoformat() for c in found if c.well == "F-12")
+
+    assert [f["cutoff"] for f in reel["frames"]] == cutoffs
+    assert reel["rate"]["date"][-1] <= reel["data_ends"]
+    for frame in reel["frames"]:
+        assert [m["method"] for m in frame["methods"]] == ["classic"]  # no agent runs cached
+        assert frame["band"] is None and frame["agent"] is None
+        assert frame["methods"][0]["forecast"]["date"][0] > frame["cutoff"]
+    assert film(processed_dir, store, "F-12") is reel  # built once, kept
+    with pytest.raises(ValueError, match="no backtest cases"):
+        film(processed_dir, store, "F-99")
