@@ -48,6 +48,7 @@ class Settings(BaseSettings):
     # clip costs a fraction of a run) and a cap on the clip, base64 (about 16 s of 16 kHz WAV).
     voice_per_client_per_hour: int = 20
     voice_max_audio_b64: int = 1_500_000
+    attacks_per_client_per_hour: int = 10  # the model's attempts on the checker
     # A second opinion on each accepted answer (the same model as a reviewer; about $0.01
     # and, when it raises points, one to three more agent steps).
     review_answers: bool = True

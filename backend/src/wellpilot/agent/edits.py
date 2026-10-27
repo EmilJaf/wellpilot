@@ -7,8 +7,18 @@ the edited text, so a changed number is checked as the number the reader wrote.
 """
 
 import difflib
+from dataclasses import asdict
 
-from wellpilot.agent.checker import WRITTEN_NUMBER, DeclaredNumber, _numbers_in_text, display_spans
+from wellpilot.agent.checker import (
+    WRITTEN_NUMBER,
+    DeclaredNumber,
+    Finding,
+    Submission,
+    _numbers_in_text,
+    check_submission,
+    display_spans,
+)
+from wellpilot.agent.evidence import EvidenceLog
 
 
 def _reads(text: str, european: bool) -> tuple[float, int, str | None] | None:
@@ -73,3 +83,55 @@ def redeclare(
             DeclaredNumber(text=new_text, value=reading[0], evidence_id=declared.evidence_id)
         )
     return carried
+
+
+def check_edits(
+    question: str,
+    result: dict,
+    log: EvidenceLog,
+    edits: list[tuple[int, str, str]],
+    summary: str | None = None,
+) -> dict:
+    """The checker on edits of a finished answer (`result`, as a run saves it): each edit is
+    (finding index from 1, claim, confidence). Declared numbers are carried to the edited
+    text; only the edited parts' problems come back, so an unedited finding never changes
+    the verdict. Raises IndexError for a finding the answer does not have."""
+    findings = [Finding.model_validate(f) for f in result["findings"]]
+    edited: set[int] = set()
+    for index, claim, confidence in edits:
+        if not 1 <= index <= len(findings):
+            raise IndexError(f"the answer has no finding {index}")
+        original = findings[index - 1]
+        findings[index - 1] = original.model_copy(
+            update={
+                "claim": claim,
+                "confidence": confidence,
+                "numbers": redeclare(original.claim, original.numbers, claim),
+            }
+        )
+        edited.add(index)
+    summary_numbers = [
+        DeclaredNumber.model_validate(n) for n in result.get("summary_numbers") or []
+    ]
+    text = result.get("summary") or ""
+    if summary is not None:
+        summary_numbers = redeclare(text, summary_numbers, summary) or []
+        text = summary
+    submission = Submission(summary=text, findings=findings, summary_numbers=summary_numbers)
+    problems = check_submission(submission, log, question)
+    labels = {f"Finding {n}" for n in edited} | ({"Summary"} if summary is not None else set())
+    problems = [p for p in problems if any(p.startswith(label) for label in labels)]
+    checked = []
+    for n in sorted(edited):
+        finding = findings[n - 1]
+        cited = EvidenceLog.restore(asdict(e) for e in log if e.id in set(finding.evidence_ids))
+        checked.append(
+            {
+                "index": n,
+                "claim": finding.claim,
+                "confidence": finding.confidence,
+                "numbers": [d.model_dump() for d in finding.numbers or []],
+                "spans": display_spans(finding.claim, finding.numbers, cited),
+            }
+        )
+    return {"accepted": not problems, "problems": problems, "findings": checked}

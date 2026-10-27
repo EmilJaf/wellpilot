@@ -30,14 +30,7 @@ from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 from sse_starlette import EventSourceResponse
 
-from wellpilot.agent.checker import (
-    DeclaredNumber,
-    Finding,
-    Submission,
-    check_submission,
-    display_spans,
-)
-from wellpilot.agent.edits import redeclare
+from wellpilot.agent.edits import check_edits
 from wellpilot.agent.evidence import EvidenceLog
 from wellpilot.agent.loop import AgentRun, run_agent, with_spans
 from wellpilot.agent.review import review
@@ -203,6 +196,7 @@ class RunManager:
         daily_token_budget: int = 3_000_000,
         voice_per_client_per_hour: int = 20,
         voice_max_audio_b64: int = 1_500_000,
+        attacks_per_client_per_hour: int = 10,
         review_answers: bool = True,
         run_timeout_s: float | None = 600.0,
         featured: tuple[str, ...] | None = None,
@@ -219,6 +213,7 @@ class RunManager:
         self.daily_token_budget = daily_token_budget
         self.voice_per_client_per_hour = voice_per_client_per_hour
         self.voice_max_audio_b64 = voice_max_audio_b64
+        self.attacks_per_client_per_hour = attacks_per_client_per_hour
         self.review_answers = review_answers
         self.run_timeout_s = run_timeout_s
         # A tuple lists only those runs. None lists every saved run in development and none
@@ -235,6 +230,7 @@ class RunManager:
         self._tasks: set[asyncio.Task] = set()
         self._starts: dict[str, deque[float]] = {}
         self._voice: dict[str, deque[float]] = {}  # voice questions per client, by start time
+        self._attacks: dict[str, deque[float]] = {}  # the model's attempts on the checker
         # A restart (a deploy, an idle machine stopped) must not reset today's spend.
         self._spent: tuple[date, int] = (datetime.now(UTC).date(), self._spent_on_disk())
 
@@ -351,19 +347,45 @@ class RunManager:
     def allow_voice(self, client: str, privileged: bool = False) -> None:
         """A voice question costs a fraction of a run, so it has its own hourly limit per
         client; the daily budget still applies. Raises Refused."""
+        self._allow(
+            self._voice,
+            client,
+            privileged,
+            self.voice_per_client_per_hour,
+            f"limit of {self.voice_per_client_per_hour} voice questions per hour reached; "
+            "type the question instead",
+        )
+
+    def allow_attack(self, client: str, privileged: bool = False) -> None:
+        """The model's attempts on the checker cost about a cent each time; their own hourly
+        limit per client, and the daily budget. Raises Refused."""
+        self._allow(
+            self._attacks,
+            client,
+            privileged,
+            self.attacks_per_client_per_hour,
+            f"limit of {self.attacks_per_client_per_hour} attempts per hour reached; "
+            "edit the finding yourself instead",
+        )
+
+    def _allow(
+        self,
+        bucket: dict[str, deque[float]],
+        client: str,
+        privileged: bool,
+        limit: int,
+        refusal: str,
+    ) -> None:
         if privileged:
             return
         now = time.monotonic()
-        starts = self._voice.setdefault(client, deque())
+        starts = bucket.setdefault(client, deque())
         while starts and now - starts[0] > 3600:
             starts.popleft()
-        if len(starts) >= self.voice_per_client_per_hour:
-            raise Refused(
-                f"limit of {self.voice_per_client_per_hour} voice questions per hour reached; "
-                "type the question instead"
-            )
+        if len(starts) >= limit:
+            raise Refused(refusal)
         if self.tokens_spent_today() >= self.daily_token_budget:
-            raise Refused("today's demo budget is used up; type the question instead")
+            raise Refused("today's demo budget is used up")
         starts.append(now)
 
     def charge(self, tokens: int) -> None:
@@ -517,46 +539,16 @@ def check_edit(run_id: str, body: CheckRequest, request: Request) -> dict:
     result = record.result or {}
     if not result.get("findings"):
         raise HTTPException(409, "the run has no answer to edit")
-    findings = [Finding.model_validate(f) for f in result["findings"]]
-    edited: set[int] = set()
-    for edit in body.findings:
-        if edit.index > len(findings):
-            raise HTTPException(422, f"the answer has no finding {edit.index}")
-        original = findings[edit.index - 1]
-        findings[edit.index - 1] = original.model_copy(
-            update={
-                "claim": edit.claim,
-                "confidence": edit.confidence,
-                "numbers": redeclare(original.claim, original.numbers, edit.claim),
-            }
+    try:
+        return check_edits(
+            record.question,
+            result,
+            EvidenceLog.restore(record.evidence.values()),
+            [(e.index, e.claim, e.confidence) for e in body.findings],
+            body.summary,
         )
-        edited.add(edit.index)
-    summary_numbers = [
-        DeclaredNumber.model_validate(n) for n in result.get("summary_numbers") or []
-    ]
-    summary = result.get("summary") or ""
-    if body.summary is not None:
-        summary_numbers = redeclare(summary, summary_numbers, body.summary) or []
-        summary = body.summary
-    log = EvidenceLog.restore(record.evidence.values())
-    submission = Submission(summary=summary, findings=findings, summary_numbers=summary_numbers)
-    problems = check_submission(submission, log, record.question)
-    labels = {f"Finding {n}" for n in edited} | ({"Summary"} if body.summary is not None else set())
-    problems = [p for p in problems if any(p.startswith(label) for label in labels)]
-    checked = []
-    for n in sorted(edited):
-        finding = findings[n - 1]
-        cited = EvidenceLog.restore(asdict(e) for e in log if e.id in set(finding.evidence_ids))
-        checked.append(
-            {
-                "index": n,
-                "claim": finding.claim,
-                "confidence": finding.confidence,
-                "numbers": [d.model_dump() for d in finding.numbers or []],
-                "spans": display_spans(finding.claim, finding.numbers, cited),
-            }
-        )
-    return {"accepted": not problems, "problems": problems, "findings": checked}
+    except IndexError as e:
+        raise HTTPException(422, str(e)) from None
 
 
 @router.get("/{run_id}/evidence/{evidence_id}")

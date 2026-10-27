@@ -37,6 +37,7 @@ check "field against design limits"  sh -c "curl -sf $URL/api/field/design | gre
 check "a tool's source code"         sh -c "curl -sf $URL/api/code/wellpilot.agent.tools.detect_events@0 | grep -q 'def detect_events'"
 check "no key: a run is refused 503" sh -c "[ \$(curl -s -o /dev/null -w '%{http_code}' -X POST -H 'content-type: application/json' -d '{\"question\":\"Which well produced most?\"}' $URL/api/runs) = 503 ]"
 check "no key: voice is refused 503" sh -c "[ \$(curl -s -o /dev/null -w '%{http_code}' -X POST -H 'content-type: application/json' -d '{\"audio_wav_b64\":\"$(printf 'UklGRg%.0s' $(seq 1 20))\"}' $URL/api/transcribe) = 503 ]"
+check "no key: the model's attempts 503" sh -c "[ \$(curl -s -o /dev/null -w '%{http_code}' -X POST -H 'content-type: application/json' -d '{\"index\":1}' $URL/api/runs/$RUN/attack) = 503 ]"
 check "a reader's edit is checked"   sh -c "curl -sf -X POST -H 'content-type: application/json' -d '{\"findings\":[{\"index\":1,\"claim\":\"Nothing at all.\",\"confidence\":\"fact\"}]}' $URL/api/runs/$RUN/check | grep -q '\"accepted\"'"
 echo "memory: $(docker stats --no-stream --format '{{.MemUsage}}' "$NAME")"
 check "stops cleanly on SIGTERM"     sh -c "docker stop -t 10 $NAME && docker logs $NAME 2>&1 | grep -q 'Application shutdown complete'"

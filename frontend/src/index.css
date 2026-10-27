@@ -2926,6 +2926,9 @@ code,
 }
 
 .fool-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
   margin-bottom: 10px;
 }
 
@@ -2936,6 +2939,70 @@ code,
 
 .fool-closest {
   color: var(--ink-2);
+}
+
+.secondary-button {
+  padding: 9px 16px;
+  border: 1px solid var(--ink);
+  border-radius: 6px;
+  background: var(--sheet);
+  color: var(--ink);
+  font-weight: 650;
+}
+
+.secondary-button:hover:not(:disabled) {
+  background: var(--panel);
+}
+
+.secondary-button:disabled {
+  color: var(--ink-3);
+  border-color: var(--ink-3);
+  cursor: progress;
+}
+
+.fool-attempts {
+  margin-top: 6px;
+  font-size: 14px;
+}
+
+.fool-attempts-head {
+  margin: 0 0 6px;
+}
+
+.fool-attempts ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fool-attempts li {
+  padding: 8px 0 8px 12px;
+  border-left: 3px solid var(--ink);
+  margin-bottom: 8px;
+}
+
+.fool-attempts li.is-through {
+  border-left-color: var(--caution);
+  background: var(--caution-wash);
+}
+
+.fool-attempt-kind {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 4px;
+  font-weight: 600;
+}
+
+.fool-attempt-note,
+.fool-attempt-verdict {
+  margin: 4px 0 0;
+  color: var(--ink-2);
+  line-height: 1.45;
+}
+
+.fool-attempt-verdict {
+  color: var(--ink);
 }
 
 .plan-aligned {

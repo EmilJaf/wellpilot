@@ -169,6 +169,13 @@ export const api = {
       body: JSON.stringify({ audio_wav_b64: audioWavB64 }),
     }).then((r) => json<{ question: string; language: string; tokens: number }>(r)),
   film: (well: string) => fetch(`/api/backtest/film/${encodeURIComponent(well)}`).then((r) => json<Film>(r)),
+  // The model's own attempts to get a false version of a finding past the checker.
+  attack: (runId: string, index: number, count = 3) =>
+    fetch(`/api/runs/${runId}/attack`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...operatorHeader() },
+      body: JSON.stringify({ index, count }),
+    }).then((r) => json<AttackResult>(r)),
   // A reader's edit of a finished answer, checked against the run's saved evidence (no model call).
   check: (runId: string, edit: CheckRequest) =>
     fetch(`/api/runs/${runId}/check`, {
@@ -287,6 +294,21 @@ export type CheckResult = {
   problems: string[]
   findings: { index: number; claim: string; confidence: 'fact' | 'inference'; numbers: DeclaredNumber[]; spans: Span[] }[]
 }
+
+/** One of the model's attempts on a verified finding, and the checker's verdict on it. */
+export type Attempt = {
+  finding: number
+  original: string
+  kind: 'number' | 'well' | 'date' | 'direction' | 'quote' | 'cause' | 'scale' | 'unsupported'
+  claim: string
+  confidence: 'fact' | 'inference'
+  what_is_false: string
+  caught: boolean
+  problems: string[]
+  unchanged: boolean
+}
+
+export type AttackResult = { attempts: Attempt[]; model: string; tokens: number }
 
 /** The source of the tool function that produced an evidence item. */
 export type ToolCode = { ref: string; same_as_run: boolean; file: string; line: number; source: string }

@@ -1,14 +1,27 @@
-import { useState } from 'react'
-import { api, type CheckResult, type Finding } from '../api'
-import { AlarmIcon, CheckIcon } from '../icons'
+import { useEffect, useState } from 'react'
+import { api, type AttackResult, type CheckResult, type Finding } from '../api'
+import { AlarmIcon, CautionIcon, CheckIcon } from '../icons'
 import { plainProblem } from '../labels'
 import { wordDiff } from '../corrections'
 import { Diff } from './Corrections'
+
+const KINDS: Record<string, string> = {
+  number: 'a changed number',
+  well: 'another well',
+  date: 'a moved date',
+  direction: 'a reversed direction',
+  quote: 'a misquote',
+  cause: 'a cause called a fact',
+  scale: 'a wrong scale',
+  unsupported: 'a value from elsewhere',
+}
 
 /**
  * "Try to fool the checker": the reader edits one finding of a finished answer and the
  * deterministic checker runs again on the run's saved tool results, with no model call.
  * The quick tricks apply the classic ways an answer goes wrong; the textarea takes any edit.
+ * Or the model tries: it writes false versions of the finding, and each goes through the
+ * same checker.
  */
 export function FoolChecker({
   runId,
@@ -27,6 +40,16 @@ export function FoolChecker({
   const [confidence, setConfidence] = useState(original.confidence)
   const [result, setResult] = useState<{ value?: CheckResult; error?: string; claim: string } | null>(null)
   const [checking, setChecking] = useState(false)
+  const [attacks, setAttacks] = useState<{ index: number; value?: AttackResult; error?: string } | null>(null)
+  const [attacking, setAttacking] = useState(false)
+  const [modelOn, setModelOn] = useState(false)
+
+  useEffect(() => {
+    api
+      .health()
+      .then((h) => setModelOn(h.llm_configured))
+      .catch(() => setModelOn(false))
+  }, [])
 
   // Following the selection: picking a finding in the answer brings it into the editor
   // (state adjusted during render, so no effect runs after the paint).
@@ -87,6 +110,18 @@ export function FoolChecker({
       },
     },
   ]
+
+  async function letTheModelTry() {
+    setAttacking(true)
+    const at = index
+    try {
+      setAttacks({ index: at, value: await api.attack(runId, at + 1) })
+    } catch (e) {
+      setAttacks({ index: at, error: (e as Error).message })
+    } finally {
+      setAttacking(false)
+    }
+  }
 
   async function check() {
     setChecking(true)
@@ -156,6 +191,11 @@ export function FoolChecker({
         <button type="button" className="primary-button" onClick={check} disabled={checking || !claim.trim()}>
           {checking ? 'Checking' : 'Check again'}
         </button>
+        {modelOn && (
+          <button type="button" className="secondary-button" onClick={letTheModelTry} disabled={attacking}>
+            {attacking ? 'The model is trying' : 'Let the model try'}
+          </button>
+        )}
       </div>
       {result && result.claim === claim && (
         <div className="fool-result" aria-live="polite">
@@ -192,7 +232,49 @@ export function FoolChecker({
           {claim !== original.claim && <Diff pieces={wordDiff(original.claim, claim)} />}
         </div>
       )}
+      {attacks && attacks.index === index && <Attempts result={attacks} />}
     </section>
+  )
+}
+
+/** The model's attempts on one finding and what the checker made of each. */
+function Attempts({ result }: { result: { value?: AttackResult; error?: string } }) {
+  if (result.error)
+    return (
+      <div className="flag flag-alarm fool-attempts">
+        <AlarmIcon />
+        <span>The model could not try: {result.error}</span>
+      </div>
+    )
+  const attempts = result.value!.attempts.filter((a) => !a.unchanged)
+  const caught = attempts.filter((a) => a.caught).length
+  const all = caught === attempts.length
+  return (
+    <div className="fool-attempts" aria-live="polite">
+      <p className="fool-attempts-head">
+        <strong>
+          The model ({result.value!.model}) wrote {attempts.length === 1 ? 'one false version' : `${attempts.length} false versions`}{' '}
+          of this finding; the checker caught {all ? (attempts.length === 1 ? 'it' : 'all of them') : `${caught} of them`}.
+        </strong>
+      </p>
+      <ol>
+        {attempts.map((a, i) => (
+          <li key={i} className={a.caught ? 'is-caught' : 'is-through'}>
+            <p className="fool-attempt-kind">
+              {a.caught ? <CheckIcon /> : <CautionIcon />} {KINDS[a.kind] ?? a.kind}
+              {a.confidence === 'fact' ? ', labelled a fact' : ', labelled an inference'}
+            </p>
+            <Diff pieces={wordDiff(a.original, a.claim)} />
+            <p className="fool-attempt-note">What the model says is false: {a.what_is_false}</p>
+            <p className="fool-attempt-verdict">
+              {a.caught
+                ? `Caught: ${plainProblem(a.problems[0]).replace(/^Finding \d+:?\s*/, '')}`
+                : 'Got through. Read it: the checker tests sources, not meaning, and the model may have written something still true.'}
+            </p>
+          </li>
+        ))}
+      </ol>
+    </div>
   )
 }
 

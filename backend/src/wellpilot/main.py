@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 from wellpilot import __version__
-from wellpilot.api import data, runs, voice
+from wellpilot.api import data, redteam, runs, voice
 from wellpilot.config import Settings, get_settings
 from wellpilot.llm import LLM, make_llm
 
@@ -36,6 +36,7 @@ def create_app(
         daily_token_budget=settings.daily_token_budget,
         voice_per_client_per_hour=settings.voice_per_client_per_hour,
         voice_max_audio_b64=settings.voice_max_audio_b64,
+        attacks_per_client_per_hour=settings.attacks_per_client_per_hour,
         review_answers=settings.review_answers,
         run_timeout_s=settings.run_timeout_s,
         featured=tuple(r.strip() for r in settings.featured_runs.split(",") if r.strip()) or None,
@@ -46,6 +47,7 @@ def create_app(
     app.include_router(runs.router)
     app.include_router(data.router)
     app.include_router(voice.router)
+    app.include_router(redteam.router)
 
     @app.get("/api/health")
     async def health() -> dict:
