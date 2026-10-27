@@ -72,7 +72,7 @@ CASES = [
         "forecast is.",
         as_of=date(2013, 1, 1),
         tools=("forecast_production",),
-        mentions=(r"P50",),
+        mentions=(r"P50|central estimate|most likely",),
     ),
     Case(
         "design_limit",
@@ -180,7 +180,7 @@ SYNTHETIC_CASES = [
         "Forecast P-2 oil production for the next 12 months and say how confident the forecast is.",
         as_of=date(2019, 3, 31),
         tools=("forecast_production",),
-        mentions=(r"P50|P90|P10",),
+        mentions=(r"P50|P90|P10|central estimate|range",),
         max_steps=10,
     ),
 ]

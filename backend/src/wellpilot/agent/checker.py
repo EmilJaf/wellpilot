@@ -1283,6 +1283,78 @@ def finding_text(finding: Finding) -> str:
     return finding.claim + (f"\n{finding.detail}" if finding.detail else "")
 
 
+# Readability, not truth: what a manager or a judge reads in a claim or the summary. The
+# loop asks for it once per run, so style never costs an answer its verification.
+READER_JARGON = re.compile(r"\br2(?:_log)?\b|r²|\bAIC\b|\bP(?:10|50|90)\b")
+
+
+def _noisy(text: str, value: float) -> tuple[float, int] | None:
+    """A declared number that reads as noise: more than 3 significant digits in a whole
+    number of 10,000 or more ("359 007", "1,133,053") or a decimal under 10 ("0.6939").
+    "1 551", "4,050" and "72.3%" read fine. Of the two conventions, the reading that shows
+    the declared value counts ("9.000" for 9000 is nine thousand)."""
+    readings = [
+        (v, decimals)
+        for european in (False, True)
+        for v, decimals, _ in _numbers_in_text(text, european)
+    ]
+    if not readings:
+        return None
+    v, decimals = min(
+        readings, key=lambda r: min(abs(r[0] * scale - value) for scale in (1, 0.01, 100))
+    )
+    if decimals <= 0:
+        significant = len(str(round(v)).rstrip("0"))
+        return (v, decimals) if v >= 10_000 and significant > 3 else None
+    significant = len(f"{v:.{decimals}f}".replace(".", "").lstrip("0"))
+    return (v, decimals) if v < 10 and significant > 3 else None
+
+
+def _three_digits(v: float, decimals: int) -> str:
+    if decimals > 0:
+        return f"{v:.3g}"
+    if v >= 1e6:
+        return f"{v / 1e6:.3g} million"
+    return f"{round(v, 3 - len(str(round(v)))):,.0f}"
+
+
+def readability(submission: Submission) -> list[str]:
+    """Claims and a summary a reader takes in at a glance: numbers rounded to three
+    significant digits, no forecaster's or fit labels. Exact values and labels belong in a
+    finding's detail. Numbers inside quotes are the document's and stay as written."""
+    parts = [
+        (f"Finding {n}", "claim", f.claim, f.numbers or [])
+        for n, f in enumerate(submission.findings, start=1)
+    ]
+    parts.append(("Summary", "summary", submission.summary, submission.summary_numbers or []))
+    problems = []
+    for label, where, text, declared in parts:
+        outside = QUOTED.sub(" ", _translations_outside(text))
+        long = []
+        for number in declared:
+            if number.text in outside and (noisy := _noisy(number.text, number.value)):
+                long.append(f"'{number.text}' (about {_three_digits(*noisy)})")
+        if long:
+            detail = " and keep the exact values in the detail" if where == "claim" else ""
+            problems.append(
+                f"{label}: round {', '.join(dict.fromkeys(long))} in the {where} to three "
+                f"significant digits{detail}; a reader takes in three. Declare the rounded "
+                "text with the same value and evidence id."
+            )
+        if jargon := sorted({m.group(0) for m in READER_JARGON.finditer(outside)}):
+            plain = []
+            if any(j.startswith("P") for j in jargon):
+                plain.append("say 'central estimate' for P50 and 'range' for P90 to P10")
+            if any(not j.startswith("P") for j in jargon):
+                plain.append("leave fit statistics out")
+            labels = "is a label" if len(jargon) == 1 else "are labels"
+            problems.append(
+                f"{label}: {', '.join(jargon)} {labels} a reader may not know; in the {where}, "
+                f"{' and '.join(plain)}. The detail can keep them."
+            )
+    return problems
+
+
 def check_submission(submission: Submission, log: EvidenceLog, question: str = "") -> list[str]:
     """Return problems as sentences for the model; an empty list means accepted."""
     free = _question_numbers(question)

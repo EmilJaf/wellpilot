@@ -2288,6 +2288,27 @@ code,
   margin-top: 28px;
 }
 
+/* Forecasts the agent tried but its answer does not use: folded under the answer's. */
+.hindsight-tried {
+  margin-top: 24px;
+  border-top: 1px solid var(--rule);
+  padding-top: 10px;
+}
+
+.hindsight-tried summary {
+  cursor: pointer;
+  color: var(--ink-2);
+  font-weight: 600;
+}
+
+.hindsight-tried[open] .hindsight-forecast {
+  margin-top: 16px;
+}
+
+.hindsight-wells th[scope="row"] {
+  white-space: nowrap;
+}
+
 .hindsight-change {
   color: var(--ink-3);
 }

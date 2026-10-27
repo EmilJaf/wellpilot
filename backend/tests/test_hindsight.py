@@ -83,3 +83,25 @@ def test_a_run_that_saw_all_the_data_has_no_hindsight(stores) -> None:
     full, past = stores
     with pytest.raises(ValueError, match="saw all the data"):
         hindsight({"as_of": None, "evidence": {}}, full, past)
+
+
+def test_the_forecast_the_answer_cites_comes_first(stores) -> None:
+    """Run 8aef8d548380 forecast twice and answered with the first; the reveal showed both,
+    the unused one (band 290k-725k) right under the answer's, as if it were a second answer."""
+    full, past = stores
+    run = run_with_forecast(past, well="F-12", start="2010-07-18")
+    tried = execute(
+        past, "forecast_production", json.dumps({"well": "F-12", "start": "2010-09-01"})
+    )
+    run["evidence"]["E2"] = {
+        "id": "E2",
+        "tool": "forecast_production",
+        "arguments": {"well": "F-12", "start": "2010-09-01"},
+        "result": tried["result"],
+    }
+    run["result"]["findings"] = [{"claim": "F-12 makes about 360k.", "evidence_ids": ["E2"]}]
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        h = hindsight(run, full, past)
+
+    assert [(f["evidence_id"], f["cited"]) for f in h["forecasts"]] == [("E2", True), ("E1", False)]

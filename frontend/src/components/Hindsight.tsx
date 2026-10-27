@@ -26,6 +26,11 @@ export function HindsightView({ runId }: { runId: string }) {
   if (loaded?.id !== runId) return <p className="empty field-view">Loading what happened next</p>
   if (!loaded.value) return <p className="empty field-view">What happened next could not load: {loaded.error}</p>
   const h = loaded.value
+  // The forecasts the answer gives; the others the agent tried on the way fold away. An
+  // answer that cites none shows them all.
+  const cited = h.forecasts.filter((f) => f.cited)
+  const answered = cited.length > 0 ? cited : h.forecasts
+  const tried = cited.length > 0 ? h.forecasts.filter((f) => !f.cited) : []
 
   return (
     <div className="hindsight field-view">
@@ -35,40 +40,23 @@ export function HindsightView({ runId }: { runId: string }) {
         set against what it said.
       </p>
       {h.forecasts.length === 0 && <p className="empty">The agent made no forecast in this run.</p>}
-      {h.forecasts.map((f) => {
-        const [agent, classic] = f.methods
-        const band = f.calibrated_band
-        return (
-          <section key={f.evidence_id} className="case hindsight-forecast" aria-label={`${f.well} forecast against the outcome`}>
-            <h4 className="case-title">
-              {f.well}: forecast against the outcome
-            </h4>
-            <p className="hindsight-verdict">
-              The agent forecast <strong>{volume(agent.p50_sm3)}</strong> of oil for {f.forecast_from} to {f.horizon_end}
-              {f.data_ends && ` (the data ends on ${f.data_ends})`}. The well produced{' '}
-              <strong>{volume(f.actual_sm3)}</strong>: the forecast was <strong>{signed(agent.error)}</strong>. The classic
-              decline fit over the whole history, made the same day, said {volume(classic.p50_sm3)} ({signed(classic.error)}).
-            </p>
-            {f.p50_by_model && Object.keys(f.p50_by_model).length > 1 && (
-              <p className="hindsight-models">
-                On the same window the three Arps models said{' '}
-                {Object.entries(f.p50_by_model)
-                  .map(([model, p50]) => `${volume(p50)} (${model}, ${signed(p50 / f.actual_sm3 - 1)})`)
-                  .join(', ')}
-                : the choice of model is part of the uncertainty.
-              </p>
-            )}
-            {band && (
-              <p className={`hindsight-band${band.holds_actual ? '' : ' is-miss'}`}>
-                {band.holds_actual && <CheckIcon />}
-                Its range from past forecast errors, {volume(band.p90)} to {volume(band.p10)},{' '}
-                {band.holds_actual ? 'held the outcome' : 'missed the outcome'}.
-              </p>
-            )}
-            <CaseChart detail={f} />
-          </section>
-        )
-      })}
+      {answered.map((f) => (
+        <ForecastCase key={f.evidence_id} f={f} />
+      ))}
+      {tried.length > 0 && (
+        <details className="hindsight-tried">
+          <summary>
+            {tried.length === 1 ? 'One more forecast' : `${tried.length} more forecasts`} the agent made on the way
+          </summary>
+          <p className="chart-note-line">
+            The agent tried {tried.length === 1 ? 'this window' : 'these windows'} too; its answer does not use{' '}
+            {tried.length === 1 ? 'it' : 'them'}.
+          </p>
+          {tried.map((f) => (
+            <ForecastCase key={f.evidence_id} f={f} />
+          ))}
+        </details>
+      )}
 
       <h4 className="case-title hindsight-wells-title">Every producing well, a year later</h4>
       <table className="case-table hindsight-wells">
@@ -105,6 +93,39 @@ export function HindsightView({ runId }: { runId: string }) {
         the 30 days before each date.
       </p>
     </div>
+  )
+}
+
+function ForecastCase({ f }: { f: Hindsight['forecasts'][number] }) {
+  const [agent, classic] = f.methods
+  const band = f.calibrated_band
+  return (
+    <section className="case hindsight-forecast" aria-label={`${f.well} forecast against the outcome`}>
+      <h4 className="case-title">{f.well}: forecast against the outcome</h4>
+      <p className="hindsight-verdict">
+        The agent forecast <strong>{volume(agent.p50_sm3)}</strong> of oil for {f.forecast_from} to {f.horizon_end}
+        {f.data_ends && ` (the data ends on ${f.data_ends})`}. The well produced <strong>{volume(f.actual_sm3)}</strong>:
+        the forecast was <strong>{signed(agent.error)}</strong>. The classic decline fit over the whole history, made the
+        same day, said {volume(classic.p50_sm3)} ({signed(classic.error)}).
+      </p>
+      {f.p50_by_model && Object.keys(f.p50_by_model).length > 1 && (
+        <p className="hindsight-models">
+          On the same window the three Arps models said{' '}
+          {Object.entries(f.p50_by_model)
+            .map(([model, p50]) => `${volume(p50)} (${model}, ${signed(p50 / f.actual_sm3 - 1)})`)
+            .join(', ')}
+          : the choice of model is part of the uncertainty.
+        </p>
+      )}
+      {band && (
+        <p className={`hindsight-band${band.holds_actual ? '' : ' is-miss'}`}>
+          {band.holds_actual && <CheckIcon />}
+          Its range from past forecast errors, {volume(band.p90)} to {volume(band.p10)},{' '}
+          {band.holds_actual ? 'held the outcome' : 'missed the outcome'}.
+        </p>
+      )}
+      <CaseChart detail={f} />
+    </section>
   )
 }
 

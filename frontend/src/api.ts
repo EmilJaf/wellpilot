@@ -195,6 +195,7 @@ export type Hindsight = {
   as_of: string
   forecasts: (BacktestCase & {
     evidence_id: string
+    cited?: boolean
     forecast_from: string
     data_ends: string | null
     classic_warned: boolean

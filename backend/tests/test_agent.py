@@ -421,6 +421,31 @@ async def test_declared_numbers_pass_end_to_end(store) -> None:
     assert run.findings[0].numbers[0].text == "60"
 
 
+async def test_readability_is_asked_once_and_never_costs_verification(store) -> None:
+    """A long number is sent back once; the same text again is accepted: style must not end
+    a run unverified."""
+    total = store.query("SELECT round(sum(oil_sm3)) AS oil FROM production_daily").rows["oil"][0]
+    written = f"{int(total):,}".replace(",", " ")
+    answer = submission(f"F-12 produced {written} Sm3.", ("E2",), numbers=[(written, total)])
+    llm, _ = fake_llm(
+        [
+            completion(tool_calls=[("list_wells", {})]),
+            completion(
+                tool_calls=[
+                    ("run_sql", {"sql": "SELECT sum(oil_sm3) AS oil FROM production_daily"})
+                ]
+            ),
+            completion(tool_calls=[(SUBMIT, answer)]),
+            completion(tool_calls=[(SUBMIT, answer)]),
+        ]
+    )
+
+    run = await run_agent("How much oil?", llm, store)
+
+    assert run.verified and len(run.check_rounds) == 2
+    assert "round" in run.check_rounds[0][0] and run.check_rounds[1] == []
+
+
 async def test_text_between_tool_calls_does_not_end_the_run(store) -> None:
     """The audit's scenario: a plan, a tool, a rejected answer, a remark, then the fix."""
     llm, completions = fake_llm(

@@ -475,6 +475,25 @@ async def test_the_built_frontend_is_served_beside_the_api(settings, tmp_path) -
     assert health.json()["status"] == "ok"
 
 
+async def test_link_previews_get_the_sites_own_address(settings, tmp_path) -> None:
+    """Discord and X read og:image only as an absolute URL; the address is the request's,
+    over https in public, where Fly's proxy ends TLS and the app sees http."""
+    dist = tmp_path / "dist"
+    dist.mkdir()
+    (dist / "index.html").write_text('<meta property="og:image" content="__ORIGIN__/og.png">')
+
+    async def page(public: bool) -> str:
+        app = create_app(
+            settings.model_copy(update={"frontend_dir": dist, "public": public}),
+            llm_factory=fake_llm,
+        )
+        async with client_for(app) as client:
+            return (await client.get("/", headers={"host": "wellpilot.fly.dev"})).text
+
+    assert 'content="https://wellpilot.fly.dev/og.png"' in await page(public=True)
+    assert 'content="http://wellpilot.fly.dev/og.png"' in await page(public=False)
+
+
 async def test_hindsight_only_for_a_run_with_an_as_of_date(settings) -> None:
     async with client_for(create_app(settings, llm_factory=fake_llm)) as client:
         started = await client.post("/api/runs", json={"question": "Which?", "as_of": "2010-02-15"})

@@ -25,6 +25,7 @@ from wellpilot.agent.checker import (
     check_submission,
     display_spans,
     lookup_spans,
+    readability,
 )
 from wellpilot.agent.evidence import Evidence, EvidenceLog
 from wellpilot.agent.tools import TOOLS_BY_NAME, execute, tool_schemas
@@ -78,10 +79,12 @@ Dates, years, well names, integers up to 10, window lengths ("30-day median", "t
 months") and numbers from the question need no declaration.
 - Write for an engineer and their manager. The summary's first sentence answers the \
 question in plain words. Round numbers to what a reader needs (0.45 per year, 72%, 1.13 \
-million Sm3) and give their units; in the summary, at most 3 significant digits (0.45, not \
-0.4461; 1.13 million, not 1,133,053). Each finding's claim is one or two plain sentences \
-with at most three numbers, all declared; the fit behind it (model, window, r2_log, di, b) \
-and exact values go in its detail, copied as the tools give them: the detail's numbers need \
+million Sm3) and give their units; in the summary and the claims, at most 3 significant \
+digits (0.45, not 0.4461; 359,000, not 359 007; 1.13 million, not 1,133,053), and say \
+"central estimate" and "range", not P50, P90 and P10. Each finding's claim is one or two \
+plain sentences with at most three numbers, all declared; the fit behind it (model, \
+window, r2_log, di, b) and exact values go in its detail, copied as the tools give them: \
+the detail's numbers need \
 no declaring, but each must be in the evidence the finding cites. Keep fit statistics out of \
 claims and the summary, and never write internal scores or field names. For a share such as \
 water cut, give the values before and after, not a percent change. Translate every quote \
@@ -420,6 +423,7 @@ async def run_agent(
     steps: list[Step] = []
     check_rounds: list[list[str]] = []
     last_submission: Submission | None = None
+    asked_readability = False  # rounded numbers and plain labels, asked once per run
     text_replies = 0  # consecutive replies without a tool call
     deadline = time.monotonic() + timeout_s if timeout_s else None
 
@@ -525,7 +529,7 @@ async def run_agent(
         accepted: Submission | None = None
 
         def check(arguments: str) -> dict:
-            nonlocal accepted, last_submission
+            nonlocal accepted, last_submission, asked_readability
             try:
                 submission = Submission.model_validate_json(arguments or "{}")
             except ValidationError as e:
@@ -539,6 +543,10 @@ async def run_agent(
                     f"The checker could not read this submission ({type(e).__name__}). "
                     "Write every number in plain decimal form and submit again."
                 ]
+            # Readability is asked once: a second request could cost the answer its rounds.
+            if not asked_readability and (style := readability(submission)):
+                asked_readability = True
+                problems = [*problems, *style]
             check_rounds.append(problems)
             if not problems:
                 accepted = submission

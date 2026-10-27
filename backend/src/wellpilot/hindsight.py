@@ -144,9 +144,21 @@ def hindsight(run: dict, full: ProductionStore, past: ProductionStore) -> dict:
         raise ValueError("this run saw all the data: there is no later data to compare with")
     cut = pd.Timestamp(run["as_of"])
     evidence = sorted(run["evidence"].values(), key=lambda e: int(e["id"][1:]))
+    cited = _cited(run.get("result") or {})
     forecasts = [
-        _forecast_hindsight(full, past, cut, e, run)
+        {**_forecast_hindsight(full, past, cut, e, run), "cited": e["id"] in cited}
         for e in evidence
         if e["tool"] == "forecast_production" and isinstance(e.get("result"), dict)
     ]
+    # The forecasts the answer gives first; the ones the agent tried on the way after them.
+    forecasts.sort(key=lambda f: not f["cited"])
     return {"as_of": cut.date().isoformat(), "forecasts": forecasts, "wells": _next_year(full, cut)}
+
+
+def _cited(result: dict) -> set[str]:
+    """Evidence ids the answer rests on: its findings' sources and every declared number's."""
+    ids = {n["evidence_id"] for n in result.get("summary_numbers") or []}
+    for finding in result.get("findings") or []:
+        ids |= set(finding.get("evidence_ids") or [])
+        ids |= {n["evidence_id"] for n in finding.get("numbers") or []}
+    return ids

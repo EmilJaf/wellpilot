@@ -80,6 +80,8 @@ export function plainProblem(problem: string): string {
     .replace(/is marked fact but rests on evidence with warnings\.?$/, warning ? `rests on a tool result with a warning (${warning[1]}: ${warning[2]}).` : 'rests on a tool result with a warning.')
     .replace(/'(.+?)' comes from (E\d+), which has warnings.*$/, "'$1' comes from an unreliable result ($2) but reads as certain.")
     .replace(/quoted text not found in .*$/, 'quotes something its sources do not say word for word.')
+    .replace(/: round (.+?) in the (?:claim|summary) to three significant digits.*$/, ': asked to round $1 so it reads at a glance.')
+    .replace(/: (.+?) (?:is a label|are labels) a reader may not know.*$/, ': asked to say $1 in plain words.')
 }
 
 /** Letters and digits only, lowercased: how quotes are compared (as the backend does). */
