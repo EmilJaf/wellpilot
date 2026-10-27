@@ -96,6 +96,14 @@ CASES = [
         mentions=(r"2014-12|2015-01|December 2014",),
     ),
     Case(
+        "water_shutoff_f12",
+        "F-12's water cut fell from about 0.97 to about 0.3 at the end of 2014. What was done "
+        "to the well, and why did the plug set in 2010 not do the same?",
+        tools=("well_operations", "production_log"),
+        mentions=(r"3150", r"3210", r"2009|2010-09"),
+        max_steps=10,
+    ),
+    Case(
         "unknown_well",
         "Why did well F-99 stop producing in 2013?",
         any_tools=("list_wells", "run_sql"),
