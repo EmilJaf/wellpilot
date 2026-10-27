@@ -1,8 +1,9 @@
 # Data notice
 
 These files are derived from the Volve field dataset: the daily production sheet cleaned
-by `wellpilot.ingest.production`, and the 2005 development plan (PUD) read by
-`wellpilot.ingest.reports` and `wellpilot.ingest.report_facts`. They are a test fixture,
+by `wellpilot.ingest.production`, and two reports (the 2005 development plan, PUD, and
+F-11 B's completion report) read by `wellpilot.ingest.reports` and
+`wellpilot.ingest.report_facts` on Muse Spark Open. They are a test fixture,
 so CI can check the analysis and the facts the demo quotes against real data.
 
 Contains data from the Volve field dataset, made available by Equinor and the former Volve

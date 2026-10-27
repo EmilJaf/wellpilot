@@ -13,9 +13,9 @@ from wellpilot.ingest.report_facts import FACTS_FILE, uncovered_numbers
 FIXTURE = Path(__file__).parent / "fixtures" / "processed"
 
 
-def test_the_gate_names_what_falls_short_in_the_fixture() -> None:
-    """The fixture holds the hosted model's facts: two misquotes, everything else in place."""
-    assert check(FIXTURE) == ["2 quotes are not on their page"]
+def test_the_fixture_facts_pass_the_gate() -> None:
+    """The fixture holds the live facts (Muse Spark Open with self-review, both reports)."""
+    assert check(FIXTURE) == []
 
 
 def test_a_missing_plan_row_fails_the_gate(tmp_path) -> None:
