@@ -9,7 +9,8 @@ CLAUDE.local.md
 .idea/
 .vscode/
 data/raw/
-# data/runs stays: the replayed demo runs (FEATURED_RUNS) ship in the image.
+# Local runs stay out: the image takes the featured runs from backend/tests/fixtures/runs.
+data/runs/
 **/__pycache__/
 **/.pytest_cache/
 **/.ruff_cache/

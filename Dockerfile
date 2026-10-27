@@ -1,5 +1,5 @@
 # WellPilot: one image, the API serving the built frontend and the processed Volve data.
-# Build from the repo root (the context needs data/processed and data/runs):
+# Build from the repo root (the context needs data/processed):
 #   docker build -t wellpilot .
 # Keys are never baked in: pass them at run time (fly secrets set ...).
 
@@ -26,8 +26,10 @@ RUN uv sync --locked --no-dev
 
 # Volve data (Equinor Open Data Licence, attributed in the app's footer and the README).
 COPY data/processed /app/data/processed
-# Saved runs; only FEATURED_RUNS are listed in public.
-COPY data/runs /app/data/runs
+# The featured runs, frozen in git and replayed in CI; only FEATURED_RUNS are listed in
+# public. Not the local data/runs: today's eval runs in it would count against the live
+# site's daily token budget, which is read back from the run files at startup.
+RUN mkdir -p /app/data/runs && cp /app/backend/tests/fixtures/runs/*.json /app/data/runs/
 COPY --from=web /web/dist /app/frontend/dist
 
 RUN useradd --create-home --uid 10001 wellpilot && chown -R wellpilot /app/data

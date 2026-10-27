@@ -158,7 +158,7 @@ docker build -t wellpilot:smoke .
 scripts/smoke_image.sh
 ```
 
-The image is built from the repository root and copies `data/processed` and `data/runs`, so run the ingest first. Then, once:
+The image is built from the repository root and copies `data/processed`, so run the ingest first; the featured runs it replays come from `backend/tests/fixtures/runs`. Then, once:
 
 ```bash
 brew install flyctl
