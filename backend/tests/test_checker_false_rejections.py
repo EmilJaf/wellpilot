@@ -354,7 +354,6 @@ def test_E5_constants_control() -> None:
 NOR = "Produksjonen avtar grunnet økende vannrate."
 
 
-@pending("block 6: quote forms")
 def test_F1_translation_in_parentheses_is_the_reports_claim_too() -> None:
     """Brackets are handled; parentheses, the other natural way to add a translation, are
     not. 'due to' then counts as the finding's own cause."""
@@ -377,7 +376,6 @@ def test_F1b_bracketed_translation_control() -> None:
     assert check(f, log=log) == []
 
 
-@pending("block 6: quote forms")
 def test_F2_two_scare_quoted_words_read_as_one_quote() -> None:
     """Scare quotes on two words 15+ characters apart are read as one long quotation."""
     log = corpus_log(F12)
@@ -389,7 +387,6 @@ def test_F2_two_scare_quoted_words_read_as_one_quote() -> None:
     assert check(f, log=log) == []
 
 
-@pending("block 6: quote forms")
 def test_F3_quote_with_an_ellipsis() -> None:
     """Eliding the middle of a quotation with an ellipsis is standard practice."""
     log = corpus_log(F12)
@@ -402,7 +399,6 @@ def test_F3_quote_with_an_ellipsis() -> None:
     assert check(f, log=log) == []
 
 
-@pending("block 6: quote forms")
 def test_F4_quote_preceded_by_a_dash_without_space() -> None:
     log = corpus_log(F12)
     eid = evidence_with_quote(log, NOR)
@@ -414,7 +410,6 @@ def test_F4_quote_preceded_by_a_dash_without_space() -> None:
     assert check(f, log=log) == []
 
 
-@pending("block 6: quote forms")
 def test_F5_quote_followed_by_a_question_mark() -> None:
     log = corpus_log(F12)
     eid = evidence_with_quote(log, "Maksimum vannkutt 0,80")
@@ -440,7 +435,6 @@ def test_F6_slash_translation_control() -> None:
 # G. causal regex over petroleum vocabulary
 
 
-@pending("block 6: causal and hedge vocabulary")
 def test_G1_water_drive_is_a_recovery_mechanism_term() -> None:
     log = corpus_log(F12)
     f = finding(
@@ -452,7 +446,6 @@ def test_G1_water_drive_is_a_recovery_mechanism_term() -> None:
     assert check(f, log=log) == []
 
 
-@pending("block 6: causal and hedge vocabulary")
 def test_G2_results_in_followed_by_an_evidence_id() -> None:
     """'The fit results in E9 show...' is a reference to evidence, not a cause."""
     log = corpus_log(F12)
@@ -464,7 +457,6 @@ def test_G2_results_in_followed_by_an_evidence_id() -> None:
     assert check(f, log=log) == []
 
 
-@pending("block 6: causal and hedge vocabulary")
 def test_G3_summary_hedged_with_could_or_presumably() -> None:
     log = corpus_log(F12)
     f = finding("Oil fell 72%.", ["E5"], [d("72%", 0.7171, "E5")])
@@ -666,9 +658,10 @@ def test_L2_legacy_control() -> None:
 # M. fact on a poor fit, reported as poor
 
 
-@pending("block 6: a fact that reports a poor fit as poor")
-def test_M1_reporting_that_a_fit_is_poor_is_a_fact() -> None:
-    """Two corpus runs lost a round on this. Rejected by design; listed for the record."""
+def test_M1_a_fact_on_a_poor_fit_is_sent_back_even_when_it_says_so() -> None:
+    """By design: a finding that names the fit poor may still draw a conclusion from it
+    (run 6fe2c784147c turned this fit's Di into "7.89 times faster", as a fact). Facts on
+    warned evidence stay inferences."""
     log = corpus_log(F12)
     f = finding(
         "The plateau window 2008-02-13 to 2010-07-18 gives a poor fit (r2_log 0.019), so no "
@@ -676,7 +669,8 @@ def test_M1_reporting_that_a_fit_is_poor_is_a_fact() -> None:
         ["E11"],
         [d("0.019", 0.01942, "E11")],
     )
-    assert check(f, log=log) == []
+    problems = check(f, log=log)
+    assert problems and "rests on evidence with warnings" in problems[0]
 
 
 # N. sanity: wrong answers are still rejected

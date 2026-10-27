@@ -124,23 +124,40 @@ def _normalize(text: str) -> str:
 CONSTANTS = {7.0, 12.0, 24.0, 30.0, 30.44, 52.0, 60.0, 365.0, 365.25, 3600.0, 86400.0}
 CONSTANTS |= {6.2898, 0.159, 0.158987, 35.3147}
 # Causes are interpretations: the data shows timing and size, not why.
+# "Water drive" and "gas drive" are recovery mechanisms, and "the fit results in E9" points
+# at evidence: neither is a claim about why.
 CAUSAL = re.compile(
-    r"\b(because|caus(?:e|ed|es|ing)|dr(?:ove|ives?|iven|iving)|due to|led to|leads? to|"
-    r"result(?:s|ed)? (?:from|in)|responsible for)\b",
+    r"\b(because|caus(?:e|ed|es|ing)|"
+    r"(?<!water )(?<!gas )(?<!aquifer )(?<!depletion )(?<!gravity )dr(?:ove|ives?|iven|iving)|"
+    r"due to|led to|leads? to|result(?:s|ed)? (?:from|in)(?! E\d)|(?:as a )?result of|"
+    r"responsible for|attribut(?:able|ed) to|triggered by|owing to|thanks to|"
+    r"(?:a )?consequence of|contribut(?:ed|es|ing) to|stem(?:s|med)? from|induced by|"
+    r"the reason|accounts? for|explain(?:s|ed by)?)\b",
     re.IGNORECASE,
 )
 # A quoted passage: opened after a space or "(", closed before a space or punctuation, so
 # apostrophes inside words ("oil's") do not end it.
-QUOTED = re.compile(r"""(?:(?<=[\s(])|^)['"‘“«](.{15,}?)['"’”»](?=[\s.,;:)/]|$)""")
-# A quote with its translation in brackets: “Produksjonen avtar...” [Production declines
-# due to...]. Both report the document's claim, so causal words there are not the finding's.
-QUOTED_CLAIM = re.compile(QUOTED.pattern + r"(?:\s*\[[^\]]*\])?")
+# Curly quotes and guillemets open after any non-letter ("—“..."), straight quotes only
+# after a space, "(" or the start. A quote cannot run across another opening quote, so two
+# scare-quoted words ('plateau' ... 'decline') are not read as one quotation.
+QUOTED = re.compile(
+    r"""(?:(?:(?<=[\s(])|^)['"]|(?<!\w)[‘“«])((?:(?!\s['"‘“«]).){15,}?)['"’”»]"""
+    r"""(?=[\s.,;:)/\]?!—–-]|$)"""
+)
+# A quote with its translation after it, in brackets or parentheses: “Produksjonen
+# avtar...” [Production declines due to...]. A translation found in the evidence (the
+# fact's statement_en) reports the document's claim, so its causal words are not the
+# finding's; one written freely is checked like the finding's own words.
+QUOTED_CLAIM = re.compile(QUOTED.pattern + r"(\s*(?:\[[^\]]*\]|\([^)]*\)))?")
 MIN_QUOTE_CHARS = 12  # letters and digits; shorter quotes are phrases, not citations
+# Checked per sentence: a hedge in one sentence does not license a cause in another.
 HEDGE = re.compile(
-    r"\b(likely|probabl[ey]|possibly|consistent with|suggests?|appears?|may|might|"
-    r"hypothes\w*|indicat\w*)\b",
+    r"\b(likely|probabl[ey]|possibly|perhaps|presumabl[ey]|plausibl[ey]|consistent with|"
+    r"suggests?|seems?|appears? to|could|would|may|might|hypothes\w*|interpret\w*|"
+    r"points? to)\b",
     re.IGNORECASE,
 )
+SENTENCE = re.compile(r"(?<=[.;!?])\s+")
 
 
 class DeclaredNumber(BaseModel):
@@ -371,9 +388,35 @@ def _unsupported(
     return numbers, dates
 
 
+def _quoted_in(quote: str, pool: _Pool) -> bool:
+    """A quote is in the evidence word for word; one elided with "…" or "[...]" must have
+    each part there, in order."""
+    parts = [squash(p) for p in re.split(r"\[?(?:…|\.\.\.)\]?", quote)]
+    at = 0
+    for part in (p for p in parts if p):
+        at = pool.text.find(part, at)
+        if at < 0:
+            return False
+        at += len(part)
+    return True
+
+
 def _missing_quotes(text: str, pool: _Pool) -> list[str]:
     quotes = [q for q in QUOTED.findall(text) if len(squash(q)) >= MIN_QUOTE_CHARS]
-    return [q for q in quotes if squash(q) not in pool.text]
+    return [q for q in quotes if not _quoted_in(q, pool)]
+
+
+def _own_words(text: str, pool: _Pool) -> str:
+    """The text without quotes, and without translations of quotes found in the evidence:
+    what the finding itself claims."""
+
+    def strip(match: re.Match) -> str:
+        translation = match.group(2)
+        if translation and squash(translation.strip()[1:-1]) not in pool.text:
+            return " " + translation
+        return " "
+
+    return QUOTED_CLAIM.sub(strip, text)
 
 
 def _precision(value: float) -> float:
@@ -403,7 +446,11 @@ def _readings(text: str) -> list[Reading]:
         if not math.isfinite(shown):
             continue
         unit = 0.5 * 10.0**-decimals if decimals else _precision(shown)
-        reading = (shown, unit, (1.0, *SCALES.get(suffix or "", ())))
+        if not decimals and shown >= 10:
+            # Trailing zeros are rounding, but to two significant digits at most: "4000" is
+            # good to 50, so 3593 does not verify it (half a leading digit would be 500).
+            unit = min(unit, 0.5 * 10.0 ** (math.floor(math.log10(shown)) - 1))
+        reading = (shown, unit, tuple(dict.fromkeys((1.0, *SCALES.get(suffix or "", ())))))
         if reading not in readings:
             readings.append(reading)
     return readings
@@ -431,6 +478,20 @@ GROUP_BEFORE = re.compile(r"(?:^|[^\w.,])\d{1,3}[ \u00a0\u202f]$")
 CALENDAR_WINDOW = re.compile(
     r"\b(?:12|24|30|365)[-\s](?:month|hour|day)\b|\b(?:12\s+months|24\s+hours|365\s+days)\b"
 )
+
+
+def _pinned(reading: Reading, value: float) -> Reading | None:
+    """The reading at the scales its declared value takes, or None if none fits.
+
+    A full value fixes the scale: "72%" declared 0.72 must be 0.72 in the evidence, not a
+    72.3 choke; "1146k" declared 1146000 is not 1145.72. A short value ("4.58" written
+    "4.58 MSm3", "72" for "72%") leaves the scale open, as before.
+    """
+    number, unit, scales = reading
+    fitting = tuple(s for s in scales if _reads_as((number, unit, (s,)), [value]))
+    if not fitting:
+        return None
+    return reading if fitting == (1.0,) else (number, unit, fitting)
 
 
 def _standalone(text: str, written: str) -> list[tuple[int, int]]:
@@ -482,7 +543,7 @@ def _declared(
         unit = SUFFIX_AFTER.match(masked, _standalone(masked, number.text)[0][1])
         # (+2 keeps the "Sm" that "M" and "k" need after them)
         readings = _readings(number.text + (masked[unit.start() : unit.end() + 2] if unit else ""))
-        fits = [r for r in readings if _reads_as(r, [number.value])]
+        fits = [f for r in readings if (f := _pinned(r, number.value))]
         exempt = [n for n in _numbers_in_text(number.text) if _free(*n, pool, free)]
         if fits and exempt:
             continue  # "3 producers", "2010": declared though it needs no evidence
@@ -596,7 +657,7 @@ def check_submission(submission: Submission, log: EvidenceLog, question: str = "
                 "word for word (the original quote or its statement_en) or drop the quotes."
             )
         # A cause inside a quote is the report's claim, which the finding only reports.
-        cause = CAUSAL.search(QUOTED_CLAIM.sub(" ", finding.claim))
+        cause = CAUSAL.search(_own_words(finding.claim, pool))
         if finding.confidence == "fact" and cause:
             problems.append(
                 f"Finding {n} states a cause ('{cause.group(0)}') but is marked fact. The data "
@@ -632,10 +693,14 @@ def check_submission(submission: Submission, log: EvidenceLog, question: str = "
     )
     if missing:
         problems.append(f"Summary: {', '.join(missing)} not found in any evidence.")
-    cause = CAUSAL.search(QUOTED_CLAIM.sub(" ", submission.summary))
-    if cause and not HEDGE.search(submission.summary):
-        problems.append(
-            f"Summary states a cause as certain ('{cause.group(0)}'). The data shows timing "
-            "and size, not causes: hedge it, e.g. 'most likely because' or 'consistent with'."
-        )
+    own = _normalize(_own_words(submission.summary, everything))  # "May 2010" is a date
+    for sentence in SENTENCE.split(own):
+        cause = CAUSAL.search(sentence)
+        if cause and not HEDGE.search(sentence):
+            problems.append(
+                f"Summary states a cause as certain ('{cause.group(0)}'). The data shows "
+                "timing and size, not causes: hedge it in the same sentence, e.g. 'most "
+                "likely because' or 'consistent with'."
+            )
+            break
     return problems

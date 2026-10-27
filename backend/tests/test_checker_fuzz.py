@@ -60,9 +60,15 @@ def claim_with(text: str) -> str:
     return f"In 2012 the well made {text} of oil."
 
 
+def realistic(style: str, value: float) -> bool:
+    """Nobody writes 12,000 Sm3 as "0.01 MSm3": million formats are for millions."""
+    return style not in ("million", "MSm3") or value >= 1e6
+
+
 def coarsest(written: float) -> float:
-    """Half a unit in the leading digit: the loosest any rounding of written can be."""
-    return 0.5 * 10 ** math.floor(math.log10(written))
+    """Half a unit in the second significant digit: the loosest the checker lets a written
+    number round ("4000" is good to 50)."""
+    return 0.5 * 10 ** (math.floor(math.log10(written)) - 1)
 
 
 def check(text: str, value: float, evidence: float, numbers: list | None = ...) -> list[str]:
@@ -118,6 +124,7 @@ def test_a_tie_may_round_either_way(whole, decimals, up) -> None:
 @given(value=large, style=st.sampled_from(sorted(LARGE)), off=off)
 def test_declared_numbers_that_are_not_in_the_evidence_fail(value, style, off) -> None:
     text, written = LARGE[style](value * (1 + off))
+    assume(realistic(style, value * (1 + off)))
     assume(abs(written - value) > coarsest(written))  # no rounding of the text covers value
 
     problems = check(text, written, value)
@@ -130,6 +137,7 @@ def test_declared_numbers_that_are_not_in_the_evidence_fail(value, style, off) -
 def test_text_that_does_not_show_its_declared_value_fails(value, style, off) -> None:
     """The evidence value declared honestly, the text written wrong: '2.00 million' for 1.6M."""
     text, written = LARGE[style](value * (1 + off))
+    assume(realistic(style, value * (1 + off)))
     assume(abs(written - value) > coarsest(written))
 
     problems = check(text, value, value)

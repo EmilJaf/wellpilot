@@ -112,3 +112,72 @@ def test_absurd_numbers_are_rejected_not_crashed_on() -> None:
         assert check(f"The rate was {text} Sm3/d.", ["E5"], [], log)
         assert check(f"The rate was {text} Sm3/d.", ["E5"], [d(text, 1146, "E5")], log)
     assert check("The rate was 1e400 Sm3/d.", ["E5"], None, log)  # legacy path
+
+
+def test_round_numbers_are_good_to_two_significant_digits() -> None:
+    log = EvidenceLog()
+    eid = add(log, "detect_events", {"well": "F-14"}, {"before_mean": 3593.1, "rate": 1480.0})
+
+    assert check("The rate was about 4000 Sm3/d.", [eid], [d("4000", 3593.1, eid)], log)
+    assert check("The rate was 1,000 Sm3/d.", [eid], [d("1,000", 1000, eid)], log)
+    ok = EvidenceLog()
+    oid = add(ok, "detect_events", {"well": "F-14"}, {"before_mean": 4049.93})
+    assert check("The rate was about 4000 Sm3/d.", [oid], [d("4000", 4049.93, oid)], ok) == []
+
+
+def test_a_full_declared_value_pins_the_scale() -> None:
+    log = EvidenceLog()
+    eid = add(
+        log,
+        "production_monthly",
+        {"well": "F-12"},
+        {"water_cut": 0.31, "choke_pct": 72.3, "after_mean": 1145.72, "b": 1.13},
+    )
+
+    assert check("Water cut reached 72%.", [eid], [d("72%", 0.72, eid)], log)
+    assert check("Cumulative oil 1146k Sm3.", [eid], [d("1146k", 1146000, eid)], log)
+    assert check("Cumulative oil 1.13 million Sm3.", [eid], [d("1.13 million", 1130000, eid)], log)
+    # Still fine: the short value leaves the scale open, the full one matches its scale.
+    assert check("Water cut reached 31%.", [eid], [d("31%", 0.31, eid)], log) == []
+    assert check("Choke at 72%.", [eid], [d("72%", 72, eid)], log) == []
+
+
+def test_a_translation_not_in_the_evidence_is_the_findings_own_words() -> None:
+    log = corpus_log(F12)
+    eid = next(
+        e.id for e in log if "Maksimum vannkutt 0,80" in json.dumps(e.result, ensure_ascii=False)
+    )
+    invented = (
+        'The PUD sets "Maksimum vannkutt 0,80" [F-12 exceeded it because the injectors drove '
+        "water into the producers]."
+    )
+
+    problems = check(invented, [eid], [], log)
+
+    assert problems and "states a cause" in problems[0]
+
+
+def summary_problems(summary: str) -> list[str]:
+    log = corpus_log(F12)
+    finding = Finding(claim="The rate fell.", evidence_ids=["E5"], confidence="fact", numbers=[])
+    return check_submission(Submission(summary=summary, findings=[finding]), log)
+
+
+def test_a_hedge_counts_only_in_its_own_sentence() -> None:
+    assert summary_problems("In May 2010 the rate collapsed because water broke through.")
+    assert summary_problems("The fit is probably exponential. The fall was caused by water.")
+    assert summary_problems("The fall was most likely caused by water breakthrough.") == []
+
+
+def test_common_causal_phrasings_are_causes() -> None:
+    for phrase in (
+        "as a result of water breakthrough",
+        "attributable to water breakthrough",
+        "triggered by water breakthrough",
+        "owing to water breakthrough",
+        "which explains the faster decline",
+        "a consequence of water breakthrough",
+    ):
+        assert summary_problems(f"The rate fell, {phrase}."), phrase
+    # Petroleum vocabulary and evidence references are not causes.
+    assert summary_problems("F-12 produces under water drive; the fit results in E9 show it.") == []
