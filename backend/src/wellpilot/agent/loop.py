@@ -204,22 +204,30 @@ class AgentRun:
                 "evidence": [
                     {k: v for k, v in asdict(e).items() if k != "result"} for e in self.evidence
                 ],
-            }
+            },
+            EvidenceLog.restore(asdict(e) for e in self.evidence),
         )
 
 
-def with_spans(result: dict) -> dict:
+def with_spans(result: dict, log: EvidenceLog | None = None) -> dict:
     """Add the display spans of the summary and each finding to a result (also to one saved
-    before spans existed, so replays mark numbers by the same rules)."""
+    before spans existed, so replays mark numbers by the same rules). With the evidence log,
+    each quote also names the evidence it was found in."""
 
     def numbers(raw: list | None) -> list[DeclaredNumber]:
         return [DeclaredNumber.model_validate(n) for n in raw or []]
 
     result["summary_spans"] = display_spans(
-        result.get("summary"), numbers(result.get("summary_numbers"))
+        result.get("summary"), numbers(result.get("summary_numbers")), log
     )
     for finding in result.get("findings", []):
-        finding["spans"] = display_spans(finding.get("claim"), numbers(finding.get("numbers")))
+        cited = None
+        if log is not None:  # a finding's quote is looked for in what it cites
+            ids = set(finding.get("evidence_ids", []))
+            cited = EvidenceLog.restore(asdict(e) for e in log if e.id in ids)
+        finding["spans"] = display_spans(
+            finding.get("claim"), numbers(finding.get("numbers")), cited
+        )
     return result
 
 

@@ -542,3 +542,18 @@ def test_runs_saved_before_spans_get_them_on_load() -> None:
         spans = answer["findings"][0]["spans"]
         assert [(s["start"], s["end"]) for s in spans] == [(5, 10)]
         assert answer["summary_spans"] == []
+
+
+def test_a_quote_span_names_the_evidence_that_holds_it() -> None:
+    """The UI opens a quote's own source; a quote in brackets is a quote too."""
+    from wellpilot.agent.checker import display_spans
+
+    log = EvidenceLog()
+    log.add("search_reports", {}, {"quote": "Maksimum vannkutt 0,80"}, _tool)
+    log.add("search_reports", {}, {"quote": "bryter gjennom i brønnene etter omlag 2 år"}, _tool)
+    text = 'The plan: ["bryter gjennom i brønnene etter omlag 2 år" - after about 2 years].'
+
+    spans = display_spans(text, [], log)
+
+    assert spans[0]["kind"] == "quote" and spans[0]["evidence_id"] == "E2"
+    assert "evidence_id" not in display_spans(text, [])[0]  # no log: no source named

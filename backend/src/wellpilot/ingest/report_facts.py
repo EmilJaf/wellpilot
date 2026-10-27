@@ -5,6 +5,12 @@ text layer and returns structured facts: an English statement, the verbatim quot
 original language, topic and wells. Each quote is then checked against the page's text
 layer, so a fact the model invented shows up as unverified.
 
+Each page's extraction is then reviewed against the page, deterministically, the way the
+agent's answers are checked: quotes that are not on the page word for word, numbers on the
+page that no fact covers (a table row left out), a page of text with no facts. Problems go
+back to the model, which returns a corrected extraction; up to MAX_REVIEW_ROUNDS rounds,
+keeping the extraction with the fewest problems.
+
 Results are cached per page, so a rerun only pays for pages not done yet.
 
 Run (spends tokens): uv run python -m wellpilot.ingest.report_facts --pages 23,25
@@ -17,6 +23,7 @@ import hashlib
 import json
 import re
 import time
+from contextlib import suppress
 from pathlib import Path
 from typing import Literal
 
@@ -32,6 +39,9 @@ FACTS_FILE = "report_facts.parquet"
 SUMMARIES_FILE = "report_summaries.parquet"
 TEXT_LAYER_CHARS = 8000
 CONCURRENCY = 4
+MAX_REVIEW_ROUNDS = 2  # corrections after the first extraction
+MIN_UNCOVERED = 3  # fewer uncovered numbers than this are prose asides, not a missed table
+EMPTY_PAGE_CHARS = 1000  # a page with this much text and no facts is asked about once
 
 Topic = Literal[
     "production_forecast",
@@ -52,10 +62,12 @@ You read pages of oil field reports about the Volve field (Norwegian North Sea, 
 named like F-12 or 15/9-F-12). You get the page image and, when available, its text \
 layer. Tables and figures are only fully visible in the image.
 
-Extract the facts a petroleum engineer analysing well performance would cite: production \
+Extract the facts a petroleum engineer or a project reviewer would cite: production \
 forecasts and plateau rates, water breakthrough and water production, injection strategy, \
 pressures, reserves, facility limits (liquid, oil, gas, injection capacity, maximum water \
-cut), well design and completion, schedules.
+cut), well design and completion, drilling, schedules, costs and economics. For a table, \
+extract every row as one fact whose statement gives all the row's values, with the row as \
+its quote.
 
 For each fact:
 - statement_en: one English sentence with the numbers and units exactly as on the page.
@@ -138,6 +150,114 @@ def quote_check(quote: str, page_text: str) -> QuoteCheck:
     if len(words) >= 3 and words <= set(TOKEN.findall(_clean(page_text))):
         return "tokens"
     return "unverified"
+
+
+def _readings(token: str) -> set[float]:
+    """A number token read both ways: "1,25" is 1.25 (Norwegian) or 125 (English
+    thousands); "9.000" is 9.0 or 9000."""
+    candidates = {
+        token.replace(",", "."),  # one decimal comma
+        token.replace(".", "").replace(",", "."),  # Norwegian thousands and decimals
+        token.replace(",", ""),  # English thousands
+        token.replace(",", "").replace(".", ""),  # every separator a thousands group
+    }
+    values = set()
+    for c in candidates:
+        with suppress(ValueError):
+            values.add(round(float(c), 6))
+    return values
+
+
+def _is_year(token: str) -> bool:
+    return token.isdigit() and 1900 <= int(token) <= 2100
+
+
+# Numbers that are names, not values: section numbers ("4.5.1", "12.1"; the PUD writes
+# decimals with a comma), and numbers after a word that makes them a reference or a label.
+SECTION = re.compile(r"^\d{1,2}(?:\.\d{1,2})+$")
+REFERENCE_WORDS = {"tabell", "tab", "figur", "fig", "kapittel", "kapitel", "kap", "side"}
+REFERENCE_WORDS |= {"vedlegg", "table", "figure", "chapter", "section", "appendix", "page"}
+LABEL_WORDS = {"p", "pl", "f", "st"}  # P90, licence PL 046, well F-12, survey ST 0202
+NAMING_WORDS = REFERENCE_WORDS | LABEL_WORDS
+
+
+def _a_name(tokens: list[str], i: int) -> bool:
+    token = tokens[i]
+    before = tokens[i - 1] if i else ""
+    after = tokens[i + 1 : i + 3]
+    return (
+        bool(SECTION.match(token))
+        or before in NAMING_WORDS
+        or (token == "15" and after[:1] == ["9"])  # 15/9-F-12
+        or (token == "9" and before == "15")
+    )
+
+
+def uncovered_numbers(text: str, facts: list[dict], page: int) -> list[str]:
+    """Numbers on the page that no fact's quote or statement holds, each shown in a few
+    words of context. Years, small integers, the page number and chart axes (four or more
+    evenly spaced numbers in a row) are not counted."""
+    tokens = TOKEN.findall(_clean(text))
+    covered: set[float] = set()
+    for fact in facts:
+        for t in TOKEN.findall(_clean(f"{fact['quote']} {fact['statement_en']}")):
+            if t[0].isdigit():
+                covered |= _readings(t)
+    numeric = [i for i, t in enumerate(tokens) if t[0].isdigit()]
+    axis: set[int] = set()
+    run: list[int] = []
+    for i in [*numeric, -2]:  # -2 closes the last run
+        if run and i == run[-1] + 1:
+            run.append(i)
+            continue
+        values = [min(_readings(tokens[j]) or {0.0}) for j in run]
+        steps = {round(b - a, 6) for a, b in zip(values, values[1:], strict=False)}
+        if len(run) >= 4 and len(steps) == 1 and steps != {0.0}:
+            axis.update(run)
+        run = [i]
+    missed = [
+        i
+        for i in numeric
+        if i not in axis
+        and not _is_year(tokens[i])
+        and not (tokens[i].isdigit() and (int(tokens[i]) <= 10 or int(tokens[i]) == page))
+        and not _a_name(tokens, i)
+        and not (_readings(tokens[i]) & covered)
+    ]
+    snippets: list[tuple[int, int]] = []
+    for i in missed:
+        start, end = max(0, i - 4), min(len(tokens), i + 5)
+        if snippets and start <= snippets[-1][1]:
+            snippets[-1] = (snippets[-1][0], end)
+        else:
+            snippets.append((start, end))
+    return [" ".join(tokens[a:b]) for a, b in snippets] if len(missed) >= MIN_UNCOVERED else []
+
+
+def review(extraction: "PageExtraction", text: str, page: int) -> list[str]:
+    """Problems with one page's extraction, as sentences for the model; [] means none."""
+    facts = [f.model_dump() for f in extraction.facts]
+    problems = [
+        f"Fact {n}: the quote is not on the page word for word: '{f['quote'][:160]}'. "
+        "Copy it character for character from the text layer, or drop the fact."
+        for n, f in enumerate(facts, start=1)
+        if quote_check(f["quote"], text) == "unverified"
+    ]
+    missed = uncovered_numbers(text, facts, page)
+    if missed:
+        shown = "; ".join(f"«{m}»" for m in missed[:12])
+        problems.append(
+            f"These numbers on the page are in no fact (shown in context): {shown}. Add a "
+            "fact for each one an engineer or reviewer would cite: every row of a table, "
+            "every rate, volume, pressure, date or cost. Leave out chart axis labels."
+        )
+    elif not facts and len(text) >= EMPTY_PAGE_CHARS:
+        problems.append(
+            f"The page has {len(text)} characters of text and no facts. If any of it would "
+            "be cited (decisions, methods, dates, numbers), extract it; if nothing would, "
+            "return an empty fact list again."
+        )
+    return problems
 
 
 def _fingerprint() -> str:
@@ -234,36 +354,64 @@ async def extract_page(
         "json_schema": {"name": "page_extraction", "schema": json_schema(PageExtraction)},
     }
     started = time.monotonic()
-    errors = []
-    for _ in range(2):  # one retry if the JSON does not validate
-        response = await llm.client.chat.completions.create(
-            model=llm.model,
-            messages=messages,
-            response_format=response_format,
-            **({"reasoning_effort": reasoning_effort} if reasoning_effort else {}),
-        )
-        usage = response.usage
-        details = getattr(usage, "completion_tokens_details", None)
-        try:
-            extraction = PageExtraction.model_validate_json(
-                response.choices[0].message.content or ""
+    tokens = {"prompt": 0, "completion": 0, "reasoning": 0}
+
+    async def ask() -> tuple[PageExtraction, str]:
+        errors = []
+        for _ in range(2):  # one retry if the JSON does not validate
+            response = await llm.client.chat.completions.create(
+                model=llm.model,
+                messages=messages,
+                response_format=response_format,
+                **({"reasoning_effort": reasoning_effort} if reasoning_effort else {}),
             )
-        except ValidationError as e:
-            errors.append(str(e)[:500])
-            continue
-        return {
-            "doc_id": doc_id,
-            "page": int(page["page"]),
-            "model": llm.model,
-            "prompt_tokens": usage.prompt_tokens if usage else 0,
-            "completion_tokens": usage.completion_tokens if usage else 0,
-            "reasoning_tokens": (details.reasoning_tokens or 0) if details else 0,
-            "reasoning_effort": reasoning_effort or "default",
-            "seconds": round(time.monotonic() - started, 1),
-            "fingerprint": _fingerprint(),
-            "extraction": extraction.model_dump(),
-        }
-    raise ValueError(f"page {page['page']}: no valid extraction: {errors}")
+            usage = response.usage
+            details = getattr(usage, "completion_tokens_details", None)
+            tokens["prompt"] += usage.prompt_tokens if usage else 0
+            tokens["completion"] += usage.completion_tokens if usage else 0
+            tokens["reasoning"] += (details.reasoning_tokens or 0) if details else 0
+            content = response.choices[0].message.content or ""
+            try:
+                return PageExtraction.model_validate_json(content), content
+            except ValidationError as e:
+                errors.append(str(e)[:500])
+        raise ValueError(f"page {page['page']}: no valid extraction: {errors}")
+
+    # Extract, review against the page, send problems back; keep the best extraction.
+    text = page["text"] if page["has_text"] else ""
+    rounds: list[list[str]] = []
+    best: tuple[int, PageExtraction] | None = None
+    for attempt in range(1 + MAX_REVIEW_ROUNDS):
+        extraction, content = await ask()
+        problems = review(extraction, text, int(page["page"])) if text else []
+        rounds.append(problems)
+        weight = len(problems)
+        if best is None or weight <= best[0]:
+            best = (weight, extraction)
+        if not problems or attempt == MAX_REVIEW_ROUNDS:
+            break
+        messages.append({"role": "assistant", "content": content})
+        messages.append(
+            {
+                "role": "user",
+                "content": "A check of your extraction against the page found:\n- "
+                + "\n- ".join(problems)
+                + "\nReturn the whole corrected extraction: every fact, fixed and added.",
+            }
+        )
+    return {
+        "doc_id": doc_id,
+        "page": int(page["page"]),
+        "model": llm.model,
+        "prompt_tokens": tokens["prompt"],
+        "completion_tokens": tokens["completion"],
+        "reasoning_tokens": tokens["reasoning"],
+        "reasoning_effort": reasoning_effort or "default",
+        "seconds": round(time.monotonic() - started, 1),
+        "fingerprint": _fingerprint(),
+        "review_rounds": rounds,
+        "extraction": best[1].model_dump(),
+    }
 
 
 def combine(processed_dir: Path, raw_dir: Path | None = None) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -355,10 +503,16 @@ async def run(doc_id: str, page_numbers: list[int], force: bool) -> None:
                 totals[1] += record["completion_tokens"]
                 totals[2] += record["reasoning_tokens"]
                 n = len(record["extraction"]["facts"])
+                rounds = record["review_rounds"]
+                review_note = (
+                    f", reviewed {len(rounds)}x, {len(rounds[-1])} problems left"
+                    if len(rounds) > 1
+                    else ""
+                )
                 print(
                     f"  p{number}: {n} facts, {record['prompt_tokens']} in / "
                     f"{record['completion_tokens']} out tokens "
-                    f"({record['reasoning_tokens']} reasoning), {record['seconds']}s"
+                    f"({record['reasoning_tokens']} reasoning), {record['seconds']}s{review_note}"
                 )
 
         await asyncio.gather(*(one(p) for p in todo))

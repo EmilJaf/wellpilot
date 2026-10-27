@@ -149,11 +149,12 @@ class RunRecord:
         record.result = data["result"]
         record.evidence = data["evidence"]
         # Runs saved before display spans existed get them now, by today's rules.
+        log = EvidenceLog.restore(record.evidence.values())
         if record.result is not None:
-            with_spans(record.result)
+            with_spans(record.result, log)
         for event in record.events:
             if event.get("type") == "final":
-                with_spans(event)
+                with_spans(event, log)
         if record.status == "running":
             # Saved mid-run by a process that then stopped: it will never finish.
             record.status = "error"

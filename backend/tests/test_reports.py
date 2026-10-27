@@ -22,6 +22,8 @@ from wellpilot.ingest.report_facts import (
     parse_pages,
     quote_check,
     quote_in_text,
+    review,
+    uncovered_numbers,
 )
 from wellpilot.ingest.reports import PAGES_FILE, REPORTS_BY_ID, normalize_text, render_report
 from wellpilot.llm import LLM
@@ -168,8 +170,11 @@ def test_parse_pages() -> None:
         parse_pages("60", 53)
 
 
+CLEAN = {**EXTRACTION, "facts": EXTRACTION["facts"][:2]}  # both quotes are on the page
+
+
 async def test_extract_page_sends_image_and_text_and_retries_bad_json(processed_dir) -> None:
-    llm, requests = fake_llm(["not json", json.dumps(EXTRACTION)])
+    llm, requests = fake_llm(["not json", json.dumps(CLEAN)])
     page = pd.read_parquet(processed_dir / PAGES_FILE).iloc[1]
 
     record = await extract_page(llm, "volve_pud", page, processed_dir, reasoning_effort="low")
@@ -183,7 +188,69 @@ async def test_extract_page_sends_image_and_text_and_retries_bad_json(processed_
     assert content[1]["image_url"]["url"].startswith("data:image/png;base64,")
     assert requests[0]["response_format"]["type"] == "json_schema"
     assert record["page"] == 23
-    assert len(record["extraction"]["facts"]) == 3
+    assert len(record["extraction"]["facts"]) == 2
+    assert record["review_rounds"] == [[]]  # nothing to correct: one round
+
+
+async def test_extraction_problems_go_back_to_the_model_until_fixed(processed_dir) -> None:
+    llm, requests = fake_llm([json.dumps(EXTRACTION), json.dumps(CLEAN)])
+    page = pd.read_parquet(processed_dir / PAGES_FILE).iloc[1]
+
+    record = await extract_page(llm, "volve_pud", page, processed_dir)
+
+    first, fixed = record["review_rounds"]
+    assert len(first) == 1 and first[0].startswith("Fact 3: the quote is not on the page")
+    assert fixed == []
+    feedback = requests[1]["messages"][-1]
+    assert feedback["role"] == "user" and "F-12 bores først" in feedback["content"]
+    assert requests[1]["messages"][-2]["role"] == "assistant"  # its own answer, then the check
+    assert len(record["extraction"]["facts"]) == 2
+    assert record["prompt_tokens"] == 4000  # both calls counted
+
+
+async def test_the_least_wrong_extraction_is_kept_when_problems_remain(processed_dir) -> None:
+    llm, requests = fake_llm([json.dumps(CLEAN), json.dumps(EXTRACTION)])
+    page = pd.read_parquet(processed_dir / PAGES_FILE).iloc[1]
+
+    record = await extract_page(llm, "volve_pud", page, processed_dir)
+
+    assert len(requests) == 1 and len(record["extraction"]["facts"]) == 2
+
+
+TABLE_PAGE = (
+    "Plan for utbygging og drift av Volve Februar 2005 25 Resultatet er oppsummert i figur 4.5 "
+    "og tabell 4.5. 0 0.5 1 1.5 2 2.5 3 3.5 2007 2008 2009 2010 År mill Sm3/år 4.5.1 Prognose "
+    "Snitt p90 p50 p10 2010 2,14 1,49 2,13 2,82 2011 1,25 0,10 1,22 1,82 2012 0,40 - 0,40 1,25 "
+    "Lisens PL 046 og brønn 15/9-F-12."
+)
+
+
+def test_numbers_no_fact_covers_are_found_but_names_and_axes_are_not() -> None:
+    row_2010 = {"quote": "2010 | 2,14 | 1,49 | 2,13 | 2,82", "statement_en": "2010: 2.13 MSm3."}
+
+    missed = uncovered_numbers(TABLE_PAGE, [row_2010], page=25)
+    every_row = uncovered_numbers(
+        TABLE_PAGE,
+        [
+            row_2010,
+            {"quote": "2011 1,25 0,10 1,22 1,82", "statement_en": ""},
+            {"quote": "2012 0,40 - 0,40 1,25", "statement_en": ""},
+        ],
+        page=25,
+    )
+
+    assert len(missed) == 1 and "1,25 0,10 1,22 1,82" in missed[0] and "0,40" in missed[0]
+    # The axis, the years, the page and section numbers, P90, PL 046 and F-12 are names.
+    assert every_row == []
+
+
+def test_a_page_of_text_with_no_facts_is_asked_about_once() -> None:
+    from wellpilot.ingest.report_facts import PageExtraction
+
+    empty = PageExtraction(page_summary_en="Nothing relevant.", facts=[])
+
+    assert review(empty, "Ord " * 400, page=9)
+    assert review(empty, "Kort side.", page=9) == []
 
 
 def test_combine_verifies_quotes_against_the_page(processed_dir) -> None:

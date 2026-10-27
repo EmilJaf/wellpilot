@@ -574,7 +574,7 @@ def plan_vs_actual(store: ProductionStore, _: NoArgs) -> dict:
         {
             "unit": "million Sm3 (MSm3) of oil per calendar year, whole field",
             "plan_source": f"{REPORTS_BY_ID[PLAN_DOC].title}, page {PLAN_PAGE}, Table 4.5",
-            "plan_rows_quoted": quotes,
+            "plan_rows_quoted": list(dict.fromkeys(quotes)),
             "years": table(pd.DataFrame(rows)),
             "totals_msm3": {
                 "actual": sum(by_year.values()),

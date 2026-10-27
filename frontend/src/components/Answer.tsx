@@ -64,16 +64,17 @@ function bySpans(
     // <q> draws its own quotation marks, so the text's are left out. With a report among the
     // sources, the quote opens its page with the passage marked.
     const inner = text.slice(q.start + 1, q.end - 1)
+    const source = q.evidence_id ?? quoteSource  // the evidence the checker found it in
     parts.push(
-      quoteSource ? (
+      source ? (
         <q
           key={`q${q.start}`}
           className="quote-link"
-          title={`Show this passage on the page it was read from (${quoteSource})`}
+          title={`Show this passage on the page it was read from (${source})`}
           onClick={(e) => {
             if ((e.target as HTMLElement).closest('button')) return
             e.stopPropagation()
-            open(quoteSource, { text: inner, value: Number.NaN, quote: true })
+            open(source, { text: inner, value: Number.NaN, quote: true })
           }}
         >
           {plain(q.start + 1, q.end - 1)}

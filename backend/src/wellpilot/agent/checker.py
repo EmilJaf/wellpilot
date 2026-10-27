@@ -149,7 +149,7 @@ CAUSAL = re.compile(
 # after a space, "(" or the start. A quote cannot run across another opening quote, so two
 # scare-quoted words ('plateau' ... 'decline') are not read as one quotation.
 QUOTED = re.compile(
-    r"""(?:(?:(?<=[\s(])|^)['"]|(?<!\w)[‘“«])((?:(?!\s['"‘“«]).){15,}?)['"’”»]"""
+    r"""(?:(?:(?<=[\s(\[])|^)['"]|(?<!\w)[‘“«])((?:(?!\s['"‘“«]).){15,}?)['"’”»]"""
     r"""(?=[\s.,;:)/\]?!—–-]|$)"""
 )
 # A quote with its translation after it, in brackets or parentheses: “Produksjonen
@@ -666,16 +666,23 @@ def _blank(text: str, *patterns: re.Pattern) -> str:
     return text
 
 
-def display_spans(text: str | None, numbers: list[DeclaredNumber] | None) -> list[dict]:
+def display_spans(
+    text: str | None, numbers: list[DeclaredNumber] | None, log: EvidenceLog | None = None
+) -> list[dict]:
     """Where the answer panel marks the text, by the checker's own rules: each quoted
-    passage, and each declared number where it stands as a whole number (not inside a
-    date, a well name or a window), with the evidence it came from. Positions index the
-    text as written, so the UI only slices; it re-implements no rule."""
+    passage (with the first evidence that holds it, given the log), and each declared
+    number where it stands as a whole number (not inside a date, a well name or a window),
+    with the evidence it came from. Positions index the text as written, so the UI only
+    slices; it re-implements no rule."""
     if not text:
         return []
-    spans: list[dict] = [
-        {"kind": "quote", "start": m.start(), "end": m.end()} for m in QUOTED.finditer(text)
-    ]
+    spans: list[dict] = []
+    for m in QUOTED.finditer(text):
+        span = {"kind": "quote", "start": m.start(), "end": m.end()}
+        source = next((e.id for e in log or [] if _quoted_in(m.group(1), _Pool([e]))), None)
+        if source:
+            span["evidence_id"] = source
+        spans.append(span)
     plain = text.replace("\u2212", "-").replace("\u2013", "-")  # same length
     masked = _blank(plain, DATE, WELL, CALENDAR_WINDOW, DAY_MONTH_YEAR, MONTH_DAY_YEAR, MONTH_YEAR)
     declared: dict[str, list[DeclaredNumber]] = {}

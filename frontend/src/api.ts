@@ -28,7 +28,7 @@ export type DeclaredNumber = { text: string; value: number; evidence_id: string 
 
 /** Where to mark a text, computed by the backend checker's own rules (positions index the text as written). */
 export type Span =
-  | { kind: 'quote'; start: number; end: number }
+  | { kind: 'quote'; start: number; end: number; evidence_id?: string }
   | { kind: 'number'; start: number; end: number; value: number; evidence_id: string }
 
 export type Finding = {
