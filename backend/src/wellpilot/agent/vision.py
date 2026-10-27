@@ -3,9 +3,10 @@
 Report facts are extracted once, at ingest. Some things live only in the picture: a
 forecast curve, a log track, a scanned table. look_at_page sends the page image and the
 agent's question to the same model (Muse Spark Open on Baseten) and returns its reading.
-A reading off a picture is an estimate, not data, so every result carries a warning: the
+A reading off a picture is an estimate, not data, so a result carries a warning: the
 checker then lets a finding cite it only as an inference, and the summary only with a
-hedge.
+hedge. Where SAM 3.1 measured the figure, each reading is set against that measurement
+(crosscheck.py); a page whose readings all agree with it carries none.
 """
 
 import asyncio
@@ -14,6 +15,7 @@ import json
 
 from pydantic import BaseModel, Field, ValidationError
 
+from wellpilot.agent.crosscheck import MONTHS_TOLERANCE, RATE_TOLERANCE, cross_check, measured
 from wellpilot.agent.tools import MAX_RESULT_CHARS, Args, Tool, to_jsonable
 from wellpilot.data.store import ProductionStore
 from wellpilot.ingest.reports import REPORTS_BY_ID
@@ -98,18 +100,39 @@ async def look_at_page(store: ProductionStore, llm: LLM, args: LookArgs) -> dict
         reading = PageReading.model_validate_json(response.choices[0].message.content or "")
     except ValidationError as e:
         raise ValueError(f"the page reading was not valid: {str(e)[:300]}") from None
-    return to_jsonable(
-        {
-            "document": report.title,
-            "doc_id": args.doc_id,
-            "page": args.page,
-            "question": args.question,
-            "answer": reading.answer,
-            "readings": [r.model_dump() for r in reading.readings],
-            "read_by": llm.model,
-            "warnings": [WARNING],
+    readings = [r.model_dump() for r in reading.readings]
+    result = {
+        "document": report.title,
+        "doc_id": args.doc_id,
+        "page": args.page,
+        "question": args.question,
+        "answer": reading.answer,
+        "readings": readings,
+        "read_by": llm.model,
+        "warnings": [WARNING],
+    }
+    # A figure SAM 3.1 measured: each reading set against the measurement of the same
+    # pixels, within tolerances fixed by the figure's grid. Agreed on all, no warning.
+    sam = measured(store.processed_dir, args.doc_id, args.page)
+    if sam is not None:
+        checks = cross_check(readings, sam)
+        result["measured_by_sam"] = {
+            "what": sam["what"],
+            "plateau": sam["plateau"],
+            "colour_check": sam["colour_check"],
+            "tolerances": {"rate_sm3_per_day": RATE_TOLERANCE, "months": MONTHS_TOLERANCE},
         }
-    )
+        result["cross_check"] = checks
+        if checks and all(c["agree"] for c in checks):
+            result["warnings"] = []
+        else:
+            off = [c["label"] for c in checks if c["agree"] is False]
+            if off:
+                result["warnings"] = [
+                    WARNING,
+                    f"SAM 3.1's measurement of the same figure disagrees on: {', '.join(off)}",
+                ]
+    return to_jsonable(result)
 
 
 async def look(store: ProductionStore, llm: LLM, arguments: str) -> dict:
@@ -136,7 +159,10 @@ VISION_TOOL = Tool(
     "what only the picture holds, such as a figure's curve, a chart or a scanned table (the "
     "plan's oil forecast profile is a figure on PUD page 23; completion reports hold survey "
     "tables, time-depth charts and schematics as pictures). Values read off a picture are "
-    "approximate and carry a warning.",
+    "approximate and carry a warning. Where SAM 3.1 measured the figure (the plan's forecast "
+    "curve), each reading is set against that measurement in cross_check: readings both "
+    "agree on lose the warning; where they disagree, report SAM's measured value and say "
+    "they differ.",
     LookArgs,
     look_at_page,
 )

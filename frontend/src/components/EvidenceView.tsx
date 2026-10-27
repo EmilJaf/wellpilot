@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { api, type Evidence, type Table, type ToolCode } from '../api'
-import { CautionIcon } from '../icons'
+import { CautionIcon, CheckIcon } from '../icons'
 import { describeArgs, sameQuote, toolName } from '../labels'
 import type { Focus } from './Answer'
 import { DesignChart, type DesignResult } from './DesignChart'
@@ -271,18 +271,79 @@ type ReadingResult = {
   answer: string
   readings: { label: string; value: number; unit: string; where: string }[]
   read_by: string
+  // Set against SAM 3.1's measurement of the same figure, when it measured one.
+  measured_by_sam?: {
+    what: string
+    plateau: { sm3_per_day: number; first: string; last: string; months: number }
+    colour_check?: { median_sm3_per_day: number } | null
+    tolerances: { rate_sm3_per_day: number; months: number }
+  }
+  cross_check?: {
+    label: string
+    sam: number | null
+    sam_unit?: string
+    at?: string
+    difference?: number
+    tolerance?: string
+    agree: boolean | null
+    note?: string
+  }[]
 }
 
 /** What the model read off a report page image during the run, next to the page itself. */
 function PageReading({ result }: { result: ReadingResult }) {
   const hit = useContext(HitContext)
+  const sam = result.measured_by_sam
+  const checks = result.cross_check
   return (
     <>
       <p className="evidence-sub">
         The agent showed this page to {result.read_by.replace('meta-models/', '')} and asked: “{result.question}”
       </p>
       <p className="reading-answer">{result.answer}</p>
-      {result.readings.length > 0 && (
+      {sam && checks && (
+        <p className="evidence-sub cross-lead">
+          <strong>Two Meta models on one picture.</strong> SAM 3.1 measured the same figure at ingest: a plateau of{' '}
+          {sam.plateau.sm3_per_day.toLocaleString('en')} Sm³/d for {sam.plateau.months} months
+          {sam.colour_check ? `, matching a colour trace of the same pixels within ${sam.colour_check.median_sm3_per_day} Sm³/d` : ''}.
+          Each reading is set against it within a quarter of a gridline, fixed before any comparison (
+          {sam.tolerances.rate_sm3_per_day} Sm³/d on a rate, {sam.tolerances.months} months on a length). They agree on{' '}
+          {checks.filter((c) => c.agree).length} of {checks.filter((c) => c.agree !== null).length}.
+        </p>
+      )}
+      {checks ? (
+        <ul className="cross-list">
+          {result.readings.map((r, i) => {
+            const c = checks[i]
+            return (
+              <li key={i} className={c?.agree === false ? 'is-off' : c?.agree ? 'is-agreed' : undefined}>
+                <span className="cross-label">{r.label}</span>
+                <span>
+                  Muse Spark Open read <strong className={hit(r.value) ? 'hit' : undefined}>{r.value.toLocaleString('en')} {r.unit.split(/[,~(]/)[0].trim()}</strong>
+                </span>
+                {c?.sam != null ? (
+                  <span>
+                    SAM 3.1 measured{' '}
+                    <strong className={hit(c.sam) ? 'hit' : undefined}>
+                      {c.sam.toLocaleString('en')} {c.sam_unit === 'Sm3/d' ? 'Sm³/d' : c.sam_unit}
+                    </strong>
+                    {c.at && c.at !== 'the plateau' ? ` in ${c.at}` : ''}
+                  </span>
+                ) : null}
+                <span className="cross-verdict">
+                  {c?.agree === true ? (
+                    <><CheckIcon /> they agree, {c.difference?.toLocaleString('en')} apart</>
+                  ) : c?.agree === false ? (
+                    <><CautionIcon /> they differ by {c.difference?.toLocaleString('en')}{c.sam_unit === 'months' ? ' months' : ' Sm³/d'}</>
+                  ) : (
+                    c?.note ?? 'nothing SAM measured to set it against'
+                  )}
+                </span>
+              </li>
+            )
+          })}
+        </ul>
+      ) : result.readings.length > 0 && (
         <table className="data-table reading-table">
           <thead>
             <tr>

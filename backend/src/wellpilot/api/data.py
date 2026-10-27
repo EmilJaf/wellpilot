@@ -4,11 +4,11 @@ import inspect
 import json
 from datetime import date
 
-import numpy as np
 import pandas as pd
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import FileResponse
 
+from wellpilot.agent.crosscheck import plateau
 from wellpilot.agent.evidence import code_ref
 from wellpilot.agent.tools import (
     TOOLS,
@@ -89,8 +89,6 @@ def field_plan_figure(request: Request) -> dict:
     )
     figure = json.loads(path.read_text())
     curve = figure["curve"]
-    top = max(curve["rate"])
-    flat = [m for m, r in zip(curve["month"], curve["rate"], strict=True) if r >= 0.98 * top]
     store = _store(request)
     said = []
     if "report_facts" in store.tables:
@@ -102,12 +100,7 @@ def field_plan_figure(request: Request) -> dict:
         ).rows.to_dict(orient="records")
     return {
         **figure,
-        "plateau": {
-            "sm3_per_day": round(float(np.median([r for r in curve["rate"] if r >= 0.98 * top]))),
-            "first": flat[0],
-            "last": flat[-1],
-            "months": len(flat),
-        },
+        "plateau": plateau(curve["month"], curve["rate"]),
         "plan_text": said,
         "actual": {
             "month": monthly["month"].tolist(),

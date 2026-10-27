@@ -1368,6 +1368,69 @@ code,
   color: var(--ink-3);
 }
 
+/* two Meta models on one picture: Muse's reading against SAM's measurement */
+.cross-lead {
+  color: var(--ink-2);
+  line-height: 1.5;
+}
+
+.cross-list {
+  margin: 8px 0 12px;
+  padding: 0;
+  list-style: none;
+  font-size: 13.5px;
+}
+
+.cross-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 7px 0 7px 10px;
+  border-left: 3px solid var(--rule-strong);
+  margin-bottom: 6px;
+}
+
+.cross-list li.is-agreed {
+  border-left-color: var(--ink);
+}
+
+.cross-list li.is-off {
+  border-left-color: var(--caution);
+  background: var(--caution-wash);
+}
+
+.cross-label {
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+
+.cross-verdict {
+  color: var(--ink-2);
+}
+
+.cross-verdict svg {
+  display: inline;
+  vertical-align: -2px;
+  margin-right: 3px;
+}
+
+/* the model's labels run long: they wrap, so the values stay in view */
+.reading-table td:first-child {
+  white-space: normal;
+  min-width: 12em;
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+.reading-table td svg {
+  vertical-align: -2px;
+  margin-right: 3px;
+}
+
+.reading-table td.cross-off {
+  color: var(--caution-ink);
+}
+
 /* the agent's own Python, as it ran in the sandbox */
 .python-code {
   margin: 0 0 10px;
