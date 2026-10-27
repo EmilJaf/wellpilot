@@ -88,6 +88,31 @@ function bySpans(
   return parts
 }
 
+/** Where the summary's first sentence ends, unless a quote or number runs across it. */
+function firstSentenceEnd(text: string, spans: Span[] | undefined): number | null {
+  for (const m of text.matchAll(/[.!?][”"’)]?(?=\s+[A-Z“"(])/g)) {
+    const cut = (m.index ?? 0) + m[0].length
+    if (cut < text.length && !(spans ?? []).some((s) => s.start < cut && s.end > cut)) return cut
+  }
+  return null
+}
+
+/** The summary with its first sentence, the plain answer, set apart as the lead. */
+function Summary({ text, spans, open, quoteSource }: { text: string; spans?: Span[]; open: Props['onSelectEvidence']; quoteSource?: string }) {
+  const cut = firstSentenceEnd(text, spans)
+  if (cut === null) return <p className="summary-lead">{bySpans(text, spans, open, quoteSource)}</p>
+  const rest = text.slice(cut).trimStart()
+  const offset = text.length - rest.length
+  const shift = (list: Span[] | undefined, from: number, to: number, by: number) =>
+    list?.filter((s) => s.start >= from && s.end <= to).map((s) => ({ ...s, start: s.start - by, end: s.end - by }))
+  return (
+    <>
+      <p className="summary-lead">{bySpans(text.slice(0, cut), shift(spans, 0, cut, 0), open, quoteSource)}</p>
+      <p className="summary">{bySpans(rest, shift(spans, offset, text.length, offset), open, quoteSource)}</p>
+    </>
+  )
+}
+
 export function Answer(props: Props) {
   const { state } = props
   const final = state.final
@@ -122,8 +147,15 @@ function Intro({ recorded, onReplay }: { recorded: RunSummary | null; onReplay: 
   return (
     <div className="intro">
       <p className="intro-lead">
-        Ask a question about a well. An AI agent works it out on the field's own data and
-        reports, and every number in its answer is checked against the data it came from.
+        Ask why a well changed. An AI agent works it out on the field's own data and reports, and
+        every number in its answer is checked against the data it came from.
+      </p>
+      <p className="intro-who">
+        <strong>For production and reservoir engineers</strong> reviewing wells: why output fell,
+        whether a dead gauge or the reservoir is to blame, what next year will bring, and how it
+        compares with the development plan. Today that means hours across a production database,
+        PDF reports in several languages and spreadsheets. Here it is one question, answered in
+        about a minute, with every number traceable to the data.
       </p>
       <ol className="how">
         <li>
@@ -147,9 +179,10 @@ function Intro({ recorded, onReplay }: { recorded: RunSummary | null; onReplay: 
         </button>
       )}
       <p className="intro-note">
-        The data is Volve, an oil field in the Norwegian North Sea that Equinor operated from
-        2008 to 2016 and published openly. The agent runs on Muse Spark Open, Meta's
-        open-weight model.
+        The agent runs on Muse Spark Open, Meta's open-weight model, so an operator can host it
+        on their own servers, next to well data that never leaves the company. This demo uses
+        Volve, an oil field in the Norwegian North Sea that Equinor operated from 2008 to 2016
+        and published openly.
       </p>
     </div>
   )
@@ -209,7 +242,7 @@ function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSe
   return (
     <>
       {final.summary && (
-        <p className="summary">{bySpans(final.summary, final.summary_spans, onSelectEvidence, anyReport)}</p>
+        <Summary text={final.summary} spans={final.summary_spans} open={onSelectEvidence} quoteSource={anyReport} />
       )}
 
       {final.verified ? (
@@ -220,7 +253,9 @@ function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSe
               Verified{rounds.length > 1 ? ` on attempt ${rounds.length}` : ' on the first attempt'}
             </strong>
             <p>
-              Every number, date and quote below was found in the evidence it cites.
+              Every number, date and quote below was found in the tool result it cites, and causes are
+              marked as inferences. Whether the reasoning holds is for you to judge: every source is one
+              click away.
               {sentBack.length > 0 &&
                 ` The checker sent ${sentBack.length === 1 ? 'the first answer' : `${sentBack.length} answers`} back with ${problems} ${problems === 1 ? 'problem' : 'problems'}, and the agent fixed ${problems === 1 ? 'it' : 'them'}.`}
             </p>

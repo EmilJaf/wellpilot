@@ -60,3 +60,17 @@ CLAUSES = [
 def test_each_exemption_the_prompt_states_holds(clause: str, claim: str, question: str) -> None:
     assert clause in SYSTEM_PROMPT, f"the prompt no longer says {clause!r}; update this case"
     assert check(claim, [], question) == []
+
+
+def test_the_prompts_rounding_examples_pass() -> None:
+    """The prompt asks for readable precision; the checker must accept the examples it gives."""
+    log = EvidenceLog()
+    log.add("fit", {"well": "F-12"}, {"di_per_year": 0.4461, "oil_sm3": 1133053}, _tool)
+    assert "0.45 per year" in SYSTEM_PROMPT and "1.13 million Sm3" in SYSTEM_PROMPT
+    claim = "F-12 declined at 0.45 per year and produced 1.13 million Sm3 meanwhile."
+    numbers = [
+        DeclaredNumber(text="0.45", value=0.4461, evidence_id="E1"),
+        DeclaredNumber(text="1.13 million", value=1133053, evidence_id="E1"),
+    ]
+    finding = Finding(claim=claim, evidence_ids=["E1"], confidence="fact", numbers=numbers)
+    assert check_submission(Submission(summary="Done.", findings=[finding]), log) == []

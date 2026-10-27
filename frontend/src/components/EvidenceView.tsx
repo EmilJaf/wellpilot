@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
-import { api, type Evidence, type Table } from '../api'
+import { api, type Evidence, type Table, type ToolCode } from '../api'
 import { CautionIcon } from '../icons'
 import { describeArgs, sameQuote, toolName } from '../labels'
 import type { Focus } from './Answer'
@@ -100,7 +100,7 @@ export function EvidenceView({ runId, evidenceId, attempt, focus }: Props) {
         <dd>{describeArgs(evidence.tool, evidence.arguments) || 'no arguments'}</dd>
         <dt>Code</dt>
         <dd>
-          <code>{evidence.code}</code>
+          <CodeRef key={evidence.code} codeRef={evidence.code} />
         </dd>
         <dt>Ran at</dt>
         <dd>{evidence.created_at.replace('T', ' ').replace('+00:00', ' UTC')}</dd>
@@ -115,6 +115,46 @@ export function EvidenceView({ runId, evidenceId, attempt, focus }: Props) {
         <Result tool={evidence.tool} result={evidence.result} focus={focus} />
       </HitContext.Provider>
     </div>
+  )
+}
+
+const REPO = 'https://github.com/EmilJaf/wellpilot/blob/main'
+
+/** The code ref, with the tool's Python source one click away: the code that ran. */
+function CodeRef({ codeRef }: { codeRef: string }) {
+  const [code, setCode] = useState<{ value: ToolCode | null; error?: string } | null>(null)
+  const [open, setOpen] = useState(false)
+  const toggle = () => {
+    setOpen(!open)
+    if (!code)
+      api
+        .code(codeRef)
+        .then((value) => setCode({ value }))
+        .catch((e: Error) => setCode({ value: null, error: e.message }))
+  }
+  return (
+    <>
+      <code>{codeRef}</code>{' '}
+      <button type="button" className="link-button" aria-expanded={open} onClick={toggle}>
+        {open ? 'Hide the code' : 'Show the code'}
+      </button>
+      {open &&
+        (code?.value ? (
+          <div className="tool-code">
+            <p className="evidence-sub">
+              {code.value.same_as_run
+                ? 'The Python function that produced this result, exactly as it ran (its hash matches).'
+                : 'This tool changed after the run; today’s version is shown.'}{' '}
+              <a href={`${REPO}/${code.value.file}#L${code.value.line}`} target="_blank" rel="noreferrer">
+                {code.value.file.split('/').pop()}, line {code.value.line}
+              </a>
+            </p>
+            <pre className="code">{code.value.source}</pre>
+          </div>
+        ) : (
+          <p className="evidence-sub">{code?.error ? `The code could not load: ${code.error}` : 'Loading the code'}</p>
+        ))}
+    </>
   )
 }
 

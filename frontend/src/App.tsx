@@ -48,6 +48,8 @@ export default function App() {
   // The data column shows one well's daily data, the field against its 2005 plan, or how
   // close past forecasts came.
   const [view, setView] = useState<'well' | 'plan' | 'accuracy'>('well')
+  // The reader can fold the charts away to give the evidence the whole column.
+  const [chartsShown, setChartsShown] = useState(true)
   const setSelectedEvidence = (id: string | null, clicked?: Focus) => {
     setSelected(id)
     // The field and accuracy views fill the column: go back to the well, where evidence shows.
@@ -179,8 +181,9 @@ export default function App() {
         <div className="brand">
           <h1 className="wordmark">WellPilot</h1>
           <p className="tagline">
-            An AI agent that analyses oil wells on Equinor's open Volve field data and checks every
-            number it writes against the data. Running on Meta's open-weight Muse Spark Open.
+            An AI agent for production engineers: ask why a well changed and get an answer in which
+            every number is checked against the field data. Runs on Meta's open-weight Muse Spark
+            Open, here on Equinor's open Volve field.
           </p>
         </div>
         <form className="ask" onSubmit={submit}>
@@ -253,6 +256,11 @@ export default function App() {
                 </button>
               </div>
               {view === 'well' && (
+                <button type="button" className="link-button charts-toggle" aria-pressed={!chartsShown} onClick={() => setChartsShown(!chartsShown)}>
+                  {chartsShown ? 'Hide charts' : 'Show charts'}
+                </button>
+              )}
+              {view === 'well' && (
                 <select
                   className="well-picker"
                   aria-label="Well to plot"
@@ -267,7 +275,7 @@ export default function App() {
                 </select>
               )}
             </div>
-            {view === 'well' && (
+            {view === 'well' && chartsShown && (
               <WellCharts
                 table={daily?.well === well ? daily.table : null}
                 error={daily?.well === well ? daily.error : undefined}

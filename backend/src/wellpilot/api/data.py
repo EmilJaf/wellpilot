@@ -1,5 +1,6 @@
 """Data the dashboard plots and shows next to the agent's evidence."""
 
+import inspect
 import json
 from datetime import date
 
@@ -7,7 +8,9 @@ import pandas as pd
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import FileResponse
 
+from wellpilot.agent.evidence import code_ref
 from wellpilot.agent.tools import (
+    TOOLS,
     NoArgs,
     ReportPageArgs,
     field_vs_design,
@@ -64,6 +67,25 @@ def field_design(request: Request) -> dict:
         return field_vs_design(_store(request), NoArgs())
     except ValueError as e:
         raise HTTPException(404, str(e)) from None
+
+
+@router.get("/code/{ref}")
+def tool_code(ref: str) -> dict:
+    """The source of the tool function an evidence item's code ref names, and whether it is
+    still the code that ran (the ref's hash matches the source)."""
+    name = ref.split("@", 1)[0]
+    for tool in TOOLS:
+        fn = tool.run
+        if f"{fn.__module__}.{fn.__qualname__}" == name:
+            lines, first = inspect.getsourcelines(fn)
+            return {
+                "ref": code_ref(fn),
+                "same_as_run": code_ref(fn) == ref,
+                "file": "backend/src/" + fn.__module__.replace(".", "/") + ".py",
+                "line": first,
+                "source": "".join(lines),
+            }
+    raise HTTPException(404, f"no tool function {name!r}")
 
 
 @router.get("/wells/{well}/daily")

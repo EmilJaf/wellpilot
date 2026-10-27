@@ -35,22 +35,28 @@ export function PageImage({ doc, page, alt, marks }: { doc: string; page: number
   }, [boxes.length])
 
   return (
-    <div className="page-frame" ref={host}>
-      <img className="page-image" src={api.pageImageUrl(doc, page)} alt={alt} onLoad={() => boxes.length && scrollToMark()} />
-      {boxes.map(([x, y, w, h], i) => (
-        <span
-          key={i}
-          className="page-mark"
-          aria-hidden
-          style={{
-            left: `${x * 100}%`,
-            top: `${y * 100}%`,
-            width: `${w * 100}%`,
-            height: `${h * 100}%`,
-          }}
-        />
-      ))}
-      {boxes.length > 0 && <span className="sr-only">The quoted passage is marked on the page.</span>}
-    </div>
+    <>
+      <div className="page-frame" ref={host}>
+        <img className="page-image" src={api.pageImageUrl(doc, page)} alt={alt} onLoad={() => boxes.length && scrollToMark()} />
+        {boxes.map(([x, y, w, h], i) => (
+          <span
+            key={i}
+            className="page-mark"
+            aria-hidden
+            style={{
+              left: `${x * 100}%`,
+              top: `${y * 100}%`,
+              width: `${w * 100}%`,
+              height: `${h * 100}%`,
+            }}
+          />
+        ))}
+        {boxes.length > 0 && <span className="sr-only">The quoted passage is marked on the page.</span>}
+      </div>
+      {/* outside the frame: the marks are placed in percent of the frame's height */}
+      <a className="page-open" href={api.pageImageUrl(doc, page)} target="_blank" rel="noreferrer">
+        Open the page full size
+      </a>
+    </>
   )
 }

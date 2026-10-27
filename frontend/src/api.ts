@@ -126,10 +126,14 @@ export const api = {
   pageQuotes: (docId: string, page: number) =>
     fetch(`/api/reports/${docId}/pages/${page}/quotes`).then((r) => json<{ quote: string; boxes: number[][] }[]>(r)),
   pageImageUrl: (docId: string, page: number) => `/api/reports/${docId}/pages/${page}/image`,
+  code: (ref: string) => fetch(`/api/code/${encodeURIComponent(ref)}`).then((r) => json<ToolCode>(r)),
   backtest: () => fetch('/api/backtest').then((r) => json<Backtest>(r)),
   backtestCase: (well: string, cutoff: string) =>
     fetch(`/api/backtest/cases/${encodeURIComponent(well)}/${cutoff}`).then((r) => json<BacktestCase>(r)),
 }
+
+/** The source of the tool function that produced an evidence item. */
+export type ToolCode = { ref: string; same_as_run: boolean; file: string; line: number; source: string }
 
 export type MethodSummary = { cases: number; median_abs_error: number; mean_abs_error: number; median_bias: number }
 

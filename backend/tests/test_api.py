@@ -10,7 +10,9 @@ import pandas as pd
 import pytest
 from openai.types.chat import ChatCompletion
 
+from wellpilot.agent.evidence import code_ref
 from wellpilot.agent.loop import SUBMIT
+from wellpilot.agent.tools import detect_events
 from wellpilot.config import Settings
 from wellpilot.ingest.production import DAILY_FILE, ISSUE_COLUMNS, ISSUES_FILE
 from wellpilot.ingest.reports import PAGES_FILE
@@ -291,6 +293,11 @@ async def test_data_endpoints(settings) -> None:
         no_backtest = await client.get("/api/backtest")
         no_plan = await client.get("/api/field/plan")
         no_design = await client.get("/api/field/design")
+        code = (await client.get(f"/api/code/{code_ref(detect_events)}")).json()
+        old_code = (
+            await client.get("/api/code/wellpilot.agent.tools.detect_events@000000000000")
+        ).json()
+        no_code = await client.get("/api/code/os.system@000000000000")
         no_quotes = (await client.get("/api/reports/volve_pud/pages/23/quotes")).json()
 
     assert wells["rows"][0][0] == "F-12"
@@ -305,6 +312,10 @@ async def test_data_endpoints(settings) -> None:
     assert no_backtest.status_code == 404
     assert no_plan.status_code == 404  # no report facts extracted: no plan to compare with
     assert no_design.status_code == 404
+    assert code["same_as_run"] and code["source"].startswith("def detect_events(")
+    assert code["file"] == "backend/src/wellpilot/agent/tools.py"
+    assert old_code["same_as_run"] is False  # shown, but marked as changed since the run
+    assert no_code.status_code == 404  # only registered tools
     assert no_quotes == []
 
 
