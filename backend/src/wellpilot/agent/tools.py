@@ -30,6 +30,7 @@ from wellpilot.analysis.anomalies import (
 )
 from wellpilot.analysis.decline import B_BOUNDS, DeclineFit, fit_decline, forecast
 from wellpilot.analysis.screen import screen
+from wellpilot.analysis.waterflood import waterflood
 from wellpilot.data.store import ProductionStore, QueryError
 from wellpilot.ingest.report_facts import Topic
 from wellpilot.ingest.reports import REPORTS_BY_ID
@@ -678,6 +679,14 @@ def field_screen(store: ProductionStore, _: NoArgs) -> dict:
     return to_jsonable(screen(store))
 
 
+def waterflood_tool(store: ProductionStore, args: WindowArgs) -> dict:
+    _check_well(store, args.well)
+    result = waterflood(store, args.well, args.start, args.end)
+    for key in ("monthly", "by_year", "field_voidage"):
+        result[key] = table(result[key])
+    return to_jsonable(result)
+
+
 @dataclass(frozen=True)
 class Tool:
     name: str
@@ -781,6 +790,17 @@ TOOLS = [
         "field's life with the plan.",
         NoArgs,
         plan_vs_actual,
+    ),
+    Tool(
+        "waterflood",
+        "Waterflood diagnostics for one producer: WOR (water/oil) against cumulative oil by "
+        "month with a fitted log10(WOR) trend extended to water cuts 0.80, 0.90 and 0.95 (the "
+        "oil left before each), liquid rate, choke and water cut by year, and the field's "
+        "injection against production by year. On a waterflood, oil often falls because water "
+        "takes the well's capacity, not because pressure is lost: use this alongside the "
+        "decline fit. Optional start/end (YYYY-MM-DD) bound the trend window.",
+        WindowArgs,
+        waterflood_tool,
     ),
     Tool(
         "field_screen",

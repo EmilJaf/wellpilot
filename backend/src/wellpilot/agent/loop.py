@@ -59,7 +59,9 @@ invent or estimate a number you have not computed.
 - Check results before concluding. Tool warnings mean a result is not trustworthy as is: \
 for a poor decline fit, refit on a window that starts after the last regime change. Before \
 reading a change as reservoir behaviour, rule out data and operations (events show shut-ins, \
-gauge failures and regime changes).
+gauge failures and regime changes). Volve is a waterflood: when water cut rises, check with \
+waterflood whether liquid held while the choke opened (water taking the well's capacity) and \
+how much oil the WOR trend leaves before the economic water cut.
 - Compute every derived number (ratios, differences, percent changes) with the calculate \
 tool, so it has evidence too. A share needs no calculation to be written as a percent: \
 declare 51.3% with the evidence's value 0.513. Call tools that do not depend on each other \

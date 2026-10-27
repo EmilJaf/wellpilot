@@ -5,6 +5,7 @@ import { describeArgs, sameQuote, toolName } from '../labels'
 import type { Focus } from './Answer'
 import { DesignChart, type DesignResult } from './DesignChart'
 import { ScreenList, type ScreenResult } from './FieldScreen'
+import { WaterfloodChart, type WaterfloodResult } from './WaterfloodChart'
 import { PageImage } from './PageImage'
 import { PlanChart, type PlanResult } from './PlanChart'
 
@@ -171,6 +172,19 @@ function Result({ tool, result, focus }: { tool: string; result: unknown; focus?
   if (tool === 'plan_vs_actual') return <PlanEvidence result={result as PlanResult} />
   if (tool === 'look_at_page') return <PageReading result={result as ReadingResult} />
   if (tool === 'field_screen') return <ScreenList result={result as ScreenResult} />
+  if (tool === 'waterflood') {
+    const wf = result as WaterfloodResult
+    return (
+      <>
+        <WaterfloodChart result={wf} />
+        <p className="evidence-sub">By year: liquid rate held while the choke opened means water took the well&rsquo;s capacity.</p>
+        <DataTable table={wf.by_year} />
+        <p className="evidence-sub">The field&rsquo;s water injected against liquid produced (surface volumes):</p>
+        <DataTable table={wf.field_voidage} />
+        <DataTable table={wf.monthly} />
+      </>
+    )
+  }
   if (tool === 'field_vs_design') {
     const design = result as DesignResult
     return (

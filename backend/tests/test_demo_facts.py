@@ -148,3 +148,30 @@ def test_the_field_screen_ends_on_the_last_day_of_oil(store) -> None:
 
     assert result["as_of"] == "2016-09-17"  # not December, when only F-4 injected
     assert {w["well"] for w in result["wells"]} >= {"F-12", "F-14", "F-11", "F-4"}
+
+
+def test_waterflood_diagnostics_for_f12_at_the_end_of_2012() -> None:
+    """With data to 2012-12-31: F-12's WOR trend leaves about 165k Sm3 before water cut 0.90
+    and 560k before 0.95 (it went on to make about 444k); liquid held near 5,000 Sm3/d while
+    the choke opened to 100%; the field injected more water than it produced liquid."""
+    import json as _json
+    from datetime import date
+
+    from wellpilot.agent.tools import execute
+
+    store = ProductionStore(PROCESSED, as_of=date(2012, 12, 31))
+    result = execute(store, "waterflood", _json.dumps({"well": "F-12"}))["result"]
+    fit = result["wor_fit"]
+    limits = {round(lim["water_cut"], 2): lim for lim in fit["to_limits"]}
+    years = {r[0]: r for r in result["by_year"]["rows"]}
+    cols = result["by_year"]["columns"]
+    voidage = result["field_voidage"]
+
+    assert fit["r2"] == pytest.approx(0.92, abs=0.01) and result["warnings"] == []
+    assert limits[0.8]["already_passed"]
+    assert limits[0.9]["remaining_oil_sm3"] == pytest.approx(164_702, rel=0.01)
+    assert limits[0.95]["remaining_oil_sm3"] == pytest.approx(560_299, rel=0.01)
+    assert years[2012][cols.index("choke_pct")] == 100
+    assert 4_900 < years[2011][cols.index("liquid_rate_sm3_per_day")] < 5_300
+    ratio = voidage["columns"].index("replacement_ratio")
+    assert all(r[ratio] > 1 for r in voidage["rows"])

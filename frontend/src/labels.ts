@@ -13,6 +13,7 @@ export const TOOL_NAMES: Record<string, string> = {
   plan_vs_actual: 'Compare with the 2005 plan',
   field_vs_design: 'Field against design limits',
   field_screen: 'Screen every well',
+  waterflood: 'Waterflood diagnostics',
   look_at_page: 'Look at a report page',
   submit_findings: 'Submit answer',
 }
