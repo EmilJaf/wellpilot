@@ -2042,3 +2042,163 @@ code,
     border-top: 1px solid var(--rule);
   }
 }
+
+/* ---------- field screen: every well, ranked by what needs attention ---------- */
+
+.screen {
+  padding: 14px 18px 24px;
+  max-width: 860px;
+}
+
+.screen-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--rule-strong);
+}
+
+.screen-row {
+  padding: 12px 4px 12px 10px;
+  border-bottom: 1px solid var(--rule);
+  border-left: 3px solid transparent;
+}
+
+.screen-row.attention-3 {
+  border-left-color: var(--alarm);
+}
+
+.screen-row.attention-1 {
+  border-left-color: var(--caution);
+}
+
+.screen-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+
+.level {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 92px;
+  font-size: 12.5px;
+  font-weight: 700;
+  font-stretch: var(--narrow);
+  color: var(--ink-2);
+}
+
+.level svg {
+  width: 15px;
+  height: 15px;
+}
+
+.level-alarm {
+  color: var(--alarm-ink);
+}
+
+.level-caution {
+  color: var(--caution-ink);
+}
+
+.level-note {
+  color: var(--ink-3);
+}
+
+.screen-well {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--rule-strong);
+  text-underline-offset: 4px;
+}
+
+.screen-well:hover {
+  text-decoration-color: var(--ink);
+}
+
+.screen-role {
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.screen-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 120px));
+  gap: 0 16px;
+  margin: 8px 0 0 104px;
+}
+
+.screen-metrics dt {
+  font-size: 12px;
+  font-stretch: var(--narrow);
+  color: var(--ink-3);
+}
+
+.screen-metrics dd {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.screen-issues {
+  list-style: none;
+  margin: 8px 0 0 104px;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.issue {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+
+.issue svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  margin-top: 2px;
+}
+
+.issue-alarm {
+  color: var(--alarm-ink);
+}
+
+.issue-caution {
+  color: var(--caution-ink);
+}
+
+.issue-dot {
+  flex: none;
+  width: 14px;
+  text-align: center;
+}
+
+.issue-dot::before {
+  content: "–";
+}
+
+.issue-since {
+  color: var(--ink-3);
+}
+
+@media (max-width: 700px) {
+  .screen-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-left: 0;
+  }
+  .screen-issues {
+    margin-left: 0;
+  }
+}

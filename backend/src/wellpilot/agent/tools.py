@@ -29,6 +29,7 @@ from wellpilot.analysis.anomalies import (
     threshold_crossing,
 )
 from wellpilot.analysis.decline import B_BOUNDS, DeclineFit, fit_decline, forecast
+from wellpilot.analysis.screen import screen
 from wellpilot.data.store import ProductionStore, QueryError
 from wellpilot.ingest.report_facts import Topic
 from wellpilot.ingest.reports import REPORTS_BY_ID
@@ -673,6 +674,10 @@ def field_vs_design(store: ProductionStore, _: NoArgs) -> dict:
     )
 
 
+def field_screen(store: ProductionStore, _: NoArgs) -> dict:
+    return to_jsonable(screen(store))
+
+
 @dataclass(frozen=True)
 class Tool:
     name: str
@@ -776,6 +781,16 @@ TOOLS = [
         "field's life with the plan.",
         NoArgs,
         plan_vs_actual,
+    ),
+    Tool(
+        "field_screen",
+        "Every well at once, ranked by what needs attention as of the end of the data: its "
+        "recent oil rate, water cut, uptime and 90-day change, and issues found by the "
+        "detectors (a dead downhole gauge, water cut above the platform's 0.80 design limit, "
+        "a steep recent decline, long shut-ins, a step down in rate, a stopped well). Use it "
+        "for questions about the field or which wells to look at.",
+        NoArgs,
+        field_screen,
     ),
     Tool(
         "field_vs_design",

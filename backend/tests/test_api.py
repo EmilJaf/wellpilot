@@ -293,6 +293,7 @@ async def test_data_endpoints(settings) -> None:
         no_backtest = await client.get("/api/backtest")
         no_plan = await client.get("/api/field/plan")
         no_design = await client.get("/api/field/design")
+        screened = (await client.get("/api/field/screen?as_of=2010-02-15")).json()
         code = (await client.get(f"/api/code/{code_ref(detect_events)}")).json()
         old_code = (
             await client.get("/api/code/wellpilot.agent.tools.detect_events@000000000000")
@@ -312,6 +313,7 @@ async def test_data_endpoints(settings) -> None:
     assert no_backtest.status_code == 404
     assert no_plan.status_code == 404  # no report facts extracted: no plan to compare with
     assert no_design.status_code == 404
+    assert screened["as_of"] == "2010-02-15" and screened["wells"][0]["well"] == "F-12"
     assert code["same_as_run"] and code["source"].startswith("def detect_events(")
     assert code["file"] == "backend/src/wellpilot/agent/tools.py"
     assert old_code["same_as_run"] is False  # shown, but marked as changed since the run

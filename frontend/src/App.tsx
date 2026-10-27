@@ -3,6 +3,7 @@ import { api, type RunSummary, type Table } from './api'
 import { AgentLog } from './components/AgentLog'
 import { AccuracyView } from './components/AccuracyView'
 import { DesignChart, type DesignResult } from './components/DesignChart'
+import { FieldScreen } from './components/FieldScreen'
 import { Answer, type Focus } from './components/Answer'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { EvidenceView } from './components/EvidenceView'
@@ -47,7 +48,10 @@ export default function App() {
   const evidencePanel = useRef<HTMLDivElement>(null)
   // The data column shows one well's daily data, the field against its 2005 plan, or how
   // close past forecasts came.
-  const [view, setView] = useState<'well' | 'plan' | 'accuracy'>('well')
+  // A first visit opens on the field screen; a shared run opens on its well.
+  const [view, setView] = useState<'screen' | 'well' | 'plan' | 'accuracy'>(() =>
+    new URLSearchParams(window.location.search).get('run') ? 'well' : 'screen',
+  )
   // The reader can fold the charts away to give the evidence the whole column.
   const [chartsShown, setChartsShown] = useState(true)
   const setSelectedEvidence = (id: string | null, clicked?: Focus) => {
@@ -244,14 +248,17 @@ export default function App() {
           <section aria-label="Well data and evidence" className="center">
             <div className="panel-head">
               <div className="tabs" role="tablist" aria-label="Data to show">
+                <button type="button" role="tab" aria-selected={view === 'screen'} onClick={() => setView('screen')}>
+                  Field screen
+                </button>
                 <button type="button" role="tab" aria-selected={view === 'well'} onClick={() => setView('well')}>
                   Well {well}
                 </button>
                 <button type="button" role="tab" aria-selected={view === 'plan'} onClick={() => setView('plan')}>
-                  Field vs plan
+                  Plan
                 </button>
                 <button type="button" role="tab" aria-selected={view === 'accuracy'} onClick={() => setView('accuracy')}>
-                  Forecast accuracy
+                  Accuracy
                 </button>
               </div>
               {view === 'well' && (
@@ -283,7 +290,15 @@ export default function App() {
               />
             )}
             <div className="evidence-scroll" ref={evidencePanel}>
-              {view === 'accuracy' ? (
+              {view === 'screen' ? (
+                <FieldScreen
+                  asOf={asOf}
+                  onOpenWell={(w) => {
+                    setPickedWell(w)
+                    setView('well')
+                  }}
+                />
+              ) : view === 'accuracy' ? (
                 <AccuracyView />
               ) : view === 'plan' ? (
                 <div className="charts field-view">

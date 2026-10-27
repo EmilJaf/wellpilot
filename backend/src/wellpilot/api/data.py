@@ -13,6 +13,7 @@ from wellpilot.agent.tools import (
     TOOLS,
     NoArgs,
     ReportPageArgs,
+    field_screen,
     field_vs_design,
     list_wells,
     plan_vs_actual,
@@ -59,6 +60,12 @@ def field_plan(request: Request) -> dict:
         return plan_vs_actual(_store(request), NoArgs())
     except ValueError as e:
         raise HTTPException(404, str(e)) from None
+
+
+@router.get("/field/screen")
+def field_screen_view(request: Request, as_of: date | None = None) -> dict:
+    """Every well ranked by what needs attention, as of a day (default: the end of the data)."""
+    return field_screen(request.app.state.runs.store(as_of), NoArgs())
 
 
 @router.get("/field/design")
