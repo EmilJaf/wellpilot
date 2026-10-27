@@ -197,3 +197,18 @@ def test_a_declared_number_does_not_cover_a_longer_one_that_contains_it() -> Non
         value = float(declared)
         problems = check(claim, [eid], [d(declared, value, eid)], log)
         assert any("undeclared number" in p for p in problems), claim
+
+
+def test_an_undeclared_number_is_named_as_written() -> None:
+    """Run fcfb4188de3b: "0,80" left undeclared was reported as "80, 0.80", and the model,
+    which had declared "0.80", could not tell what was meant."""
+    log = corpus_log(F12)
+
+    problems = check(
+        "The rise to 0.80 passed the plan's Maksimum vannkutt 0,80 limit.",
+        ["E5"],
+        [d("0.80", 0.8, "E5")],
+        log,
+    )
+
+    assert problems and "undeclared number(s) 0,80." in problems[0]

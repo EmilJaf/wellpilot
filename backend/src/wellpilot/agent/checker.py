@@ -60,6 +60,12 @@ NUMBER = re.compile(
     r"(?:\s*(%|percent\b|pct\b|x\b|×|million\b|mill\b\.?|thousand\b|M(?=Sm)|k(?=Sm)|k\b))?"
     r"(?!\d|\.\d)"
 )
+# A number as the text writes it, so a rejection can name it that way: "0,80", "4 050",
+# "1,133,053", "2.5x". (Parsing it into values may split or rewrite it.)
+WRITTEN_NUMBER = re.compile(
+    r"(?<![\w.,])(?:\d{1,3}(?:[ \u00a0\u202f]\d{3})+|\d+)(?:[.,]\d+)*(?:[eE][-+]?\d+)?"
+    r"(?:\s*(?:%|percent\b|pct\b|x\b|×|million\b|mill\b\.?|thousand\b|M(?=Sm)|k(?=Sm)|k\b))?"
+)
 SUFFIX_AFTER = re.compile(
     r"\s*(?:%|percent\b|pct\b|million\b|mill\b\.?|thousand\b|M(?=Sm)|k(?=Sm))"
 )
@@ -576,14 +582,14 @@ def _declared(
         for start, end in reversed(_standalone(rest, number.text)):
             rest = rest[:start] + " " + rest[end:]
     leftover: list[str] = []
-    # Either convention: an undeclared "1.234.567" is a number too.
-    for european in (False, True):
-        for value, decimals, suffix in _numbers_in_text(rest, european):
-            if _free(value, decimals, suffix, pool, free):
-                continue
-            written = _as_written(value, decimals, suffix)
-            if written not in leftover:
-                leftover.append(written)
+    for match in WRITTEN_NUMBER.finditer(rest):
+        written = match.group(0).strip()
+        # Either convention: "0,80" is 0 and 80, or 0.8; "1.234.567" is a number too.
+        values = [n for european in (False, True) for n in _numbers_in_text(written, european)]
+        if values and all(_free(*n, pool, free) for n in values):
+            continue
+        if values and written not in leftover:
+            leftover.append(written)
     if leftover:
         hint = (
             f" Declared but not written as such: {', '.join(repr(d.text) for d in unused)}."
