@@ -357,3 +357,16 @@ def test_render_real_pud_page_text(tmp_path) -> None:
     page_23 = pages.loc[pages["page"] == 23, "text"].iloc[0]
     assert quote_in_text("bryter gjennom i brønnene etter omlag 2 år", page_23)
     assert (tmp_path / "reports" / "volve_pud" / "p023.png").exists()
+
+
+def test_a_quote_from_a_picture_page_is_marked_image_not_unverified() -> None:
+    header = "FINAL WELL REPORT Completion License: NO PL046BS Well: NO 15/9-F-11 B Page 30 of 64"
+    assert quote_check("Measured Depth 660,00 Inclination 1,66", header, image_page=True) == "image"
+    assert quote_check("Measured Depth 660,00", header) == "unverified"  # a text page: misquote
+
+
+def test_numbers_on_a_chart_axis_that_starts_again_need_no_fact() -> None:
+    from wellpilot.ingest.report_facts import uncovered_numbers
+
+    axes = "Depth m 0 1000 2000 3000 4000 5000 6000 0 20 40 60 80 100 inc"
+    assert uncovered_numbers(axes, [], page=19) == []

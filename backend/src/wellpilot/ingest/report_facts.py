@@ -107,7 +107,7 @@ def parse_pages(spec: str, total: int) -> list[int]:
     return sorted(pages)
 
 
-QuoteCheck = Literal["exact", "tokens", "unverified"]
+QuoteCheck = Literal["exact", "tokens", "unverified", "image"]
 # Glyphs the PDF text layer drops: vulgar fractions (8 ½", 10 ¾") and the ³ in Sm³.
 DROPPED_GLYPHS = re.compile(r"[¼-¾⅐-⅞³]")
 
@@ -138,7 +138,7 @@ def quote_in_text(quote: str, page_text: str) -> bool:
 TOKEN = re.compile(r"\d+(?:[.,]\d+)*|[^\W\d_]+")
 
 
-def quote_check(quote: str, page_text: str) -> QuoteCheck:
+def quote_check(quote: str, page_text: str, image_page: bool = False) -> QuoteCheck:
     """'exact': the quote is on the page as written. 'tokens': every word and whole number
     of the quote is on the page, but not in that order, as when a table row is read across
     columns. 'unverified': neither, e.g. text inside a figure or a misquote. Numbers count
@@ -146,6 +146,8 @@ def quote_check(quote: str, page_text: str) -> QuoteCheck:
     even when its digits occur elsewhere on the page."""
     if quote_in_text(quote, page_text):
         return "exact"
+    if image_page:  # a picture with a header: nothing to check its quotes against
+        return "image"
     words = set(TOKEN.findall(_clean(quote)))
     if len(words) >= 3 and words <= set(TOKEN.findall(_clean(page_text))):
         return "tokens"
@@ -166,6 +168,10 @@ def _readings(token: str) -> set[float]:
         with suppress(ValueError):
             values.add(round(float(c), 6))
     return values
+
+
+def _first(token: str) -> float:
+    return min(_readings(token) or {0.0})
 
 
 def _is_year(token: str) -> bool:
@@ -209,7 +215,8 @@ def uncovered_numbers(text: str, facts: list[dict], page: int) -> list[str]:
     axis: set[int] = set()
     run: list[int] = []
     for i in [*numeric, -2]:  # -2 closes the last run
-        if run and i == run[-1] + 1:
+        restarts = run and i == run[-1] + 1 and _first(tokens[i]) < _first(tokens[run[-1]])
+        if run and i == run[-1] + 1 and not (restarts and len(run) >= 4):
             run.append(i)
             continue
         values = [min(_readings(tokens[j]) or {0.0}) for j in run]
@@ -236,14 +243,18 @@ def uncovered_numbers(text: str, facts: list[dict], page: int) -> list[str]:
     return [" ".join(tokens[a:b]) for a, b in snippets] if len(missed) >= MIN_UNCOVERED else []
 
 
-def review(extraction: "PageExtraction", text: str, page: int) -> list[str]:
-    """Problems with one page's extraction, as sentences for the model; [] means none."""
+def review(
+    extraction: "PageExtraction", text: str, page: int, image_page: bool = False
+) -> list[str]:
+    """Problems with one page's extraction, as sentences for the model; [] means none. A
+    picture page's quotes and numbers are not in its text layer, so only its empty facts
+    are questioned."""
     facts = [f.model_dump() for f in extraction.facts]
     problems = [
         f"Fact {n}: the quote is not on the page word for word: '{f['quote'][:160]}'. "
         "Copy it character for character from the text layer, or drop the fact."
         for n, f in enumerate(facts, start=1)
-        if quote_check(f["quote"], text) == "unverified"
+        if quote_check(f["quote"], text, image_page) == "unverified"
     ]
     missed = uncovered_numbers(text, facts, page)
     if missed:
@@ -385,7 +396,8 @@ async def extract_page(
     best: tuple[int, PageExtraction] | None = None
     for attempt in range(1 + MAX_REVIEW_ROUNDS):
         extraction, content = await ask()
-        problems = review(extraction, text, int(page["page"])) if text else []
+        image_page = bool(page.get("image_page", False))
+        problems = review(extraction, text, int(page["page"]), image_page) if text else []
         rounds.append(problems)
         weight = len(problems)
         if best is None or weight <= best[0]:
@@ -431,6 +443,7 @@ def combine(processed_dir: Path, raw_dir: Path | None = None) -> tuple[pd.DataFr
         record = json.loads(path.read_text())
         key = (record["doc_id"], record["page"])
         text = pages.loc[key, "text"] if key in pages.index else ""
+        image_page = bool(pages.loc[key].get("image_page", False)) if key in pages.index else False
         extraction = record["extraction"]
         summaries.append(
             {
@@ -450,8 +463,8 @@ def combine(processed_dir: Path, raw_dir: Path | None = None) -> tuple[pd.DataFr
                     "topic": fact["topic"],
                     "statement_en": fact["statement_en"],
                     "quote": fact["quote"],
-                    "quote_check": (check := quote_check(fact["quote"], text)),
-                    "quote_verified": check != "unverified",
+                    "quote_check": (check := quote_check(fact["quote"], text, image_page)),
+                    "quote_verified": check in ("exact", "tokens"),
                     "quote_boxes": json.dumps(
                         locate_quote(pdfs[record["doc_id"]][record["page"] - 1], fact["quote"])
                         if check == "exact" and record["doc_id"] in pdfs

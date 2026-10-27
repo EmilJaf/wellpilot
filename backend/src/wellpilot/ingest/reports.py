@@ -40,8 +40,21 @@ REPORTS = [
         language="no",
         doc_date="2005-02-01",
     ),
+    # Filed under 15_9-F-12 in the Volve data as COMPLETION_REPORT_3.PDF, but it is F-11 B's
+    # completion report. Its schematics, tallies and plots are images with no text layer.
+    Report(
+        doc_id="f11b_completion",
+        title="Final Well Report, Completion, 15/9-F-11 B",
+        file="F11B_Completion_FWR.pdf",
+        source="Well_logs/14.DIV. REPORTS/15_9-F-12/COMPLETION_REPORT_3.PDF",
+        language="en",
+        doc_date="2013-09-04",
+    ),
 ]
 REPORTS_BY_ID = {r.doc_id: r for r in REPORTS}
+
+
+IMAGE_PAGE_CHARS = 400
 
 
 def normalize_text(text: str) -> str:
@@ -84,7 +97,12 @@ def render_report(report: Report, raw_dir: Path, processed_dir: Path) -> pd.Data
                 "height_px": image.height,
             }
         )
-    return pd.DataFrame(rows)
+    frame = pd.DataFrame(rows)
+    # A page with little more than the running header, in a document that has real text
+    # pages: its content is a picture (a scanned table, a chart, a schematic).
+    lengths = frame["text"].str.len()
+    frame["image_page"] = (lengths <= IMAGE_PAGE_CHARS) & (lengths.max() > 1000)
+    return frame
 
 
 def main(argv: list[str] | None = None) -> None:

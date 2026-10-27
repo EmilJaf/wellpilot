@@ -94,7 +94,8 @@ def check(processed_dir: Path) -> list[str]:
         if key not in pages.index or not pages.loc[key, "has_text"]:
             continue
         extraction = PageExtraction.model_validate(record["extraction"])
-        left = review(extraction, pages.loc[key, "text"], record["page"])
+        image_page = bool(pages.loc[key].get("image_page", False))
+        left = review(extraction, pages.loc[key, "text"], record["page"], image_page)
         left = [p for p in left if "no facts" not in p]
         if left:
             problems.append(f"{record['doc_id']} page {record['page']}: {left[0][:160]}")

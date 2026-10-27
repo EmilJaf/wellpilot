@@ -28,6 +28,7 @@ from wellpilot.agent.evidence import Evidence, EvidenceLog
 from wellpilot.agent.tools import TOOLS_BY_NAME, execute, tool_schemas
 from wellpilot.agent.vision import LOOK, VISION_TOOL, look
 from wellpilot.data.store import ProductionStore
+from wellpilot.ingest.reports import REPORTS_BY_ID
 from wellpilot.llm import LLM, json_schema
 
 logger = logging.getLogger(__name__)
@@ -41,16 +42,15 @@ MAX_REASONING_CHARS = 6000  # Muse Spark Open's visible reasoning, per step, in 
 
 SYSTEM_PROMPT = """\
 You are WellPilot, an analysis agent for petroleum engineers working on the Volve oil \
-field (Norwegian North Sea, operated by Equinor). {wells} Reports are indexed too, \
-such as the February 2005 development plan (PUD, in Norwegian): \
-use search_reports to compare what happened with what was planned (plan_vs_actual gives the \
-field's production by year against the plan's forecast; field_vs_design gives the field \
-against the plan's design limits), and quote the original wording with an English \
-translation. Prefer facts whose quote_check is "exact". Facts were extracted from the text \
-and tables; to read a figure, such as the plan's forecast curve, look at the page yourself \
-with look_at_page. The plan's limits and capacities \
-(maximum water cut, liquid capacity) are for the whole field and platform: compare them with \
-field totals from field_vs_design, never with one well's numbers.
+field (Norwegian North Sea, operated by Equinor). {wells} Reports are indexed too: \
+{reports}. Use search_reports to compare what happened with what was planned \
+(plan_vs_actual gives the field's production by year against the plan's forecast; \
+field_vs_design gives the field against the plan's design limits), and quote the original \
+wording with an English translation. Prefer facts whose quote_check is "exact". Facts were \
+extracted from the text and tables; to read a figure, such as the plan's forecast curve, \
+look at the page yourself with look_at_page. The plan's limits and capacities (maximum \
+water cut, liquid capacity) are for the whole field and platform: compare them with field \
+totals from field_vs_design, never with one well's numbers.
 
 How you work:
 - Start with a short numbered plan, then call tools. Get every number from a tool; never \
@@ -277,10 +277,24 @@ def describe_wells(store: ProductionStore) -> str:
     )
 
 
+def describe_reports(store: ProductionStore) -> str:
+    """The reports the store holds (an as-of store hides those issued later)."""
+    if "report_pages" not in store.tables:
+        return "none yet"
+    ids = store.query("SELECT DISTINCT doc_id FROM report_pages ORDER BY doc_id DESC").rows
+    language = {"no": "Norwegian", "en": "English"}
+    return "; ".join(
+        f"{r.title} (doc_id {r.doc_id}, {r.doc_date[:7]}, {language.get(r.language, r.language)})"
+        for r in (REPORTS_BY_ID[d] for d in ids["doc_id"])
+    )
+
+
 def system_prompt(store: ProductionStore) -> str:
     as_of = store.as_of
     note = f"\n\nData is available only up to {as_of.isoformat()}." if as_of else ""
-    return SYSTEM_PROMPT.format(wells=describe_wells(store), as_of_note=note)
+    return SYSTEM_PROMPT.format(
+        wells=describe_wells(store), reports=describe_reports(store), as_of_note=note
+    )
 
 
 def _parse_arguments(arguments: str) -> dict:

@@ -105,6 +105,30 @@ CASES = [
         max_cost=0.15,
     ),
     Case(
+        "waterflood_f12",
+        "Was F-12's falling oil rate in 2011-2013 a loss of reservoir pressure or water taking "
+        "over the well? How much oil was left before an uneconomic water cut?",
+        as_of=date(2013, 12, 31),
+        tools=("waterflood",),
+        mentions=(r"liquid|choke", r"water cut|WOR"),
+        max_steps=12,
+        max_cost=0.35,
+    ),
+    Case(
+        "screen_2010",
+        "Which wells needed attention at the end of 2010, and why?",
+        as_of=date(2010, 12, 31),
+        tools=("field_screen",),
+        mentions=(r"F-12", r"gauge|pressure"),
+    ),
+    Case(
+        "f11b_completion",
+        "When was well F-11 B completed, and how does its completion report's timing compare "
+        "with when it started producing?",
+        any_tools=("search_reports", "read_report_page", "look_at_page"),
+        mentions=(r"2013-07", r"F-11"),
+    ),
+    Case(
         "top_producers",
         "Which wells produced most of Volve's oil, and how much did each produce?",
         any_tools=("list_wells", "run_sql", "production_monthly"),
