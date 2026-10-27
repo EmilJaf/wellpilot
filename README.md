@@ -36,14 +36,14 @@ A rolling backtest: for each producer, every 6 months, the data is cut at that d
 
 | Method | Median error | Mean error | Off by more than 50% |
 |---|---|---|---|
-| WellPilot agent, its own fit window | 14.8% | 23.2% | 3 |
+| WellPilot agent on Muse Spark Open, its own fit window | 14.9% | 22.4% | 3 |
 | Decline fit, last 3 months (best fixed window in hindsight) | 14.4% | 24.6% | 4 |
 | Decline fit, last 6 months | 19.7% | 32.0% | 5 |
 | Decline fit, last 24 months | 19.0% | 28.6% | 6 |
 | Decline fit, last 12 months | 21.0% | 29.4% | 6 |
 | Decline fit, whole history (the quick standard) | 27.6% | 39.5% | 8 |
 
-The agent halves the error of the whole-history fit and is closer in 16 of 25 forecasts. Against the best fixed window, which is only known after the fact, it is about even (closer in 15 of 25) with a lower mean error and fewer large misses. 25 overlapping forecasts from three wells are too few for a significance claim, and the agent's uncertainty bands are too narrow (an 80% band covered 28% of actuals); the app says so. The backtest's agent runs predate recording the model; rerun them with `--agent --refresh` to record it.
+The agent halves the error of the whole-history fit and is closer in 16 of 25 forecasts. Against the best fixed window, which is only known after the fact, it is about even (closer in 14 of 25) with a lower mean error and fewer large misses. 25 overlapping forecasts from three wells are too few for a significance claim, and the forecasts' uncertainty bands are too narrow (an 80% band held the actual in 24% of the agent's forecasts); the app says so. All 25 agent runs were made with Muse Spark Open on Baseten (23 verified by the checker; 2.4M input and 0.19M output tokens, about $3.80 in total).
 
 ## How it works
 
