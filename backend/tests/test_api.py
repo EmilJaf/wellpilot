@@ -289,6 +289,8 @@ async def test_data_endpoints(settings) -> None:
         no_doc = await client.get("/api/reports/../pages/23/image")
         no_page = await client.get("/api/reports/volve_pud/pages/99/image")
         no_backtest = await client.get("/api/backtest")
+        no_plan = await client.get("/api/field/plan")
+        no_quotes = (await client.get("/api/reports/volve_pud/pages/23/quotes")).json()
 
     assert wells["rows"][0][0] == "F-12"
     rate = daily["columns"].index("oil_rate_per_producing_day")
@@ -300,6 +302,8 @@ async def test_data_endpoints(settings) -> None:
     assert no_doc.status_code == 404
     assert no_page.status_code == 404
     assert no_backtest.status_code == 404
+    assert no_plan.status_code == 404  # no report facts extracted: no plan to compare with
+    assert no_quotes == []
 
 
 async def test_stream_resumes_after_last_event_id(settings) -> None:

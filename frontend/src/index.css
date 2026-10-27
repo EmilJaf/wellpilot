@@ -1149,3 +1149,153 @@ code,
 .credits a {
   color: inherit;
 }
+
+/* ---------- data column tabs ---------- */
+
+.tabs {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 6px;
+  background: var(--canvas);
+}
+
+.tabs button {
+  padding: 3px 10px;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.tabs button[aria-selected="true"] {
+  background: var(--sheet);
+  color: var(--ink);
+  box-shadow: 0 0 0 1px var(--rule-strong);
+}
+
+/* ---------- field vs plan ---------- */
+
+.plan-chart svg {
+  display: block;
+  overflow: visible;
+}
+
+.plan-grid {
+  stroke: var(--rule);
+  stroke-width: 1;
+}
+
+.plan-axis {
+  fill: var(--ink-3);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.plan-after {
+  fill: var(--shut-wash);
+}
+
+.plan-note {
+  fill: var(--ink-2);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.plan-band {
+  fill: var(--rule);
+  opacity: 0.85;
+}
+
+.plan-bar {
+  fill: var(--oil);
+}
+
+.plan-line {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.plan-dot {
+  fill: var(--sheet);
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+
+.plan-key-bar {
+  background: var(--oil);
+}
+
+.plan-key-band {
+  background: var(--rule);
+}
+
+.plan-key-line {
+  display: inline-block;
+  width: 14px;
+  height: 2px;
+  background: var(--ink);
+}
+
+.plan-summary {
+  margin: 10px 0 4px;
+  font-size: 14.5px;
+  line-height: 1.5;
+  max-width: 62ch;
+}
+
+.chart-note-line,
+.evidence-sub {
+  margin: 4px 0 8px;
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+
+.quoted-rows {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  display: grid;
+  gap: 2px;
+}
+
+/* ---------- report page with the quoted passage marked ---------- */
+
+.page-frame {
+  position: relative;
+  max-width: 760px;
+  margin-top: 10px;
+}
+
+.page-frame .page-image {
+  margin-top: 0;
+}
+
+.page-mark {
+  position: absolute;
+  margin: -3px -4px;
+  padding: 3px 4px;
+  box-sizing: content-box;
+  border: 2px solid var(--ink);
+  border-radius: 3px;
+  background: rgb(31 38 45 / 0.1);
+  pointer-events: none;
+}
+
+.quote-link {
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: var(--rule-strong);
+  text-underline-offset: 4px;
+}
+
+.quote-link:hover {
+  text-decoration-color: var(--ink);
+}

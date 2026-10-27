@@ -120,7 +120,10 @@ export const api = {
   runs: () => fetch('/api/runs').then((r) => json<RunSummary[]>(r)),
   evidence: (runId: string, evidenceId: string) =>
     fetch(`/api/runs/${runId}/evidence/${evidenceId}`).then((r) => json<Evidence>(r)),
+  fieldPlan: () => fetch('/api/field/plan').then((r) => json<unknown>(r)),
   daily: (well: string) => fetch(`/api/wells/${encodeURIComponent(well)}/daily`).then((r) => json<Table>(r)),
+  pageQuotes: (docId: string, page: number) =>
+    fetch(`/api/reports/${docId}/pages/${page}/quotes`).then((r) => json<{ quote: string; boxes: number[][] }[]>(r)),
   pageImageUrl: (docId: string, page: number) => `/api/reports/${docId}/pages/${page}/image`,
 }
 

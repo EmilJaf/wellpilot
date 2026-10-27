@@ -4,6 +4,7 @@ import { AgentLog } from './components/AgentLog'
 import { Answer, type Focus } from './components/Answer'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { EvidenceView } from './components/EvidenceView'
+import { PlanChart, type PlanResult } from './components/PlanChart'
 import { type Marker, WellCharts } from './components/WellCharts'
 import { datesIn } from './labels'
 import { useRun } from './useRun'
@@ -57,6 +58,17 @@ export default function App() {
   const [daily, setDaily] = useState<{ well: string; table: Table | null; error?: string } | null>(null)
   const [markers, setMarkers] = useState<{ key: string; list: Marker[] }>({ key: '', list: [] })
   const [recorded, setRecorded] = useState<RunSummary | null>(null)
+  // The data column shows one well's daily data or the field against its 2005 plan.
+  const [view, setView] = useState<'well' | 'plan'>('well')
+  const [plan, setPlan] = useState<{ result: PlanResult | null; error?: string } | null>(null)
+
+  useEffect(() => {
+    if (view !== 'plan' || plan) return
+    api
+      .fieldPlan()
+      .then((result) => setPlan({ result: result as PlanResult }))
+      .catch((e: Error) => setPlan({ result: null, error: e.message }))
+  }, [view, plan])
 
   const running = state.status === 'starting' || state.status === 'running'
 
@@ -225,26 +237,45 @@ export default function App() {
         <ErrorBoundary>
           <section aria-label="Well data and evidence" className="center">
             <div className="panel-head">
-              <h2>Data: well {well}</h2>
-              <select
-                className="well-picker"
-                aria-label="Well to plot"
-                value={well}
-                onChange={(e) => setPickedWell(e.target.value)}
-              >
-                {[...new Set([...wells, well])].map((w) => (
-                  <option key={w} value={w}>
-                    {w}
-                  </option>
-                ))}
-              </select>
+              <div className="tabs" role="tablist" aria-label="Data to show">
+                <button type="button" role="tab" aria-selected={view === 'well'} onClick={() => setView('well')}>
+                  Well {well}
+                </button>
+                <button type="button" role="tab" aria-selected={view === 'plan'} onClick={() => setView('plan')}>
+                  Field vs 2005 plan
+                </button>
+              </div>
+              {view === 'well' && (
+                <select
+                  className="well-picker"
+                  aria-label="Well to plot"
+                  value={well}
+                  onChange={(e) => setPickedWell(e.target.value)}
+                >
+                  {[...new Set([...wells, well])].map((w) => (
+                    <option key={w} value={w}>
+                      {w}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
-            <WellCharts
-              table={daily?.well === well ? daily.table : null}
-              error={daily?.well === well ? daily.error : undefined}
-              markers={chartMarkers}
-              highlights={highlights}
-            />
+            {view === 'well' ? (
+              <WellCharts
+                table={daily?.well === well ? daily.table : null}
+                error={daily?.well === well ? daily.error : undefined}
+                markers={chartMarkers}
+                highlights={highlights}
+              />
+            ) : (
+              <div className="charts">
+                {plan?.result ? (
+                  <PlanChart result={plan.result} />
+                ) : (
+                  <p className="empty">{plan?.error ? `The plan comparison could not load: ${plan.error}` : 'Loading the plan comparison'}</p>
+                )}
+              </div>
+            )}
             <div className="evidence-scroll" ref={evidencePanel}>
               <EvidenceView runId={state.id} evidenceId={selectedEvidence} attempt={evidenceAttempt} focus={focus} />
             </div>

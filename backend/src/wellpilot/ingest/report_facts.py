@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Literal
 
 import pandas as pd
+import pypdfium2 as pdfium
 from pydantic import BaseModel, Field, ValidationError
 
 from wellpilot.config import get_settings
@@ -145,6 +146,60 @@ def _fingerprint() -> str:
     return hashlib.sha256(spec.encode()).hexdigest()[:12]
 
 
+def locate_quote(page: "pdfium.PdfPage", quote: str) -> list[list[float]]:
+    """Where a quote stands on a PDF page, one rectangle per line: [x, y, width, height] as
+    fractions of the page, top-left origin. Matched like quote_in_text (letters and digits
+    only, case and the dropped glyphs ignored), so a quote found "exact" can be shown.
+    Empty when the quote is not on the page as written."""
+    target = squash(quote)
+    if len(target) < 6:
+        return []
+    textpage = page.get_textpage()
+    kept: list[tuple[str, int]] = []  # each squashed character and its index on the page
+    for i in range(textpage.count_chars()):
+        piece = re.sub(r"\W+", "", DROPPED_GLYPHS.sub("", textpage.get_text_range(i, 1)).casefold())
+        kept.extend((ch, i) for ch in piece)
+    # The 3 of "Sm3" is dropped on both sides (it is a superscript in the PDF).
+    kept = [
+        (ch, i)
+        for k, (ch, i) in enumerate(kept)
+        if not (
+            ch == "3"
+            and k >= 2
+            and kept[k - 2][0] + kept[k - 1][0] == "sm"
+            and not (k + 1 < len(kept) and kept[k + 1][0].isdigit())
+        )
+    ]
+    at = "".join(ch for ch, _ in kept).find(target)
+    if at < 0:
+        return []
+    width, height = page.get_size()
+    lines: list[list[float]] = []  # left, bottom, right, top in PDF points
+    for i in sorted({i for _, i in kept[at : at + len(target)]}):
+        left, bottom, right, top = textpage.get_charbox(i, loose=True)
+        if right <= left or top <= bottom:
+            continue
+        line = next((b for b in lines if abs(b[1] - bottom) < (top - bottom) * 0.5), None)
+        if line is None:
+            lines.append([left, bottom, right, top])
+        else:
+            line[:] = [
+                min(line[0], left),
+                min(line[1], bottom),
+                max(line[2], right),
+                max(line[3], top),
+            ]
+    return [
+        [
+            round(left / width, 4),
+            round(1 - top / height, 4),
+            round((right - left) / width, 4),
+            round((top - bottom) / height, 4),
+        ]
+        for left, bottom, right, top in lines
+    ]
+
+
 def cache_path(processed_dir: Path, doc_id: str, page: int) -> Path:
     return page_dir(processed_dir, doc_id) / "facts" / f"p{page:03d}.json"
 
@@ -211,10 +266,16 @@ async def extract_page(
     raise ValueError(f"page {page['page']}: no valid extraction: {errors}")
 
 
-def combine(processed_dir: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
+def combine(processed_dir: Path, raw_dir: Path | None = None) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Merge every cached page of every document into facts and summaries tables, checking
-    each quote against its page's text layer."""
+    each quote against its page's text layer and, when the PDF is at hand, locating it on
+    the page so the UI can mark it on the page image."""
     pages = pd.read_parquet(processed_dir / PAGES_FILE).set_index(["doc_id", "page"])
+    pdfs: dict[str, pdfium.PdfDocument] = {}
+    if raw_dir is not None:
+        for report in REPORTS_BY_ID.values():
+            if (raw_dir / "reports" / report.file).exists():
+                pdfs[report.doc_id] = pdfium.PdfDocument(raw_dir / "reports" / report.file)
     facts, summaries = [], []
     for path in sorted((processed_dir / "reports").glob("*/facts/p*.json")):
         record = json.loads(path.read_text())
@@ -241,6 +302,11 @@ def combine(processed_dir: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
                     "quote": fact["quote"],
                     "quote_check": (check := quote_check(fact["quote"], text)),
                     "quote_verified": check != "unverified",
+                    "quote_boxes": json.dumps(
+                        locate_quote(pdfs[record["doc_id"]][record["page"] - 1], fact["quote"])
+                        if check == "exact" and record["doc_id"] in pdfs
+                        else []
+                    ),
                     "source": fact["source"],
                     "wells": ", ".join(fact["wells"]),
                 }
@@ -298,7 +364,7 @@ async def run(doc_id: str, page_numbers: list[int], force: bool) -> None:
         await asyncio.gather(*(one(p) for p in todo))
         print(f"tokens: {totals[0]} input + {totals[1]} output (of which {totals[2]} reasoning)")
 
-    facts, summaries = combine(processed)
+    facts, summaries = combine(processed, settings.raw_dir)
     facts.to_parquet(processed / FACTS_FILE, index=False)
     summaries.to_parquet(processed / SUMMARIES_FILE, index=False)
     checks = facts["quote_check"].value_counts().to_dict() if len(facts) else {}

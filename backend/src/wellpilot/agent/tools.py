@@ -510,6 +510,77 @@ def read_report_page(store: ProductionStore, args: ReportPageArgs) -> dict:
     return to_jsonable(result, max_text=None)
 
 
+# Table 4.5 of the 2005 plan (PUD p.25): one row per year, "2010 2,14 1,49 2,13 2,82" for
+# mean, P90, P50 and P10 oil in MSm3 ("-" for none). The rows are exact quotes Muse Spark
+# read from the page image, checked against the PDF's text.
+PLAN_DOC, PLAN_PAGE = "volve_pud", 25
+PLAN_ROW = re.compile(r"^(?:\w+ )?(\d{4})((?:\s+(?:-|\d+,\d+)){4})$")
+
+
+def plan_vs_actual(store: ProductionStore, _: NoArgs) -> dict:
+    _require_reports(store)
+    facts = store.query(
+        "SELECT quote FROM report_facts WHERE doc_id = ? AND page = ? AND quote_check = 'exact'",
+        [PLAN_DOC, PLAN_PAGE],
+    ).rows
+    plan: dict[int, list[float]] = {}
+    quotes = []
+    for quote in facts["quote"].dropna():
+        match = PLAN_ROW.match(quote.strip())
+        if match:
+            values = [0.0 if v == "-" else float(v.replace(",", ".")) for v in match[2].split()]
+            plan[int(match[1])] = values
+            quotes.append(quote.strip())
+    if not plan:
+        raise ValueError("the plan's production table (PUD p.25) is not in the report facts")
+    actual = store.query(
+        "SELECT year(date) AS year, sum(oil_sm3) / 1e6 AS oil_msm3 FROM production_daily "
+        "GROUP BY 1 HAVING sum(oil_sm3) > 0 ORDER BY 1"
+    ).rows
+    by_year = dict(zip(actual["year"].astype(int), actual["oil_msm3"], strict=True))
+    years = sorted(set(plan) | set(by_year))
+    rows = [
+        {
+            "year": y,
+            "actual_oil_msm3": by_year.get(y),
+            "plan_p90_msm3": plan[y][1] if y in plan else None,
+            "plan_p50_msm3": plan[y][2] if y in plan else None,
+            "plan_p10_msm3": plan[y][3] if y in plan else None,
+        }
+        for y in years
+    ]
+    plan_end = max(y for y, v in plan.items() if v[2] > 0)
+    after = {y: v for y, v in by_year.items() if y > plan_end}
+    late_wells = store.query(
+        "SELECT well, min(date) AS first_oil FROM production_daily WHERE oil_sm3 > 0 "
+        "GROUP BY well HAVING year(min(date)) > ? ORDER BY 2",
+        [plan_end],
+    ).rows
+    return to_jsonable(
+        {
+            "unit": "million Sm3 (MSm3) of oil per calendar year, whole field",
+            "plan_source": f"{REPORTS_BY_ID[PLAN_DOC].title}, page {PLAN_PAGE}, Table 4.5",
+            "plan_rows_quoted": quotes,
+            "years": table(pd.DataFrame(rows)),
+            "totals_msm3": {
+                "actual": sum(by_year.values()),
+                "plan_p90": sum(v[1] for v in plan.values()),
+                "plan_p50": sum(v[2] for v in plan.values()),
+                "plan_p10": sum(v[3] for v in plan.values()),
+            },
+            "plan_p50_last_year": plan_end,
+            "actual_last_year": max(by_year) if by_year else None,
+            # A last year cut by the data (as-of runs) is partial, not a collapse.
+            "actual_data_ends": store.query("SELECT max(date) AS d FROM production_daily").rows.loc[
+                0, "d"
+            ],
+            "actual_after_plan_p50_ends_msm3": sum(after.values()),
+            "wells_first_oil_after_plan_p50_ends": table(late_wells),
+            "note": "The plan assumed first oil in March 2007; years are calendar years.",
+        }
+    )
+
+
 @dataclass(frozen=True)
 class Tool:
     name: str
@@ -604,6 +675,15 @@ TOOLS = [
         "happened with what was planned.",
         ReportSearchArgs,
         search_reports,
+    ),
+    Tool(
+        "plan_vs_actual",
+        "The whole field's oil production per year against the 2005 development plan's "
+        "forecast (P90/P50/P10, Table 4.5 on PUD page 25, quoted rows), with totals, the "
+        "plan's last producing year and what was produced after it. Use it to compare the "
+        "field's life with the plan.",
+        NoArgs,
+        plan_vs_actual,
     ),
     Tool(
         "read_report_page",

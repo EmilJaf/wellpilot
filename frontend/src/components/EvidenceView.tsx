@@ -1,8 +1,10 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { api, type Evidence, type Table } from '../api'
 import { CautionIcon } from '../icons'
-import { describeArgs, toolName } from '../labels'
+import { describeArgs, sameQuote, toolName } from '../labels'
 import type { Focus } from './Answer'
+import { PageImage } from './PageImage'
+import { PlanChart, type PlanResult } from './PlanChart'
 
 type Props = { runId: string | null; evidenceId: string | null; attempt: number; focus?: Focus | null }
 
@@ -16,7 +18,8 @@ function matcher(focus: Focus | null | undefined): (v: unknown) => boolean {
   const targets = [focus.value, focus.value / 100, focus.value * 100].map(Math.abs).filter((t) => t > 0)
   return (v) => {
     if (typeof v === 'number') return targets.some((t) => Math.abs(Math.abs(v) - t) <= t * 0.006)
-    return typeof v === 'string' && v.includes(focus.text)
+    if (typeof v !== 'string') return false
+    return focus.quote ? sameQuote(v, focus.text) : v.includes(focus.text)
   }
 }
 
@@ -79,8 +82,13 @@ export function EvidenceView({ runId, evidenceId, attempt, focus }: Props) {
     <div className="panel-body evidence" ref={host}>
       {focus && (
         <p className="focus-banner">
-          <strong>{focus.text}</strong> in the answer comes from this result
-          {hits ? ', marked below.' : '.'}
+          {focus.quote ? (
+            <>The quoted passage was read from this report{hits ? ': its page is shown below, with the passage marked.' : '.'}</>
+          ) : (
+            <>
+              <strong>{focus.text}</strong> in the answer comes from this result{hits ? ', marked below.' : '.'}
+            </>
+          )}
         </p>
       )}
       <h3 className="evidence-title">
@@ -103,7 +111,7 @@ export function EvidenceView({ runId, evidenceId, attempt, focus }: Props) {
         </div>
       ))}
       <HitContext.Provider value={hit}>
-        <Result tool={evidence.tool} result={evidence.result} />
+        <Result tool={evidence.tool} result={evidence.result} focus={focus} />
       </HitContext.Provider>
     </div>
   )
@@ -112,17 +120,36 @@ export function EvidenceView({ runId, evidenceId, attempt, focus }: Props) {
 const isTable = (v: unknown): v is Table =>
   typeof v === 'object' && v !== null && Array.isArray((v as Table).columns) && Array.isArray((v as Table).rows)
 
-function Result({ tool, result }: { tool: string; result: unknown }) {
+function Result({ tool, result, focus }: { tool: string; result: unknown; focus?: Focus | null }) {
   if (tool === 'calculate') {
     const r = result as { expression: string; value: number }
     return <CalcResult expression={r.expression} value={r.value} />
   }
   if (tool === 'detect_events') return <Events events={result as EventRow[]} />
-  if (tool === 'search_reports') return <Facts result={result as SearchResult} />
-  if (tool === 'read_report_page') return <ReportPage page={result as PageResult} />
+  if (tool === 'plan_vs_actual') return <PlanEvidence result={result as PlanResult} />
+  if (tool === 'search_reports') return <Facts result={result as SearchResult} focus={focus} />
+  if (tool === 'read_report_page') return <ReportPage page={result as PageResult} focus={focus} />
   if (tool === 'fit_decline' || tool === 'forecast_production') return <Fit result={result as FitResult} />
   if (isTable(result)) return <DataTable table={result} />
   return <pre className="code">{JSON.stringify(result, null, 2)}</pre>
+}
+
+function PlanEvidence({ result }: { result: PlanResult }) {
+  const hit = useContext(HitContext)
+  return (
+    <>
+      <PlanChart result={result} />
+      <p className="evidence-sub">The plan's rows as quoted from the page (year, mean, P90, P50, P10):</p>
+      <ul className="quoted-rows">
+        {result.plan_rows_quoted.map((q) => (
+          <li key={q} lang="no" className={hit(q) ? 'hit' : undefined}>
+            {q}
+          </li>
+        ))}
+      </ul>
+      <DataTable table={result.years} />
+    </>
+  )
 }
 
 function CalcResult({ expression, value }: { expression: string; value: number }) {
@@ -198,10 +225,13 @@ function Events({ events }: { events: EventRow[] }) {
 
 type SearchResult = { documents: Record<string, { title: string; issued: string }>; facts?: Table; pages?: Table }
 
-function Facts({ result }: { result: SearchResult }) {
+function Facts({ result, focus }: { result: SearchResult; focus?: Focus | null }) {
   const hit = useContext(HitContext)
-  const [open, setOpen] = useState<number | null>(null) // row index of the fact showing its page
   const table = result.facts
+  // Opened from a quote in the answer: show that fact's page straight away.
+  const quoteAt = table ? table.columns.indexOf('quote') : -1
+  const quoted = focus?.quote && table ? table.rows.findIndex((r) => hit(r[quoteAt])) : -1
+  const [open, setOpen] = useState<number | null>(quoted >= 0 ? quoted : null) // the fact showing its page
   if (!table) return result.pages ? <DataTable table={result.pages} /> : null
   const at = (row: Table['rows'][number], name: string) => row[table.columns.indexOf(name)]
   if (!table.rows.length) return <p className="empty">No report facts matched this search.</p>
@@ -234,7 +264,9 @@ function Facts({ result }: { result: SearchResult }) {
               <button type="button" className="link-button" onClick={() => setOpen(open === i ? null : i)}>
                 {open === i ? 'Hide page' : `Show page ${page}`}
               </button>
-              {open === i && <img className="page-image" src={api.pageImageUrl(doc, page)} alt={`${doc} page ${page}`} />}
+              {open === i && (
+                <PageImage doc={doc} page={page} alt={`${doc} page ${page}`} marks={[String(at(row, 'quote') ?? '')]} />
+              )}
             </li>
           )
         })}
@@ -245,12 +277,17 @@ function Facts({ result }: { result: SearchResult }) {
 
 type PageResult = { document: { title: string }; page: number; text: string; image: string; summary_en?: string; facts?: Table }
 
-function ReportPage({ page }: { page: PageResult }) {
+function ReportPage({ page, focus }: { page: PageResult; focus?: Focus | null }) {
   const doc = page.image.split('/')[1]
   return (
     <>
       {page.summary_en && <p>{page.summary_en}</p>}
-      <img className="page-image" src={api.pageImageUrl(doc, page.page)} alt={`${page.document.title}, page ${page.page}`} />
+      <PageImage
+        doc={doc}
+        page={page.page}
+        alt={`${page.document.title}, page ${page.page}`}
+        marks={focus?.quote ? [focus.text] : []}
+      />
     </>
   )
 }

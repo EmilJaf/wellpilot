@@ -4,8 +4,9 @@ import { AlarmIcon, CheckIcon } from '../icons'
 import { brief, compact, describeArgs, toolName } from '../labels'
 import type { RunState } from '../useRun'
 
-/** A number the reader clicked: its evidence opens with that value marked. */
-export type Focus = { text: string; value: number }
+/** What the reader clicked: a number (its value marked in the evidence) or a quote (marked
+    on the report page it came from). */
+export type Focus = { text: string; value: number; quote?: boolean }
 
 type Props = {
   state: RunState
@@ -22,7 +23,12 @@ type Props = {
  * numbers as buttons to their evidence, numbers inside a quote inside it. The checker owns
  * the rules; this only slices.
  */
-function bySpans(text: string, spans: Span[] | undefined, open: Props['onSelectEvidence']): ReactNode[] {
+function bySpans(
+  text: string,
+  spans: Span[] | undefined,
+  open: Props['onSelectEvidence'],
+  quoteSource?: string,
+): ReactNode[] {
   if (!spans) return [text]
   const numbers = spans.filter((s) => s.kind === 'number')
   const plain = (from: number, to: number): ReactNode[] => {
@@ -53,8 +59,27 @@ function bySpans(text: string, spans: Span[] | undefined, open: Props['onSelectE
   for (const q of spans) {
     if (q.kind !== 'quote' || q.start < at) continue
     parts.push(...plain(at, q.start))
-    // <q> draws its own quotation marks, so the text's are left out.
-    parts.push(<q key={`q${q.start}`}>{plain(q.start + 1, q.end - 1)}</q>)
+    // <q> draws its own quotation marks, so the text's are left out. With a report among the
+    // sources, the quote opens its page with the passage marked.
+    const inner = text.slice(q.start + 1, q.end - 1)
+    parts.push(
+      quoteSource ? (
+        <q
+          key={`q${q.start}`}
+          className="quote-link"
+          title={`Show this passage on the page it was read from (${quoteSource})`}
+          onClick={(e) => {
+            if ((e.target as HTMLElement).closest('button')) return
+            e.stopPropagation()
+            open(quoteSource, { text: inner, value: Number.NaN, quote: true })
+          }}
+        >
+          {plain(q.start + 1, q.end - 1)}
+        </q>
+      ) : (
+        <q key={`q${q.start}`}>{plain(q.start + 1, q.end - 1)}</q>
+      ),
+    )
     at = q.end
   }
   parts.push(...plain(at, text.length))
@@ -172,12 +197,16 @@ function Live({ steps, thinking }: { steps: StepEvent[]; thinking: number | null
 function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSelectEvidence }: Props) {
   const final = state.final!
   const tools = Object.fromEntries(final.evidence.map((e) => [e.id, e.tool]))
+  const isReport = (id: string) => tools[id] === 'search_reports' || tools[id] === 'read_report_page'
+  const anyReport = final.evidence.map((e) => e.id).find(isReport)
   const rounds = final.check_rounds
   const sentBack = rounds.filter((r) => r.length)
   const problems = sentBack.reduce((n, r) => n + r.length, 0)
   return (
     <>
-      {final.summary && <p className="summary">{bySpans(final.summary, final.summary_spans, onSelectEvidence)}</p>}
+      {final.summary && (
+        <p className="summary">{bySpans(final.summary, final.summary_spans, onSelectEvidence, anyReport)}</p>
+      )}
 
       {final.verified ? (
         <div className="verdict">
@@ -246,7 +275,7 @@ function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSe
                   onSelectFinding(selectedFinding === i ? null : i)
                 }}
               >
-                {bySpans(finding.claim, finding.spans, onSelectEvidence)}
+                {bySpans(finding.claim, finding.spans, onSelectEvidence, finding.evidence_ids.find(isReport))}
               </p>
               <p className="sources">
                 <span className="sources-label">Sources</span>

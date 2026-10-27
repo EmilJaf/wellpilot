@@ -10,6 +10,7 @@ export const TOOL_NAMES: Record<string, string> = {
   calculate: 'Calculate',
   search_reports: 'Search reports',
   read_report_page: 'Read report page',
+  plan_vs_actual: 'Compare with the 2005 plan',
   submit_findings: 'Submit answer',
 }
 
@@ -54,4 +55,14 @@ export function brief(problem: string): string {
   const shorter = problem.replace(/\s*\([^()]{40,}\)/g, '')
   const first = shorter.match(/^.*?[.!?](?=\s|$)/)
   return (first ? first[0] : shorter).trim()
+}
+
+/** Letters and digits only, lowercased: how quotes are compared (as the backend does). */
+export const squash = (text: string) => text.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '')
+
+/** Does a quote on a page match a passage the reader is looking at? */
+export function sameQuote(a: string, b: string): boolean {
+  const x = squash(a)
+  const y = squash(b)
+  return x.length >= 6 && y.length >= 6 && (x.includes(y) || y.includes(x))
 }
