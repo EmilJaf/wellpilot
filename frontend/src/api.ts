@@ -393,8 +393,21 @@ export type Film = {
 }
 
 /** A run made with data up to a past date, against what happened next. */
+export type ReasoningCheck =
+  | { available: false; note: string }
+  | {
+      available: true
+      steps: number
+      characters: number
+      later_dates: { step: number; dates: string[]; sentence: string }[]
+      hidden_values: { step: number; number: number; matches: string; sentence: string }[]
+      forecast_mentions: number
+    }
+
 export type Hindsight = {
   as_of: string
+  /** The model's reasoning, read for dates and values from the hidden period. */
+  reasoning?: ReasoningCheck
   forecasts: (BacktestCase & {
     evidence_id: string
     cited?: boolean

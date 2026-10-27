@@ -5,7 +5,8 @@ has answered, this reads the full data and shows, for every forecast the run mad
 oil the well actually produced over the forecast's days, and what the classic decline fit
 (the whole history up to the same date) would have said. For every well, it also shows
 the year after the date beside the year before: oil, water cut, and whether a dead
-downhole gauge came back.
+downhole gauge came back. And the model's reasoning, read for dates and values from the
+hidden period (reasoning_check).
 
 Only the API calls this, after a run ends; nothing here reaches the agent.
 """
@@ -16,6 +17,7 @@ from wellpilot.agent.tools import fit_warnings
 from wellpilot.analysis.decline import fit_decline, forecast
 from wellpilot.backtest import _curve, weekly_rate
 from wellpilot.data.store import ProductionStore
+from wellpilot.reasoning_check import reasoning_check
 
 YEAR = pd.Timedelta(days=365)
 WATER_CUT_DAYS = 30  # water cut at a date: the median over the flowing days of the month before
@@ -152,7 +154,12 @@ def hindsight(run: dict, full: ProductionStore, past: ProductionStore) -> dict:
     ]
     # The forecasts the answer gives first; the ones the agent tried on the way after them.
     forecasts.sort(key=lambda f: not f["cited"])
-    return {"as_of": cut.date().isoformat(), "forecasts": forecasts, "wells": _next_year(full, cut)}
+    return {
+        "as_of": cut.date().isoformat(),
+        "forecasts": forecasts,
+        "wells": _next_year(full, cut),
+        "reasoning": reasoning_check(run, full),
+    }
 
 
 def _cited(result: dict) -> set[str]:

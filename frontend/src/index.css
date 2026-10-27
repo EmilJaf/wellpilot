@@ -1368,6 +1368,26 @@ code,
   color: var(--ink-3);
 }
 
+/* the reveal: the model's reasoning read for the hidden period */
+.reasoning-line {
+  margin: 0 0 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+.reasoning-line svg {
+  display: inline;
+  vertical-align: -2px;
+  margin-right: 4px;
+}
+
+.reasoning-found ul {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  font-size: 13px;
+}
+
 /* what each Meta model did for this answer: one quiet line under the status */
 .meta-line {
   margin: 8px 0 14px;

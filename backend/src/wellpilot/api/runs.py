@@ -576,6 +576,7 @@ def run_hindsight(run_id: str, request: Request) -> dict:
         "verified": bool((record.result or {}).get("verified")),
         "result": record.result,
         "evidence": record.evidence,
+        "events": record.events,  # the model's reasoning, read for the hidden period
     }
     try:
         return hindsight(run, manager.store(None), manager.store(record.as_of))

@@ -1,8 +1,47 @@
 import { useEffect, useState } from 'react'
-import { api, type Hindsight } from '../api'
-import { CheckIcon } from '../icons'
+import { api, type Hindsight, type ReasoningCheck } from '../api'
+import { CautionIcon, CheckIcon } from '../icons'
 import { signed, volume } from '../labels'
 import { CaseChart } from './AccuracyView'
+
+/** What the model's reasoning holds from the hidden period, in words that promise no more
+    than was checked: what it wrote, not what it may remember. */
+function ReasoningLine({ r, asOf }: { r: ReasoningCheck; asOf: string }) {
+  if (!r.available) return <p className="reasoning-line">{r.note}.</p>
+  const found = r.later_dates.length + r.hidden_values.length
+  if (!found)
+    return (
+      <p className="reasoning-line">
+        <CheckIcon /> The model&rsquo;s reasoning ({r.steps} steps, {r.characters.toLocaleString('en')} characters) holds no
+        date or value from after {asOf}
+        {r.forecast_mentions > 0 &&
+          `; ${r.forecast_mentions} ${r.forecast_mentions === 1 ? 'mention' : 'mentions'} of the year it forecasts ${r.forecast_mentions === 1 ? 'is' : 'are'} not counted`}
+        . That is what it wrote, not what it may remember; the README shows what it remembers of this field.
+      </p>
+    )
+  return (
+    <div className="flag flag-caution reasoning-found">
+      <CautionIcon />
+      <div>
+        <strong>
+          The model&rsquo;s reasoning mentions {found === 1 ? 'something' : `${found} things`} from after {asOf}:
+        </strong>
+        <ul>
+          {r.later_dates.map((d, i) => (
+            <li key={`d${i}`}>
+              step {d.step}, {d.dates.join(', ')}: &ldquo;{d.sentence}&rdquo;
+            </li>
+          ))}
+          {r.hidden_values.map((v, i) => (
+            <li key={`v${i}`}>
+              step {v.step}, {v.number.toLocaleString('en')} ({v.matches}): &ldquo;{v.sentence}&rdquo;
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  )
+}
 
 /**
  * The time machine's reveal: the agent answered with data up to a past date; this shows the
@@ -39,6 +78,7 @@ export function HindsightView({ runId }: { runId: string }) {
         The agent answered with the data up to <strong>{h.as_of}</strong>. Below is the data it could not see,
         set against what it said.
       </p>
+      {h.reasoning && <ReasoningLine r={h.reasoning} asOf={h.as_of} />}
       {h.forecasts.length === 0 && <p className="empty">The agent made no forecast in this run.</p>}
       {answered.map((f) => (
         <ForecastCase key={f.evidence_id} f={f} />
