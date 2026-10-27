@@ -121,12 +121,6 @@ export function Answer(props: Props) {
     <section aria-label="Answer" className="answer-panel">
       <div className="panel-head">
         <h2>Answer</h2>
-        {final && (
-          <span className="panel-meta">
-            {final.steps} steps, {final.evidence.length} tool results, {compact(final.tokens.input + final.tokens.output)}{' '}
-            tokens
-          </span>
-        )}
       </div>
       <div className="panel-body answer-body" aria-live="polite">
         {final ? (
@@ -147,31 +141,24 @@ export function Answer(props: Props) {
 function Intro({ recorded, onReplay }: { recorded: RunSummary | null; onReplay: (id: string) => void }) {
   return (
     <div className="intro">
+      <h3 className="intro-title">Ask why a well changed.</h3>
       <p className="intro-lead">
-        Ask why a well changed. An AI agent works it out on the field's own data and reports, and
-        every number in its answer is checked against the data it came from.
+        An AI agent works it out on the field&rsquo;s own data and reports. Every number in its answer is
+        checked against the data before you see it.
       </p>
-      <p className="intro-who">
-        <strong>For production and reservoir engineers</strong> reviewing wells: why output fell,
-        whether a dead gauge or the reservoir is to blame, what next year will bring, and how it
-        compares with the development plan. Today that means hours across a production database,
-        PDF reports in several languages and spreadsheets. Here it is one question, answered in
-        about a minute, with every number traceable to the data.
-      </p>
-      <ol className="how">
+      {/* plan, check, trace: the order the agent works in */}
+      <ol className="intro-steps">
         <li>
-          <strong>It plans and runs real analysis.</strong> Decline-curve fits, event detection on
-          rates and pressures, SQL on daily production, and a search of the 2005 development
-          plan, a Norwegian PDF the model read page by page.
+          <strong>Runs real analysis</strong>
+          <span>Decline fits, event detection, SQL and the 2005 plan, a Norwegian PDF read page by page.</span>
         </li>
         <li>
-          <strong>A checker verifies the answer before you see it.</strong> Every number, date and
-          quote must be found in the tool result it cites. Causes must be marked as inferences.
-          A wrong answer goes back to the agent to fix.
+          <strong>Checks every number</strong>
+          <span>A deterministic checker sends a wrong answer back to the agent to fix.</span>
         </li>
         <li>
-          <strong>You can trace any number.</strong> Click it to open the exact tool result and
-          the code that produced it.
+          <strong>Shows its sources</strong>
+          <span>Any number opens the tool result and the code that produced it.</span>
         </li>
       </ol>
       {recorded && (
@@ -179,11 +166,14 @@ function Intro({ recorded, onReplay }: { recorded: RunSummary | null; onReplay: 
           Watch a recorded run
         </button>
       )}
+      <p className="intro-who">
+        <strong>For production and reservoir engineers.</strong> Why output fell, whether a gauge or the reservoir is
+        to blame, what next year brings, how the field compares with its plan: questions that take hours across
+        databases, PDFs and spreadsheets, answered in about a minute.
+      </p>
       <p className="intro-note">
-        The agent runs on Muse Spark Open, Meta's open-weight model, so an operator can host it
-        on their own servers, next to well data that never leaves the company. This demo uses
-        Volve, an oil field in the Norwegian North Sea that Equinor operated from 2008 to 2016
-        and published openly.
+        Runs on Muse Spark Open, Meta&rsquo;s open-weight model, so an operator can host it next to well data that
+        never leaves the company. The data here is Volve, a North Sea field Equinor published openly.
       </p>
     </div>
   )
@@ -239,56 +229,76 @@ function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSe
   const sentBack = rounds.filter((r) => r.length)
   const problems = sentBack.reduce((n, r) => n + r.length, 0)
   const fixes = corrections(state.steps, final.findings)
-  const history = fixes.length ? <CorrectionList items={fixes} /> : <Rounds rounds={rounds} />
+  const history = fixes.length ? <CorrectionList items={fixes} bare /> : <Rounds rounds={rounds} />
+  const seconds = state.steps.reduce((t, step) => t + step.seconds, 0)
+  const facts = final.findings.filter((f) => f.confidence === 'fact').length
   return (
     <>
-      {final.summary && (
-        <Summary text={final.summary} spans={final.summary_spans} open={onSelectEvidence} quoteSource={anyReport} />
-      )}
-
-      {final.verified ? (
-        <div className="verdict">
-          <CheckIcon />
-          <div>
-            <strong>
-              Verified{rounds.length > 1 ? ` on attempt ${rounds.length}` : ' on the first attempt'}
-            </strong>
-            <p>
-              Every number, date and quote below was found in the tool result it cites, and causes are
-              marked as inferences. Whether the reasoning holds is for you to judge: every source is one
-              click away.
-              {sentBack.length > 0 &&
-                ` The checker sent ${sentBack.length === 1 ? 'the first answer' : `${sentBack.length} answers`} back with ${problems} ${problems === 1 ? 'problem' : 'problems'}, and the agent fixed ${problems === 1 ? 'it' : 'them'}.`}
-            </p>
-            {sentBack.length > 0 && history}
-          </div>
-        </div>
-      ) : (
-        <div className="verdict verdict-alarm">
-          <AlarmIcon />
-          <div>
-            <strong>Not verified</strong>
-            <p>
-              {final.finished
+      <div className={`status${final.verified ? '' : ' status-alarm'}`} role="status">
+        <div className="status-main">
+          {final.verified ? <CheckIcon /> : <AlarmIcon />}
+          <strong>{final.verified ? 'Verified' : 'Not verified'}</strong>
+          <span>
+            {final.verified
+              ? rounds.length > 1
+                ? `on attempt ${rounds.length}, after ${problems} ${problems === 1 ? 'fix' : 'fixes'}`
+                : 'on the first attempt'
+              : final.finished
                 ? final.findings.length
-                  ? 'The checker still found problems after the last correction round.'
-                  : 'The agent answered in text without submitting findings to check.'
-                : `The run stopped early (${final.stopped ?? 'step limit'})${
-                    final.findings.length
-                      ? '. Below is its last submitted answer, which did not pass the checker.'
-                      : ' before the agent submitted an answer.'
-                  }`}
-            </p>
-            {rounds.length > 0 && history}
-          </div>
+                  ? 'problems remained after the last correction round'
+                  : 'no findings were submitted'
+                : `stopped early: ${final.stopped ?? 'step limit'}`}
+          </span>
         </div>
+        <dl className="status-metrics">
+          <div>
+            <dt>Steps</dt>
+            <dd>{final.steps}</dd>
+          </div>
+          <div>
+            <dt>Tool results</dt>
+            <dd>{final.evidence.length}</dd>
+          </div>
+          <div>
+            <dt>Time</dt>
+            <dd>{Math.round(seconds)} s</dd>
+          </div>
+          <div>
+            <dt>Tokens</dt>
+            <dd>{compact(final.tokens.input + final.tokens.output)}</dd>
+          </div>
+        </dl>
+        <details className="status-more">
+          <summary>
+            {sentBack.length > 0 ? `What the checker caught (${problems})` : 'What the checker checks'}
+          </summary>
+          <p className="status-note">
+            Every number, date and quote in the answer was found in the tool result it cites, and causes are
+            marked as inferences. Whether the reasoning holds is for you to judge: every source is one click
+            away.
+          </p>
+          {rounds.length > 0 && sentBack.length > 0 && history}
+        </details>
+      </div>
+
+      {final.summary && (
+        <section className="conclusion" aria-label="Conclusion">
+          <h3 className="section-label">Conclusion</h3>
+          <Summary text={final.summary} spans={final.summary_spans} open={onSelectEvidence} quoteSource={anyReport} />
+        </section>
       )}
 
-      <p className="answer-hint">
-        Click an underlined number to see where it comes from. <span className="pill pill-fact">Fact</span>{' '}
-        is shown directly by the data; <span className="pill">Inference</span> is an interpretation, such as a
-        likely cause.
-      </p>
+      <div className="findings-head">
+        <h3 className="section-label">
+          Findings <span>{final.findings.length}: {facts} {facts === 1 ? 'fact' : 'facts'}, {final.findings.length - facts}{' '}
+          {final.findings.length - facts === 1 ? 'inference' : 'inferences'}</span>
+        </h3>
+        <p className="findings-key">
+          <span><i className="mark mark-fact" /> fact: shown by the data</span>
+          <span><i className="mark" /> inference: an interpretation</span>
+          <span>underlined numbers open their source</span>
+        </p>
+      </div>
 
       <ol className="findings">
         {final.findings.map((finding, i) => {
@@ -296,54 +306,59 @@ function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSe
           const fixed = fixes.filter((c) => c.finalIndex === i)
           return (
             <li key={i} className={`finding${selectedFinding === i ? ' is-selected' : ''}`}>
-              <div className="finding-head">
-                {/* The label selects the finding (and marks its dates on the charts); the claim
-                    cannot be one button because its numbers are buttons to evidence. */}
-                <button
-                  type="button"
-                  className={`pill pill-button${fact ? ' pill-fact' : ''}`}
-                  aria-pressed={selectedFinding === i}
-                  aria-label={`${fact ? 'Fact' : 'Inference'} ${i + 1}: show its dates on the charts`}
-                  onClick={() => onSelectFinding(selectedFinding === i ? null : i)}
-                >
-                  {fact ? 'Fact' : 'Inference'}
-                </button>
-              </div>
-              <p
-                className="claim"
-                onClick={(e) => {
-                  if ((e.target as HTMLElement).closest('button')) return
-                  onSelectFinding(selectedFinding === i ? null : i)
-                }}
-              >
-                {bySpans(finding.claim, finding.spans, onSelectEvidence, finding.evidence_ids.find(isReport))}
-              </p>
-              {fixed.length > 0 && (
-                <p className="fix-tag">
-                  <RedoIcon />
-                  <span>
-                    <strong>Fixed after the checker sent it back:</strong> {[...new Set(fixed.flatMap((c) => c.changes))].join(' ')}
-                  </span>
-                </p>
-              )}
-              <p className="sources">
-                <span className="sources-label">Sources</span>
-                {finding.evidence_ids.map((id) => (
+              <span className="finding-index" aria-hidden>
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              <div className="finding-body">
+                <div className="finding-head">
+                  {/* The label selects the finding (and marks its dates on the charts); the claim
+                      cannot be one button because its numbers are buttons to evidence. */}
                   <button
-                    key={id}
                     type="button"
-                    className="evidence-chip"
-                    aria-pressed={selectedEvidence === id}
-                    onClick={() => {
-                      onSelectFinding(i)
-                      onSelectEvidence(id)
-                    }}
+                    className={`pill pill-button${fact ? ' pill-fact' : ''}`}
+                    aria-pressed={selectedFinding === i}
+                    aria-label={`${fact ? 'Fact' : 'Inference'} ${i + 1}: show its dates on the charts`}
+                    onClick={() => onSelectFinding(selectedFinding === i ? null : i)}
                   >
-                    {id}
-                    {tools[id] && <span className="chip-tool">{toolName(tools[id])}</span>}
+                    {fact ? 'Fact' : 'Inference'}
                   </button>
-                ))}
-              </p>
+                </div>
+                <p
+                  className="claim"
+                  onClick={(e) => {
+                    if ((e.target as HTMLElement).closest('button')) return
+                    onSelectFinding(selectedFinding === i ? null : i)
+                  }}
+                >
+                  {bySpans(finding.claim, finding.spans, onSelectEvidence, finding.evidence_ids.find(isReport))}
+                </p>
+                {fixed.length > 0 && (
+                  <p className="fix-tag">
+                    <RedoIcon />
+                    <span>
+                      <strong>Fixed after the checker sent it back:</strong> {[...new Set(fixed.flatMap((c) => c.changes))].join(' ')}
+                    </span>
+                  </p>
+                )}
+                <p className="sources">
+                  <span className="sources-label">Sources</span>
+                  {finding.evidence_ids.map((id) => (
+                    <button
+                      key={id}
+                      type="button"
+                      className="evidence-chip"
+                      aria-pressed={selectedEvidence === id}
+                      onClick={() => {
+                        onSelectFinding(i)
+                        onSelectEvidence(id)
+                      }}
+                    >
+                      {id}
+                      {tools[id] && <span className="chip-tool">{toolName(tools[id])}</span>}
+                    </button>
+                  ))}
+                </p>
+              </div>
             </li>
           )
         })}

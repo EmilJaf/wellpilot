@@ -41,7 +41,7 @@ export function Diff({ pieces }: { pieces: Piece[] }) {
 }
 
 /** What the checker caught, attempt by attempt, and what the agent changed each time. */
-export function CorrectionList({ items }: { items: Correction[] }) {
+export function CorrectionList({ items, bare = false }: { items: Correction[]; bare?: boolean }) {
   const attempts = [...new Set(items.map((c) => c.attempt))]
   // One entry per finding: its problems together, what changed once.
   const byTarget = (attempt: number) => {
@@ -51,34 +51,37 @@ export function CorrectionList({ items }: { items: Correction[] }) {
       .forEach((c, i) => groups.set(c.target || `#${i}`, [...(groups.get(c.target || `#${i}`) ?? []), c]))
     return [...groups.values()]
   }
+  const rounds = attempts.map((attempt) => (
+    <div key={attempt} className="fix-round">
+      <p className="round-label">Attempt {attempt} was sent back:</p>
+      <ol>
+        {byTarget(attempt).map((group, i) => {
+          const changes = [...new Set(group.flatMap((c) => c.changes))]
+          const diff = group.find((c) => c.diff)?.diff
+          return (
+            <li key={i} title={group.map((c) => c.problem).join('\n')}>
+              {group[0].target && <p className="fix-target">{group[0].target}</p>}
+              {group.map((c, j) => (
+                <p key={j} className="fix-problem">
+                  {problemText(c)}
+                </p>
+              ))}
+              {changes.length > 0 && <p className="fix-change">{changes.join(' ')}</p>}
+              {diff && <Diff pieces={diff} />}
+            </li>
+          )
+        })}
+      </ol>
+    </div>
+  ))
+  // Inside another disclosure (the answer's status) the list shows as it is.
+  if (bare) return <div className="fixes">{rounds}</div>
   return (
     <details className="fixes">
       <summary>
         What the checker caught, and how the agent fixed {items.length === 1 ? 'it' : `all ${items.length}`}
       </summary>
-      {attempts.map((attempt) => (
-        <div key={attempt} className="fix-round">
-          <p className="round-label">Attempt {attempt} was sent back:</p>
-          <ol>
-            {byTarget(attempt).map((group, i) => {
-              const changes = [...new Set(group.flatMap((c) => c.changes))]
-              const diff = group.find((c) => c.diff)?.diff
-              return (
-                <li key={i} title={group.map((c) => c.problem).join('\n')}>
-                  {group[0].target && <p className="fix-target">{group[0].target}</p>}
-                  {group.map((c, j) => (
-                    <p key={j} className="fix-problem">
-                      {problemText(c)}
-                    </p>
-                  ))}
-                  {changes.length > 0 && <p className="fix-change">{changes.join(' ')}</p>}
-                  {diff && <Diff pieces={diff} />}
-                </li>
-              )
-            })}
-          </ol>
-        </div>
-      ))}
+      {rounds}
     </details>
   )
 }

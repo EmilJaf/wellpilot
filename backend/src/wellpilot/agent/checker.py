@@ -486,6 +486,14 @@ GROUP_BEFORE = re.compile(r"(?:^|[^\w.,])\d{1,3}[ \u00a0\u202f]$")
 CALENDAR_WINDOW = re.compile(
     r"\b(?:12|24|30|365)[-\s](?:month|hour|day)\b|\b(?:12\s+months|24\s+hours|365\s+days)\b"
 )
+DECIMAL_COMMA = re.compile(r"\d,\d{1,2}(?!\d)")
+# A reference to a part of a document names it; its digits are no value to declare:
+# "Figure 4.2", "Tabell 4.5", "section 4.5.1", "§ 4.5.1", "page 23", "p. 23", "pages 23-25".
+REFERENCE = re.compile(
+    r"\b(?:fig(?:ure|ur)?|tab(?:le|ell)?|sections?|chapters?|kap(?:ittel|itel)?|appendix|"
+    r"vedlegg|pages?|side|p)\.?\s*\d+(?:\.\d+)*(?:\s*[-–]\s*\d+)?\b|§\s*\d+(?:\.\d+)*",
+    re.IGNORECASE,
+)
 
 
 def _pinned(reading: Reading, value: float) -> Reading | None:
@@ -512,7 +520,7 @@ def _standalone(text: str, written: str) -> list[tuple[int, int]]:
 def _mask(text: str) -> str:
     """Dates, well names and calendar windows blanked out: their digits are not numbers to
     declare."""
-    return CALENDAR_WINDOW.sub(" ", DATE.sub(" ", WELL.sub(" ", text)))
+    return REFERENCE.sub(" ", CALENDAR_WINDOW.sub(" ", DATE.sub(" ", WELL.sub(" ", text))))
 
 
 def _as_written(value: float, decimals: int, suffix: str | None) -> str:
@@ -584,11 +592,26 @@ def _declared(
         for start, end in reversed(_standalone(rest, number.text)):
             rest = rest[:start] + " " + rest[end:]
     leftover: list[str] = []
+
+    # A value already declared may be written again in another form ("94 %" declared, "94%"
+    # in the translation after a quote): it was checked once, it needs no second entry.
+    def exact(text: str) -> set[float]:
+        """A number as written, percent as a fraction: "94 %" and "94%" are 0.94, "0,80" and
+        "80%" are 0.8; no rounding, so "2%" is not a declared "1.77%"."""
+        return {
+            round(v / 100 if suffix == "%" else v, 9)
+            for v, _, suffix in _numbers_in_text(text, bool(DECIMAL_COMMA.search(text)))
+        }
+
+    declared_values = set().union(*(exact(d.text) for d in declared)) if declared else set()
     for match in WRITTEN_NUMBER.finditer(rest):
         written = match.group(0).strip()
         # Either convention: "0,80" is 0 and 80, or 0.8; "1.234.567" is a number too.
         values = [n for european in (False, True) for n in _numbers_in_text(written, european)]
         if values and all(_free(*n, pool, free) for n in values):
+            continue
+        # Read as written: a Norwegian reading counts only with a decimal comma ("0,80").
+        if exact(written) and exact(written) <= declared_values:
             continue
         if values and written not in leftover:
             leftover.append(written)
@@ -684,7 +707,9 @@ def display_spans(
             span["evidence_id"] = source
         spans.append(span)
     plain = text.replace("\u2212", "-").replace("\u2013", "-")  # same length
-    masked = _blank(plain, DATE, WELL, CALENDAR_WINDOW, DAY_MONTH_YEAR, MONTH_DAY_YEAR, MONTH_YEAR)
+    masked = _blank(
+        plain, DATE, WELL, CALENDAR_WINDOW, REFERENCE, DAY_MONTH_YEAR, MONTH_DAY_YEAR, MONTH_YEAR
+    )
     declared: dict[str, list[DeclaredNumber]] = {}
     for number in numbers or []:
         written = number.text.replace("\u2212", "-").replace("\u2013", "-")

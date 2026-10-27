@@ -208,13 +208,21 @@ def test_an_undeclared_number_is_named_as_written() -> None:
     log = corpus_log(F12)
 
     problems = check(
-        "The rise to 0.80 passed the plan's Maksimum vannkutt 0,80 limit.",
+        "The rise to 0.80 passed the plan's Maksimum vannkutt 0,85 limit.",
+        ["E5"],
+        [d("0.80", 0.8, "E5")],
+        log,
+    )
+    # The same value written again in another form was declared once; that is enough.
+    same_value = check(
+        "The rise to 0.80 reached the plan's Maksimum vannkutt 0,80 limit.",
         ["E5"],
         [d("0.80", 0.8, "E5")],
         log,
     )
 
-    assert problems and "undeclared number(s) 0,80." in problems[0]
+    assert problems and "undeclared number(s) 0,85." in problems[0]
+    assert same_value == []
 
 
 DEMO = "fcfb4188de3b-2"  # E2 detect_events for F-12; E11 calculates 7.89 from the 0.019 fit
@@ -250,3 +258,33 @@ def test_a_finding_about_a_well_needs_evidence_about_that_well() -> None:
     assert problems and "names F-14" in problems[0]
     assert own_well == []
     assert field_wide == []  # list_wells is about every well
+
+
+def test_a_declared_value_written_again_must_read_the_same() -> None:
+    """ "94 %" declared covers "94%" written again, but "0.100" is not 100 (no decimal comma
+    makes it Norwegian), and 95% is not 94 %."""
+    log = corpus_log(F12)
+    drop = [d("72 %", 72, "E5")]
+
+    assert check("The rate fell 72 % [72% in the summary].", ["E5"], drop, log) == []
+    later = check("The rate fell 72 %, later 75%.", ["E5"], drop, log)
+    norwegian = check("It made 0.072 Sm3, then 72 % less.", ["E5"], drop, log)
+
+    rounded = check(
+        "Each made 1.77% of the oil, less than 2%.", ["E5"], [d("1.77%", 0.0177, "E5")], log
+    )
+
+    assert any("undeclared number(s) 75%" in p for p in later)
+    assert any("undeclared number(s) 2%" in p for p in rounded)  # a bound, not 1.77% rounded
+    assert any("undeclared number(s) 0.072" in p for p in norwegian)
+
+
+def test_document_references_are_names_not_numbers() -> None:
+    log = corpus_log(F12)
+    claim = (
+        "The plan's Figure 4.2 and Tabell 4.5 (section 4.5.1, § 4.5.2, pages 23-25) show "
+        "the profile."
+    )
+
+    assert check(claim, ["E5"], [], log) == []
+    assert check("The plan shows 4.2 Sm3/d.", ["E5"], [], log)  # a bare value still counts

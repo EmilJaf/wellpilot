@@ -6,13 +6,12 @@
   "question": "Why did well F-12 decline faster after 2010? Compare with the 2005 development plan."
  },
  "to_review": false,
- "note": "Live checker also rejected '253.9' for 253.85 bar (Finding 5): a tie, half a unit off, which float error pushed past the tolerance. Fixed. The rest is right: undeclared '72%', '0.80' and '0.8'; 'drive' marked fact; a fact on a fit with r2_log 0.019; an unhedged 'because' in the summary. Finding 1 was flagged only for the '30' in '30-day median'; calendar windows need no declaring since run 4882e62d527c.",
+ "note": "Live checker also rejected '253.9' for 253.85 bar (Finding 5): a tie, half a unit off, which float error pushed past the tolerance. Fixed. The rest is right: undeclared '72%', '0.80' and '0.8'; 'drive' marked fact; a fact on a fit with r2_log 0.019; an unhedged 'because' in the summary. Finding 1 was flagged only for the '30' in '30-day median'; calendar windows need no declaring since run 4882e62d527c. Oct 27 evening: document references (Table 4.3, p.23, Figure 4.2, § 4.5.1) are names, and a declared value written again in another form ('94 %' and '94%', '0,80' and '0.80') needs no second declaration; the rejections those caused were false, so the verdict changed on purpose.",
  "expected": {
   "accepted": false,
   "flagged": [
    "Finding 2",
    "Finding 3",
-   "Finding 4",
    "Summary"
   ]
  },

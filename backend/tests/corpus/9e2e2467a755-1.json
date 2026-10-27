@@ -1,0 +1,700 @@
+{
+ "source": {
+  "run": "9e2e2467a755",
+  "submission": 1,
+  "model": "meta-models/muse-spark-open-1026",
+  "question": "Why did well F-99 stop producing in 2013?"
+ },
+ "to_review": false,
+ "note": "Reviewed: right. 'because' in a finding marked fact.",
+ "expected": {
+  "accepted": false,
+  "flagged": [
+   "Finding 3"
+  ]
+ },
+ "submission": {
+  "summary": "Well F-99 does not exist in the Volve field data and has no production or injection records, so it did not stop producing in 2013 — the field's only producers are F-1 C, F-11, F-12, F-14, F-15 D and F-5.",
+  "findings": [
+   {
+    "claim": "The Volve database from 2007-09-01 to 2016-12-01 contains no well named F-99. The listed wells are F-1 C, F-11, F-12, F-14, F-15 D, F-4 and F-5 (E1, E3), and a query for F-99 returns 0 rows (E4). The dataset holds 15862 daily records from 2007-09-01 to 2016-12-01 (E7).",
+    "evidence_ids": [
+     "E1",
+     "E3",
+     "E4",
+     "E7"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "0",
+      "value": 0,
+      "evidence_id": "E4"
+     },
+     {
+      "text": "15862",
+      "value": 15862,
+      "evidence_id": "E7"
+     }
+    ]
+   },
+   {
+    "claim": "No production issues are logged for a well named F-99; a query on production_issues for F-99 returns 0 rows (E5). Search of the 2005 PUD reports for F-99 returns only generic hydrates/emulsions/water-handling sections with no mention of F-99 (E2).",
+    "evidence_ids": [
+     "E5",
+     "E2"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "0",
+      "value": 0,
+      "evidence_id": "E5"
+     }
+    ]
+   },
+   {
+    "claim": "Actual oil producers operating around 2013 were F-12 (first oil 2008-02-12) and F-14 (first oil 2008-07-13), joined later by F-11 on 2013-07-24, F-15 D on 2014-01-16, F-1 C on 2014-04-22 and F-5 on 2016-04-20; all continued producing beyond 2013 to 2016-09-17 or later (E1, E3). No cessation in 2013 is recorded for F-99 because it does not exist.",
+    "evidence_ids": [
+     "E1",
+     "E3"
+    ],
+    "confidence": "fact",
+    "numbers": []
+   }
+  ],
+  "summary_numbers": []
+ },
+ "evidence": [
+  {
+   "id": "E1",
+   "tool": "list_wells",
+   "arguments": {},
+   "result": {
+    "columns": [
+     "well",
+     "well_types",
+     "first_oil",
+     "last_date",
+     "cum_oil_sm3",
+     "cum_water_sm3",
+     "cum_water_injected_sm3",
+     "producing_days"
+    ],
+    "rows": [
+     [
+      "F-1 C",
+      "OP/WI",
+      "2014-04-22",
+      "2016-04-21",
+      177709,
+      207302,
+      null,
+      438
+     ],
+     [
+      "F-11",
+      "OP",
+      "2013-07-24",
+      "2016-09-17",
+      1147849,
+      1090806,
+      0.0,
+      1122
+     ],
+     [
+      "F-12",
+      "OP",
+      "2008-02-12",
+      "2016-09-17",
+      4579610,
+      6833792,
+      0.0,
+      2838
+     ],
+     [
+      "F-14",
+      "OP",
+      "2008-07-13",
+      "2016-09-17",
+      3942233,
+      7121310,
+      0.0,
+      2724
+     ],
+     [
+      "F-15 D",
+      "OP",
+      "2014-01-16",
+      "2016-09-17",
+      148519,
+      52366,
+      0.0,
+      769
+     ],
+     [
+      "F-4",
+      "WI",
+      null,
+      "2016-12-01",
+      0.0,
+      0.0,
+      16240727,
+      0
+     ],
+     [
+      "F-5",
+      "OP/WI",
+      "2016-04-20",
+      "2016-09-18",
+      41161,
+      13533,
+      14089406,
+      129
+     ]
+    ]
+   },
+   "code": "wellpilot.agent.tools.list_wells@67bd47cfcdd1",
+   "created_at": "2026-10-27T11:14:39+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E2",
+   "tool": "search_reports",
+   "arguments": {
+    "query": "F-99",
+    "limit": 8
+   },
+   "result": {
+    "documents": {
+     "volve_pud": {
+      "title": "Plan for utbygging og drift av Volve (PUD, plan for development and operation)",
+      "issued": "2005-02-01"
+     }
+    },
+    "facts": {
+     "columns": [
+      "doc_id",
+      "page",
+      "topic",
+      "source",
+      "statement_en",
+      "quote",
+      "quote_check",
+      "wells"
+     ],
+     "rows": [
+      [
+       "volve_pud",
+       3,
+       "schedule",
+       "text",
+       "Section 5.3.2 Hydrater is listed on page 28.",
+       "5.3.2 Hydrater........................................................................................................................................28",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       3,
+       "schedule",
+       "text",
+       "Section 5.3.3 Emulsjoner is listed on page 28.",
+       "5.3.3 Emulsjoner ...................................................................................................................................28",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       3,
+       "schedule",
+       "text",
+       "Section 5.3.4 Asfaltenutfelling is listed on page 28.",
+       "5.3.4 Asfaltenutfelling ..................................................................................................................28",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       3,
+       "schedule",
+       "text",
+       "Section 5.3.5 H2S is listed on page 28.",
+       "5.3.5 H2S ...............................................................................................................................................28",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       3,
+       "schedule",
+       "text",
+       "Section 5.3.6 Voks is listed on page 28.",
+       "5.3.6 Voks..............................................................................................................................................28",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       3,
+       "schedule",
+       "text",
+       "Section 5.4 Vannhåndtering is listed on page 28.",
+       "5.4 Vannhåndtering............................................................................................................................28",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       3,
+       "schedule",
+       "text",
+       "Section 5.4.1 Utsira vannproduksjon is listed on page 28.",
+       "5.4.1 Utsira vannproduksjon.................................................................................................................28",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       3,
+       "schedule",
+       "text",
+       "Section 5.4.2 Re-injeksjon av produsert vann is listed on page 28.",
+       "5.4.2 Re-injeksjon av produsert vann ..................................................................................................28",
+       "exact",
+       ""
+      ]
+     ]
+    }
+   },
+   "code": "wellpilot.agent.tools.search_reports@5907b6347b0e",
+   "created_at": "2026-10-27T11:14:39+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E3",
+   "tool": "run_sql",
+   "arguments": {
+    "sql": "SELECT DISTINCT well, well_type, flow_kind, COUNT(*) as days, MIN(date) as first_date, MAX(date) as last_date FROM production_daily GROUP BY well, well_type, flow_kind ORDER BY well"
+   },
+   "result": {
+    "columns": [
+     "well",
+     "well_type",
+     "flow_kind",
+     "days",
+     "first_date",
+     "last_date"
+    ],
+    "rows": [
+     [
+      "F-1 C",
+      "WI",
+      "production",
+      2,
+      "2014-04-07",
+      "2014-07-07"
+     ],
+     [
+      "F-1 C",
+      "OP",
+      "production",
+      744,
+      "2014-04-08",
+      "2016-04-21"
+     ],
+     [
+      "F-11",
+      "OP",
+      "production",
+      1168,
+      "2013-07-08",
+      "2016-09-17"
+     ],
+     [
+      "F-12",
+      "OP",
+      "production",
+      3141,
+      "2008-02-12",
+      "2016-09-17"
+     ],
+     [
+      "F-14",
+      "OP",
+      "production",
+      3141,
+      "2008-02-12",
+      "2016-09-17"
+     ],
+     [
+      "F-15 D",
+      "OP",
+      "production",
+      980,
+      "2014-01-12",
+      "2016-09-17"
+     ],
+     [
+      "F-4",
+      "WI",
+      "injection",
+      3380,
+      "2007-09-01",
+      "2016-12-01"
+     ],
+     [
+      "F-5",
+      "WI",
+      "injection",
+      3146,
+      "2007-09-01",
+      "2016-09-18"
+     ],
+     [
+      "F-5",
+      "OP",
+      "production",
+      144,
+      "2016-04-12",
+      "2016-09-17"
+     ],
+     [
+      "F-5",
+      "WI",
+      "production",
+      16,
+      "2016-04-11",
+      "2016-09-12"
+     ]
+    ],
+    "row_count": 10,
+    "truncated": false
+   },
+   "code": "wellpilot.agent.tools.run_sql@50068378f8ca",
+   "created_at": "2026-10-27T11:14:39+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E4",
+   "tool": "run_sql",
+   "arguments": {
+    "sql": "SELECT * FROM production_daily WHERE well LIKE '%99%' LIMIT 20"
+   },
+   "result": {
+    "columns": [
+     "date",
+     "well",
+     "wellbore",
+     "npd_wellbore_code",
+     "flow_kind",
+     "well_type",
+     "on_stream_hrs",
+     "oil_sm3",
+     "gas_sm3",
+     "water_sm3",
+     "water_inj_sm3",
+     "bhp_bar",
+     "bht_c",
+     "dp_tubing_bar",
+     "whp_bar",
+     "wht_c",
+     "annulus_press_bar",
+     "choke_pct",
+     "dp_choke_bar",
+     "water_cut",
+     "gor_sm3_sm3"
+    ],
+    "rows": [],
+    "row_count": 0,
+    "truncated": false
+   },
+   "code": "wellpilot.agent.tools.run_sql@50068378f8ca",
+   "created_at": "2026-10-27T11:14:42+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E5",
+   "tool": "run_sql",
+   "arguments": {
+    "sql": "SELECT * FROM production_issues WHERE well LIKE '%99%' LIMIT 20"
+   },
+   "result": {
+    "columns": [
+     "date",
+     "well",
+     "field",
+     "issue",
+     "raw_value",
+     "action"
+    ],
+    "rows": [],
+    "row_count": 0,
+    "truncated": false
+   },
+   "code": "wellpilot.agent.tools.run_sql@50068378f8ca",
+   "created_at": "2026-10-27T11:14:42+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E6",
+   "tool": "search_reports",
+   "arguments": {
+    "query": "well producer",
+    "topic": "wells",
+    "limit": 20
+   },
+   "result": {
+    "documents": {
+     "volve_pud": {
+      "title": "Plan for utbygging og drift av Volve (PUD, plan for development and operation)",
+      "issued": "2005-02-01"
+     }
+    },
+    "facts": {
+     "columns": [
+      "doc_id",
+      "page",
+      "topic",
+      "source",
+      "statement_en",
+      "quote",
+      "quote_check",
+      "wells"
+     ],
+     "rows": [
+      [
+       "volve_pud",
+       7,
+       "wells",
+       "text",
+       "Both wells in the oil zone have been production tested and showed good production properties.",
+       "Begge brønner i oljesonen har blitt produksjonstestet og viste gode produksjonsegenskaper.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       8,
+       "wells",
+       "text",
+       "The Volve field is planned to be developed with three oil production wells and three water injection wells, plus two water production wells to the Utsira formation for production of injection water.",
+       "Volvefeltet er planlagt utbygd med tre oljeproduksjonsbrønner og tre vanninjeksjonsbrønner. I tillegg er det planlagt å bore to vannproduksjonsbrønner til Utsira-formasjonen for produksjon av injeksjonsvann.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       8,
+       "wells",
+       "text",
+       "The three production wells are planned to be completed with gas lift equipment.",
+       "De tre produksjonsbrønnene er planlagt komplettert med gassløft utstyr.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       11,
+       "wells",
+       "text",
+       "About 50 production wells have been drilled for the gas/condensate fields in Block 15/9.",
+       "det er boret ca 50 produksjonsbrønner for dette formål.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       11,
+       "wells",
+       "text",
+       "The reservoir in well 15/9-19SR production tested an undersaturated 29 API oil.",
+       "Reservoaret ble produksjonstestet og gav en undermettet 290 API olje.",
+       "exact",
+       "15/9-19SR"
+      ],
+      [
+       "volve_pud",
+       11,
+       "wells",
+       "text",
+       "The test interval in well 15/9-19SR flowed with rates up to 1358 Sm3/d and a productivity index of 143 Sm3/D/Bar.",
+       "strømmet med rater opp til 1358 Sm3 /d og en produktivitetsindeks på 143 Sm3 /D/Bar.",
+       "exact",
+       "15/9-19SR"
+      ],
+      [
+       "volve_pud",
+       11,
+       "wells",
+       "text",
+       "The production test in well 15/9-19A gave rates up to 528 Sm3/d of 27 API oil and with a productivity index of 63 Sm3/D/Bar.",
+       "En produksjonstest gav rater opp til 528 Sm3 /d av 270 API olje og med en produktivitetsindeks på 63 Sm3 /D/Bar.",
+       "exact",
+       "15/9-19A"
+      ],
+      [
+       "volve_pud",
+       21,
+       "wells",
+       "text",
+       "The highest production rate during well tests was 1.358 Sm3/d with a calculated productivity index of 142,5 Sm3/d/bar and average permeability of 1300 md.",
+       "Høyeste produksjonsrate var 1.358 Sm3/d med beregnet produktivitetsindeks på 142,5 Sm3/d/bar og gjennomsnitt permeabilitet var 1300 md.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       27,
+       "wells",
+       "text",
+       "It is planned for deviated wells in the reservoir, which entails a relatively high productivity which maintains a high bottom hole pressure which in turn reduces the need for artificial lift.",
+       "Det er planlagt for devierte brønner i reservoaret, det medfører en relativt høy Produktivitet noe som opprettholder et høyt bunnhullstrykk som igjen reduserer behovet for kunstig løft.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       27,
+       "wells",
+       "text",
+       "The Hugin formation on the Volve field is a well consolidated reservoir where there are no special challenges related to sand production, while the Utsira formation is little consolidated and is therefore planned with open hole screens.",
+       "Hugin-formasjonen på Volvefeltet er et godt konsolidert reservoar der det ikke er spesielle utfordringer knyttet til sandproduksjon. Utsira formasjonen er lite konsolidert, her planlegges det derfor med åpenhullsskjermer.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       30,
+       "wells",
+       "text",
+       "It is planned to drill 3 oil production wells, 3 water injection wells and 2 water production wells to the Utsira formation.",
+       "Det er planlagt å bore 3 oljeproduksjonsbrønner, 3 vanninjeksjonsbrønner og 2 vannproduksjonsbrønner til Utsira-formasjonen.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       30,
+       "wells",
+       "text",
+       "The drilling and production facility location relative to the reservoir is chosen to minimize the risk of shallow gas and to achieve the simplest possible well trajectories.",
+       "Bore- og produksjonsinnretningens plassering i forhold til reservoaret er valgt basert på å minimalisere faren for grunn gass, samt å oppnå enklest mulige brønnbaner.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       30,
+       "wells",
+       "text",
+       "The following casings are planned for use on Volve: 30\" casing, 20\" casing (in oil production wells), 13 3/8\" casing, 10 3/4\" x 9 5/8\" casing, 7\" casing.",
+       "Følgende foringsrør planlegges brukt på Volve: • 30” foringsrør • 20” foringsrør (i oljeproduksjonsbrønnene) • 13 3/8” foringsrør • 10 ¾” x 9 5/8” foringsrør • 7”foringsrør.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       30,
+       "wells",
+       "text",
+       "The water production wells to the Utsira formation are planned with 30\" and 13 3/8\" casing.",
+       "Vannproduksjonsbrønnene til Utsira-formasjonen er planlagt med 30”og 13 3/8” foringsrør.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       31,
+       "wells",
+       "text",
+       "Production wells and injection wells are planned to be completed with 7\" production tubing.",
+       "Produksjonsbrønnene og injeksjonsbrønnene er planlagt komplettert med 7” produksjonsrør.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       31,
+       "wells",
+       "text",
+       "Oil production wells and water injection wells are completed with production packers and safety valves in the production tubing.",
+       "Oljeproduksjonsbrønnene og vanninjeksjonsbrønnene kompletteres med produksjonspakninger og sikkerhetsventiler i produksjonsrøret.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       31,
+       "wells",
+       "text",
+       "Production wells are also planned to be completed with gas lift equipment including annulus safety valve, downhole pressure and temperature gauge and a downhole chemical line for continuous injection of asphaltene precipitation inhibitor.",
+       "Produksjonsbrønnene planlegges også komplettert med gassløft utstyr inkludert ringroms sikkerhetsventil, nedihulls trykk og temperaturmåler og en nedihulls kjemikalielinje for kontinuerlig injeksjon av asfalten utfellingshemmer (se figur6.1).",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       31,
+       "wells",
+       "text",
+       "The two water production wells are planned to be completed with downhole electrically driven pumps to pump water to the surface.",
+       "De to vannproduksjonsbrønnene planlegges komplettert med nedihulls elektriske drevne pumper for å pumpe vannet til overflaten",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       32,
+       "wells",
+       "figure",
+       "Figure 6.3 shows the schematic of an Utsira water production well with 21\" x 20\" OD riser, 13 3/8\" production riser, 9 5/8\" Excluder screen, ESP, and flow head.",
+       "Figur 6.3 - Utsira vannproduksjonsbrønn",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       32,
+       "wells",
+       "text",
+       "One of the production wells is planned to be completed with pre-perforated liner through the reservoir.",
+       "En av produksjonsbrønnene planlegges komplettert med pre-perforert foringsrør gjennom reservoaret.",
+       "exact",
+       ""
+      ]
+     ]
+    }
+   },
+   "code": "wellpilot.agent.tools.search_reports@5907b6347b0e",
+   "created_at": "2026-10-27T11:14:42+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E7",
+   "tool": "run_sql",
+   "arguments": {
+    "sql": "SELECT MIN(date) as first_date, MAX(date) as last_date, COUNT(*) as rows FROM production_daily"
+   },
+   "result": {
+    "columns": [
+     "first_date",
+     "last_date",
+     "rows"
+    ],
+    "rows": [
+     [
+      "2007-09-01",
+      "2016-12-01",
+      15862
+     ]
+    ],
+    "row_count": 1,
+    "truncated": false
+   },
+   "code": "wellpilot.agent.tools.run_sql@50068378f8ca",
+   "created_at": "2026-10-27T11:14:47+00:00",
+   "warnings": []
+  }
+ ]
+}

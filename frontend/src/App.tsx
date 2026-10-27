@@ -181,9 +181,8 @@ export default function App() {
         <div className="brand">
           <h1 className="wordmark">WellPilot</h1>
           <p className="tagline">
-            An AI agent for production engineers: ask why a well changed and get an answer in which
-            every number is checked against the field data. Runs on Meta's open-weight Muse Spark
-            Open, here on Equinor's open Volve field.
+            Well analysis by an AI agent whose every number is checked against the field data. On
+            Meta&rsquo;s open-weight Muse Spark Open.
           </p>
         </div>
         <form className="ask" onSubmit={submit}>

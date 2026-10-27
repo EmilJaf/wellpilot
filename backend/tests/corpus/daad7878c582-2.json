@@ -1,0 +1,451 @@
+{
+ "source": {
+  "run": "daad7878c582",
+  "submission": 2,
+  "model": "meta-models/muse-spark-open-1026",
+  "question": "Which wells produced most of Volve's oil, and how much did each produce?"
+ },
+ "to_review": false,
+ "note": "",
+ "expected": {
+  "accepted": true,
+  "flagged": []
+ },
+ "submission": {
+  "summary": "Volve produced a total of 10,037,081 Sm3 of oil to 2016-09-18 (data cut 2016-12-01). Two early wells dominate: F-12 produced 4,579,610 Sm3 (45.6%) and F-14 produced 3,942,233 Sm3 (39.3%), together 84.9% of field oil; the remaining four producers contributed 11.4% or less each.",
+  "findings": [
+   {
+    "claim": "The Volve field produced 10,037,081 Sm3 of oil in total from six producers, with data through 2016-12-01 and last producer oil on 2016-09-18.",
+    "evidence_ids": [
+     "E1",
+     "E2",
+     "E3"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "10,037,081",
+      "value": 10037081,
+      "evidence_id": "E2"
+     },
+     {
+      "text": "10,037,081",
+      "value": 10037081,
+      "evidence_id": "E3"
+     }
+    ]
+   },
+   {
+    "claim": "F-12 is the largest producer with 4,579,610 Sm3 (45.6% of field total), on stream from 2008-02-12 to 2016-09-17 for 2,838 producing days.",
+    "evidence_ids": [
+     "E1",
+     "E4"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "4,579,610",
+      "value": 4579610,
+      "evidence_id": "E1"
+     },
+     {
+      "text": "45.6%",
+      "value": 45.63,
+      "evidence_id": "E4"
+     },
+     {
+      "text": "2,838",
+      "value": 2838,
+      "evidence_id": "E1"
+     }
+    ]
+   },
+   {
+    "claim": "F-14 is the second largest producer with 3,942,233 Sm3 (39.3% of field total), on stream from 2008-07-13 to 2016-09-17 for 2,724 producing days.",
+    "evidence_ids": [
+     "E1",
+     "E5"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "3,942,233",
+      "value": 3942233,
+      "evidence_id": "E1"
+     },
+     {
+      "text": "39.3%",
+      "value": 39.28,
+      "evidence_id": "E5"
+     },
+     {
+      "text": "2,724",
+      "value": 2724,
+      "evidence_id": "E1"
+     }
+    ]
+   },
+   {
+    "claim": "F-12 and F-14 together produced 84.9% of Volve's oil.",
+    "evidence_ids": [
+     "E10"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "84.9%",
+      "value": 84.91,
+      "evidence_id": "E10"
+     }
+    ]
+   },
+   {
+    "claim": "F-11 produced 1,147,849 Sm3 (11.4% of field total) from 2013-07-24 to 2016-09-17 for 1,122 producing days.",
+    "evidence_ids": [
+     "E1",
+     "E6"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "1,147,849",
+      "value": 1147849,
+      "evidence_id": "E1"
+     },
+     {
+      "text": "11.4%",
+      "value": 11.44,
+      "evidence_id": "E6"
+     },
+     {
+      "text": "1,122",
+      "value": 1122,
+      "evidence_id": "E1"
+     }
+    ]
+   },
+   {
+    "claim": "The three smallest producers contributed small shares: F-1 C produced 177,709 Sm3 (1.77%) over 438 days from 2014-04-22 to 2016-04-21, F-15 D produced 148,519 Sm3 (1.48%) over 769 days from 2014-01-16, and F-5 produced 41,161 Sm3 (0.41%) over 129 days from 2016-04-20.",
+    "evidence_ids": [
+     "E1",
+     "E7",
+     "E8",
+     "E9"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "177,709",
+      "value": 177709,
+      "evidence_id": "E1"
+     },
+     {
+      "text": "1.77%",
+      "value": 1.77,
+      "evidence_id": "E7"
+     },
+     {
+      "text": "438",
+      "value": 438,
+      "evidence_id": "E1"
+     },
+     {
+      "text": "148,519",
+      "value": 148519,
+      "evidence_id": "E1"
+     },
+     {
+      "text": "1.48%",
+      "value": 1.48,
+      "evidence_id": "E8"
+     },
+     {
+      "text": "769",
+      "value": 769,
+      "evidence_id": "E1"
+     },
+     {
+      "text": "41,161",
+      "value": 41161,
+      "evidence_id": "E1"
+     },
+     {
+      "text": "0.41%",
+      "value": 0.41,
+      "evidence_id": "E9"
+     },
+     {
+      "text": "129",
+      "value": 129,
+      "evidence_id": "E1"
+     }
+    ]
+   }
+  ],
+  "summary_numbers": [
+   {
+    "text": "10,037,081",
+    "value": 10037081,
+    "evidence_id": "E2"
+   },
+   {
+    "text": "4,579,610",
+    "value": 4579610,
+    "evidence_id": "E1"
+   },
+   {
+    "text": "45.6%",
+    "value": 45.63,
+    "evidence_id": "E4"
+   },
+   {
+    "text": "3,942,233",
+    "value": 3942233,
+    "evidence_id": "E1"
+   },
+   {
+    "text": "39.3%",
+    "value": 39.28,
+    "evidence_id": "E5"
+   },
+   {
+    "text": "84.9%",
+    "value": 84.91,
+    "evidence_id": "E10"
+   },
+   {
+    "text": "11.4%",
+    "value": 11.44,
+    "evidence_id": "E6"
+   }
+  ]
+ },
+ "evidence": [
+  {
+   "id": "E1",
+   "tool": "list_wells",
+   "arguments": {},
+   "result": {
+    "columns": [
+     "well",
+     "well_types",
+     "first_oil",
+     "last_date",
+     "cum_oil_sm3",
+     "cum_water_sm3",
+     "cum_water_injected_sm3",
+     "producing_days"
+    ],
+    "rows": [
+     [
+      "F-1 C",
+      "OP/WI",
+      "2014-04-22",
+      "2016-04-21",
+      177709,
+      207302,
+      null,
+      438
+     ],
+     [
+      "F-11",
+      "OP",
+      "2013-07-24",
+      "2016-09-17",
+      1147849,
+      1090806,
+      0.0,
+      1122
+     ],
+     [
+      "F-12",
+      "OP",
+      "2008-02-12",
+      "2016-09-17",
+      4579610,
+      6833792,
+      0.0,
+      2838
+     ],
+     [
+      "F-14",
+      "OP",
+      "2008-07-13",
+      "2016-09-17",
+      3942233,
+      7121310,
+      0.0,
+      2724
+     ],
+     [
+      "F-15 D",
+      "OP",
+      "2014-01-16",
+      "2016-09-17",
+      148519,
+      52366,
+      0.0,
+      769
+     ],
+     [
+      "F-4",
+      "WI",
+      null,
+      "2016-12-01",
+      0.0,
+      0.0,
+      16240727,
+      0
+     ],
+     [
+      "F-5",
+      "OP/WI",
+      "2016-04-20",
+      "2016-09-18",
+      41161,
+      13533,
+      14089406,
+      129
+     ]
+    ]
+   },
+   "code": "wellpilot.agent.tools.list_wells@67bd47cfcdd1",
+   "created_at": "2026-10-27T11:14:49+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E2",
+   "tool": "calculate",
+   "arguments": {
+    "expression": "4579610+3942233+1147849+177709+148519+41161"
+   },
+   "result": {
+    "expression": "4579610+3942233+1147849+177709+148519+41161",
+    "value": 10037081
+   },
+   "code": "wellpilot.agent.tools.calculate@53e50bfd509f",
+   "created_at": "2026-10-27T11:14:52+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E3",
+   "tool": "run_sql",
+   "arguments": {
+    "sql": "SELECT SUM(cum_oil) as total_oil FROM (SELECT well, SUM(oil_sm3) as cum_oil FROM production_daily WHERE flow_kind='production' GROUP BY well)"
+   },
+   "result": {
+    "columns": [
+     "total_oil"
+    ],
+    "rows": [
+     [
+      10037081
+     ]
+    ],
+    "row_count": 1,
+    "truncated": false
+   },
+   "code": "wellpilot.agent.tools.run_sql@50068378f8ca",
+   "created_at": "2026-10-27T11:14:52+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E4",
+   "tool": "calculate",
+   "arguments": {
+    "expression": "4579610/10037081*100"
+   },
+   "result": {
+    "expression": "4579610/10037081*100",
+    "value": 45.63
+   },
+   "code": "wellpilot.agent.tools.calculate@53e50bfd509f",
+   "created_at": "2026-10-27T11:14:54+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E5",
+   "tool": "calculate",
+   "arguments": {
+    "expression": "3942233/10037081*100"
+   },
+   "result": {
+    "expression": "3942233/10037081*100",
+    "value": 39.28
+   },
+   "code": "wellpilot.agent.tools.calculate@53e50bfd509f",
+   "created_at": "2026-10-27T11:14:54+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E6",
+   "tool": "calculate",
+   "arguments": {
+    "expression": "1147849/10037081*100"
+   },
+   "result": {
+    "expression": "1147849/10037081*100",
+    "value": 11.44
+   },
+   "code": "wellpilot.agent.tools.calculate@53e50bfd509f",
+   "created_at": "2026-10-27T11:14:54+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E7",
+   "tool": "calculate",
+   "arguments": {
+    "expression": "177709/10037081*100"
+   },
+   "result": {
+    "expression": "177709/10037081*100",
+    "value": 1.77
+   },
+   "code": "wellpilot.agent.tools.calculate@53e50bfd509f",
+   "created_at": "2026-10-27T11:14:54+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E8",
+   "tool": "calculate",
+   "arguments": {
+    "expression": "148519/10037081*100"
+   },
+   "result": {
+    "expression": "148519/10037081*100",
+    "value": 1.48
+   },
+   "code": "wellpilot.agent.tools.calculate@53e50bfd509f",
+   "created_at": "2026-10-27T11:14:54+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E9",
+   "tool": "calculate",
+   "arguments": {
+    "expression": "41161/10037081*100"
+   },
+   "result": {
+    "expression": "41161/10037081*100",
+    "value": 0.4101
+   },
+   "code": "wellpilot.agent.tools.calculate@53e50bfd509f",
+   "created_at": "2026-10-27T11:14:54+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E10",
+   "tool": "calculate",
+   "arguments": {
+    "expression": "45.63+39.28"
+   },
+   "result": {
+    "expression": "45.63+39.28",
+    "value": 84.91
+   },
+   "code": "wellpilot.agent.tools.calculate@53e50bfd509f",
+   "created_at": "2026-10-27T11:14:56+00:00",
+   "warnings": []
+  }
+ ]
+}

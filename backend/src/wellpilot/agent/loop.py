@@ -93,6 +93,11 @@ NUDGE = (
     "tool, citing the evidence ids of the tool results each finding rests on."
 )
 NUDGE_FIX = "Fix the problems the checker listed and call submit_findings again."
+SUBMIT_BY = 8  # a run with no submission by this step is told to submit, keeping steps to fix
+SUBMIT_NOW = (
+    "You have gathered evidence for several steps. Submit your findings now with "
+    "submit_findings: the checker may send them back, and fixing takes steps too."
+)
 TWO_STEPS_LEFT = (
     "Two steps left, this one included: finish what you need and call submit_findings with "
     "the evidence you have."
@@ -365,6 +370,8 @@ async def run_agent(
             messages.append({"role": "user", "content": LAST_STEP})
         elif index == max_steps - 1:
             messages.append({"role": "user", "content": TWO_STEPS_LEFT})
+        elif index == SUBMIT_BY and not check_rounds and max_steps > SUBMIT_BY + 2:
+            messages.append({"role": "user", "content": SUBMIT_NOW})
         emit({"type": "llm_call", "step": index})
         started = time.monotonic()
         try:

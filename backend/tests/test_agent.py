@@ -514,6 +514,16 @@ async def test_the_last_steps_are_announced(store) -> None:
     assert "Two steps left" in said[1] and "last step" in said[2]
 
 
+async def test_a_run_without_an_answer_by_step_8_is_told_to_submit(store) -> None:
+    llm, completions = fake_llm([completion(tool_calls=[("list_wells", {})])])
+
+    await run_agent("Loop", llm, store, max_steps=14)
+
+    said = [r["messages"][-1]["content"] for r in completions.requests]
+    assert "Submit your findings now" in said[7]  # step 8
+    assert not any("Submit your findings now" in m for m in said[:7] + said[8:])
+
+
 async def test_tool_calls_per_step_are_capped(store) -> None:
     from wellpilot.agent.loop import MAX_CALLS_PER_STEP
 

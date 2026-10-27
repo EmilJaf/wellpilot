@@ -1,0 +1,1462 @@
+{
+ "source": {
+  "run": "27ec19b3946d",
+  "submission": 2,
+  "model": "meta-models/muse-spark-open-1026",
+  "question": "When did the Volve field reach the maximum water cut the 2005 plan designed the platform for?"
+ },
+ "to_review": false,
+ "note": " Oct 27 evening: document references (Table 4.3, p.23, Figure 4.2, § 4.5.1) are names, and a declared value written again in another form ('94 %' and '94%', '0,80' and '0.80') needs no second declaration; the rejections those caused were false, so the verdict changed on purpose.",
+ "expected": {
+  "accepted": true,
+  "flagged": []
+ },
+ "submission": {
+  "summary": "The 2005 PUD designed the Volve field/platform for a maximum water cut of 80% [“Maksimum vannkutt 0,80”]. The whole-field monthly water cut first reached this limit in 2012-06 at 80.3%, and was at or above it in 27 months in total to 2016-09.",
+  "findings": [
+   {
+    "claim": "The 2005 plan (PUD Table 4.3 and platform table) set the field/platform maximum water cut design limit at 0.80 [“Maksimum vannkutt 0,80” translates as Maximum water cut 0.80], also quoted as 80% [“Maks vanninnhold 80 %” translates as Maximum water content 80%].",
+    "evidence_ids": [
+     "E1",
+     "E2",
+     "E3"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "0.80",
+      "value": 0.8,
+      "evidence_id": "E1"
+     },
+     {
+      "text": "80%",
+      "value": 80,
+      "evidence_id": "E2"
+     }
+    ]
+   },
+   {
+    "claim": "On a whole-field monthly basis the field first reached or exceeded that 0.80 limit in 2012-06 with a water cut of 0.803 (80.3%), rising from 0.7952 in 2012-05.",
+    "evidence_ids": [
+     "E1",
+     "E5"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "0.80",
+      "value": 0.8,
+      "evidence_id": "E1"
+     },
+     {
+      "text": "0.803",
+      "value": 0.803,
+      "evidence_id": "E1"
+     },
+     {
+      "text": "80.3%",
+      "value": 80.3,
+      "evidence_id": "E5"
+     },
+     {
+      "text": "0.7952",
+      "value": 0.7952,
+      "evidence_id": "E1"
+     }
+    ]
+   },
+   {
+    "claim": "After first breach the field was at or above the design limit in 27 months to the end of data, with a maximum monthly field water cut of 0.8606 in 2016-04.",
+    "evidence_ids": [
+     "E1"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "27",
+      "value": 27,
+      "evidence_id": "E1"
+     },
+     {
+      "text": "0.8606",
+      "value": 0.8606,
+      "evidence_id": "E1"
+     }
+    ]
+   }
+  ],
+  "summary_numbers": [
+   {
+    "text": "80%",
+    "value": 80,
+    "evidence_id": "E2"
+   },
+   {
+    "text": "80.3%",
+    "value": 80.3,
+    "evidence_id": "E5"
+   },
+   {
+    "text": "27",
+    "value": 27,
+    "evidence_id": "E1"
+   }
+  ]
+ },
+ "evidence": [
+  {
+   "id": "E1",
+   "tool": "field_vs_design",
+   "arguments": {},
+   "result": {
+    "scope": "whole field, all producers and injectors summed per day, then per month",
+    "plan_source": "Plan for utbygging og drift av Volve (PUD, plan for development and operation), page 23, Table 4.3",
+    "design_limits": {
+     "liquid_sm3_per_day": {
+      "limit": "field liquid capacity",
+      "value": 13000,
+      "quote": "Væskekapasitet 13000 Sm3 /d"
+     },
+     "oil_sm3_per_day": {
+      "limit": "field oil capacity",
+      "value": 9000,
+      "quote": "Oljekapasitet 9000 Sm3 /d"
+     },
+     "water_cut": {
+      "limit": "maximum water cut",
+      "value": 0.8,
+      "quote": "Maksimum vannkutt 0,80"
+     },
+     "water_inj_sm3_per_day": {
+      "limit": "field water injection capacity",
+      "value": 16000,
+      "quote": "Vanninjeksjons kapasitet 16000 Sm3 /d"
+     }
+    },
+    "field_against_limits": {
+     "liquid_sm3_per_day": {
+      "first_month_at_or_above": null,
+      "months_at_or_above": 0,
+      "max": 11438,
+      "max_month": "2014-06"
+     },
+     "oil_sm3_per_day": {
+      "first_month_at_or_above": null,
+      "months_at_or_above": 0,
+      "max": 8924,
+      "max_month": "2008-12"
+     },
+     "water_cut": {
+      "first_month_at_or_above": "2012-06",
+      "months_at_or_above": 27,
+      "max": 0.8606,
+      "max_month": "2016-04"
+     },
+     "water_inj_sm3_per_day": {
+      "first_month_at_or_above": "2008-12",
+      "months_at_or_above": 3,
+      "max": 17206,
+      "max_month": "2008-12"
+     }
+    },
+    "months": {
+     "columns": [
+      "month",
+      "days",
+      "oil_sm3_per_day",
+      "liquid_sm3_per_day",
+      "water_cut",
+      "water_inj_sm3_per_day",
+      "max_day_liquid_sm3"
+     ],
+     "rows": [
+      [
+       "2008-02",
+       29,
+       1693,
+       1707,
+       0.008335,
+       0.0,
+       3127
+      ],
+      [
+       "2008-03",
+       31,
+       2689,
+       2690,
+       0.0003288,
+       0.0,
+       3193
+      ],
+      [
+       "2008-04",
+       30,
+       2484,
+       2501,
+       0.006614,
+       991.76,
+       3306
+      ],
+      [
+       "2008-05",
+       31,
+       4048,
+       4573,
+       0.1148,
+       7140,
+       13065
+      ],
+      [
+       "2008-06",
+       30,
+       4793,
+       4809,
+       0.003288,
+       7060,
+       5242
+      ],
+      [
+       "2008-07",
+       31,
+       5364,
+       5377,
+       0.002497,
+       7485,
+       6853
+      ],
+      [
+       "2008-08",
+       31,
+       5337,
+       5355,
+       0.003474,
+       7368,
+       9258
+      ],
+      [
+       "2008-09",
+       30,
+       6409,
+       6424,
+       0.002408,
+       5447,
+       9078
+      ],
+      [
+       "2008-10",
+       31,
+       7651,
+       7674,
+       0.003049,
+       11476,
+       9017
+      ],
+      [
+       "2008-11",
+       30,
+       8344,
+       8430,
+       0.0102,
+       14730,
+       9346
+      ],
+      [
+       "2008-12",
+       31,
+       8924,
+       8958,
+       0.003852,
+       17206,
+       9076
+      ],
+      [
+       "2009-01",
+       31,
+       8685,
+       8730,
+       0.005053,
+       16139,
+       9232
+      ],
+      [
+       "2009-02",
+       28,
+       8421,
+       8511,
+       0.01061,
+       15973,
+       9102
+      ],
+      [
+       "2009-03",
+       31,
+       5923,
+       5977,
+       0.009062,
+       4608,
+       9137
+      ],
+      [
+       "2009-04",
+       30,
+       7930,
+       7980,
+       0.006236,
+       7046,
+       9031
+      ],
+      [
+       "2009-05",
+       31,
+       8297,
+       8508,
+       0.02482,
+       14963,
+       9429
+      ],
+      [
+       "2009-06",
+       30,
+       7303,
+       7582,
+       0.03688,
+       8773,
+       9372
+      ],
+      [
+       "2009-07",
+       31,
+       5515,
+       5840,
+       0.05558,
+       12796,
+       6571
+      ],
+      [
+       "2009-08",
+       31,
+       7255,
+       8088,
+       0.103,
+       12593,
+       10519
+      ],
+      [
+       "2009-09",
+       30,
+       6015,
+       6599,
+       0.08845,
+       11185,
+       10363
+      ],
+      [
+       "2009-10",
+       31,
+       7214,
+       8276,
+       0.1283,
+       12353,
+       10182
+      ],
+      [
+       "2009-11",
+       30,
+       7802,
+       9479,
+       0.1769,
+       13760,
+       10430
+      ],
+      [
+       "2009-12",
+       31,
+       7984,
+       10355,
+       0.2289,
+       14354,
+       11620
+      ],
+      [
+       "2010-01",
+       31,
+       7480,
+       10713,
+       0.3018,
+       15298,
+       11704
+      ],
+      [
+       "2010-02",
+       28,
+       5897,
+       9655,
+       0.3892,
+       13751,
+       11350
+      ],
+      [
+       "2010-03",
+       31,
+       5437,
+       9262,
+       0.4129,
+       10609,
+       11732
+      ],
+      [
+       "2010-04",
+       30,
+       5310,
+       9905,
+       0.4639,
+       12194,
+       11636
+      ],
+      [
+       "2010-05",
+       31,
+       5320,
+       10473,
+       0.492,
+       16282,
+       11430
+      ],
+      [
+       "2010-06",
+       30,
+       4831,
+       10826,
+       0.5538,
+       14279,
+       11645
+      ],
+      [
+       "2010-07",
+       31,
+       4311,
+       10642,
+       0.5949,
+       13286,
+       11074
+      ],
+      [
+       "2010-08",
+       31,
+       2211,
+       5799,
+       0.6188,
+       7385,
+       11173
+      ],
+      [
+       "2010-09",
+       30,
+       3557,
+       8755,
+       0.5937,
+       10281,
+       11026
+      ],
+      [
+       "2010-10",
+       31,
+       4200,
+       10667,
+       0.6063,
+       12755,
+       11406
+      ],
+      [
+       "2010-11",
+       30,
+       3567,
+       10208,
+       0.6505,
+       11863,
+       11198
+      ],
+      [
+       "2010-12",
+       31,
+       3519,
+       10712,
+       0.6715,
+       12316,
+       10927
+      ],
+      [
+       "2011-01",
+       31,
+       3422,
+       10778,
+       0.6825,
+       12198,
+       10972
+      ],
+      [
+       "2011-02",
+       28,
+       2615,
+       8500,
+       0.6923,
+       9816,
+       10970
+      ],
+      [
+       "2011-03",
+       31,
+       3036,
+       10479,
+       0.7103,
+       11917,
+       11111
+      ],
+      [
+       "2011-04",
+       30,
+       2988,
+       10929,
+       0.7266,
+       12314,
+       11104
+      ],
+      [
+       "2011-05",
+       31,
+       2849,
+       10878,
+       0.7381,
+       12246,
+       11093
+      ],
+      [
+       "2011-06",
+       30,
+       1774,
+       6968,
+       0.7454,
+       7868,
+       10990
+      ],
+      [
+       "2011-07",
+       31,
+       1054,
+       3438,
+       0.6934,
+       4046,
+       10959
+      ],
+      [
+       "2011-08",
+       31,
+       2778,
+       9485,
+       0.7072,
+       10806,
+       11863
+      ],
+      [
+       "2011-09",
+       30,
+       2702,
+       10849,
+       0.751,
+       12020,
+       12592
+      ],
+      [
+       "2011-10",
+       31,
+       1111,
+       4639,
+       0.7604,
+       5289,
+       10784
+      ],
+      [
+       "2011-11",
+       30,
+       1894,
+       6873,
+       0.7244,
+       7778,
+       10931
+      ],
+      [
+       "2011-12",
+       31,
+       1686,
+       6173,
+       0.7269,
+       6989,
+       10967
+      ],
+      [
+       "2012-01",
+       31,
+       1469,
+       5384,
+       0.7272,
+       6045,
+       11518
+      ],
+      [
+       "2012-02",
+       29,
+       2212,
+       8738,
+       0.7468,
+       10045,
+       11227
+      ],
+      [
+       "2012-03",
+       31,
+       1981,
+       8511,
+       0.7672,
+       9486,
+       9033
+      ],
+      [
+       "2012-04",
+       30,
+       2020,
+       9051,
+       0.7768,
+       10009,
+       9254
+      ],
+      [
+       "2012-05",
+       31,
+       1854,
+       9050,
+       0.7952,
+       9900,
+       10140
+      ],
+      [
+       "2012-06",
+       30,
+       1752,
+       8894,
+       0.803,
+       9731,
+       9274
+      ],
+      [
+       "2012-07",
+       31,
+       1747,
+       8977,
+       0.8054,
+       9857,
+       9195
+      ],
+      [
+       "2012-08",
+       31,
+       699.62,
+       3556,
+       0.8033,
+       4005,
+       9291
+      ],
+      [
+       "2012-09",
+       30,
+       88.97,
+       336.68,
+       0.7357,
+       469.75,
+       8296
+      ],
+      [
+       "2012-10",
+       31,
+       1728,
+       7579,
+       0.772,
+       7385,
+       9875
+      ],
+      [
+       "2012-11",
+       30,
+       1798,
+       9203,
+       0.8046,
+       11037,
+       9354
+      ],
+      [
+       "2012-12",
+       31,
+       1498,
+       8762,
+       0.829,
+       9661,
+       9526
+      ],
+      [
+       "2013-01",
+       31,
+       1535,
+       9263,
+       0.8343,
+       10180,
+       10037
+      ],
+      [
+       "2013-02",
+       28,
+       1489,
+       9290,
+       0.8398,
+       10239,
+       9488
+      ],
+      [
+       "2013-03",
+       31,
+       810.4,
+       4931,
+       0.8357,
+       5892,
+       9817
+      ],
+      [
+       "2013-04",
+       30,
+       1174,
+       7254,
+       0.8381,
+       7923,
+       10088
+      ],
+      [
+       "2013-05",
+       31,
+       1419,
+       9700,
+       0.8538,
+       10564,
+       11576
+      ],
+      [
+       "2013-06",
+       30,
+       1140,
+       8006,
+       0.8576,
+       9026,
+       10017
+      ],
+      [
+       "2013-07",
+       31,
+       1238,
+       7908,
+       0.8434,
+       8542,
+       10764
+      ],
+      [
+       "2013-08",
+       31,
+       2010,
+       9912,
+       0.7972,
+       11028,
+       11090
+      ],
+      [
+       "2013-09",
+       30,
+       1696,
+       8327,
+       0.7964,
+       9055,
+       10963
+      ],
+      [
+       "2013-10",
+       31,
+       1963,
+       9583,
+       0.7951,
+       10076,
+       12493
+      ],
+      [
+       "2013-11",
+       30,
+       2060,
+       9744,
+       0.7886,
+       10799,
+       11071
+      ],
+      [
+       "2013-12",
+       31,
+       1806,
+       9165,
+       0.803,
+       10267,
+       11391
+      ],
+      [
+       "2014-01",
+       31,
+       1997,
+       8387,
+       0.7619,
+       9257,
+       11120
+      ],
+      [
+       "2014-02",
+       28,
+       2034,
+       9519,
+       0.7863,
+       9675,
+       11677
+      ],
+      [
+       "2014-03",
+       31,
+       2005,
+       9507,
+       0.7891,
+       10402,
+       11788
+      ],
+      [
+       "2014-04",
+       30,
+       2540,
+       10878,
+       0.7665,
+       11856,
+       12756
+      ],
+      [
+       "2014-05",
+       31,
+       2704,
+       8943,
+       0.6976,
+       10053,
+       12585
+      ],
+      [
+       "2014-06",
+       30,
+       2651,
+       11438,
+       0.7682,
+       12426,
+       12106
+      ],
+      [
+       "2014-07",
+       31,
+       2419,
+       10971,
+       0.7795,
+       12136,
+       12596
+      ],
+      [
+       "2014-08",
+       31,
+       1593,
+       8691,
+       0.8167,
+       9878,
+       11742
+      ],
+      [
+       "2014-09",
+       30,
+       2080,
+       10879,
+       0.8088,
+       12018,
+       11907
+      ],
+      [
+       "2014-10",
+       31,
+       2081,
+       11151,
+       0.8134,
+       12466,
+       11677
+      ],
+      [
+       "2014-11",
+       30,
+       1764,
+       9593,
+       0.8161,
+       10442,
+       11853
+      ],
+      [
+       "2014-12",
+       31,
+       591.4,
+       3931,
+       0.8495,
+       5238,
+       4315
+      ],
+      [
+       "2015-01",
+       31,
+       2621,
+       6735,
+       0.6108,
+       6388,
+       7752
+      ],
+      [
+       "2015-02",
+       28,
+       2367,
+       7082,
+       0.6658,
+       8905,
+       8724
+      ],
+      [
+       "2015-03",
+       31,
+       2637,
+       7734,
+       0.6591,
+       8544,
+       9858
+      ],
+      [
+       "2015-04",
+       30,
+       3007,
+       8210,
+       0.6337,
+       9689,
+       9352
+      ],
+      [
+       "2015-05",
+       31,
+       2809,
+       7938,
+       0.6462,
+       8513,
+       9432
+      ],
+      [
+       "2015-06",
+       30,
+       2795,
+       8495,
+       0.671,
+       10244,
+       9682
+      ],
+      [
+       "2015-07",
+       31,
+       2387,
+       8114,
+       0.7058,
+       8838,
+       9207
+      ],
+      [
+       "2015-08",
+       31,
+       1816,
+       6664,
+       0.7275,
+       7351,
+       9409
+      ],
+      [
+       "2015-09",
+       30,
+       2103,
+       7961,
+       0.7358,
+       8734,
+       9364
+      ],
+      [
+       "2015-10",
+       31,
+       1861,
+       8029,
+       0.7682,
+       8717,
+       9622
+      ],
+      [
+       "2015-11",
+       30,
+       2016,
+       8856,
+       0.7724,
+       9837,
+       10114
+      ],
+      [
+       "2015-12",
+       31,
+       1930,
+       8580,
+       0.7751,
+       9623,
+       9587
+      ],
+      [
+       "2016-01",
+       31,
+       1664,
+       8818,
+       0.8113,
+       9694,
+       10168
+      ],
+      [
+       "2016-02",
+       29,
+       1633,
+       8877,
+       0.816,
+       10768,
+       9490
+      ],
+      [
+       "2016-03",
+       31,
+       1381,
+       8920,
+       0.8452,
+       9065,
+       9567
+      ],
+      [
+       "2016-04",
+       30,
+       1077,
+       7727,
+       0.8606,
+       8010,
+       9126
+      ],
+      [
+       "2016-05",
+       31,
+       1259,
+       8000,
+       0.8426,
+       8686,
+       10416
+      ],
+      [
+       "2016-06",
+       30,
+       1189,
+       7937,
+       0.8502,
+       8576,
+       8223
+      ],
+      [
+       "2016-07",
+       31,
+       1002,
+       5794,
+       0.8271,
+       6386,
+       8118
+      ],
+      [
+       "2016-08",
+       31,
+       804.99,
+       4065,
+       0.802,
+       4270,
+       5776
+      ],
+      [
+       "2016-09",
+       30,
+       286.97,
+       1846,
+       0.8446,
+       2040,
+       3581
+      ]
+     ]
+    },
+    "plan_end_quote": "Kumulativ oljeproduksjon inntil minimum økonomisk rate på 2.100 Sm3 /d (gitt Volve oljepris på 18,7 USD/fat) nås er 11,4 MSm3",
+    "note": "These are field and platform limits (PUD p.35 lists the same platform capacities). A single well's water cut above 0.80 does not breach them; the field's water cut does. Rates are per calendar day of each month."
+   },
+   "code": "wellpilot.agent.tools.field_vs_design@aef480bea994",
+   "created_at": "2026-10-27T11:13:47+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E2",
+   "tool": "search_reports",
+   "arguments": {
+    "query": "maximum water cut design limit",
+    "topic": "facility_limits"
+   },
+   "result": {
+    "documents": {
+     "volve_pud": {
+      "title": "Plan for utbygging og drift av Volve (PUD, plan for development and operation)",
+      "issued": "2005-02-01"
+     }
+    },
+    "facts": {
+     "columns": [
+      "doc_id",
+      "page",
+      "topic",
+      "source",
+      "statement_en",
+      "quote",
+      "quote_check",
+      "wells"
+     ],
+     "rows": [
+      [
+       "volve_pud",
+       23,
+       "facility_limits",
+       "table",
+       "The field maximum water cut is 0,80.",
+       "Maksimum vannkutt 0,80",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       35,
+       "facility_limits",
+       "table",
+       "The platform maximum water content design capacity is 80 %.",
+       "Maks vanninnhold 80 %",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       35,
+       "facility_limits",
+       "text",
+       "The rig is designed for a maximum water depth of 150 meter.",
+       "Riggen er designet for et maksimum havdyp på 150 meter",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       8,
+       "facility_limits",
+       "text",
+       "The process plant on the jack-up platform is designed for the following capacities: oil production 9,000 Sm3/d, rich gas 1.5 MSm3/d, water treatment 10,400 m3/d, gas lift 0.45 MSm3/d, total liquid treatment 13,000 m3/d and water injection 16,000 m3/d.",
+       "Prosessanlegget på den oppjekkbare plattformen er designet for følgende kapasiteter.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       8,
+       "facility_limits",
+       "table",
+       "The table row shows water treatment 10,400 m3/d and gas lift 0.45 MSm3/d as design capacities.",
+       "Vannbehandling | 10.400 m3/d | Gass løft | 0,45 MSm3/d",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       8,
+       "facility_limits",
+       "table",
+       "The table row shows total liquid treatment 13,000 m3/d and water injection 16,000 m3/d as design capacities.",
+       "Total væske behandling | 13.000 m3/d | Vanninjeksjon | 16.000 m3/d",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       35,
+       "facility_limits",
+       "table",
+       "The platform water injection rate design capacity is 5.000 – 16.000 Sm3/d.",
+       "Vann injeksjons-rate: 5.000 – 16.000 Sm³/d",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       35,
+       "facility_limits",
+       "table",
+       "The platform water injection pressure design capacity is 330 bara.",
+       "Vann injeksjonstrykk: 330 bara",
+       "exact",
+       ""
+      ]
+     ]
+    }
+   },
+   "code": "wellpilot.agent.tools.search_reports@5907b6347b0e",
+   "created_at": "2026-10-27T11:13:47+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E3",
+   "tool": "read_report_page",
+   "arguments": {
+    "doc_id": "volve_pud",
+    "page": 23
+   },
+   "result": {
+    "document": {
+     "title": "Plan for utbygging og drift av Volve (PUD, plan for development and operation)",
+     "issued": "2005-02-01"
+    },
+    "page": 23,
+    "pages": 53,
+    "text": "Plan for utbygging og drift av Volve Februar 2005 23 regularitet på 94 % er lagt til grunn for beregning av produksjonsprofilene. Gassløft er inkludert for å sikre oppstart av brønner etter vedlikehold og sikrer produksjonen hvis kommunikasjonen i reservoaret er dårligere enn antatt. Tabell 4.3 - Felt begrensninger Antatt produksjonsstart mars.2007 Væskekapasitet 13000 Sm3 /d Oljekapasitet 9000 Sm3 /d Gass kapasitet 1,5 M Sm3 /d Vanninjeksjons kapasitet 16000 Sm3 /d Maksimum vannkutt 0,80 Maks gassløft rate 0,45 MSm3 /d Antatt produksjonsstart mars 2007 er basert på kontrakten med Maersk. På grunn av værrisiko ved utslep kan produksjonsstart bli utsatt.. Tabell 4.4 - Brønn begrensninger Oljerate 2500-4500 Sm3 /d Minimum Oljerate 100 Sm3 /d Minimum brønnhodetrykk 40 bar Maks gassløft rate 0,15 MSm3/d 4.5.1 Prognose for oljeproduksjon Feltet vil bli startet opp når første brønn er klargjort og etter en oppstartsperiode på ca. 1 år vil feltetprodusere på platårate. Platåraten på 9.000 Sm3 /d vil vare om lag 19 måneder. Produksjonen avtar grunnet økende vannrate. Kumulativ oljeproduksjon inntil minimum økonomisk rate på 2.100 Sm3 /d (gitt Volve oljepris på 18,7 USD/fat) nås er 11,4 MSm3 . Oljerate og kumulativ produksjon er vist i figur 4.2. Denne er basert på forventet produksjon (snitt) estimert fra usikkerhetsstudiet, se kapitel 4.6. Figur 4.2 - Volve oljerate og kumulativ produksjon 4.5.2 Prognose for vannproduksjon Vannproduksjonen kommer først og fremst fra injeksjonsvannet som bryter gjennom i brønnene etter omlag 2 år. På det tidspunkt er kumulativ oljeproduksjon omlag 6 MSm3 . Behovet for vann fra Utsira-formasjonen for injeksjon er ca 12.000 Sm3 /d. Når vannproduksjonen øker, reduseres behovet for Utsiravann. Produsert vann og injisert vann er vist i figur 4.3.",
+    "image": "reports/volve_pud/p023.png",
+    "summary_en": "Page 23 of the Volve PUD presents field and well constraints (Tabell 4.3 and 4.4), assumed production start March 2007, and forecasts for oil production and water production including plateau rate, cumulative volume, economic cutoff, and figure 4.2 for oil rate and cumulative production.",
+    "facts": {
+     "columns": [
+      "topic",
+      "source",
+      "statement_en",
+      "quote",
+      "quote_check",
+      "wells"
+     ],
+     "rows": [
+      [
+       "facility_limits",
+       "table",
+       "The assumed production start for the Volve field is mars.2007.",
+       "Antatt produksjonsstart mars.2007",
+       "exact",
+       ""
+      ],
+      [
+       "facility_limits",
+       "table",
+       "The field liquid capacity is 13000 Sm3/d.",
+       "Væskekapasitet 13000 Sm3 /d",
+       "exact",
+       ""
+      ],
+      [
+       "facility_limits",
+       "table",
+       "The field oil capacity is 9000 Sm3/d.",
+       "Oljekapasitet 9000 Sm3 /d",
+       "exact",
+       ""
+      ],
+      [
+       "facility_limits",
+       "table",
+       "The field gas capacity is 1,5 M Sm3/d.",
+       "Gass kapasitet 1,5 M Sm3 /d",
+       "exact",
+       ""
+      ],
+      [
+       "facility_limits",
+       "table",
+       "The field water injection capacity is 16000 Sm3/d.",
+       "Vanninjeksjons kapasitet 16000 Sm3 /d",
+       "exact",
+       ""
+      ],
+      [
+       "facility_limits",
+       "table",
+       "The field maximum water cut is 0,80.",
+       "Maksimum vannkutt 0,80",
+       "exact",
+       ""
+      ],
+      [
+       "facility_limits",
+       "table",
+       "The field maximum gas lift rate is 0,45 MSm3/d.",
+       "Maks gassløft rate 0,45 MSm3 /d",
+       "exact",
+       ""
+      ],
+      [
+       "facility_limits",
+       "table",
+       "The well oil rate limit is 2500-4500 Sm3/d.",
+       "Oljerate 2500-4500 Sm3 /d",
+       "exact",
+       ""
+      ],
+      [
+       "facility_limits",
+       "table",
+       "The well minimum oil rate is 100 Sm3/d.",
+       "Minimum Oljerate 100 Sm3 /d",
+       "exact",
+       ""
+      ],
+      [
+       "facility_limits",
+       "table",
+       "The well minimum wellhead pressure is 40 bar.",
+       "Minimum brønnhodetrykk 40 bar",
+       "exact",
+       ""
+      ],
+      [
+       "facility_limits",
+       "table",
+       "The well maximum gas lift rate is 0,15 MSm3/d.",
+       "Maks gassløft rate 0,15 MSm3/d",
+       "exact",
+       ""
+      ],
+      [
+       "production_forecast",
+       "text",
+       "A regularity of 94% is assumed as basis for calculation of the production profiles.",
+       "regularitet på 94 % er lagt til grunn for beregning av produksjonsprofilene.",
+       "exact",
+       ""
+      ],
+      [
+       "facility_limits",
+       "text",
+       "Gas lift is included to ensure start-up of wells after maintenance and to secure production if reservoir communication is worse than assumed.",
+       null,
+       "tokens",
+       ""
+      ],
+      [
+       "schedule",
+       "text",
+       "The assumed production start in march 2007 is based on the contract with Maersk and may be postponed due to weather risk at offloading.",
+       "Antatt produksjonsstart mars 2007 er basert på kontrakten med Maersk. På grunn av værrisiko ved utslep kan produksjonsstart bli utsatt..",
+       "exact",
+       ""
+      ],
+      [
+       "production_forecast",
+       "text",
+       "The field will start up when the first well is completed and after a start-up period of about 1 year it will produce at plateau rate.",
+       "Feltet vil bli startet opp når første brønn er klargjort og etter en oppstartsperiode på ca. 1 år vil feltetprodusere på platårate.",
+       "exact",
+       ""
+      ],
+      [
+       "production_forecast",
+       "text",
+       "The plateau rate of 9.000 Sm3/d will last about 19 months.",
+       "Platåraten på 9.000 Sm3 /d vil vare om lag 19 måneder.",
+       "exact",
+       ""
+      ],
+      [
+       "production_forecast",
+       "text",
+       "Cumulative oil production until the minimum economic rate of 2.100 Sm3/d at a Volve oil price of 18,7 USD/fat is 11,4 MSm3.",
+       "Kumulativ oljeproduksjon inntil minimum økonomisk rate på 2.100 Sm3 /d (gitt Volve oljepris på 18,7 USD/fat) nås er 11,4 MSm3",
+       "exact",
+       ""
+      ],
+      [
+       "production_forecast",
+       "figure",
+       "Figure 4.2 shows Volve oil rate and cumulative production versus year from 2007 to 2017, with oil rate on left axis in Sm3/d and cumulative oil in mill Sm3 on right axis.",
+       "Figur 4.2 - Volve oljerate og kumulativ produksjon",
+       "exact",
+       ""
+      ],
+      [
+       "water",
+       "text",
+       "Water production comes primarily from injection water that breaks through in the wells after about 2 years.",
+       "Vannproduksjonen kommer først og fremst fra injeksjonsvannet som bryter gjennom i brønnene etter omlag 2 år.",
+       "exact",
+       ""
+      ],
+      [
+       "water",
+       "text",
+       "At the time of water breakthrough the cumulative oil production is about 6 MSm3.",
+       "På det tidspunkt er kumulativ oljeproduksjon omlag 6 MSm3",
+       "exact",
+       ""
+      ],
+      [
+       "injection",
+       "text",
+       "The need for water from the Utsira formation for injection is about 12.000 Sm3/d, decreasing as water production increases.",
+       "Behovet for vann fra Utsira-formasjonen for injeksjon er ca 12.000 Sm3 /d. Når vannproduksjonen øker, reduseres behovet for Utsiravann.",
+       "exact",
+       ""
+      ]
+     ]
+    }
+   },
+   "code": "wellpilot.agent.tools.read_report_page@d467451f92da",
+   "created_at": "2026-10-27T11:13:49+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E4",
+   "tool": "calculate",
+   "arguments": {
+    "expression": "0.803*100"
+   },
+   "result": {
+    "expression": "0.803*100",
+    "value": 80.3
+   },
+   "code": "wellpilot.agent.tools.calculate@53e50bfd509f",
+   "created_at": "2026-10-27T11:13:52+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E5",
+   "tool": "calculate",
+   "arguments": {
+    "expression": "0.803*100"
+   },
+   "result": {
+    "expression": "0.803*100",
+    "value": 80.3
+   },
+   "code": "wellpilot.agent.tools.calculate@53e50bfd509f",
+   "created_at": "2026-10-27T11:13:58+00:00",
+   "warnings": []
+  }
+ ]
+}
