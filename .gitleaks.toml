@@ -1,0 +1,19 @@
+# gitleaks: the default rules plus the shapes of this project's two LLM keys, which the
+# defaults miss in prose, curl commands and Authorization headers. Used by the pre-commit
+# hook and CI. Run over the whole history before the repo goes public:
+#   gitleaks git -c .gitleaks.toml .
+title = "WellPilot"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "meta-model-api-key"
+description = "Meta Model API key (LLM_ followed by underscore-separated segments)"
+regex = '''\bLLM_[A-Za-z0-9_]{30,80}\b'''
+keywords = ["llm_"]
+
+[[rules]]
+id = "baseten-api-key"
+description = "Baseten API key (three characters, underscore, 8 characters, dot, 32 characters)"
+regex = '''\b[a-z0-9]{3}_[A-Za-z0-9]{6,12}\.[A-Za-z0-9]{24,48}\b'''

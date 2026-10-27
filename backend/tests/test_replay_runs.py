@@ -1,0 +1,77 @@
+"""Replay the frozen demo runs through the agent loop on today's code (no tokens spent).
+
+See tests/fixtures/runs/README.md: a run here is one the public site replays, so its
+evidence results, check rounds and verdict must not change silently.
+"""
+
+import json
+from pathlib import Path
+from types import SimpleNamespace
+
+import pytest
+
+from wellpilot.agent.loop import run_agent
+from wellpilot.agent.replay import _completion, differences, replay
+from wellpilot.api.runs import RunRecord
+from wellpilot.data.store import ProductionStore
+from wellpilot.llm import LLM
+
+FIXTURES = Path(__file__).parent / "fixtures"
+RUNS = {p.stem: json.loads(p.read_text()) for p in sorted((FIXTURES / "runs").glob("*.json"))}
+
+
+@pytest.mark.skipif(not RUNS, reason="no frozen demo runs yet (see tests/fixtures/runs)")
+@pytest.mark.parametrize("run_id", sorted(RUNS))
+async def test_a_frozen_run_replays_as_recorded(run_id: str) -> None:
+    run = RUNS[run_id]
+
+    replayed = await replay(run, FIXTURES / "processed")
+
+    assert differences(run, replayed) == []
+
+
+CLAIM = "F-12's oil rate fell from 4 050 to 1 146 Sm3/d around 2010-07-18."
+SUBMISSION = {
+    "summary": "F-12 stepped down on 2010-07-18.",
+    "summary_numbers": [],
+    "findings": [
+        {
+            "claim": CLAIM,
+            "evidence_ids": ["E1"],
+            "confidence": "fact",
+            "numbers": [
+                {"text": "4 050", "value": 4050.37, "evidence_id": "E1"},
+                {"text": "1 146", "value": 1145.72, "evidence_id": "E1"},
+            ],
+        }
+    ],
+}
+EVENTS_CALL = {"name": "detect_events", "arguments": {"well": "F-12"}}
+SUBMIT_CALL = {"name": "submit_findings", "arguments": SUBMISSION}
+STEPS = [
+    {"index": 1, "content": "Plan.", "tool_calls": [EVENTS_CALL]},
+    {"index": 2, "content": None, "tool_calls": [SUBMIT_CALL]},
+]
+
+
+async def test_the_replay_harness_reproduces_a_run_recorded_now() -> None:
+    """Record a run with a scripted model on the fixture, then replay it: no differences."""
+    replies = iter([_completion(step) for step in STEPS])
+
+    async def create(**_):
+        return next(replies)
+
+    client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=create)))
+    record = RunRecord("0123456789ab", "Why did F-12 fall?", None)
+    run = await run_agent(
+        record.question,
+        LLM(client, "scripted", "scripted"),
+        ProductionStore(FIXTURES / "processed"),
+        on_event=record.emit,
+        evidence_log=record.log,
+    )
+    record.complete(run)
+    saved = json.loads(json.dumps(record.to_file()))
+
+    assert run.verified
+    assert differences(saved, await replay(saved, FIXTURES / "processed")) == []

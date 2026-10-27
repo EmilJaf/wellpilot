@@ -206,3 +206,24 @@ def test_legacy_text_reading_accepts_every_format(value, style) -> None:
     text, written = LEGACY[style](value)
 
     assert check(text, written, value, numbers=None) == []
+
+
+@settings(max_examples=200, deadline=None)
+@given(
+    declared=st.integers(min_value=11, max_value=999),
+    extra=st.sampled_from(["{}5", "{}.5", "0.{}", "{}{}", "{} 500", "{},000", "{}.5x"]),
+)
+def test_a_declared_number_never_covers_one_that_contains_it(declared, extra) -> None:
+    """One declared and one undeclared number sharing digits: the undeclared one is named."""
+    other = extra.format(declared, declared)
+    assume(not (other.isdigit() and 1900 <= int(other) <= 2100))  # a year needs no declaring
+    finding = Finding(
+        claim=f"In 2012 the well made {other} Sm3, then {declared} Sm3.",
+        evidence_ids=["E1"],
+        confidence="fact",
+        numbers=[DeclaredNumber(text=str(declared), value=declared, evidence_id="E1")],
+    )
+
+    problems = check_submission(Submission(summary="Done.", findings=[finding]), log_of(declared))
+
+    assert any("undeclared number" in p for p in problems), other

@@ -181,3 +181,19 @@ def test_common_causal_phrasings_are_causes() -> None:
         assert summary_problems(f"The rate fell, {phrase}."), phrase
     # Petroleum vocabulary and evidence references are not causes.
     assert summary_problems("F-12 produces under water drive; the fit results in E9 show it.") == []
+
+
+def test_a_declared_number_does_not_cover_a_longer_one_that_contains_it() -> None:
+    """Each case would pass if the declared text were matched as a plain substring."""
+    log = EvidenceLog()
+    eid = add(log, "tool", {}, {"values": [2, 50, 1, 12]})
+    for claim, declared in [
+        ("Rate fell 2.5x in 2 years.", "2"),
+        ("Water cut 0.50 after 50 days.", "50"),
+        ("It made 12 500 Sm3 in 1 year.", "1"),
+        ("Rate 1.2e+03 after 1 day.", "1"),
+        ("It made 12,000 Sm3 in 12 days.", "12"),
+    ]:
+        value = float(declared)
+        problems = check(claim, [eid], [d(declared, value, eid)], log)
+        assert any("undeclared number" in p for p in problems), claim

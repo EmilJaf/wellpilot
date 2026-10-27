@@ -1,0 +1,31 @@
+{
+  "source_file": "Volve production data.xlsx",
+  "source_sha256": "514d4e38763e09be7fbad12313429909b9799b1a6ec999bf5f36e0df1b6c9cae",
+  "sheet": "Daily Production Data",
+  "rows": 15862,
+  "wells": [
+    "F-1 C",
+    "F-11",
+    "F-12",
+    "F-14",
+    "F-15 D",
+    "F-4",
+    "F-5"
+  ],
+  "date_range": [
+    "2007-09-01",
+    "2016-12-01"
+  ],
+  "issues": {
+    "dp_tubing_without_bhp": 2312,
+    "dst_25_hour_day": 20,
+    "missing_day": 228,
+    "negative_volume": 4,
+    "uptime_without_volume": 13,
+    "volume_without_uptime": 3,
+    "zero_gauge_reading": 4926,
+    "zero_whp_while_flowing": 4
+  },
+  "ingested_at": "2026-10-27T00:38:49+00:00",
+  "licence": "Equinor Open Data Licence (see README)"
+}

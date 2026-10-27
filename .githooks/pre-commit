@@ -4,4 +4,5 @@ if ! command -v gitleaks >/dev/null 2>&1; then
   echo "pre-commit: gitleaks is not installed (brew install gitleaks); commit blocked." >&2
   exit 1
 fi
-exec gitleaks git --pre-commit --staged --redact --no-banner
+# .gitleaks.toml adds the shapes of the project's own API keys to the default rules.
+exec gitleaks git --pre-commit --staged --redact --no-banner --config "$(git rev-parse --show-toplevel)/.gitleaks.toml"

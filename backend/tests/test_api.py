@@ -97,11 +97,13 @@ SCRIPT = [
                 SUBMIT,
                 {
                     "summary": "F-12 is the only well.",
+                    "summary_numbers": [],
                     "findings": [
                         {
                             "claim": "F-12 produced on 60 days.",
                             "evidence_ids": ["E1"],
                             "confidence": "fact",
+                            "numbers": [{"text": "60", "value": 60, "evidence_id": "E1"}],
                         }
                     ],
                 },
@@ -191,6 +193,12 @@ async def test_finished_runs_are_saved_and_replayed_after_restart(settings) -> N
 
     assert replay == events
     assert evidence.json()["tool"] == "list_wells"
+    # The declared numbers and their display spans survive the save and the reload.
+    final = replay[-1]
+    assert final["verified"]
+    assert final["findings"][0]["numbers"] == [{"text": "60", "value": 60, "evidence_id": "E1"}]
+    assert final["findings"][0]["spans"][0]["evidence_id"] == "E1"
+    assert final["summary_numbers"] == [] and final["summary_spans"] == []
 
 
 async def test_missing_api_key_is_503(settings) -> None:

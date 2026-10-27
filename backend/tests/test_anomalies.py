@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -11,11 +13,10 @@ from wellpilot.analysis.anomalies import (
     threshold_crossing,
     weekly_signal,
 )
-from wellpilot.config import get_settings
 from wellpilot.data.store import ProductionStore
-from wellpilot.ingest.production import DAILY_FILE
 
-PROCESSED = get_settings().processed_dir
+# Real Volve data committed as a fixture (see its NOTICE), so CI checks it too.
+PROCESSED = Path(__file__).parent / "fixtures" / "processed"
 
 
 def flowing_well(days: int = 730, well: str = "F-12", seed: int = 0) -> pd.DataFrame:
@@ -200,7 +201,6 @@ def test_mark_field_wide() -> None:
     assert marked[3] is events[3]
 
 
-@pytest.mark.skipif(not (PROCESSED / DAILY_FILE).exists(), reason="run the ingest first")
 def test_real_volve_events() -> None:
     store = ProductionStore(PROCESSED)
     f12, f14 = store.well_daily("F-12"), store.well_daily("F-14")

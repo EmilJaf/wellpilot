@@ -1,5 +1,6 @@
 import json
 import math
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -210,6 +211,10 @@ def test_real_volve_sheet() -> None:
     for _, rows in daily.groupby("well"):
         assert len(rows) == (rows["date"].max() - rows["date"].min()).days + 1
     assert (result.issues["issue"] == "missing_day").sum() == 228
+    # The committed fixture CI tests against is this ingest's output: refresh it when this
+    # fails (see tests/fixtures/processed/NOTICE.md).
+    fixture = Path(__file__).parent / "fixtures" / "processed" / DAILY_FILE
+    pd.testing.assert_frame_equal(daily, pd.read_parquet(fixture), check_dtype=False)
     f12 = daily[daily["well"] == "F-12"].set_index("date")
     # Total F-12 oil is unchanged by cleaning: no F-12 oil value is negative.
     assert f12["oil_sm3"].sum() == pytest.approx(4_579_610, abs=1)

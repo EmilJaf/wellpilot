@@ -159,7 +159,7 @@ def list_wells(store: ProductionStore, _: NoArgs) -> dict:
     rows = store.query(
         """
         SELECT well,
-               string_agg(DISTINCT well_type, '/') AS well_types,
+               string_agg(DISTINCT well_type, '/' ORDER BY well_type) AS well_types,
                min(date) FILTER (WHERE oil_sm3 > 0) AS first_oil,
                max(date) AS last_date,
                sum(oil_sm3) AS cum_oil_sm3,
@@ -334,10 +334,12 @@ def forecast_tool(store: ProductionStore, args: ForecastArgs) -> dict:
 def run_sql(store: ProductionStore, args: SqlArgs) -> dict:
     result = store.query_untrusted(args.sql)
     rows = result.rows
+    truncated = result.truncated or len(rows) > SQL_ROW_LIMIT
     return {
         **table(rows.head(SQL_ROW_LIMIT)),
-        "row_count": len(rows),
-        "truncated": result.truncated or len(rows) > SQL_ROW_LIMIT,
+        # A capped count is not the count: say so instead of reporting the cap.
+        "row_count": f"more than {len(rows)}" if result.truncated else len(rows),
+        "truncated": truncated,
     }
 
 
