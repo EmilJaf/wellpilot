@@ -35,6 +35,7 @@ from wellpilot.agent.loop import run_agent
 from wellpilot.agent.tools import fit_warnings, to_jsonable
 from wellpilot.analysis.decline import (
     calibrated_band,
+    error_quantiles,
     fit_decline,
     forecast,
     hindcast_errors,
@@ -48,7 +49,6 @@ STEP_MONTHS = 6
 FIRST_CUTOFF_MONTHS = 18
 PRODUCERS = ("F-12", "F-14", "F-11", "F-15 D", "F-1 C")
 RECENT_MONTHS = (3, 6, 12, 24)  # fixed fit windows compared with the agent's own choice
-BAND = (0.1, 0.9)  # calibrated P90-P10: the 80% interval
 MIN_PAST_ERRORS = 5  # errors needed before a calibrated band is given
 RESULTS_FILE = "backtest_results.parquet"
 SUMMARY_FILE = "backtest_summary.json"
@@ -191,13 +191,20 @@ async def agent_row(
         "agent",
         start=args.get("start"),
         end=args.get("end"),
-        model=args.get("model", "auto"),
+        model=_agent_model(chosen),
     )
     return {
         **row,
         "verified": bool(record["run"]["verified"]),
         "model": record.get("model") or "not recorded",
     }
+
+
+def _agent_model(forecast_evidence: dict) -> str:
+    """The Arps model the agent's forecast used: the one its result reports, so a refit
+    today keeps the agent's choice even where "auto" would now pick another."""
+    fit = (forecast_evidence.get("result") or {}).get("fit") or {}
+    return fit.get("model") or forecast_evidence["arguments"].get("model", "auto")
 
 
 def calibrate(results: pd.DataFrame) -> pd.DataFrame:
@@ -221,7 +228,7 @@ def calibrate(results: pd.DataFrame) -> pd.DataFrame:
             high.append(np.nan)
             continue
         # error = p50 / actual - 1, so the actual lies in p50 / (1 + error quantiles).
-        q_low, q_high = np.quantile(known, BAND)
+        q_low, q_high = error_quantiles(list(known))
         low.append(row["p50"] / (1 + q_high))
         high.append(row["p50"] / (1 + q_low))
     results["calibrated_low"] = low
@@ -326,9 +333,10 @@ def case_detail(processed_dir: Path, store: ProductionStore, well: str, cutoff: 
         windows["agent"] = {
             "start": args.get("start"),
             "end": args.get("end"),
-            "model": args.get("model", "auto"),
+            "model": _agent_model(chosen),
         }
         agent = {
+            "window_asked": [args.get("start"), args.get("end")],
             "question": record["question"],
             "model": record.get("model"),
             "verified": bool(run["verified"]),

@@ -622,16 +622,20 @@ async def test_an_empty_reply_is_sent_back_as_text_and_a_cut_off_is_explained(st
     assert "cut off by the output limit" in second[-1]["content"]
 
 
-def test_a_fit_with_b_at_its_bound_is_warned_about(store) -> None:
-    from dataclasses import replace
+def test_hyperbolic_b_never_exceeds_one() -> None:
+    """A waterflooded conventional well declines with b at most 1 (harmonic). The time
+    machine's first run picked b = 1.82 by an AIC margin of 0.4 over harmonic; harmonic
+    would have forecast +6% instead of +15% (the reservoir engineer judge's point)."""
+    from pathlib import Path
 
-    from wellpilot.agent.tools import fit_warnings
-    from wellpilot.analysis.decline import B_BOUNDS, fit_decline
+    from wellpilot.analysis.decline import fit_decline, forecast
+    from wellpilot.data.store import ProductionStore
 
-    fit = fit_decline(store.well_daily("F-12")).best
+    fixtures = ProductionStore(Path(__file__).parent / "fixtures" / "processed")
+    days = fixtures.well_daily("F-12", "2010-05-02", "2010-12-31")
+    result = fit_decline(days[days["flow_kind"] == "production"])
+    hyperbolic = next(c for c in result.candidates if c.model == "hyperbolic")
 
-    assert not any(
-        "upper bound" in w for w in fit_warnings(replace(fit, model="hyperbolic", b=0.5))
-    )
-    stuck = replace(fit, model="hyperbolic", b=B_BOUNDS[1])
-    assert any("upper bound" in w for w in fit_warnings(stuck))
+    assert hyperbolic.b <= 1.0 + 1e-9
+    p50 = forecast(result.best, 365, start=pd.Timestamp("2011-01-01"))
+    assert p50.cumulative["p50"] < 391_544  # what b = 1.82 forecast

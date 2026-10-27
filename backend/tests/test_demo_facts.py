@@ -80,6 +80,11 @@ def test_the_field_against_the_2005_plan(store) -> None:
         "F-5",
     ]
     assert "2010 2,14 1,49 2,13 2,82" in result["plan_rows_quoted"]
+    # The plan assumed first oil a year earlier: by year of production the field started
+    # ahead of plan (1.76 against 1.53 MSm3) and fell behind from its second year.
+    aligned = {r[0]: r for r in result["by_production_year"]["rows"]}
+    assert aligned[1][1:] == [2007, 1.53, 2008, pytest.approx(1.76, abs=0.01)]
+    assert aligned[2][2] == 3.1 and aligned[2][4] == pytest.approx(2.68, abs=0.01)
 
 
 def test_the_field_against_the_plans_design_limits(store) -> None:
@@ -99,6 +104,12 @@ def test_the_field_against_the_plans_design_limits(store) -> None:
     assert against["liquid_sm3_per_day"]["months_at_or_above"] == 0
     assert against["liquid_sm3_per_day"]["max_month"] == "2014-06"
     assert against["oil_sm3_per_day"]["max"] == pytest.approx(8924, abs=1)
+    # The 0.80 share at 13000 Sm3/d liquid is 10400 Sm3/d of water: the field ran at the
+    # design water cut from 2012 but never over its water handling (worst day 10240).
+    water = limits["water_sm3_per_day"]
+    assert water["value"] == 10400 and water["quote"] is None
+    assert against["water_sm3_per_day"]["months_at_or_above"] == 0
+    assert against["water_sm3_per_day"]["max_day"] == pytest.approx(10240, abs=1)
 
 
 def test_pud_quotes_are_located_on_their_page(store) -> None:
@@ -173,8 +184,12 @@ def test_waterflood_diagnostics_for_f12_at_the_end_of_2012() -> None:
     assert limits[0.95]["remaining_oil_sm3"] == pytest.approx(560_299, rel=0.01)
     assert years[2012][cols.index("choke_pct")] == 100
     assert 4_900 < years[2011][cols.index("liquid_rate_sm3_per_day")] < 5_300
+    # At reservoir conditions (Bo 1.385 from the plan) injection kept pace with voidage,
+    # within 10% every year; surface volumes alone would say it exceeded it by 10-50%.
     ratio = voidage["columns"].index("replacement_ratio")
-    assert all(r[ratio] > 1 for r in voidage["rows"])
+    surface = voidage["columns"].index("surface_ratio")
+    assert all(0.9 < r[ratio] < 1.15 for r in voidage["rows"])
+    assert all(r[surface] > 1.05 for r in voidage["rows"])
 
 
 def test_a_poor_wor_trend_is_left_out_and_its_tables_carry_no_warning() -> None:

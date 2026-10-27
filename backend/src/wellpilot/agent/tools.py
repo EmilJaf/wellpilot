@@ -29,12 +29,12 @@ from wellpilot.analysis.anomalies import (
     threshold_crossing,
 )
 from wellpilot.analysis.decline import (
-    B_BOUNDS,
     DeclineFit,
     calibrated_band,
     fit_decline,
     forecast,
-    hindcast_errors,
+    hindcasts,
+    p50_volume,
 )
 from wellpilot.analysis.screen import screen
 from wellpilot.analysis.waterflood import waterflood
@@ -259,11 +259,6 @@ def fit_warnings(fit: DeclineFit) -> list[str]:
             "or a regime change; refit after the last regime change, or treat any decline "
             "rate from this fit as an inference."
         )
-    if fit.model == "hyperbolic" and fit.b >= B_BOUNDS[1] - 1e-6:
-        warnings.append(
-            f"b is at its upper bound {B_BOUNDS[1]:g}: the window does not constrain the "
-            "decline's curvature, so the forecast and its band are not reliable."
-        )
     if fit.di_per_year <= 1e-6:
         warnings.append("no decline in this window (di at 0): it is a plateau, not a decline.")
     if abs(fit.residual_trend) > MAX_RESIDUAL_TREND:
@@ -315,20 +310,29 @@ def fit_decline_tool(store: ProductionStore, args: DeclineArgs) -> dict:
 
 def forecast_tool(store: ProductionStore, args: ForecastArgs) -> dict:
     _check_well(store, args.well)
-    fit = fit_decline(_production(store, args.well, args.start, args.end), model=args.model).best
+    days = _production(store, args.well, args.start, args.end)
+    fit = fit_decline(days, model=args.model).best
     # The forecast covers the future of the data the agent can see, whatever window the
     # fit used: from the day after the as-of date, or after the well's last day of data.
     last = pd.Timestamp(store.as_of) if store.as_of else store.well_daily(args.well)["date"].max()
-    fc = forecast(fit, args.horizon_days, start=last + pd.Timedelta(days=1))
+    first = last + pd.Timedelta(days=1)
+    fc = forecast(fit, args.horizon_days, start=first)
     # The bootstrap band shows the fit's scatter, not how wrong such forecasts turn out: an
     # 80% band from the errors of forecasts made the same way from earlier dates.
     window = (
         (pd.Timestamp(args.end or last) - pd.Timestamp(args.start)).days if args.start else None
     )
-    errors = hindcast_errors(
-        _production(store, args.well), last, window, args.horizon_days, args.model
-    )
+    past = hindcasts(_production(store, args.well), last, window, args.horizon_days, args.model)
+    errors = [e for _, e in past]
     calibrated = calibrated_band(fc.cumulative["p50"], errors)
+    # Forecasts made before this window began saw another regime (a plateau, before water
+    # broke through): their errors may say little about this one.
+    earlier = sum(1 for made, _ in past if args.start and made < pd.Timestamp(args.start))
+    # Which Arps model to use is a choice too: the P50 each would give on this window.
+    by_model = {
+        c.model: p50_volume(c, first, args.horizon_days)
+        for c in fit_decline(days, model="auto").candidates
+    }
     monthly = (
         pd.DataFrame({"p90": fc.p90, "p50": fc.p50, "p10": fc.p10}, index=fc.dates)
         .resample("MS")
@@ -348,10 +352,19 @@ def forecast_tool(store: ProductionStore, args: ForecastArgs) -> dict:
                 f"P90-P10 from the errors of {calibrated['past_forecasts']} forecasts made the "
                 "same way from earlier dates on data up to then; use it for confidence, the "
                 "bootstrap band above only reflects the fit's scatter."
+                + (
+                    f" {earlier} of them were made before this fit window began, in another "
+                    "regime, so the band may be too narrow."
+                    if earlier
+                    else ""
+                )
                 if calibrated
                 else f"only {len(errors)} earlier forecasts to calibrate on (5 needed): no "
                 "calibrated band; the bootstrap band understates the uncertainty."
             ),
+            "p50_by_model_sm3": by_model,
+            "p50_by_model_note": "The P50 each Arps model gives on this window: when they "
+            "differ widely, the choice of model drives the forecast as much as the data does.",
             "monthly_rate_sm3_per_producing_day": table(monthly.rename_axis("month").reset_index()),
             "note": "P90 = low case, P10 = high case. Volumes = rate x historical uptime.",
         }
@@ -590,6 +603,21 @@ def plan_vs_actual(store: ProductionStore, _: NoArgs) -> dict:
         }
         for y in years
     ]
+    # The plan assumed first oil in March 2007 (PUD p.23); the field started in February
+    # 2008. Calendar years compare the plan's year 2 with the field's year 1, so the field
+    # also gets compared year by year from its own start.
+    plan_first = min(y for y, v in plan.items() if v[2] > 0)
+    actual_first = min(by_year) if by_year else plan_first
+    aligned = [
+        {
+            "production_year": k + 1,
+            "plan_year": plan_first + k,
+            "plan_p50_msm3": plan[plan_first + k][2] if plan_first + k in plan else None,
+            "actual_year": actual_first + k,
+            "actual_oil_msm3": by_year.get(actual_first + k),
+        }
+        for k in range(max(max(plan) - plan_first, max(by_year, default=0) - actual_first) + 1)
+    ]
     plan_end = max(y for y, v in plan.items() if v[2] > 0)
     after = {y: v for y, v in by_year.items() if y > plan_end}
     late_wells = store.query(
@@ -603,6 +631,7 @@ def plan_vs_actual(store: ProductionStore, _: NoArgs) -> dict:
             "plan_source": f"{REPORTS_BY_ID[PLAN_DOC].title}, page {PLAN_PAGE}, Table 4.5",
             "plan_rows_quoted": list(dict.fromkeys(quotes)),
             "years": table(pd.DataFrame(rows)),
+            "by_production_year": table(pd.DataFrame(aligned)),
             "totals_msm3": {
                 "actual": sum(by_year.values()),
                 "plan_p90": sum(v[1] for v in plan.values()),
@@ -617,7 +646,9 @@ def plan_vs_actual(store: ProductionStore, _: NoArgs) -> dict:
             ],
             "actual_after_plan_p50_ends_msm3": sum(after.values()),
             "wells_first_oil_after_plan_p50_ends": table(late_wells),
-            "note": "The plan assumed first oil in March 2007; years are calendar years.",
+            "note": "years: calendar years. The plan assumed first oil in March 2007 and the "
+            "field started in February 2008, so by_production_year compares each year of "
+            "production with the plan's year of the same number (plan 2007 with field 2008).",
         }
     )
 
@@ -656,6 +687,15 @@ def field_vs_design(store: ProductionStore, _: NoArgs) -> dict:
                 break
     if not limits:
         raise ValueError("the plan's design limits (PUD p.23) are not in the report facts")
+    if "liquid_sm3_per_day" in limits and "water_cut" in limits:
+        # The maximum water cut is a share at full liquid rate: the water the platform was
+        # built to handle is the two together. A 0.80 share at a lower liquid rate is not
+        # over capacity.
+        limits["water_sm3_per_day"] = {
+            "limit": "field water handling (derived: liquid capacity x maximum water cut)",
+            "value": limits["liquid_sm3_per_day"]["value"] * limits["water_cut"]["value"],
+            "quote": None,
+        }
     months = store.query(
         """
         WITH daily AS (
@@ -667,8 +707,10 @@ def field_vs_design(store: ProductionStore, _: NoArgs) -> dict:
                sum(oil) / count(*) AS oil_sm3_per_day,
                sum(oil + water) / count(*) AS liquid_sm3_per_day,
                sum(water) / nullif(sum(oil + water), 0) AS water_cut,
+               sum(water) / count(*) AS water_sm3_per_day,
                sum(inj) / count(*) AS water_inj_sm3_per_day,
-               max(oil + water) AS max_day_liquid_sm3
+               max(oil + water) AS max_day_liquid_sm3,
+               max(water) AS max_day_water_sm3
         FROM daily GROUP BY 1 HAVING sum(oil) > 0 ORDER BY 1
         """
     ).rows
@@ -684,6 +726,10 @@ def field_vs_design(store: ProductionStore, _: NoArgs) -> dict:
             "max": months[column].max(),
             "max_month": months.loc[months[column].idxmax(), "month"],
         }
+    if "water_sm3_per_day" in crossings:
+        worst = months.loc[months["max_day_water_sm3"].idxmax()]
+        crossings["water_sm3_per_day"]["max_day"] = worst["max_day_water_sm3"]
+        crossings["water_sm3_per_day"]["max_day_month"] = worst["month"]
     economic = [q for q in facts if "minimum økonomisk rate" in q]
     return to_jsonable(
         {
@@ -694,8 +740,11 @@ def field_vs_design(store: ProductionStore, _: NoArgs) -> dict:
             "months": table(months),
             "plan_end_quote": economic[0] if economic else None,
             "note": "These are field and platform limits (PUD p.35 lists the same platform "
-            "capacities). A single well's water cut above 0.80 does not breach them; the field's "
-            "water cut does. Rates are per calendar day of each month.",
+            "capacities); compare them with field totals, never one well. The maximum water cut "
+            "is a share at full liquid rate: the water the platform can handle is liquid "
+            "capacity x maximum water cut (water_sm3_per_day). The field reaching that share at "
+            "a lower liquid rate means it ran at the design water cut, not over its water "
+            "capacity. Rates are per calendar day of each month.",
         }
     )
 
@@ -759,7 +808,9 @@ TOOLS = [
         "detect_events",
         "Detect events for one well: gauge failures, shut-ins (marked field-wide when other "
         "wells were shut in too), regime changes in oil rate and water cut, and water cut "
-        "crossing 5%, 50%, 80%. Each event has a summary and the numbers behind it.",
+        "crossing 5%, 50%, 80%. Each event has a summary and the numbers behind it. A "
+        "regime change's date is where the data seen so far splits best: with data cut at "
+        "an earlier date it can move by weeks, so name it as 'around' that date.",
         WellArgs,
         detect_events,
     ),

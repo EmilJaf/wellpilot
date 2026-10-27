@@ -11,9 +11,11 @@ because the reservoir runs out of pressure. Three classic views show that:
 - Liquid rate and choke by year. Liquid held while the choke opens and oil falls means
   water is taking the well's capacity (fractional flow); liquid falling too would point
   at pressure support.
-- Injection against production for the field (voidage replacement, approximated with
-  surface volumes: water injected over oil plus water produced; no formation volume
-  factors or gas, so a ratio, not a reservoir balance).
+- Injection against production for the field: voidage replacement at reservoir
+  conditions, water injected x Bw over oil produced x Bo plus water produced x Bw. Bo is
+  the plan's most likely 1.385 m3/Sm3 (PUD p.20, Table 3.7; 1.27-1.5), Bw is taken as 1.
+  The reservoir stays above the bubble point (PUD p.22), so no free gas adds voidage. A
+  ratio near 1 means injection kept up with what was taken out.
 
 Every number comes from the production data. A poor WOR trend is not returned at all, only
 the reason ("no_trend"): the tables beside it are plain data, and a warning on the result
@@ -26,6 +28,9 @@ import pandas as pd
 from wellpilot.data.store import ProductionStore
 
 WATER_CUT_LIMITS = (0.80, 0.90, 0.95)  # 0.80 is the platform's design limit (PUD p.23)
+BO = 1.385  # oil formation volume factor, m3/Sm3: PUD p.20, Table 3.7, most likely value
+BO_RANGE = (1.27, 1.5)  # the table's low and high cases
+BW = 1.0  # water formation volume factor: not in the plan; 1.0-1.03 is usual
 MIN_FIT_MONTHS = 12
 FIT_MONTHS = 36  # the most recent months after breakthrough the trend is fitted on
 MIN_WOR = 1.0  # water cut 0.5: the straight-line part of the WOR plot starts about here
@@ -106,14 +111,25 @@ def _wor_fit(monthly: pd.DataFrame, start=None, end=None) -> tuple[dict | None, 
 
 
 def _field_voidage(store: ProductionStore) -> pd.DataFrame:
-    return store.query(
+    t = store.query(
         """
         SELECT year(date) AS year,
                sum(coalesce(water_inj_sm3, 0)) AS injected_sm3,
-               sum(coalesce(oil_sm3, 0) + coalesce(water_sm3, 0)) AS produced_liquid_sm3
+               sum(coalesce(oil_sm3, 0)) AS oil_sm3,
+               sum(coalesce(water_sm3, 0)) AS water_sm3
         FROM production_daily GROUP BY 1 HAVING sum(coalesce(oil_sm3, 0)) > 0 ORDER BY 1
         """
-    ).rows.assign(replacement_ratio=lambda t: t["injected_sm3"] / t["produced_liquid_sm3"])
+    ).rows
+
+    def ratio(bo: float) -> pd.Series:
+        return t["injected_sm3"] * BW / (t["oil_sm3"] * bo + t["water_sm3"] * BW)
+
+    return t.assign(
+        replacement_ratio=ratio(BO),
+        replacement_ratio_low=ratio(BO_RANGE[1]),  # with the plan's high Bo
+        replacement_ratio_high=ratio(BO_RANGE[0]),
+        surface_ratio=t["injected_sm3"] / (t["oil_sm3"] + t["water_sm3"]),
+    )
 
 
 def waterflood(store: ProductionStore, well: str, start=None, end=None) -> dict:
@@ -144,7 +160,10 @@ def waterflood(store: ProductionStore, well: str, start=None, end=None) -> dict:
         "field_voidage": _field_voidage(store),
         "notes": (
             "WOR = water/oil by month; the trend is log10(WOR) against cumulative oil, fitted "
-            f"on up to {FIT_MONTHS} recent months with WOR >= {MIN_WOR:g}. Voidage is "
-            "approximated with surface volumes (no formation volume factors, no gas)."
+            f"on up to {FIT_MONTHS} recent months with WOR >= {MIN_WOR:g}. field_voidage: "
+            f"replacement_ratio is injection over voidage at reservoir conditions (Bo {BO} "
+            f"m3/Sm3 from PUD p.20, low/high with Bo {BO_RANGE[1]}/{BO_RANGE[0]}; Bw {BW:g}; "
+            "above the bubble point, so no free gas); surface_ratio is the same in surface "
+            "volumes, which overstates replacement."
         ),
     }

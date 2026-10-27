@@ -58,6 +58,9 @@ def weekly_signal(daily: pd.DataFrame, signal: str) -> pd.Series:
     return series.resample("W").mean().dropna()
 
 
+SHARES = {"water_cut"}  # signals that are fractions of a whole
+
+
 def regime_changes(
     daily: pd.DataFrame, signal: str, penalty: float = 15.0, min_weeks: int = 8
 ) -> list[Event]:
@@ -81,8 +84,15 @@ def regime_changes(
     for i, b in enumerate(breaks):
         before = float(values[bounds[i] : b].mean())
         after = float(values[b : bounds[i + 2]].mean())
-        change = (after - before) / abs(before) if before else float("nan")
         start = weekly.index[b]
+        # A share (water cut) changes by points: 0.034 -> 0.57 is +0.54, not "+1581%".
+        if signal in SHARES:
+            change = {"change": after - before}
+            shift = f"{after - before:+.2f}"
+        else:
+            relative = (after - before) / abs(before) if before else float("nan")
+            change = {"relative_change": relative}
+            shift = f"{relative:+.0%}"
         events.append(
             Event(
                 kind="regime_change",
@@ -93,13 +103,13 @@ def regime_changes(
                 details={
                     "before_mean": before,
                     "after_mean": after,
-                    "relative_change": change,
+                    **change,
                     "before_from": weekly.index[bounds[i]],
                     "after_to": weekly.index[bounds[i + 2] - 1],
                 },
                 summary=(
                     f"{signal} shifts around {start.date()}: weekly mean {_fmt(before)} -> "
-                    f"{_fmt(after)} ({change:+.0%})."
+                    f"{_fmt(after)} ({shift})."
                 ),
             )
         )

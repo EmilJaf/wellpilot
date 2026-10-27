@@ -5,6 +5,7 @@ and partial days do not look like decline. Fits are done on log rate, which trea
 as multiplicative and keeps the early high-rate days from dominating.
 """
 
+import math
 from dataclasses import dataclass, field
 from typing import Literal
 
@@ -16,7 +17,11 @@ Model = Literal["exponential", "hyperbolic", "harmonic"]
 MODELS: tuple[Model, ...] = ("exponential", "hyperbolic", "harmonic")
 DAYS_PER_YEAR = 365.25
 MIN_POINTS = 30
-B_BOUNDS = (1e-3, 2.0)
+# b above 1 fits transient flow in tight rock; a waterflooded conventional reservoir in
+# boundary-dominated flow declines with b at most 1 (harmonic). A free b up to 2 let short,
+# noisy windows pick b = 1.8-2.0 by a fraction of an AIC point and overstate the tail.
+B_BOUNDS = (1e-3, 1.0)
+BAND = (0.1, 0.9)  # the 80% band from past forecast errors
 
 
 def arps_rate(t: np.ndarray, qi: float, di: float, b: float) -> np.ndarray:
@@ -262,18 +267,18 @@ def p50_volume(fit: DeclineFit, start: pd.Timestamp, horizon_days: int) -> float
     return float(rate.sum() * fit.uptime)
 
 
-def hindcast_errors(
+def hindcasts(
     daily: pd.DataFrame,
     as_of: pd.Timestamp,
     window_days: int | None,
     horizon_days: int = 365,
     model: Model | Literal["auto"] = "auto",
     step_days: int = 91,
-) -> list[float]:
-    """Relative errors (forecast / actual - 1) of forecasts made the same way from earlier
-    dates: every step_days, a fit on the same window length (or the whole history) ending at
-    that date, forecasting horizon_days that had all happened by as_of. Only data up to
-    as_of is used, so the errors are ones a forecaster could have known then."""
+) -> list[tuple[pd.Timestamp, float]]:
+    """(date made, relative error) of forecasts made the same way from earlier dates: every
+    step_days, a fit on the same window length (or the whole history) ending at that date,
+    forecasting horizon_days that had all happened by as_of. Error = forecast / actual - 1.
+    Only data up to as_of is used, so the errors are ones a forecaster could have known."""
     prod = daily[daily["date"] <= as_of]
     oil = prod[prod["oil_sm3"] > 0]
     if oil.empty:
@@ -294,20 +299,47 @@ def hindcast_errors(
         ahead = prod[(prod["date"] > origin) & (prod["date"] <= horizon_end)]
         actual = float(ahead["oil_sm3"].sum())
         if actual > 0:
-            errors.append(p50_volume(fit, origin + pd.Timedelta(days=1), horizon_days) / actual - 1)
+            error = p50_volume(fit, origin + pd.Timedelta(days=1), horizon_days) / actual - 1
+            errors.append((origin, error))
         origin += pd.Timedelta(days=step_days)
     return errors
 
 
+def hindcast_errors(
+    daily: pd.DataFrame,
+    as_of: pd.Timestamp,
+    window_days: int | None,
+    horizon_days: int = 365,
+    model: Model | Literal["auto"] = "auto",
+    step_days: int = 91,
+) -> list[float]:
+    """The errors of hindcasts(), without their dates."""
+    return [e for _, e in hindcasts(daily, as_of, window_days, horizon_days, model, step_days)]
+
+
+def error_quantiles(errors: list[float], band: tuple[float, float] = BAND) -> tuple[float, float]:
+    """The errors bounding an interval that holds a new error with the band's probability.
+
+    Split-conformal order statistics, not interpolated quantiles: with n past errors the
+    k-th smallest, k = floor((n + 1) * low), and the k-th, k = ceil((n + 1) * high). With few
+    errors that is the smallest and largest seen: interpolated 10%/90% quantiles of 5-15
+    errors gave bands that held the outcome well under 80% of the time."""
+    ordered = sorted(errors)
+    n = len(ordered)
+    low = max(math.floor((n + 1) * band[0]), 1)
+    high = min(math.ceil((n + 1) * band[1]), n)
+    return ordered[low - 1], ordered[high - 1]
+
+
 def calibrated_band(p50: float, errors: list[float], min_errors: int = 5) -> dict | None:
     """An 80% band from past errors: if forecasts like this one erred by e (forecast /
-    actual - 1), the actual lies at p50 / (1 + e); the 10% and 90% error quantiles bound it."""
+    actual - 1), the actual lies at p50 / (1 + e); the error quantiles bound it."""
     if len(errors) < min_errors:
         return None
-    q10, q90 = np.quantile(errors, [0.1, 0.9])
+    q_low, q_high = error_quantiles(errors)
     return {
-        "p90": p50 / (1 + q90),  # low case
-        "p10": p50 / (1 + q10),  # high case
+        "p90": p50 / (1 + q_high),  # low case
+        "p10": p50 / (1 + q_low),  # high case
         "past_forecasts": len(errors),
         "median_abs_error": float(np.median(np.abs(errors))),
     }
