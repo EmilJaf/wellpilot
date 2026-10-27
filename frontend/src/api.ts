@@ -52,6 +52,8 @@ export type FinalEvent = {
   findings: Finding[]
   verified: boolean
   finished: boolean
+  /** Why the run ended early: step or time limit, a model provider error. */
+  stopped?: string | null
   check_rounds: string[][]
   steps: number
   tokens: { input: number; output: number }

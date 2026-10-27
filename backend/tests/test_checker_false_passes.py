@@ -104,3 +104,11 @@ def test_calculate_constants_are_conversions_not_any_number() -> None:
         calc = add(log, "calculate", {"expression": expression}, {"value": 0.918})
         problems = check("The ratio is 0.918.", [calc], [d("0.918", 0.918, calc)], log)
         assert any("calculates from" in p for p in problems), expression
+
+
+def test_absurd_numbers_are_rejected_not_crashed_on() -> None:
+    log = corpus_log(F12)
+    for text in ("1e400", "9" * 400):
+        assert check(f"The rate was {text} Sm3/d.", ["E5"], [], log)
+        assert check(f"The rate was {text} Sm3/d.", ["E5"], [d(text, 1146, "E5")], log)
+    assert check("The rate was 1e400 Sm3/d.", ["E5"], None, log)  # legacy path

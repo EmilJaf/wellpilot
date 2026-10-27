@@ -21,6 +21,7 @@ def create_app(
         default_reasoning=settings.agent_reasoning_effort,
         runs_per_client_per_hour=settings.runs_per_client_per_hour,
         daily_token_budget=settings.daily_token_budget,
+        run_timeout_s=settings.run_timeout_s,
         featured=tuple(r.strip() for r in settings.featured_runs.split(",") if r.strip()) or None,
     )
     app.include_router(runs.router)

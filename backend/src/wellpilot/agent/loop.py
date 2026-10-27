@@ -7,11 +7,13 @@ the evidence it cites, and rejected submissions go back to the model to fix.
 
 import asyncio
 import json
+import logging
 import time
 from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
+import openai
 import pandas as pd
 from pydantic import ValidationError
 
@@ -21,8 +23,12 @@ from wellpilot.agent.tools import TOOLS_BY_NAME, execute, tool_schemas
 from wellpilot.data.store import ProductionStore
 from wellpilot.llm import LLM, json_schema
 
+logger = logging.getLogger(__name__)
+
 SUBMIT = "submit_findings"
+MAX_STEPS = 14  # real runs use 5-9; the model is warned two steps before the end
 MAX_CHECK_ROUNDS = 3
+MAX_CALLS_PER_STEP = 8  # tool calls past this in one step get an error, not a result
 PREVIEW_CHARS = 300
 MAX_REASONING_CHARS = 6000  # Muse Spark Open's visible reasoning, per step, in the stream
 
@@ -56,9 +62,24 @@ months") and numbers from the question need no declaration.
 - A checker verifies every declared number, date and quote against the evidence. If it \
 rejects your submission, fix the listed problems and submit again.{as_of_note}"""
 
+# What a text-only reply gets back depends on where the run is.
+NUDGE_START = (
+    "Continue by calling the tools in your plan; call submit_findings once every number you "
+    "write has evidence."
+)
 NUDGE = (
-    "Submit your answer with the submit_findings tool, citing the evidence ids of the tool "
-    "results each finding rests on."
+    "Call a tool to continue your analysis, or submit your answer with the submit_findings "
+    "tool, citing the evidence ids of the tool results each finding rests on."
+)
+NUDGE_FIX = "Fix the problems the checker listed and call submit_findings again."
+TWO_STEPS_LEFT = (
+    "Two steps left, this one included: finish what you need and call submit_findings with "
+    "the evidence you have."
+)
+LAST_STEP = "This is your last step: call submit_findings now with the evidence you have."
+CUT_OFF = (
+    "Your last reply was cut off by the output limit. Keep replies short: call tools, or "
+    "submit your answer."
 )
 
 
@@ -135,6 +156,7 @@ class AgentRun:
     finished: bool
     steps: list[Step]
     summary_numbers: list[DeclaredNumber] = field(default_factory=list)
+    stopped: str | None = None  # why the run ended early: step or time limit, provider error
 
     @property
     def total_tokens(self) -> tuple[int, int]:
@@ -153,6 +175,7 @@ class AgentRun:
             "summary_numbers": [n.model_dump() for n in self.summary_numbers],
             "verified": self.verified,
             "finished": self.finished,
+            "stopped": self.stopped,
             "check_rounds": self.check_rounds,
             "steps": len(self.steps),
             "tokens": {"input": tokens_in, "output": tokens_out},
@@ -212,13 +235,20 @@ def _parse_arguments(arguments: str) -> dict:
     return parsed if isinstance(parsed, dict) else {"_raw": parsed}
 
 
+def _nudge(log: EvidenceLog, last_submission: Submission | None) -> str:
+    if last_submission:
+        return NUDGE_FIX
+    return NUDGE if len(log) else NUDGE_START
+
+
 async def run_agent(
     question: str,
     llm: LLM,
     store: ProductionStore,
     *,
-    max_steps: int = 12,
+    max_steps: int = MAX_STEPS,
     reasoning_effort: str = "",
+    timeout_s: float | None = None,
     on_step: Callable[[Step], None] | None = None,
     on_event: Callable[[dict], None] | None = None,
     evidence_log: EvidenceLog | None = None,
@@ -227,7 +257,12 @@ async def run_agent(
 
     on_step gets each finished Step; on_event gets JSON-ready events for streaming:
     {"type": "llm_call", "step": n} before each model call, {"type": "step", ...} after.
-    Pass evidence_log to read evidence while the run is still going.
+    Pass evidence_log to read evidence while the run is still going. timeout_s bounds the
+    whole run, including a model call that hangs.
+
+    The run ends with an answer whatever happens to it: out of steps or time, or a provider
+    error after the client's retries, it returns the last submission (unverified) with the
+    reason in `stopped`, and its steps and evidence intact.
     """
     messages: list[dict] = [
         {"role": "system", "content": system_prompt(store)},
@@ -238,9 +273,12 @@ async def run_agent(
     steps: list[Step] = []
     check_rounds: list[list[str]] = []
     last_submission: Submission | None = None
-    nudged = False
+    text_replies = 0  # consecutive replies without a tool call
+    deadline = time.monotonic() + timeout_s if timeout_s else None
 
-    def finish(summary, findings, verified, finished=True, submission=None) -> AgentRun:
+    def finish(
+        summary, findings, verified, finished=True, submission=None, stopped=None
+    ) -> AgentRun:
         numbers = (submission.summary_numbers or []) if submission else []
         return AgentRun(
             question,
@@ -252,7 +290,21 @@ async def run_agent(
             finished,
             steps,
             numbers,
+            stopped,
         )
+
+    def stop(reason: str) -> AgentRun:
+        """End early, keeping the last answer the model submitted, marked unverified."""
+        if last_submission:
+            return finish(
+                last_submission.summary,
+                last_submission.findings,
+                False,
+                finished=False,
+                submission=last_submission,
+                stopped=reason,
+            )
+        return finish(None, [], False, finished=False, stopped=reason)
 
     def emit(event: dict) -> None:
         if on_event:
@@ -261,15 +313,37 @@ async def run_agent(
     effort = reasoning_effort or llm.default_reasoning
 
     for index in range(1, max_steps + 1):
+        if index == max_steps:
+            messages.append({"role": "user", "content": LAST_STEP})
+        elif index == max_steps - 1:
+            messages.append({"role": "user", "content": TWO_STEPS_LEFT})
         emit({"type": "llm_call", "step": index})
         started = time.monotonic()
-        response = await llm.client.chat.completions.create(
-            model=llm.model,
-            messages=messages,
-            tools=tools,
-            **({"reasoning_effort": effort} if effort else {}),
-        )
-        message = response.choices[0].message
+        try:
+            remaining = deadline - started if deadline else None
+            if remaining is not None and remaining <= 0:
+                raise TimeoutError
+            response = await asyncio.wait_for(
+                llm.client.chat.completions.create(
+                    model=llm.model,
+                    messages=messages,
+                    tools=tools,
+                    **({"reasoning_effort": effort} if effort else {}),
+                ),
+                remaining,
+            )
+        except TimeoutError:
+            return stop(f"time limit of {timeout_s:.0f} s")
+        except openai.APIError as e:  # after the client's own retries
+            logger.warning("model call failed at step %d: %s", index, e)
+            status = getattr(e, "status_code", None)
+            return stop(
+                f"model provider error ({type(e).__name__}{f' {status}' if status else ''})"
+            )
+        if not response.choices:
+            return stop("model provider returned no reply")
+        choice = response.choices[0]
+        message = choice.message
         usage = response.usage
         step = Step(
             index=index,
@@ -280,7 +354,9 @@ async def run_agent(
             seconds=time.monotonic() - started,
         )
 
-        assistant: dict = {"role": "assistant", "content": message.content}
+        # Content must be a string: providers reject an assistant message with null content
+        # and no tool calls.
+        assistant: dict = {"role": "assistant", "content": message.content or ""}
         if message.tool_calls:
             assistant["tool_calls"] = [
                 {
@@ -293,6 +369,7 @@ async def run_agent(
         messages.append(assistant)
 
         accepted: Submission | None = None
+        calls = 0
         for call in message.tool_calls or []:
             name, arguments = call.function.name, call.function.arguments
             record: dict = {"name": name, "arguments": arguments}
@@ -303,11 +380,22 @@ async def run_agent(
                     payload = {"accepted": False, "problems": [f"invalid submission: {e}"]}
                 else:
                     last_submission = submission
-                    problems = check_submission(submission, log, question)
+                    try:
+                        problems = check_submission(submission, log, question)
+                    except Exception as e:  # a checker bug must cost a round, not the run
+                        logger.exception("checker failed on a submission")
+                        problems = [
+                            f"The checker could not read this submission ({type(e).__name__}). "
+                            "Write every number in plain decimal form and submit again."
+                        ]
                     check_rounds.append(problems)
                     payload = {"accepted": not problems, "problems": problems}
                     if not problems:
                         accepted = submission
+            elif (calls := calls + 1) > MAX_CALLS_PER_STEP:
+                payload = {
+                    "error": f"too many tool calls in one step; call at most {MAX_CALLS_PER_STEP}"
+                }
             else:
                 # Tools are synchronous (DuckDB, scipy); keep the event loop free for streams.
                 payload = await asyncio.to_thread(execute, store, name, arguments)
@@ -323,7 +411,11 @@ async def run_agent(
             record["result"] = payload
             step.tool_calls.append(record)
             messages.append(
-                {"role": "tool", "tool_call_id": call.id, "content": json.dumps(payload)}
+                {
+                    "role": "tool",
+                    "tool_call_id": call.id,
+                    "content": json.dumps(payload, ensure_ascii=False, default=str),
+                }
             )
 
         steps.append(step)
@@ -341,19 +433,21 @@ async def run_agent(
                 False,
                 submission=last_submission,
             )
-        if not message.tool_calls:
-            if nudged:
+        if message.tool_calls:
+            text_replies = 0
+        else:
+            text_replies += 1
+            if text_replies >= 2:  # two in a row: the model will not call tools again
+                if last_submission:
+                    return finish(
+                        last_submission.summary,
+                        last_submission.findings,
+                        False,
+                        submission=last_submission,
+                    )
                 return finish(message.content, [], verified=False)
-            nudged = True
-            messages.append({"role": "user", "content": NUDGE})
+            messages.append({"role": "user", "content": _nudge(log, last_submission)})
+        if choice.finish_reason == "length":
+            messages.append({"role": "user", "content": CUT_OFF})
 
-    # Out of steps: keep the last answer the model submitted, if any, marked unverified.
-    if last_submission:
-        return finish(
-            last_submission.summary,
-            last_submission.findings,
-            False,
-            finished=False,
-            submission=last_submission,
-        )
-    return finish(None, [], verified=False, finished=False)
+    return stop("step limit")

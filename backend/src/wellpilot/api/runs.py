@@ -122,6 +122,12 @@ class RunRecord:
         self.status = "done"
         self.emit({"type": "final", **self.result})
 
+    def fail(self, message: str) -> None:
+        """End the run with an error, keeping the evidence gathered so far."""
+        self.evidence = {e.id: to_jsonable(asdict(e)) for e in self.log}
+        self.status = "error"
+        self.emit({"type": "run_error", "message": message})
+
     def save(self, runs_dir: Path) -> Path:
         runs_dir.mkdir(parents=True, exist_ok=True)
         path = runs_dir / f"{self.id}.json"
@@ -161,6 +167,7 @@ class RunManager:
         default_reasoning: str = "",
         runs_per_client_per_hour: int = 6,
         daily_token_budget: int = 3_000_000,
+        run_timeout_s: float | None = 600.0,
         featured: tuple[str, ...] | None = None,
     ) -> None:
         self.processed_dir = processed_dir
@@ -170,6 +177,7 @@ class RunManager:
         self.default_reasoning = default_reasoning
         self.runs_per_client_per_hour = runs_per_client_per_hour
         self.daily_token_budget = daily_token_budget
+        self.run_timeout_s = run_timeout_s
         # None lists every saved run (development); a tuple lists only those, so a public
         # deployment never shows other visitors' questions.
         self.featured = featured
@@ -233,19 +241,18 @@ class RunManager:
                 llm,
                 store,
                 reasoning_effort=reasoning_effort,
+                timeout_s=self.run_timeout_s,
                 on_event=record.emit,
                 evidence_log=record.log,
             )
             record.complete(run)
         except asyncio.CancelledError:
             # Shutdown or redeploy: record the run as stopped, not as running forever.
-            record.status = "error"
-            record.emit({"type": "run_error", "message": "interrupted: the server stopped"})
+            record.fail("interrupted: the server stopped")
             raise
         except Exception as e:  # any failure ends the run with an error event
             logger.exception("run %s failed", record.id)
-            record.status = "error"
-            record.emit({"type": "run_error", "message": f"{type(e).__name__}: {e}"})
+            record.fail(f"{type(e).__name__}: {e}")
         finally:
             self._finish(record)
 

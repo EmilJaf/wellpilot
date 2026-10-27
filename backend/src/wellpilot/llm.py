@@ -23,7 +23,9 @@ class LLM:
     default_reasoning: str = ""  # used when a caller asks for no particular effort
 
 
-def make_llm(settings: Settings) -> LLM:
+def make_llm(settings: Settings, *, timeout: float = 90.0) -> LLM:
+    """The configured provider's client. The agent's steps answer in seconds, so 90 s per
+    request (times the client's two retries) is plenty; page extraction passes more."""
     if settings.llm_provider == "meta":
         key, key_name = settings.model_api_key, "MODEL_API_KEY"
         base_url, model, reasoning = settings.meta_base_url, settings.meta_model, ""
@@ -33,7 +35,7 @@ def make_llm(settings: Settings) -> LLM:
         reasoning = settings.baseten_reasoning_effort
     if not key:
         raise RuntimeError(f"{key_name} is not set; add it to .env (see .env.example)")
-    client = AsyncOpenAI(api_key=key, base_url=base_url, timeout=120.0, max_retries=2)
+    client = AsyncOpenAI(api_key=key, base_url=base_url, timeout=timeout, max_retries=2)
     return LLM(
         client=client, model=model, provider=settings.llm_provider, default_reasoning=reasoning
     )

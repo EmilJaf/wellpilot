@@ -227,6 +227,28 @@ async def test_model_failure_ends_the_run_with_an_error_event(settings) -> None:
     assert run["status"] == "error"
 
 
+async def test_a_failed_run_keeps_its_evidence_after_a_restart(settings) -> None:
+    calls = []
+
+    async def create(**kwargs):
+        calls.append(kwargs)
+        if len(calls) > 1:
+            raise RuntimeError("unexpected failure")
+        return SCRIPT[0]
+
+    client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=create)))
+    llm = LLM(client=client, model="fake", provider="fake")
+    async with client_for(create_app(settings, llm_factory=lambda: llm)) as http:
+        run_id, events = await run_to_end(http)
+    assert events[-1]["type"] == "run_error"
+
+    async with client_for(create_app(settings, llm_factory=fake_llm)) as http:
+        evidence = await http.get(f"/api/runs/{run_id}/evidence/E1")
+
+    assert evidence.status_code == 200
+    assert evidence.json()["tool"] == "list_wells"
+
+
 async def test_question_is_validated(settings) -> None:
     async with client_for(create_app(settings, llm_factory=fake_llm)) as client:
         assert (await client.post("/api/runs", json={"question": "x"})).status_code == 422

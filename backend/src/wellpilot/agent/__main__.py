@@ -14,7 +14,7 @@ from datetime import date
 
 from wellpilot.agent import corpus
 from wellpilot.agent.corpus import CORPUS_DIR
-from wellpilot.agent.loop import SUBMIT, AgentRun, Step, run_agent
+from wellpilot.agent.loop import MAX_STEPS, SUBMIT, AgentRun, Step, run_agent
 from wellpilot.api.runs import RunRecord, new_run_id
 from wellpilot.config import get_settings
 from wellpilot.data.store import ProductionStore
@@ -89,7 +89,7 @@ def print_run(run: AgentRun) -> None:
 async def main() -> None:
     parser = argparse.ArgumentParser(description="Ask WellPilot a question.")
     parser.add_argument("question", nargs="?", default=DEFAULT_QUESTION)
-    parser.add_argument("--max-steps", type=int, default=12)
+    parser.add_argument("--max-steps", type=int, default=MAX_STEPS)
     parser.add_argument(
         "--as-of", type=date.fromisoformat, help="hide data after this day (YYYY-MM-DD)"
     )

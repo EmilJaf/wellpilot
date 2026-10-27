@@ -243,7 +243,7 @@ async def run(doc_id: str, page_numbers: list[int], force: bool) -> None:
     print(f"{doc_id}: {len(page_numbers)} pages requested, {len(todo)} to extract")
 
     if todo:
-        llm = make_llm(settings)
+        llm = make_llm(settings, timeout=180.0)  # a dense page can take minutes to transcribe
         effort = settings.extract_reasoning_effort
         print(f"provider: {llm.provider}, model: {llm.model}, reasoning: {effort or 'default'}")
         semaphore = asyncio.Semaphore(CONCURRENCY)

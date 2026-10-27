@@ -1,10 +1,13 @@
 """Agent tools and loop, driven by a scripted fake LLM: no tokens are spent."""
 
+import asyncio
 import json
 import re
 from types import SimpleNamespace
 
+import httpx
 import numpy as np
+import openai
 import pandas as pd
 import pytest
 from openai.types.chat import ChatCompletion
@@ -73,14 +76,41 @@ def completion(content=None, tool_calls=None, **extra) -> ChatCompletion:
     )
 
 
+def validate(request: dict) -> None:
+    """The wire rules the providers enforce (see CLAUDE.md): a request that breaks one is a
+    400 from Baseten or Meta, so a test that breaks one fails here first."""
+    assert "tool_choice" not in request, "Meta accepts only the default tool_choice"
+    for tool in request.get("tools", []):
+        assert re.fullmatch(r"[a-zA-Z0-9_.-]+", tool["function"]["name"])
+    open_calls: list[str] = []
+    for message in request["messages"]:
+        role = message["role"]
+        assert isinstance(message.get("content"), str), f"{role} content must be a string"
+        if role == "tool":
+            assert message["tool_call_id"] in open_calls, "a tool reply needs its call"
+            open_calls.remove(message["tool_call_id"])
+            continue
+        assert not open_calls, f"tool calls left unanswered: {open_calls}"
+        if role == "assistant":
+            open_calls = [call["id"] for call in message.get("tool_calls", [])]
+    assert not open_calls, f"tool calls left unanswered: {open_calls}"
+
+
 class FakeCompletions:
-    def __init__(self, responses: list[ChatCompletion]) -> None:
+    """Replays scripted responses; an Exception in the script is raised instead."""
+
+    def __init__(self, responses: list) -> None:
         self.responses = responses
         self.requests: list[dict] = []
 
     async def create(self, **kwargs) -> ChatCompletion:
-        self.requests.append(json.loads(json.dumps(kwargs, default=str)))
-        return self.responses[min(len(self.requests), len(self.responses)) - 1]
+        request = json.loads(json.dumps(kwargs, default=str))
+        validate(request)
+        self.requests.append(request)
+        response = self.responses[min(len(self.requests), len(self.responses)) - 1]
+        if isinstance(response, Exception):
+            raise response
+        return response
 
 
 def fake_llm(responses: list[ChatCompletion]) -> tuple[LLM, FakeCompletions]:
@@ -89,12 +119,18 @@ def fake_llm(responses: list[ChatCompletion]) -> tuple[LLM, FakeCompletions]:
     return LLM(client=client, model="fake", provider="fake"), completions
 
 
-def submission(claim: str, evidence_ids=("E1",), confidence="fact") -> dict:
+def submission(claim: str, evidence_ids=("E1",), confidence="fact", numbers=None) -> dict:
+    """A submission as the live model sends it, with declared numbers (numbers=None leaves
+    them out, as answers from before declared numbers did)."""
+    finding = {"claim": claim, "evidence_ids": list(evidence_ids), "confidence": confidence}
+    if numbers is not None:
+        finding["numbers"] = [
+            {"text": t, "value": v, "evidence_id": evidence_ids[0]} for t, v in numbers
+        ]
     return {
         "summary": "F-12 is the only producer here.",
-        "findings": [
-            {"claim": claim, "evidence_ids": list(evidence_ids), "confidence": confidence}
-        ],
+        "findings": [finding],
+        **({"summary_numbers": []} if numbers is not None else {}),
     }
 
 
@@ -319,3 +355,160 @@ async def test_provider_default_reasoning_and_visible_reasoning_in_events(store)
     assert completions.requests[0]["reasoning_effort"] == "medium"
     step = next(e for e in events if e["type"] == "step")
     assert step["reasoning"] == "I compare F-12 with the plan."
+
+
+async def test_declared_numbers_pass_end_to_end(store) -> None:
+    llm, _ = fake_llm(
+        [
+            completion(tool_calls=[("list_wells", {})]),
+            completion(
+                tool_calls=[(SUBMIT, submission("F-12 produced on 60 days.", numbers=[("60", 60)]))]
+            ),
+        ]
+    )
+
+    run = await run_agent("Days?", llm, store)
+
+    assert run.verified
+    assert run.findings[0].numbers[0].text == "60"
+
+
+async def test_text_between_tool_calls_does_not_end_the_run(store) -> None:
+    """The audit's scenario: a plan, a tool, a rejected answer, a remark, then the fix."""
+    llm, completions = fake_llm(
+        [
+            completion("1. List wells. 2. Count days."),
+            completion(tool_calls=[("list_wells", {})]),
+            completion(tool_calls=[(SUBMIT, submission("On 61 days.", numbers=[("61", 61)]))]),
+            completion("Let me recompute the day count."),
+            completion(tool_calls=[(SUBMIT, submission("On 60 days.", numbers=[("60", 60)]))]),
+        ]
+    )
+
+    run = await run_agent("Days?", llm, store)
+
+    assert run.verified and run.findings[0].claim == "On 60 days."
+    nudges = [
+        r["messages"][-1]["content"] for r in completions.requests[1:2] + completions.requests[4:5]
+    ]
+    assert "Continue by calling the tools" in nudges[0]
+    assert "Fix the problems the checker listed" in nudges[1]
+
+
+async def test_two_text_replies_in_a_row_keep_the_last_submission(store) -> None:
+    llm, _ = fake_llm(
+        [
+            completion(tool_calls=[("list_wells", {})]),
+            completion(tool_calls=[(SUBMIT, submission("On 61 days.", numbers=[("61", 61)]))]),
+            completion("Hmm."),
+            completion("I am done."),
+        ]
+    )
+
+    run = await run_agent("Days?", llm, store)
+
+    assert run.finished and not run.verified
+    assert run.findings[0].claim == "On 61 days."
+
+
+async def test_a_provider_error_keeps_steps_evidence_and_the_last_submission(store) -> None:
+    request = httpx.Request("POST", "https://inference.example/v1/chat/completions")
+    llm, _ = fake_llm(
+        [
+            completion(tool_calls=[("list_wells", {})]),
+            completion(tool_calls=[(SUBMIT, submission("On 61 days.", numbers=[("61", 61)]))]),
+            openai.APITimeoutError(request=request),
+        ]
+    )
+
+    run = await run_agent("Days?", llm, store)
+
+    assert not run.finished and not run.verified
+    assert run.stopped == "model provider error (APITimeoutError)"
+    assert [e.id for e in run.evidence] == ["E1"] and len(run.steps) == 2
+    assert run.findings[0].claim == "On 61 days."
+    assert run.to_dict()["stopped"] == run.stopped
+
+
+async def test_a_checker_error_is_a_rejection_not_a_crash(store, monkeypatch) -> None:
+    import wellpilot.agent.loop as loop
+
+    real = loop.check_submission
+    calls = []
+
+    def flaky(*args):
+        calls.append(1)
+        if len(calls) == 1:
+            raise OverflowError("int too large to convert to float")
+        return real(*args)
+
+    monkeypatch.setattr(loop, "check_submission", flaky)
+    llm, completions = fake_llm(
+        [
+            completion(tool_calls=[("list_wells", {})]),
+            completion(tool_calls=[(SUBMIT, submission("On 60 days.", numbers=[("60", 60)]))]),
+        ]
+    )
+
+    run = await run_agent("Days?", llm, store)
+
+    assert run.verified and len(run.check_rounds) == 2
+    assert "could not read this submission (OverflowError)" in run.check_rounds[0][0]
+
+
+async def test_the_last_steps_are_announced(store) -> None:
+    llm, completions = fake_llm([completion(tool_calls=[("list_wells", {})])])
+
+    run = await run_agent("Loop", llm, store, max_steps=3)
+
+    assert run.stopped == "step limit"
+    said = [r["messages"][-1]["content"] for r in completions.requests]
+    assert "Two steps left" in said[1] and "last step" in said[2]
+
+
+async def test_tool_calls_per_step_are_capped(store) -> None:
+    from wellpilot.agent.loop import MAX_CALLS_PER_STEP
+
+    many = [("list_wells", {})] * (MAX_CALLS_PER_STEP + 2)
+    llm, completions = fake_llm(
+        [
+            completion(tool_calls=many),
+            completion(tool_calls=[(SUBMIT, submission("On 60 days.", numbers=[("60", 60)]))]),
+        ]
+    )
+
+    run = await run_agent("Days?", llm, store)
+
+    assert len(run.evidence) == MAX_CALLS_PER_STEP
+    errors = [c["result"].get("error", "") for c in run.steps[0].tool_calls]
+    assert sum("too many tool calls" in e for e in errors) == 2
+    assert run.verified  # every call was answered, so the next request was valid
+
+
+async def test_the_time_limit_stops_a_hung_provider(store) -> None:
+    class Hung:
+        async def create(self, **kwargs):
+            await asyncio.sleep(60)
+
+    llm = LLM(
+        client=SimpleNamespace(chat=SimpleNamespace(completions=Hung())), model="f", provider="f"
+    )
+
+    run = await run_agent("Days?", llm, store, timeout_s=0.2)
+
+    assert run.stopped.startswith("time limit")
+    assert not run.finished
+
+
+async def test_an_empty_reply_is_sent_back_as_text_and_a_cut_off_is_explained(store) -> None:
+    cut = completion(None)
+    cut.choices[0].finish_reason = "length"
+    llm, completions = fake_llm(
+        [cut, completion(tool_calls=[(SUBMIT, submission("x", numbers=[]))])]
+    )
+
+    await run_agent("Hi", llm, store)
+
+    second = completions.requests[1]["messages"]
+    assert second[2] == {"role": "assistant", "content": ""}
+    assert "cut off by the output limit" in second[-1]["content"]

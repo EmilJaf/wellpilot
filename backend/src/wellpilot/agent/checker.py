@@ -208,8 +208,9 @@ def _numbers_in_text(text: str, european: bool = False) -> list[tuple[float, int
     for match in NUMBER.finditer(text):
         digits, suffix = match.group(1), match.group(2)
         mantissa, _, exponent = digits.lower().partition("e")
-        # Decimals of the value as written: "1.200e+04" is good to tens, so -1.
-        decimals = len(mantissa.partition(".")[2]) - int(exponent or 0)
+        # Decimals of the value as written: "1.200e+04" is good to tens, so -1. Clamped so
+        # that "1e400" cannot overflow a tolerance.
+        decimals = max(len(mantissa.partition(".")[2]) - int(exponent or 0), -30)
         found.append((float(digits), decimals, suffix))
     return found
 
@@ -399,6 +400,8 @@ def _readings(text: str) -> list[Reading]:
         if len(found) != 1:
             continue
         shown, decimals, suffix = found[0]
+        if not math.isfinite(shown):
+            continue
         unit = 0.5 * 10.0**-decimals if decimals else _precision(shown)
         reading = (shown, unit, (1.0, *SCALES.get(suffix or "", ())))
         if reading not in readings:

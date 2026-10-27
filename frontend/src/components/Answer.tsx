@@ -126,8 +126,14 @@ export function Answer({ state, selectedFinding, selectedEvidence, onSelectFindi
                 <span>
                   <strong>Not verified</strong>
                   {final.finished
-                    ? 'The checker still found problems after the last correction round.'
-                    : 'The agent ran out of steps before submitting an answer.'}
+                    ? final.findings.length
+                      ? 'The checker still found problems after the last correction round.'
+                      : 'The agent answered in text without submitting findings to check.'
+                    : `The run stopped early (${final.stopped ?? 'step limit'})${
+                        final.findings.length
+                          ? '. Below is its last submitted answer, which did not pass the checker.'
+                          : ' before the agent submitted an answer.'
+                      }`}
                 </span>
               </div>
             )}
