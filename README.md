@@ -55,6 +55,33 @@ cd backend && uv run pytest && uv run ruff check .
 cd frontend && pnpm lint && pnpm build
 ```
 
+## Deploy
+
+One Docker image: the API serves the built frontend and the processed data, so the app runs as one process on one machine (runs, the token budget and the rate limits live in its memory). The configuration targets [Fly.io](https://fly.io).
+
+Build and smoke-test the image locally first. No API key goes in, so no tokens are spent:
+
+```bash
+docker build -t wellpilot:smoke .
+scripts/smoke_image.sh
+```
+
+The image is built from the repository root and copies `data/processed` and `data/runs`, so run the ingest first. Then, once:
+
+```bash
+brew install flyctl
+fly auth login
+fly launch --copy-config --no-deploy        # creates the app; it may pick another name
+fly secrets set BASETEN_API_KEY=...          # the model key, never committed
+fly secrets set OPERATOR_KEY=$(openssl rand -hex 24)   # lifts the public limits for you
+fly secrets set FEATURED_RUNS=fcfb4188de3b   # the runs the public site lists and replays
+fly deploy
+```
+
+In the browser console of the deployed site, `localStorage.operatorKey = '<the operator key>'` lets your own runs skip the per-visitor and daily limits.
+
+Public limits (settings in `backend/src/wellpilot/config.py`, overridable with Fly secrets): 3 runs at once, 6 runs per visitor per hour, 3M tokens per day, 600 s per run, 14 steps per run. Agent-written SQL is checked before it runs, and the list of runs shows only `FEATURED_RUNS`.
+
 ## License
 
 Code: [MIT](LICENSE). Volve data: the Equinor Open Data Licence, see [Data](#data).

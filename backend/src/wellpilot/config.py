@@ -35,6 +35,9 @@ class Settings(BaseSettings):
     baseten_reasoning_effort: str = "medium"
 
     data_dir: Path = REPO_ROOT / "data"
+    # The built frontend (pnpm build), served by the API in production. In development Vite
+    # serves it instead; a missing directory just means the API serves no pages.
+    frontend_dir: Path = REPO_ROOT / "frontend" / "dist"
     database_url: str = ""
     # Public demo limits: every run costs tokens.
     max_active_runs: int = 3

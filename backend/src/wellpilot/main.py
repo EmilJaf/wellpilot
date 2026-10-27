@@ -1,8 +1,11 @@
 import os
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
+from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from wellpilot import __version__
 from wellpilot.api import data, runs
@@ -53,7 +56,27 @@ def create_app(
             "data_ready": (settings.processed_dir / "production_daily.parquet").exists(),
         }
 
+    _serve_frontend(app, settings.frontend_dir)
     return app
+
+
+def _serve_frontend(app: FastAPI, dist: Path) -> None:
+    """The built single-page app, from the same origin as the API (no CORS): hashed assets
+    as static files, index.html for every other path that is not the API."""
+    if not (dist / "index.html").is_file():
+        return
+    root = dist.resolve()
+    if (dist / "assets").is_dir():
+        app.mount("/assets", StaticFiles(directory=dist / "assets"), name="assets")
+
+    @app.get("/{path:path}", include_in_schema=False)
+    async def frontend(path: str) -> FileResponse:
+        if path.startswith("api/"):
+            raise HTTPException(404, "not found")
+        file = (root / path).resolve()
+        if path and file.is_file() and root in file.parents:  # favicon.svg, never ../
+            return FileResponse(file)
+        return FileResponse(root / "index.html", headers={"Cache-Control": "no-cache"})
 
 
 app = create_app()

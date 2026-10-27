@@ -60,6 +60,7 @@ def settings(tmp_path) -> Settings:
     return Settings(
         _env_file=None,
         data_dir=tmp_path,
+        frontend_dir=tmp_path / "no-frontend",  # the API alone, whether or not a build exists
         max_active_runs=1,
         runs_per_client_per_hour=100,
         daily_token_budget=10**9,
@@ -427,3 +428,29 @@ async def test_shutdown_saves_runs_in_flight_as_interrupted(settings) -> None:
     saved = json.loads((settings.runs_dir / f"{run_id}.json").read_text())
     assert saved["status"] == "error"
     assert saved["events"][-1]["message"] == "interrupted: the server stopped"
+
+
+async def test_the_built_frontend_is_served_beside_the_api(settings, tmp_path) -> None:
+    dist = tmp_path / "dist"
+    (dist / "assets").mkdir(parents=True)
+    (dist / "index.html").write_text("<!doctype html><title>WellPilot</title>")
+    (dist / "assets" / "app-1a2b.js").write_text("console.log(1)")
+    (dist / "favicon.svg").write_text("<svg/>")
+    (tmp_path / "secret.txt").write_text("not for the web")
+    app = create_app(settings.model_copy(update={"frontend_dir": dist}), llm_factory=fake_llm)
+
+    async with client_for(app) as client:
+        page = await client.get("/?run=0123456789ab&replay=1")
+        asset = await client.get("/assets/app-1a2b.js")
+        icon = await client.get("/favicon.svg")
+        api_miss = await client.get("/api/nope")
+        escape = await client.get("/..%2Fsecret.txt")
+        health = await client.get("/api/health")
+
+    assert page.status_code == 200 and "<title>WellPilot" in page.text
+    assert asset.text == "console.log(1)" and icon.text == "<svg/>"
+    assert api_miss.status_code == 404 and api_miss.headers["content-type"].startswith(
+        "application/json"
+    )
+    assert "not for the web" not in escape.text
+    assert health.json()["status"] == "ok"
