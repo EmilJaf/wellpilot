@@ -61,6 +61,7 @@ class ProductionStore:
         timeout_s: float = 5.0,
     ) -> None:
         self.as_of = as_of
+        self.processed_dir = processed_dir  # report page images live here
         self.max_rows = max_rows
         self.timeout_s = timeout_s
         self._lock = threading.Lock()

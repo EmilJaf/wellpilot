@@ -1865,3 +1865,10 @@ code,
   font-size: 13px;
   white-space: nowrap;
 }
+
+.reading-answer {
+  margin: 4px 0 10px;
+  font-size: 15px;
+  line-height: 1.5;
+  max-width: 62ch;
+}

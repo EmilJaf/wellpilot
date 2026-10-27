@@ -168,6 +168,7 @@ function Result({ tool, result, focus }: { tool: string; result: unknown; focus?
   }
   if (tool === 'detect_events') return <Events events={result as EventRow[]} />
   if (tool === 'plan_vs_actual') return <PlanEvidence result={result as PlanResult} />
+  if (tool === 'look_at_page') return <PageReading result={result as ReadingResult} />
   if (tool === 'field_vs_design') {
     const design = result as DesignResult
     return (
@@ -182,6 +183,51 @@ function Result({ tool, result, focus }: { tool: string; result: unknown; focus?
   if (tool === 'fit_decline' || tool === 'forecast_production') return <Fit result={result as FitResult} />
   if (isTable(result)) return <DataTable table={result} />
   return <pre className="code">{JSON.stringify(result, null, 2)}</pre>
+}
+
+type ReadingResult = {
+  doc_id: string
+  page: number
+  question: string
+  answer: string
+  readings: { label: string; value: number; unit: string; where: string }[]
+  read_by: string
+}
+
+/** What the model read off a report page image during the run, next to the page itself. */
+function PageReading({ result }: { result: ReadingResult }) {
+  const hit = useContext(HitContext)
+  return (
+    <>
+      <p className="evidence-sub">
+        The agent showed this page to {result.read_by.replace('meta-models/', '')} and asked: “{result.question}”
+      </p>
+      <p className="reading-answer">{result.answer}</p>
+      {result.readings.length > 0 && (
+        <table className="data-table reading-table">
+          <thead>
+            <tr>
+              <th scope="col">Read</th>
+              <th scope="col">Value</th>
+              <th scope="col">From the</th>
+            </tr>
+          </thead>
+          <tbody>
+            {result.readings.map((r, i) => (
+              <tr key={i}>
+                <td>{r.label}</td>
+                <td className={hit(r.value) ? 'hit' : undefined}>
+                  {r.value.toLocaleString('en')} {r.unit}
+                </td>
+                <td>{r.where}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+      <PageImage doc={result.doc_id} page={result.page} alt={`${result.doc_id} page ${result.page}`} marks={[]} />
+    </>
+  )
 }
 
 function PlanEvidence({ result }: { result: PlanResult }) {

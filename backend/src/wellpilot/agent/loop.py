@@ -9,7 +9,7 @@ import asyncio
 import json
 import logging
 import time
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
@@ -26,6 +26,7 @@ from wellpilot.agent.checker import (
 )
 from wellpilot.agent.evidence import Evidence, EvidenceLog
 from wellpilot.agent.tools import TOOLS_BY_NAME, execute, tool_schemas
+from wellpilot.agent.vision import LOOK, VISION_TOOL, look
 from wellpilot.data.store import ProductionStore
 from wellpilot.llm import LLM, json_schema
 
@@ -285,13 +286,15 @@ async def run_agent(
     on_step: Callable[[Step], None] | None = None,
     on_event: Callable[[dict], None] | None = None,
     evidence_log: EvidenceLog | None = None,
+    look_fn: Callable[[ProductionStore, LLM, str], Awaitable[dict]] = look,
 ) -> AgentRun:
     """Run the agent on one question.
 
     on_step gets each finished Step; on_event gets JSON-ready events for streaming:
     {"type": "llm_call", "step": n} before each model call, {"type": "step", ...} after.
     Pass evidence_log to read evidence while the run is still going. timeout_s bounds the
-    whole run, including a model call that hangs.
+    whole run, including a model call that hangs. look_fn runs look_at_page calls (the
+    replay passes recorded readings instead of asking the model again).
 
     The run ends with an answer whatever happens to it: out of steps or time, or a provider
     error after the client's retries, it returns the last submission (unverified) with the
@@ -301,7 +304,7 @@ async def run_agent(
         {"role": "system", "content": system_prompt(store)},
         {"role": "user", "content": question},
     ]
-    tools = [*tool_schemas(), submit_tool_schema()]
+    tools = [*tool_schemas(), VISION_TOOL.schema(), submit_tool_schema()]
     log = evidence_log if evidence_log is not None else EvidenceLog()
     steps: list[Step] = []
     check_rounds: list[list[str]] = []
@@ -430,14 +433,17 @@ async def run_agent(
                     "error": f"too many tool calls in one step; call at most {MAX_CALLS_PER_STEP}"
                 }
             else:
-                # Tools are synchronous (DuckDB, scipy); keep the event loop free for streams.
-                payload = await asyncio.to_thread(execute, store, name, arguments)
+                if name == LOOK:  # asks the model about a page image: async, not a thread
+                    payload = await look_fn(store, llm, arguments)
+                else:
+                    # Tools are synchronous (DuckDB, scipy); keep the event loop free.
+                    payload = await asyncio.to_thread(execute, store, name, arguments)
                 if "result" in payload:
                     evidence = log.add(
                         name,
                         _parse_arguments(arguments),
                         payload["result"],
-                        TOOLS_BY_NAME[name].run,
+                        VISION_TOOL.run if name == LOOK else TOOLS_BY_NAME[name].run,
                     )
                     payload = {"evidence_id": evidence.id, **payload}
                     record["evidence_id"] = evidence.id

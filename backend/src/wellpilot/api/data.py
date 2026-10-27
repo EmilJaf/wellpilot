@@ -19,6 +19,7 @@ from wellpilot.agent.tools import (
     read_report_page,
     table,
 )
+from wellpilot.agent.vision import VISION_TOOL
 from wellpilot.backtest import RESULTS_FILE, SUMMARY_FILE, case_detail
 from wellpilot.data.store import ProductionStore
 from wellpilot.ingest.reports import REPORTS_BY_ID, page_dir
@@ -74,7 +75,7 @@ def tool_code(ref: str) -> dict:
     """The source of the tool function an evidence item's code ref names, and whether it is
     still the code that ran (the ref's hash matches the source)."""
     name = ref.split("@", 1)[0]
-    for tool in TOOLS:
+    for tool in [*TOOLS, VISION_TOOL]:
         fn = tool.run
         if f"{fn.__module__}.{fn.__qualname__}" == name:
             lines, first = inspect.getsourcelines(fn)

@@ -19,6 +19,7 @@ from types import SimpleNamespace
 from openai.types.chat import ChatCompletion
 
 from wellpilot.agent.loop import AgentRun, run_agent
+from wellpilot.agent.vision import LOOK
 from wellpilot.config import get_settings
 from wellpilot.data.store import ProductionStore
 from wellpilot.llm import LLM
@@ -60,11 +61,24 @@ async def replay(run: dict, processed_dir: Path) -> AgentRun:
     async def create(**_):
         return next(replies)
 
+    # A page reading is the model's answer too: replay what it said, in order.
+    readings = iter(
+        {"result": run["evidence"][c["evidence_id"]]["result"]}
+        if c.get("evidence_id")
+        else {"error": c.get("error", "recorded error")}
+        for step in steps
+        for c in step["tool_calls"]
+        if c["name"] == LOOK
+    )
+
+    async def recorded_look(*_):
+        return next(readings)
+
     client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=create)))
     llm = LLM(client=client, model="replay", provider="replay")
     as_of = date.fromisoformat(run["as_of"]) if run.get("as_of") else None
     store = ProductionStore(processed_dir, as_of=as_of)
-    return await run_agent(run["question"], llm, store, max_steps=len(steps))
+    return await run_agent(run["question"], llm, store, max_steps=len(steps), look_fn=recorded_look)
 
 
 def differences(run: dict, replayed: AgentRun) -> list[str]:

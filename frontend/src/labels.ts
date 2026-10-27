@@ -12,6 +12,7 @@ export const TOOL_NAMES: Record<string, string> = {
   read_report_page: 'Read report page',
   plan_vs_actual: 'Compare with the 2005 plan',
   field_vs_design: 'Field against design limits',
+  look_at_page: 'Look at a report page',
   submit_findings: 'Submit answer',
 }
 
@@ -29,6 +30,7 @@ export function describeArgs(name: string, args: Record<string, unknown>): strin
   if (typeof args.expression === 'string') parts.push(args.expression)
   if (typeof args.sql === 'string') parts.push(args.sql.replace(/\s+/g, ' ').slice(0, 120))
   if (typeof args.doc_id === 'string') parts.push(`${args.doc_id} page ${args.page}`)
+  if (typeof args.question === 'string') parts.push(`“${args.question}”`)
   if (name === 'submit_findings' && Array.isArray(args.findings)) {
     parts.push(`${args.findings.length} findings`)
   }
