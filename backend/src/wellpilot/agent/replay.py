@@ -20,6 +20,7 @@ from openai.types.chat import ChatCompletion
 
 from wellpilot.agent.loop import AgentRun, run_agent
 from wellpilot.agent.review import Review
+from wellpilot.agent.sandbox import RUN_PYTHON
 from wellpilot.agent.vision import LOOK
 from wellpilot.config import get_settings
 from wellpilot.data.store import ProductionStore
@@ -64,18 +65,25 @@ async def replay(run: dict, processed_dir: Path) -> AgentRun:
     async def create(**_):
         return next(replies)
 
-    # A page reading is the model's answer too: replay what it said, in order.
-    readings = iter(
-        {"result": run["evidence"][c["evidence_id"]]["result"]}
-        if c.get("evidence_id")
-        else {"error": c.get("error", "recorded error")}
-        for step in steps
-        for c in step["tool_calls"]
-        if c["name"] == LOOK
-    )
+    def answers(name: str):
+        """What a tool outside the data returned to each call, in order: a page reading
+        (the model's answer too), the sandbox's output for the agent's code."""
+        return iter(
+            {"result": run["evidence"][c["evidence_id"]]["result"]}
+            if c.get("evidence_id")
+            else {"error": c.get("error", "recorded error")}
+            for step in steps
+            for c in step["tool_calls"]
+            if c["name"] == name
+        )
+
+    readings, outputs = answers(LOOK), answers(RUN_PYTHON)
 
     async def recorded_look(*_):
         return next(readings)
+
+    async def recorded_python(_arguments):
+        return next(outputs)
 
     # The second opinion is the model's too: replay the recorded one, if the run had it.
     recorded = next((e for e in run["events"] if e.get("type") == "review"), None)
@@ -83,6 +91,7 @@ async def replay(run: dict, processed_dir: Path) -> AgentRun:
     async def recorded_review(*_):
         return Review.model_validate(recorded), recorded.get("tokens", 0)
 
+    any_python = any(c["name"] == RUN_PYTHON for step in steps for c in step["tool_calls"])
     client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=create)))
     llm = LLM(client=client, model="replay", provider="replay")
     as_of = date.fromisoformat(run["as_of"]) if run.get("as_of") else None
@@ -95,6 +104,7 @@ async def replay(run: dict, processed_dir: Path) -> AgentRun:
         max_steps=max(len(steps), recorded["after_step"] + 3) if recorded else len(steps),
         look_fn=recorded_look,
         review_fn=recorded_review if recorded else None,
+        python_fn=recorded_python if any_python else None,
     )
 
 

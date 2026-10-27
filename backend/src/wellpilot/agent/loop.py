@@ -29,6 +29,7 @@ from wellpilot.agent.checker import (
 )
 from wellpilot.agent.evidence import Evidence, EvidenceLog
 from wellpilot.agent.review import Review, revise_message
+from wellpilot.agent.sandbox import MAX_CALLS_PER_RUN, PYTHON_TOOL, RUN_PYTHON, PythonFn
 from wellpilot.agent.tools import TOOLS_BY_NAME, execute, tool_schemas
 from wellpilot.agent.vision import LOOK, VISION_TOOL, look
 from wellpilot.data.store import ProductionStore
@@ -414,6 +415,7 @@ async def run_agent(
     evidence_log: EvidenceLog | None = None,
     look_fn: Callable[[ProductionStore, LLM, str], Awaitable[dict]] = look,
     review_fn: ReviewFn | None = None,
+    python_fn: PythonFn | None = None,
 ) -> AgentRun:
     """Run the agent on one question.
 
@@ -423,7 +425,9 @@ async def run_agent(
     whole run, including a model call that hangs. look_fn runs look_at_page calls (the
     replay passes recorded readings instead of asking the model again). review_fn, when
     given, reviews the first accepted answer; with points raised, the model gets one chance
-    to revise, and the checked answer stands if the revision does not pass.
+    to revise, and the checked answer stands if the revision does not pass. python_fn, when
+    given, runs run_python calls in the run's sandbox (the replay passes the recorded
+    results); without it the tool is not offered.
 
     The run ends with an answer whatever happens to it: out of steps or time, or a provider
     error after the client's retries, it returns the last submission (unverified) with the
@@ -433,7 +437,13 @@ async def run_agent(
         {"role": "system", "content": system_prompt(store)},
         {"role": "user", "content": question},
     ]
-    tools = [*tool_schemas(), VISION_TOOL.schema(), submit_tool_schema()]
+    tools = [
+        *tool_schemas(),
+        VISION_TOOL.schema(),
+        *([PYTHON_TOOL.schema()] if python_fn else []),
+        submit_tool_schema(),
+    ]
+    python_calls = 0
     log = evidence_log if evidence_log is not None else EvidenceLog()
     steps: list[Step] = []
     check_rounds: list[list[str]] = []
@@ -592,6 +602,16 @@ async def run_agent(
             else:
                 if name == LOOK:  # asks the model about a page image: async, not a thread
                     payload = await look_fn(store, llm, arguments)
+                elif name == RUN_PYTHON and python_fn:
+                    python_calls += 1
+                    payload = (
+                        await python_fn(arguments)
+                        if python_calls <= MAX_CALLS_PER_RUN
+                        else {
+                            "error": f"{RUN_PYTHON} is limited to {MAX_CALLS_PER_RUN} calls per "
+                            "question; answer with the evidence you have"
+                        }
+                    )
                 else:
                     # Tools are synchronous (DuckDB, scipy); keep the event loop free.
                     payload = await asyncio.to_thread(execute, store, name, arguments)
@@ -600,7 +620,11 @@ async def run_agent(
                         name,
                         _parse_arguments(arguments),
                         payload["result"],
-                        VISION_TOOL.run if name == LOOK else TOOLS_BY_NAME[name].run,
+                        VISION_TOOL.run
+                        if name == LOOK
+                        else PYTHON_TOOL.run
+                        if name == RUN_PYTHON
+                        else TOOLS_BY_NAME[name].run,
                     )
                     payload = {"evidence_id": evidence.id, **payload}
                     record["evidence_id"] = evidence.id

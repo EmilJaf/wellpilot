@@ -34,6 +34,7 @@ from wellpilot.agent.edits import check_edits
 from wellpilot.agent.evidence import EvidenceLog
 from wellpilot.agent.loop import AgentRun, run_agent, with_spans
 from wellpilot.agent.review import review
+from wellpilot.agent.sandbox import Sandbox, SandboxPool, run_python
 from wellpilot.agent.tools import to_jsonable
 from wellpilot.data.store import ProductionStore
 from wellpilot.hindsight import hindsight
@@ -70,6 +71,16 @@ def _record_of(value: dict) -> dict:
     their own results already; what the model sent is kept exactly, so a replay feeds back
     the same submission and the checker on a saved run sees what it saw live."""
     return to_jsonable(value, max_text=None, rounded=False)
+
+
+SANDBOX_START_S = 90.0  # a cold start and the data's preparation
+
+
+async def _close_quietly(sandbox: Sandbox) -> None:
+    try:
+        await asyncio.wait_for(sandbox.close(), 10)
+    except Exception as e:  # its own time limit ends it anyway
+        logger.warning("closing a sandbox failed: %s", type(e).__name__)
 
 
 def new_run_id() -> str:
@@ -211,8 +222,10 @@ class RunManager:
         public: bool = False,
         operator_key: str = "",
         trusted_proxy: str = "none",
+        sandboxes: SandboxPool | None = None,
     ) -> None:
         self.processed_dir = processed_dir
+        self.sandboxes = sandboxes  # run_python in Modal; None: the tool is not offered
         self.runs_dir = runs_dir
         self.llm_factory = llm_factory
         self.max_active = max_active
@@ -273,6 +286,9 @@ class RunManager:
         if tasks:
             with suppress(TimeoutError):
                 await asyncio.wait_for(asyncio.gather(*tasks, return_exceptions=True), 3)
+        if self.sandboxes is not None:
+            with suppress(TimeoutError):
+                await asyncio.wait_for(self.sandboxes.aclose(), 3)
 
     def store(self, as_of: date | None = None) -> ProductionStore:
         with self._stores_lock:
@@ -328,6 +344,16 @@ class RunManager:
     async def _run(self, record: RunRecord, llm: LLM, reasoning_effort: str) -> None:
         record.start(llm)
         self._save(record)  # killed outright, the file still says it was running
+        # The sandbox gets ready while the model takes its first steps; a run_python call
+        # waits for it only if it comes first.
+        ready = asyncio.create_task(self._sandbox(record)) if self.sandboxes else None
+
+        async def python_fn(arguments: str) -> dict:
+            sandbox = await ready
+            if sandbox is None:
+                return {"error": "the sandbox is not available now; answer with the other tools"}
+            return await run_python(sandbox, arguments)
+
         try:
             store = await asyncio.to_thread(self.store, record.as_of)
             run: AgentRun = await run_agent(
@@ -339,6 +365,7 @@ class RunManager:
                 on_event=record.emit,
                 evidence_log=record.log,
                 review_fn=review if self.review_answers else None,
+                python_fn=python_fn if ready else None,
             )
             record.complete(run)
         except asyncio.CancelledError:
@@ -350,7 +377,23 @@ class RunManager:
             # The stream is public: the type, not the message, which may name server paths.
             record.fail(f"the run failed ({type(e).__name__}); see the server log")
         finally:
+            if ready is not None:  # closed before the run ends, never left running
+                if ready.done() and not ready.cancelled() and (sandbox := ready.result()):
+                    await _close_quietly(sandbox)
+                elif not ready.done():
+                    ready.cancel()  # one still starting ends by its own time limit
             self._finish(record)
+
+    async def _sandbox(self, record: RunRecord) -> Sandbox | None:
+        """The run's sandbox, prepared for its date; a run without one goes on without
+        run_python rather than failing."""
+        if self.sandboxes is None:
+            return None
+        try:
+            return await asyncio.wait_for(self.sandboxes.take(record.as_of), SANDBOX_START_S)
+        except Exception as e:
+            logger.warning("run %s goes without a sandbox: %s", record.id, type(e).__name__)
+            return None
 
     def allow_voice(self, client: str, privileged: bool = False) -> None:
         """A voice question costs a fraction of a run, so it has its own hourly limit per

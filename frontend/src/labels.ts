@@ -15,6 +15,9 @@ export const TOOL_NAMES: Record<string, string> = {
   field_screen: 'Screen every well',
   waterflood: 'Waterflood diagnostics',
   look_at_page: 'Look at a report page',
+  run_python: 'Own Python analysis',
+  well_operations: 'Work on the well',
+  production_log: 'Production logs',
   submit_findings: 'Submit answer',
 }
 
@@ -33,6 +36,7 @@ export function describeArgs(name: string, args: Record<string, unknown>): strin
   if (typeof args.sql === 'string') parts.push(args.sql.replace(/\s+/g, ' ').slice(0, 120))
   if (typeof args.doc_id === 'string') parts.push(`${args.doc_id} page ${args.page}`)
   if (typeof args.question === 'string') parts.push(`“${args.question}”`)
+  if (typeof args.purpose === 'string') parts.push(args.purpose)
   if (name === 'submit_findings' && Array.isArray(args.findings)) {
     parts.push(`${args.findings.length} findings`)
   }

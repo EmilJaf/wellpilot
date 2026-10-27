@@ -114,7 +114,7 @@ export function EvidenceView({ runId, evidenceId, attempt, focus }: Props) {
         </div>
       ))}
       <HitContext.Provider value={hit}>
-        <Result tool={evidence.tool} result={evidence.result} focus={focus} />
+        <Result tool={evidence.tool} result={evidence.result} args={evidence.arguments} focus={focus} />
       </HitContext.Provider>
     </div>
   )
@@ -163,7 +163,18 @@ function CodeRef({ codeRef }: { codeRef: string }) {
 const isTable = (v: unknown): v is Table =>
   typeof v === 'object' && v !== null && Array.isArray((v as Table).columns) && Array.isArray((v as Table).rows)
 
-function Result({ tool, result, focus }: { tool: string; result: unknown; focus?: Focus | null }) {
+function Result({
+  tool,
+  result,
+  args,
+  focus,
+}: {
+  tool: string
+  result: unknown
+  args?: Record<string, unknown>
+  focus?: Focus | null
+}) {
+  if (tool === 'run_python') return <PythonRun result={result as PythonResult} code={String(args?.code ?? '')} />
   if (tool === 'calculate') {
     const r = result as { expression: string; value: number }
     return <CalcResult expression={r.expression} value={r.value} />
@@ -199,6 +210,58 @@ function Result({ tool, result, focus }: { tool: string; result: unknown; focus?
   if (tool === 'fit_decline' || tool === 'forecast_production') return <Fit result={result as FitResult} />
   if (isTable(result)) return <DataTable table={result} />
   return <pre className="code">{JSON.stringify(result, null, 2)}</pre>
+}
+
+type PythonResult = {
+  purpose: string
+  result: unknown
+  printed: string
+  rows_read: number
+}
+
+/** The agent's own Python and what it returned: the code that computed the number, as it
+    ran in the sandbox on the data up to the run's date. */
+function PythonRun({ result, code }: { result: PythonResult; code: string }) {
+  const hit = useContext(HitContext)
+  const value = result.result
+  const scalars =
+    typeof value === 'object' && value !== null && !Array.isArray(value) && !isTable(value)
+      ? Object.entries(value as Record<string, unknown>)
+      : null
+  return (
+    <>
+      <p className="evidence-sub">
+        The code the agent wrote for this, run in an isolated sandbox (no network) on the field&rsquo;s data up to the
+        run&rsquo;s date. It read {result.rows_read.toLocaleString('en')} rows of data.
+      </p>
+      <pre className="code python-code">{code}</pre>
+      <h4 className="evidence-subhead">What it returned</h4>
+      {isTable(value) ? (
+        <DataTable table={value} />
+      ) : scalars ? (
+        <table className="data-table">
+          <tbody>
+            {scalars.map(([k, v]) => (
+              <tr key={k}>
+                <th scope="row">{k.replace(/_/g, ' ')}</th>
+                <td className={`${typeof v === 'number' ? 'num' : ''}${hit(v) ? ' hit' : ''}`}>
+                  {typeof v === 'object' ? JSON.stringify(v) : String(v)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <pre className={`code${hit(value) ? ' hit' : ''}`}>{JSON.stringify(value, null, 2)}</pre>
+      )}
+      {result.printed && (
+        <>
+          <h4 className="evidence-subhead">What it printed</h4>
+          <pre className="code">{result.printed}</pre>
+        </>
+      )}
+    </>
+  )
 }
 
 type ReadingResult = {

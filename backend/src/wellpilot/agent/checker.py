@@ -30,6 +30,7 @@ says the gauge reads 0; whether the reasoning holds is for the reader, who can o
 source.
 """
 
+import ast
 import json
 import math
 import re
@@ -327,10 +328,34 @@ def _echoes(sql: str) -> tuple[frozenset[float], frozenset[str]]:
 
 
 def _typed_by_model(item: Evidence) -> tuple[frozenset[float], frozenset[str]]:
-    """Numbers and strings the model wrote into a SQL query's SELECT list: echoes, not data."""
+    """Numbers and strings the model wrote into a SQL query's SELECT list, or into its own
+    Python: echoes, not data."""
+    if item.tool == "run_python":
+        return _literals(str(item.arguments.get("code", "")))
     if item.tool != "run_sql":
         return frozenset(), frozenset()
     return _echoes(str(item.arguments.get("sql", "")))
+
+
+def _literals(code: str) -> tuple[frozenset[float], frozenset[str]]:
+    """The numbers and strings typed into the agent's code. A result equal to one is the
+    model's own number, wherever the code put it. Integers up to 10 and unit constants (24,
+    100, 1000) are not counted: code uses them to compute, and they need no evidence anyway.
+    Code that does not parse has no result to judge."""
+    try:
+        tree = ast.parse(code)
+    except SyntaxError:
+        return frozenset(), frozenset()
+    numbers, strings = set(), set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Constant) and not isinstance(node.value, bool):
+            if isinstance(node.value, int | float) and math.isfinite(node.value):
+                value = abs(float(node.value))
+                if not (value <= 10 and value == int(value)) and not _is_constant(value):
+                    numbers.add(value)
+            elif isinstance(node.value, str):
+                strings.add(node.value)
+    return frozenset(numbers), frozenset(strings)
 
 
 class _Pool:
@@ -351,9 +376,14 @@ class _Pool:
                 elif isinstance(leaf, str) and leaf not in typed_strings:
                     texts.append(squash(leaf))
                     self.dates.update(DATE.findall(normalize_dates(leaf)))
-                    # Report text may use either convention, so keep both readings.
+                    # Report text may use either convention, so keep both readings. A number
+                    # the model typed is no evidence in printed text either.
                     for european in (False, True):
-                        self.numbers.extend(v for v, _, _ in _numbers_in_text(leaf, european))
+                        self.numbers.extend(
+                            v
+                            for v, _, _ in _numbers_in_text(leaf, european)
+                            if abs(v) not in typed_numbers
+                        )
         self.years = {d[:4] for d in self.dates}
         self.text = "|".join(texts)
 
@@ -708,7 +738,8 @@ def _leaves(item: Evidence) -> list[_Leaf]:
         elif isinstance(value, str) and value not in typed_strings:
             for european in (False, True):
                 for number, _, suffix in _numbers_in_text(value, european, signed=True):
-                    found.append(_Leaf(number, None, label, well, record, days, suffix))
+                    if abs(number) not in typed_numbers:
+                        found.append(_Leaf(number, None, label, well, record, days, suffix))
             for day in DATE.findall(normalize_dates(value)):
                 found.append(_Leaf(None, day, label, well, record, days))
 

@@ -1,3 +1,4 @@
+import asyncio
 import os
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
@@ -8,6 +9,7 @@ from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 from wellpilot import __version__
+from wellpilot.agent.sandbox import modal_pool
 from wellpilot.api import data, redteam, runs, voice
 from wellpilot.config import Settings, get_settings
 from wellpilot.llm import LLM, make_llm
@@ -21,9 +23,20 @@ def create_app(
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        # One sandbox started ahead, so a run does not wait for a cold start (about 20 s):
+        # kept so on the public site; on a developer's machine, once, ending by its time limit.
+        keeper = None
+        if sandboxes is not None and public:
+            keeper = asyncio.create_task(sandboxes.keep_warm())
+        elif sandboxes is not None:
+            sandboxes.warm()
         yield
+        if keeper is not None:
+            keeper.cancel()
         await app.state.runs.aclose()  # runs in flight are saved as interrupted
 
+    sandboxes = modal_pool(settings.processed_dir) if settings.python_sandbox else None
+    public = settings.public or on_fly
     app = FastAPI(title="WellPilot", version=__version__, lifespan=lifespan)
     proxy = settings.trusted_proxy
     app.state.runs = runs.RunManager(
@@ -40,9 +53,10 @@ def create_app(
         review_answers=settings.review_answers,
         run_timeout_s=settings.run_timeout_s,
         featured=tuple(r.strip() for r in settings.featured_runs.split(",") if r.strip()) or None,
-        public=settings.public or on_fly,
+        public=public,
         operator_key=settings.operator_key,
         trusted_proxy=("fly" if on_fly else "none") if proxy == "auto" else proxy,
+        sandboxes=sandboxes,
     )
     app.include_router(runs.router)
     app.include_router(data.router)
@@ -61,6 +75,8 @@ def create_app(
             "llm_configured": bool(key),
             # Audio input is a Muse Spark Open on Baseten feature; the mic hides otherwise.
             "voice": bool(key) and settings.llm_provider == "baseten",
+            # The agent can run its own Python (Modal Sandboxes are set up).
+            "python": sandboxes is not None,
             "data_ready": (settings.processed_dir / "production_daily.parquet").exists(),
         }
 

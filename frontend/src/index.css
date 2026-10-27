@@ -1368,6 +1368,24 @@ code,
   color: var(--ink-3);
 }
 
+/* the agent's own Python, as it ran in the sandbox */
+.python-code {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--rule-strong);
+  border-left: 3px solid var(--ink);
+  border-radius: 4px;
+  background: var(--sheet);
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.evidence-subhead {
+  margin: 10px 0 4px;
+  font-size: 13px;
+  font-weight: 650;
+}
+
 .quoted-rows {
   list-style: none;
   margin: 0 0 12px;

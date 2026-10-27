@@ -8,6 +8,7 @@ dependencies = [
     "duckdb>=2.0.0",
     "fastapi>=0.162.0",
     "meta-sam-parser>=0.1.0",
+    "modal>=1.6.3",
     "numpy>=2.5.4",
     "openai>=3.38.0",
     "openpyxl>=3.1.5",
