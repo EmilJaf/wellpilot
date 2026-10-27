@@ -166,6 +166,9 @@ HEDGE = re.compile(
     re.IGNORECASE,
 )
 SENTENCE = re.compile(r"(?<=[.;!?])\s+")
+# A warned number's hedge may come after a semicolon ("...335 thousand; the fit suggests
+# ..."), so that rule reads whole sentences; a cause must be hedged in its own clause.
+FULL_SENTENCE = re.compile(r"(?<=[.!?])\s+")
 
 
 class DeclaredNumber(BaseModel):
@@ -722,7 +725,7 @@ def _unhedged_warned(
     summary has no label, so the sentence itself must say it is uncertain."""
     text = _normalize(summary)
     masked = _mask(text)
-    ends = [m.start() for m in SENTENCE.finditer(text)] + [len(text)]
+    ends = [m.start() for m in FULL_SENTENCE.finditer(text)] + [len(text)]
     problems = []
     for number in declared:
         item = log.get(number.evidence_id)

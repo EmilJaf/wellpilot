@@ -5,8 +5,8 @@
   "model": "meta-models/muse-spark-open-1026",
   "question": "Forecast F-14 oil production for the next 12 months and say how confident the forecast is."
  },
- "to_review": true,
- "note": "",
+ "to_review": false,
+ "note": "Fair rejection: 277, 45%, 49 and the summary's 10.7% undeclared; finding 3 states the waterflood fit's warning as a fact (M1 by design). Its summary hedge after a semicolon was falsely flagged; the warned-number rule now reads whole sentences.",
  "expected": {
   "accepted": false,
   "flagged": [

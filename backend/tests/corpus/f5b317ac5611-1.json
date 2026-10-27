@@ -5,8 +5,8 @@
   "model": "meta-models/muse-spark-open-1026",
   "question": "Is F-12's missing downhole pressure after October 2010 a reservoir problem or a sensor problem?"
  },
- "to_review": true,
- "note": "",
+ "to_review": false,
+ "note": "Fair rejection: 51.6%, 24.0 hrs, 5,100 and 5,260 written but not declared.",
  "expected": {
   "accepted": false,
   "flagged": [

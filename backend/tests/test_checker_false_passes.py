@@ -245,6 +245,10 @@ def test_a_summary_number_from_a_poor_fit_must_be_stated_as_uncertain() -> None:
     assert hedged == []
     # The hedge must be in the number's own sentence.
     assert summary_check("The fit is likely poor. It fell 7.89 times faster.", ratio, log)
+    # A clause after a semicolon is the same sentence (run 83f441296bb7's first answer).
+    assert not summary_check(
+        "It fell about 7.89 times faster; the fit suggests so, with low confidence.", ratio, log
+    )
 
 
 def test_a_finding_about_a_well_needs_evidence_about_that_well() -> None:
