@@ -70,6 +70,15 @@ A production engineer reviewing a well asks questions like: why did output fall,
 
 WellPilot turns that into one question, answered in under a minute (a median of 36 s and $0.15 of model time over the 12 eval questions; $0.06-0.48), where every figure links to the exact tool result, the data behind it and the Python that produced it. The decisions it supports are the everyday ones: next year's forecast for a budget, which wells need a gauge or a workover, and whether the field is running against the limits it was designed for.
 
+What one answer covers, counted from the data ([by hand vs with the agent](docs/by-hand-vs-agent.md)):
+
+| Question | By hand | With the agent |
+|---|---|---|
+| Which wells need attention at the end of 2010, and next year's oil for the worst one | 4,544 daily rows, F-12's 142 daily drilling reports, the design limits in a 53-page Norwegian plan, decline fits on several windows and a range from earlier forecasts' errors | 18 tool calls in 35 s, about $0.23, every number checked |
+| What was done to F-12 in 2014, and why the 2010 plug did not work | 165 daily drilling reports, a production log in 3 digital passes and a 2009 one that exists only as pictures in a PDF | 14 tool calls in 33 s, about $0.27 |
+
+We have not timed an engineer on these; the page above has the protocol for doing so.
+
 ## What it does
 
 1. **Plans and runs real analysis.** The agent writes a short plan, then calls deterministic tools over the data: monthly production, event detection (regime changes, water-cut crossings, shut-ins, dead gauges), Arps decline fits and forecasts with ranges calibrated on past errors, waterflood diagnostics (WOR against cumulative oil, liquid and choke, injection support), a screen of every well, read-only SQL, arithmetic, a search of report facts, the field against the plan's forecast and design limits, and a look at a report page image when only the picture holds the answer.
