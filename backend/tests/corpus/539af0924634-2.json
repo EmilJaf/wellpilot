@@ -6,10 +6,12 @@
   "question": "Is F-12's missing downhole pressure after October 2010 a reservoir problem or a sensor problem?"
  },
  "to_review": false,
- "note": "",
+ "note": "Oct 28 night: 'which is why' is a cause (third judge panel's probes); a fact may not state one.",
  "expected": {
-  "accepted": true,
-  "flagged": []
+  "accepted": false,
+  "flagged": [
+   "Finding 3"
+  ]
  },
  "submission": {
   "summary": "F-12's missing downhole pressure after 2010-10-12 is a sensor failure, not a reservoir pressure collapse. The gauge read zero while the well kept flowing for 1 830 days producing 1.13 million Sm3 oil with stable wellhead pressure around 53.3 bar.",

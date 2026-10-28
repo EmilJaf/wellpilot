@@ -19,10 +19,6 @@ The featured runs (Muse Spark Open on Baseten, recorded by the eval):
   F-12 first (dead gauge; rate 55% lower since May 2010, a gradual shift); its 2011 forecast
   359k Sm3 against 340k produced (+6%), the whole-history fit 685k (+102%), the band from
   past errors held. Verified on attempt 2; 9 steps, about $0.23.
-- e51eada95269, F-12's decline against the 2005 plan: breakthrough after about 2 years as
-  planned, the 2010-07-18 change 72% between periods but 22% across it (a gradual shift as
-  water took over), the field within its design limits. Verified on attempt 3; 7 steps,
-  about $0.26.
 - 3fc72959335a, the plan's forecast chart read by the model (look_at_page): the text says
   9 000 Sm3/d for about 19 months, the figure as drawn about 8 400 Sm3/d for about 2 years.
   Verified on attempt 2; 5 steps, about $0.07.
@@ -30,3 +26,9 @@ The featured runs (Muse Spark Open on Baseten, recorded by the eval):
 Earlier frozen runs (fcfb4188de3b, c8b6cbb62280, then cc62fd10242e and 44f49414e399 when the
 regime-change detector changed) were retired when the checker and the tools changed what
 they would return.
+
+e51eada95269 (F-12's decline against the 2005 plan) was retired on Oct 28 night: its
+finding 5, "The field stayed within plan design limits", is now rejected, since its own E10
+has the field's water cut at or above the plan's 0.80 for 27 months (the third judge
+panel's catch). It stays in `tests/fixtures/retired_runs/` for the red-team tests until the
+question is re-recorded.

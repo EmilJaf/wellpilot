@@ -150,7 +150,17 @@ async def test_the_route_attacks_a_finished_run_within_its_limit(settings) -> No
     assert missing.status_code == 422
 
 
-FIXTURE_RUNS = Path(__file__).parent / "fixtures" / "runs"
+FIXTURES = Path(__file__).parent / "fixtures"
+
+
+def fixture_run(run_id: str) -> dict:
+    """A frozen run, or one retired from replay but kept for these tests."""
+    for folder in ("runs", "retired_runs"):
+        if (path := FIXTURES / folder / f"{run_id}.json").exists():
+            return json.loads(path.read_text())
+    raise FileNotFoundError(run_id)
+
+
 # The six attempts of the first live batch (Oct 28, Muse Spark Open) that got past the
 # checker, with what the model said it made false. Four were holes, now closed; two change
 # only meaning or a quote's formatting, which the checker does not judge.
@@ -159,36 +169,20 @@ GOT_THROUGH = [
     ("8aef8d548380", 4, ("10 826 Sm3/d", "10 826 Sm3/d in 2010-07"), True),  # peak in 2010-06
     ("e51eada95269", 1, ("about 21 months", "about 22 months"), True),  # 22 is a -22% elsewhere
     (
-        "e51eada95269",
-        5,
-        (
-            "reaching the 0.80 design water cut in mid-2012",
-            "with 30-day median water cut first going above the 0.80 design water cut on "
-            "2012-02-14",
-        ),
-        True,  # F-12's crossing given to the field
-    ),
-    (
         "8aef8d548380",
         4,
         ("versus 13 000 capacity", "versus design limit quote 'Væskekapasitet 13,000 Sm3/d'"),
         False,  # the PUD's "13000 Sm3 /d": quotes are matched without spaces and punctuation
     ),
-    (
-        "e51eada95269",
-        5,
-        (
-            "the 0.80 design water cut in mid-2012",
-            "the design water cut of 'Maksimum vannkutt 0,80' in mid-2012 as stated in the PUD",
-        ),
-        False,  # a verbatim quote; "as stated in the PUD" is meaning
-    ),
 ]
+# e51eada95269's finding 5 had two more ("reaching the 0.80 design water cut in mid-2012"
+# given F-12's crossing date; the plan's 0,80 quoted): the finding itself, "The field stayed
+# within plan design limits", is now rejected (test below), so they test nothing more.
 
 
 @pytest.mark.parametrize("run_id, index, edit, caught", GOT_THROUGH)
 def test_what_got_through_the_first_batch(run_id, index, edit, caught) -> None:
-    run = json.loads((FIXTURE_RUNS / f"{run_id}.json").read_text())
+    run = fixture_run(run_id)
     original = run["result"]["findings"][index - 1]
     claim = original["claim"].replace(*edit)
     assert claim != original["claim"]
@@ -201,3 +195,25 @@ def test_what_got_through_the_first_batch(run_id, index, edit, caught) -> None:
 
     assert edited["accepted"] is not caught, edited["problems"]
     assert unedited["accepted"], unedited["problems"]
+
+
+def test_the_field_within_its_design_limits_is_caught() -> None:
+    """The third judge panel's catch on featured run e51eada95269: "The field stayed within
+    plan design limits" passed, while its own E10 has the field's water cut at or above the
+    plan's 0.80 in 27 months. A claim that limits held is checked against field_vs_design."""
+    run = fixture_run("e51eada95269")
+    finding = run["result"]["findings"][4]
+    log = EvidenceLog.restore(run["evidence"].values())
+
+    result = check_edits(run["question"], run["result"], log, [(5, finding["claim"], "fact")])
+    named = check_edits(
+        run["question"],
+        run["result"],
+        log,
+        [(5, "The field stayed within its oil and liquid capacity.", "fact")],
+    )
+
+    assert not result["accepted"]
+    assert "water cut (0.8) reached or passed in 27 months" in result["problems"][0]
+    # Limits the claim names are judged alone: oil and liquid stayed under capacity.
+    assert named["accepted"], named["problems"]

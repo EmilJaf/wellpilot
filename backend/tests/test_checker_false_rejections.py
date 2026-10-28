@@ -491,14 +491,19 @@ def test_H1_declared_count_of_wells() -> None:
 
 
 def test_H2_declared_duration_in_years() -> None:
+    """A small declared duration passes. It is also checked now (the third judge panel):
+    the fit's window, 2010-07-18 to 2012-12-09, is 2.4 years, so "almost 6 years", this
+    probe's first wording, is caught."""
     log = corpus_log(F12)
     f = finding(
-        "The post-2010 fit covers almost 6 years at Di 0.4461 per year.",
+        "The post-2010 fit covers about 2 years at Di 0.4461 per year.",
         ["E9"],
-        [d("6", 6, "E9"), d("0.4461", 0.4461, "E9")],
+        [d("2", 2, "E9"), d("0.4461", 0.4461, "E9")],
         confidence="inference",
     )
     assert check(f, log=log) == []
+    wrong = f.model_copy(update={"claim": f.claim.replace("about 2 years", "almost 6 years")})
+    assert check(wrong, log=log)
 
 
 def test_H3_undeclared_small_integer_control() -> None:

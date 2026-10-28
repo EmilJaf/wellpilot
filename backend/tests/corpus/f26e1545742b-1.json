@@ -6,12 +6,13 @@
   "question": "Why did F-12's oil rate jump after the December 2014 shutdown?"
  },
  "to_review": false,
- "note": "Re-judged when a finding's detail numbers became looked up instead of declared (Oct 27 evening): the remaining problems are undeclared claim numbers, facts on warned evidence, causes as facts or uncited sources, all fair.",
+ "note": "Re-judged when a finding's detail numbers became looked up instead of declared (Oct 27 evening): the remaining problems are undeclared claim numbers, facts on warned evidence, causes as facts or uncited sources, all fair. Oct 28 night: the detail's '69% less' matches only a choke of 69%, not a change; details now get the claim's checks.",
  "expected": {
   "accepted": false,
   "flagged": [
    "Finding 1",
    "Finding 2",
+   "Finding 3",
    "Summary"
   ]
  },

@@ -6,10 +6,12 @@
   "question": "Why did F-12's oil rate jump after the December 2014 shutdown?"
  },
  "to_review": false,
- "note": "",
+ "note": "Oct 28 night: the summary's '77%' rests on E16, warned (poor WOR trend); its sentence has no hedge. Accepted before only because the hedge rule sliced the sentence at masked positions (a bug, fixed).",
  "expected": {
-  "accepted": true,
-  "flagged": []
+  "accepted": false,
+  "flagged": [
+   "Summary"
+  ]
  },
  "submission": {
   "summary": "F-12 was shut in for 32 days from 2014-11-30 to 2014-12-31 (field-wide) [E2]. Its oil rate jumped from 185 Sm3/d to 860 Sm3/d (+366%) on restart [E2], with monthly oil rising to 862 Sm3/d in January 2015 [E4]. The jump coincides with water cut collapsing from 96% to 31% [E4] and wellhead pressure rising from 32.4 bar to 71.0 bar [E4] while the choke was cut to 30% [E4] and liquid fell 77% [E5][E4], indicating the well had been producing mostly water at capacity and the shut-in let water segregate/pressure rebuild so oil could take the limited liquid rate.",

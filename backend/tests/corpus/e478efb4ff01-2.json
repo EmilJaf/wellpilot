@@ -6,10 +6,12 @@
   "question": "Which wells needed attention at the end of 2010, and why?"
  },
  "to_review": false,
- "note": "",
+ "note": "Oct 28 night: 'within design' while E9 has the field's water injection over its 16,000 capacity in 3 months; the design-limit rule (third panel).",
  "expected": {
-  "accepted": true,
-  "flagged": []
+  "accepted": false,
+  "flagged": [
+   "Finding 5"
+  ]
  },
  "submission": {
   "summary": "At end-2010 both producers needed attention but F-12 most urgently. F-12 was on alarm with a dead downhole gauge since 2010-10-12, water cut of 69% and a 55% step-down in oil rate around 2010-05-02; F-14 was on caution with water cut of 61% and a 34% step-down around 2010-01-10, now running choke at 100%.",
