@@ -110,3 +110,27 @@ def test_the_forecast_the_answer_cites_comes_first(stores) -> None:
         h = hindsight(run, full, past)
 
     assert [(f["evidence_id"], f["cited"]) for f in h["forecasts"]] == [("E2", True), ("E1", False)]
+
+
+def test_the_reveal_says_when_the_agents_window_starts_at_a_change_it_found(stores) -> None:
+    """The fair story (the outside review): not '+6% against a whole-history fit', but the
+    agent dating its own window from the shift it had detected."""
+    full, past = stores
+    run = run_with_forecast(past, well="F-12", start="2010-05-02")
+    run["evidence"]["E2"] = {
+        "id": "E2",
+        "tool": "detect_events",
+        "arguments": {"well": "F-12"},
+        "result": [
+            {"kind": "regime_change", "signal": "water_cut", "start": "2010-02-28"},
+            {"kind": "regime_change", "signal": "oil_rate", "start": "2010-05-02", "summary": "x"},
+        ],
+    }
+    other = run_with_forecast(past, well="F-12", start="2010-07-18")
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        (found,) = hindsight(run, full, past)["forecasts"]
+        (fixed,) = hindsight(other, full, past)["forecasts"]
+
+    assert found["window_from_change"] == {"date": "2010-05-02", "evidence_id": "E2", "text": "x"}
+    assert fixed["window_from_change"] is None

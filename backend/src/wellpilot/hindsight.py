@@ -80,6 +80,7 @@ def _forecast_hindsight(
         )
 
     band = result.get("calibrated_band_sm3")
+    window_start = str(args.get("start") or "")[:10]
     return {
         "evidence_id": evidence["id"],
         "well": well,
@@ -95,6 +96,8 @@ def _forecast_hindsight(
         ],
         "classic_warned": bool(fit_warnings(classic_fit)),
         "fixed_windows": fixed,
+        # Why the agent's window starts where it does, when a change it found dates it.
+        "window_from_change": _change_at(run, well, window_start) if window_start else None,
         "agent_range": {"p90": reported["p90"], "p10": reported["p10"]},
         "p50_by_model": result.get("p50_by_model_sm3"),  # what each Arps model would say
         "calibrated_band": (
@@ -117,6 +120,34 @@ def _forecast_hindsight(
             ],
         },
     }
+
+
+CHANGE_KINDS = {"regime_change", "shift_down", "step_down"}
+
+
+def _change_at(run: dict, well: str, day: str) -> dict | None:
+    """The change in the well's oil rate that the run's own evidence dates to `day` (a
+    detect_events regime change, a screen's shift or step), or None."""
+    for item in (run.get("evidence") or {}).values():
+        if item.get("tool") == "detect_events" and item.get("arguments", {}).get("well") == well:
+            records = item.get("result") or []
+        elif item.get("tool") == "field_screen":
+            rows = (item.get("result") or {}).get("wells") or []
+            records = [i for w in rows if w.get("well") == well for i in w.get("issues") or []]
+        else:
+            continue
+        for record in records:
+            if not isinstance(record, dict) or record.get("kind") not in CHANGE_KINDS:
+                continue
+            if record.get("kind") == "regime_change" and record.get("signal") != "oil_rate":
+                continue
+            if str(record.get("start") or record.get("since") or "")[:10] == day:
+                return {
+                    "date": day,
+                    "evidence_id": item["id"],
+                    "text": record.get("summary") or record.get("text"),
+                }
+    return None
 
 
 def _water_cut_at(daily: pd.DataFrame, at: pd.Timestamp) -> float | None:

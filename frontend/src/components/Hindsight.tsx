@@ -152,13 +152,21 @@ function ForecastCase({ f }: { f: Hindsight['forecasts'][number] }) {
       </p>
       {f.fixed_windows && f.fixed_windows.length > 0 && (
         <p className="hindsight-fixed">
-          Decline fits made the same day on fixed windows said{' '}
+          {f.window_from_change ? (
+            <>
+              <strong>It chose its own window:</strong> it fitted from {f.window_from_change.date}, where it had found{' '}
+              {f.well}&rsquo;s rate shifting ({f.window_from_change.evidence_id}), not a fixed length of history.{' '}
+            </>
+          ) : (
+            <>It fitted from {agent.window_start}, a window it chose itself. </>
+          )}
+          Fits made the same day on fixed windows said{' '}
           {f.fixed_windows
             .filter((w) => w.error !== null)
             .map((w) => `${signed(w.error!)} (last ${w.months} months)`)
             .join(', ')}
-          , and on the whole history {signed(classic.error)}. Which window was right is known only afterwards; the agent
-          chose its own, from {agent.window_start}.
+          : one of them came closer, but which one was known only afterwards. The textbook fit on the whole history, which
+          averages in the years before the change, said {signed(classic.error)}.
         </p>
       )}
       {!f.fixed_windows?.length && (

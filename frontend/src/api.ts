@@ -418,6 +418,7 @@ export type Hindsight = {
     classic_warned: boolean
     // Fits on the last 3, 6, 12 and 24 months, made the same day: the fair baselines.
     fixed_windows?: { months: number; p50_sm3: number; error: number | null }[]
+    window_from_change?: { date: string; evidence_id: string; text: string | null } | null
     agent_range: { p90: number; p10: number }
     p50_by_model?: Record<string, number> | null
     calibrated_band: { p90: number; p10: number; holds_actual: boolean } | null
