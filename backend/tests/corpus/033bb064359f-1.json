@@ -5,8 +5,8 @@
   "model": "meta-models/muse-spark-open-1026",
   "question": "Over 2011 to 2013, how closely did F-12's monthly water cut follow its choke opening? Give the correlation and what it suggests."
  },
- "to_review": true,
- "note": "",
+ "to_review": false,
+ "note": "Reviewed (Oct 28): fair; undeclared 100% and 36, and numbers from the agent's own code (now always warned) stated as settled in the summary until hedged.",
  "expected": {
   "accepted": false,
   "flagged": [

@@ -830,6 +830,16 @@ def _row_mismatch(
             if len(at) != 1:
                 continue  # no row, or several (a month tied in a daily table): not judged
             rows = table["rows"][at[0] : at[0] + (2 if reached else 1)]
+            if len(rows) == 2:
+                # The next row counts only where the tied row has that column at all: "rose
+                # to 862 Sm3/d in 2014-12" when the well did not produce in 2014-12 is
+                # January's rate.
+                rows = [rows[0]] + [
+                    [
+                        v if rows[0][i] not in (None, 0) else None
+                        for i, v in enumerate(rows[1])
+                    ]
+                ]
             values = [
                 float(v)
                 for row in rows
@@ -2458,6 +2468,83 @@ def _durations(
     return []
 
 
+MONTH_RANGE = re.compile(
+    r"\b(\d{4})-(\d{2})(?!-\d)\s*(?:to|through|until|-|–)\s*(\d{4})-(\d{2})(?!-\d)"
+)
+MONTH_COUNT = re.compile(r"\b(\d{1,3})[\s-]*months?\b", re.IGNORECASE)
+
+
+def _month_spans(label: str, text: str) -> list[str]:
+    """A month range and a count of months in one sentence that disagree: "over 2011-01 to
+    2012-12 ... across 36 months" (the range is 24)."""
+    problems = []
+    for sentence in FULL_SENTENCE.split(normalize_dates(text)):
+        ranges, counts = MONTH_RANGE.findall(sentence), MONTH_COUNT.findall(sentence)
+        if len(ranges) != 1 or len(counts) != 1:
+            continue
+        y1, m1, y2, m2 = (int(v) for v in ranges[0])
+        span = (y2 - y1) * 12 + (m2 - m1) + 1
+        if abs(span - int(counts[0])) > 1:
+            problems.append(
+                f"{label}: {y1}-{m1:02d} to {y2}-{m2:02d} is {span} months, but the sentence "
+                f"says {counts[0]}."
+            )
+    return problems
+
+
+# The plan as the subject and a well as what it forecast: "the plan forecast that well F-12
+# would ...", "the PUD expected F-12 to ...". Not a well in another part of the sentence
+# ("the PUD predicted this: '...' - F-12's breakthrough is consistent with it").
+PLAN_ABOUT_WELL = re.compile(
+    rf"\b(?:plan|PUD|report)\w*\b[^,;.:–—]{{0,60}}?\b(?:forecast|expect|predict|assum|said|"
+    rf"state|planned|project|anticipat)\w*\s+(?:that\s+)?(?:for\s+)?(?:the\s+)?(?:well\s+)?"
+    rf"(?P<well>{WELL.pattern})",
+    re.IGNORECASE,
+)
+PLAN_YEAR = re.compile(
+    r"\b(?P<a>(?:19|20)\d{2})(?:['’]s)?\s+(?:development\s+)?(?:plan|PUD)\b"
+    r"|\b(?:plan|PUD)\s+(?:of|from|dated)\s+(?P<b>(?:19|20)\d{2})\b",
+    re.IGNORECASE,
+)
+
+
+def _report_claims(label: str, text: str, cited: list[Evidence]) -> list[str]:
+    """What a sentence gives the plan that its reports do not hold: a well the cited report
+    results never name ("the plan forecast that F-12 would ...": the plan is field-level),
+    or a year that is not the plan's ("the 2007 plan" for the February 2005 PUD)."""
+    reports = [e for e in cited if e.tool in REPORT_TOOLS]
+    if not reports:
+        return []
+    problems = []
+    said = json.dumps([e.result for e in reports], ensure_ascii=False)
+    named = {_well_key(m.group(0)) for m in WELL.finditer(said)}
+    for m in PLAN_ABOUT_WELL.finditer(text):
+        well = m.group("well")
+        if _well_key(well) not in named:
+            problems.append(
+                f"{label} gives the report a statement about {well}, but "
+                f"{', '.join(e.id for e in reports)} never name {well}: the report speaks for "
+                "the field."
+            )
+    docs = {str(d) for e in reports for d in (e.arguments.get("doc_id"), _get(e.result, "doc_id"))}
+    docs |= {m for m in re.findall(r'"doc_id":\s*"([\w-]+)"', said)}
+    years = {r.doc_date[:4] for r in REPORTS if r.doc_id in docs} or {
+        r.doc_date[:4] for r in REPORTS
+    }
+    for m in PLAN_YEAR.finditer(text):
+        year = m.group("a") or m.group("b")
+        if year not in years:
+            problems.append(
+                f"{label} dates the plan to {year}, but the report it cites is from "
+                f"{', '.join(sorted(years))}."
+            )
+    return problems
+
+
+def _get(value: Any, key: str) -> Any:
+    return value.get(key) if isinstance(value, dict) else None
+
+
 def _detail_attribution(
     label: str, detail: str, cited: list[Evidence], leaves_of, free: set[float]
 ) -> list[str]:
@@ -2578,6 +2665,8 @@ def check_submission(submission: Submission, log: EvidenceLog, question: str = "
         about = {_well_key(str(e.arguments["well"])) for e in cited if e.arguments.get("well")}
         problems += _pressure_misread(f"Finding {n}", own, failures, about)
         problems += _within_limits(f"Finding {n}", own, cited)
+        problems += _month_spans(f"Finding {n}", own)
+        problems += _report_claims(f"Finding {n}", own, cited)
         problems += _durations(
             f"Finding {n}",
             _blank(own, WELL, DATE, CALENDAR_WINDOW, REFERENCE),

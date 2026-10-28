@@ -217,3 +217,84 @@ def test_the_field_within_its_design_limits_is_caught() -> None:
     assert "water cut (0.8) reached or passed in 27 months" in result["problems"][0]
     # Limits the claim names are judged alone: oil and liquid stayed under capacity.
     assert named["accepted"], named["problems"]
+
+
+# The second live batch (Oct 28 afternoon, 72 attempts on the frozen runs, 64 caught): the
+# eight that got past. Four were holes, now closed; four are true or an inference's
+# approximate reading.
+SECOND_BATCH = [
+    # The period is moved one year early to end in 2012-12 - the cited 36-month window is 2011-0
+    (
+        "033bb064359f",
+        1,
+        "Over 2011-01 to 2012-12 F-12's monthly water cut and choke opening had a Pearson correlation of 0.68 across 36 months, Spearman 0.48, both statistically significant.",  # noqa: E501
+        "inference",
+        True,
+    ),
+    # an inference read off a picture, years moved within the curve's span: not judged
+    (
+        "3fc72959335a",
+        2,
+        "As drawn, the forecast curve Figur 4.2 on page 23 shows the plateau at about 8,400 Sm3/d for about 2 years from about 2007 to mid-2009.",  # noqa: E501
+        "inference",
+        False,
+    ),
+    # 1550 is 1551 rounded: true
+    (
+        "8aef8d548380",
+        1,
+        "F-12 needs attention most: alarm level at 1550 Sm3/d oil with 69% water cut, downhole gauge dead since 2010-10-12 for 81 days, 123,258 Sm3 oil without pressure data.",  # noqa: E501
+        "fact",
+        False,
+    ),
+    # 1.5% is the medium-rate pass's share below 3210 m: true
+    (
+        "b2b80c7484ee",
+        5,
+        "Production logs showed oil from the upper perforations and water from below, so the 2010 plug at 3210 m could only remove about 1.5% of oil and 33% of water.",  # noqa: E501
+        "fact",
+        False,
+    ),
+    # Attribution to well F-12 is false because E6 has blank wells field-level scope and E21/E22
+    (
+        "b2b80c7484ee",
+        9,
+        "The 2005 plan forecast that well F-12 would reach water breakthrough after about 2 years at about 6 MSm3 cumulative oil.",  # noqa: E501
+        "fact",
+        True,
+    ),
+    # The date 2007 is false because the cited PUD source in E6 and E23 is dated 2005-02-01, not
+    (
+        "b2b80c7484ee",
+        9,
+        "The 2007 plan’s 2 years at about 6 MSm3 expectation is a field-level statement; no per-well F-12 forecast was found in the reports.",  # noqa: E501
+        "fact",
+        True,
+    ),
+    # The date is moved to December 2014, but E5 shows December 2014 had 0 producing days and nu
+    (
+        "b4396314f788",
+        2,
+        "Oil rate after the workover rose to 862 Sm3/d in December 2014, more than four times the 186 Sm3/d just before.",  # noqa: E501
+        "fact",
+        True,
+    ),
+    # 'about 8,640' against the model's own reading of 8,400-8,600 Sm3/d, an inference
+    (
+        "c8501c918af6",
+        1,
+        "The forecast figure 4.2 shows oil plateau at about 8,640 Sm3/d, just below the 9,000 Sm3/d oil capacity in the text and Table 4.3.",  # noqa: E501
+        "inference",
+        False,
+    ),
+]
+
+
+@pytest.mark.parametrize("run_id, index, claim, confidence, caught", SECOND_BATCH)
+def test_what_got_through_the_second_batch(run_id, index, claim, confidence, caught) -> None:
+    run = fixture_run(run_id)
+    log = EvidenceLog.restore(run["evidence"].values())
+
+    edited = check_edits(run["question"], run["result"], log, [(index, claim, confidence)])
+
+    assert edited["accepted"] is not caught, edited["problems"]
