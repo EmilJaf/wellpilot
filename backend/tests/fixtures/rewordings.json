@@ -1,0 +1,3620 @@
+{
+ "note": "True rewordings of the featured runs' findings and summaries written by Muse Spark Open (python -m wellpilot.agent.paraphrase, Oct 29; inline annotations unwrapped), each with the verdict it should get. Rejected ones changed the meaning or mis-declared a number, with why.",
+ "rewordings": [
+  {
+   "run": "69519dd0a995",
+   "index": 1,
+   "passage": "finding 1",
+   "text": "The well most in need of attention is F-12: producing oil at 1,551 Sm3/d with water at 69%, its downhole pressure gauge has been dead since 2010-10-12.",
+   "numbers": [
+    {
+     "text": "1,551",
+     "value": 1551.0,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "69%",
+     "value": 0.6939,
+     "evidence_id": "E2"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "69519dd0a995",
+   "index": 1,
+   "passage": "finding 1",
+   "text": "At a 69% water cut and making 1 551 Sm3/d of oil, F-12 is the well that needs attention most urgently; the downhole gauge has read zero since 12 October 2010.",
+   "numbers": [
+    {
+     "text": "69%",
+     "value": 0.6939,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "1 551",
+     "value": 1551.0,
+     "evidence_id": "E2"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "69519dd0a995",
+   "index": 1,
+   "passage": "finding 1",
+   "text": "F-12 requires the most attention - oil rate is Sm3/d 1,551, water cut was 69%, and since 2010/10/12 the downhole gauge is dead.",
+   "numbers": [
+    {
+     "text": "1,551",
+     "value": 1551.0,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "69%",
+     "value": 0.6939,
+     "evidence_id": "E2"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "69519dd0a995",
+   "index": 1,
+   "passage": "finding 1",
+   "text": "With its downhole gauge dead since 12 Oct 2010, F-12 needs attention most: it flows at 69 percent water cut delivering 1551 Sm3 per day oil.",
+   "numbers": [
+    {
+     "text": "69",
+     "value": 0.6939,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "1551",
+     "value": 1551.0,
+     "evidence_id": "E2"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "69519dd0a995",
+   "index": 2,
+   "passage": "finding 2",
+   "text": "Around 2010-05-02 the oil rate for F-12 dropped by 55% to 1 888 Sm3/d, at the same time the choke was reduced from 83% to 58%.",
+   "numbers": [
+    {
+     "text": "55%",
+     "value": 0.5512,
+     "evidence_id": "E5"
+    },
+    {
+     "text": "1 888",
+     "value": 1888.0,
+     "evidence_id": "E5"
+    },
+    {
+     "text": "83%",
+     "value": 82.84,
+     "evidence_id": "E5"
+    },
+    {
+     "text": "58%",
+     "value": 57.57,
+     "evidence_id": "E5"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "69519dd0a995",
+   "index": 2,
+   "passage": "finding 2",
+   "text": "F-12 saw its oil rate fall 55% to 1,888 Sm3/d around 2 May 2010, with choke cut from 83% to 58%.",
+   "numbers": [
+    {
+     "text": "55%",
+     "value": 0.5512,
+     "evidence_id": "E5"
+    },
+    {
+     "text": "1,888",
+     "value": 1888.0,
+     "evidence_id": "E5"
+    },
+    {
+     "text": "83%",
+     "value": 82.84,
+     "evidence_id": "E5"
+    },
+    {
+     "text": "58%",
+     "value": 57.57,
+     "evidence_id": "E5"
+    }
+   ],
+   "accepted": false,
+   "why": "fair: 'shifted down' became 'fall ... around 2 May 2010', a step at a date for a gradual shift"
+  },
+  {
+   "run": "69519dd0a995",
+   "index": 2,
+   "passage": "finding 2",
+   "text": "While choke was cut from 83% to 58%, F-12 oil rate shifted down 55% around 2010-05-02 to Sm3/d 1 888.",
+   "numbers": [
+    {
+     "text": "83%",
+     "value": 82.84,
+     "evidence_id": "E5"
+    },
+    {
+     "text": "58%",
+     "value": 57.57,
+     "evidence_id": "E5"
+    },
+    {
+     "text": "55%",
+     "value": 0.5512,
+     "evidence_id": "E5"
+    },
+    {
+     "text": "1 888",
+     "value": 1888.0,
+     "evidence_id": "E5"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "69519dd0a995",
+   "index": 2,
+   "passage": "finding 2",
+   "text": "The 55% shift down in oil rate to 1 888 Sm3/d for F-12 occurred around 2010-05-02 while choke went from 83% to 58%.",
+   "numbers": [
+    {
+     "text": "55%",
+     "value": 0.5512,
+     "evidence_id": "E5"
+    },
+    {
+     "text": "1 888",
+     "value": 1888.0,
+     "evidence_id": "E5"
+    },
+    {
+     "text": "83%",
+     "value": 82.84,
+     "evidence_id": "E5"
+    },
+    {
+     "text": "58%",
+     "value": 57.57,
+     "evidence_id": "E5"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "69519dd0a995",
+   "index": 3,
+   "passage": "finding 3",
+   "text": "Logs indicate a plug set at 3 210 m on 2010-09-23 could remove about 32% of the water while losing about 1% of the oil.",
+   "numbers": [
+    {
+     "text": "3 210 m",
+     "value": 3210.0,
+     "evidence_id": "E10"
+    },
+    {
+     "text": "2010-09-23",
+     "value": 2010.0923,
+     "evidence_id": "E10"
+    },
+    {
+     "text": "32%",
+     "value": 0.325,
+     "evidence_id": "E14"
+    },
+    {
+     "text": "1%",
+     "value": 0.011,
+     "evidence_id": "E14"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "69519dd0a995",
+   "index": 3,
+   "passage": "finding 3",
+   "text": "On 2010-09-23, a bridge plug at 3210 m was installed; according to logs this could shut off ~32% water for a loss of ~1% oil.",
+   "numbers": [
+    {
+     "text": "2010-09-23",
+     "value": 2010.0923,
+     "evidence_id": "E10"
+    },
+    {
+     "text": "3210 m",
+     "value": 3210.0,
+     "evidence_id": "E10"
+    },
+    {
+     "text": "32%",
+     "value": 0.325,
+     "evidence_id": "E14"
+    },
+    {
+     "text": "1%",
+     "value": 0.011,
+     "evidence_id": "E14"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "69519dd0a995",
+   "index": 3,
+   "passage": "finding 3",
+   "text": "About 32% of water could be shut off for about 1% of oil, logs show, by the bridge plug set on 2010-09-23 at 3 210 m.",
+   "numbers": [
+    {
+     "text": "32%",
+     "value": 0.325,
+     "evidence_id": "E14"
+    },
+    {
+     "text": "1%",
+     "value": 0.011,
+     "evidence_id": "E14"
+    },
+    {
+     "text": "2010-09-23",
+     "value": 2010.0923,
+     "evidence_id": "E10"
+    },
+    {
+     "text": "3 210 m",
+     "value": 3210.0,
+     "evidence_id": "E10"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "69519dd0a995",
+   "index": 3,
+   "passage": "finding 3",
+   "text": "The 2010-09-23 bridge-plug installation at 3 210 m could, per logs, eliminate about 32% of water production at a cost of about 1% of oil.",
+   "numbers": [
+    {
+     "text": "2010-09-23",
+     "value": 2010.0923,
+     "evidence_id": "E10"
+    },
+    {
+     "text": "3 210 m",
+     "value": 3210.0,
+     "evidence_id": "E10"
+    },
+    {
+     "text": "32%",
+     "value": 0.325,
+     "evidence_id": "E14"
+    },
+    {
+     "text": "1%",
+     "value": 0.011,
+     "evidence_id": "E14"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "69519dd0a995",
+   "index": 4,
+   "passage": "finding 4",
+   "text": "With water cut at 61% 61% and producing 2 175 2 175 Sm3/d, F-14 also warrants monitoring: since 2010-01-10 its oil rate has been 34% 34% lower, without any gauge problem.",
+   "numbers": [
+    {
+     "text": "61%",
+     "value": 0.6112,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "2 175",
+     "value": 2175.0,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "34%",
+     "value": 0.3369,
+     "evidence_id": "E6"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "69519dd0a995",
+   "index": 4,
+   "passage": "finding 4",
+   "text": "F-14 is also on watch - no gauge issue is present, but from 10 January 2010 its oil rate dropped by 34% 34% to 2 175 2 175 Sm3/d, and its water cut is 61% 61%.",
+   "numbers": [
+    {
+     "text": "34%",
+     "value": 0.3369,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "2 175",
+     "value": 2175.0,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "61%",
+     "value": 0.6112,
+     "evidence_id": "E2"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "69519dd0a995",
+   "index": 4,
+   "passage": "finding 4",
+   "text": "At 2 175 2 175 Sm3/d with water at 61% 61%, F-14 also needs to be watched: the oil rate is down 34% 34% since 2010-01-10 and there is no gauge issue.",
+   "numbers": [
+    {
+     "text": "2 175",
+     "value": 2175.0,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "61%",
+     "value": 0.6112,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "34%",
+     "value": 0.3369,
+     "evidence_id": "E6"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "69519dd0a995",
+   "index": 4,
+   "passage": "finding 4",
+   "text": "There is no gauge issue for F-14, which also needs watching; oil rate since 2010-01-10 is 34% 34% lower, at 2 175 2 175 Sm3/d with a 61% 61% water cut.",
+   "numbers": [
+    {
+     "text": "34%",
+     "value": 0.3369,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "2 175",
+     "value": 2175.0,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "61%",
+     "value": 0.6112,
+     "evidence_id": "E2"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "69519dd0a995",
+   "index": 5,
+   "passage": "finding 5",
+   "text": "Remaining within design, the field-wide maximum was a water cut of 67% versus an 80% limit, and liquid of 10 800 Sm3/d versus a 13 000 Sm3/d capacity.",
+   "numbers": [
+    {
+     "text": "67%",
+     "value": 0.6715,
+     "evidence_id": "E3"
+    },
+    {
+     "text": "80%",
+     "value": 0.8,
+     "evidence_id": "E3"
+    },
+    {
+     "text": "10 800",
+     "value": 10826.0,
+     "evidence_id": "E3"
+    },
+    {
+     "text": "13 000",
+     "value": 13000.0,
+     "evidence_id": "E16"
+    }
+   ],
+   "accepted": false,
+   "why": "debatable: 'remaining within design' as of 2010 while injection passed its capacity in 2008-12"
+  },
+  {
+   "run": "69519dd0a995",
+   "index": 5,
+   "passage": "finding 5",
+   "text": "At 67% the peak field water cut stayed below the 80% maximum, while at 10,800 Sm3/d peak liquid stayed below the total liquid treatment capacity of 13,000 Sm3/d; the field stayed under design.",
+   "numbers": [
+    {
+     "text": "67%",
+     "value": 0.6715,
+     "evidence_id": "E3"
+    },
+    {
+     "text": "80%",
+     "value": 0.8,
+     "evidence_id": "E3"
+    },
+    {
+     "text": "10,800",
+     "value": 10826.0,
+     "evidence_id": "E3"
+    },
+    {
+     "text": "13,000",
+     "value": 13000.0,
+     "evidence_id": "E16"
+    }
+   ],
+   "accepted": false,
+   "why": "debatable: 'the field stayed under design' with the same injection months"
+  },
+  {
+   "run": "69519dd0a995",
+   "index": 5,
+   "passage": "finding 5",
+   "text": "Design limits were not exceeded field-wide: liquid peaked at 10800 Sm3/d against a capacity of 13000 Sm3/d and water cut peaked at 67 percent against a maximum of 80 percent.",
+   "numbers": [
+    {
+     "text": "10800",
+     "value": 10826.0,
+     "evidence_id": "E3"
+    },
+    {
+     "text": "13000",
+     "value": 13000.0,
+     "evidence_id": "E16"
+    },
+    {
+     "text": "67 percent",
+     "value": 0.6715,
+     "evidence_id": "E3"
+    },
+    {
+     "text": "80 percent",
+     "value": 0.8,
+     "evidence_id": "E3"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "69519dd0a995",
+   "index": 5,
+   "passage": "finding 5",
+   "text": "With a maximum water cut of 0.6715 — 67% — under the 0.80 — 80% — design maximum, and a maximum liquid rate of 10 800 Sm3/d under the 13 000 Sm3/d design, the field is under design.",
+   "numbers": [
+    {
+     "text": "67%",
+     "value": 0.6715,
+     "evidence_id": "E3"
+    },
+    {
+     "text": "80%",
+     "value": 0.8,
+     "evidence_id": "E3"
+    },
+    {
+     "text": "10 800",
+     "value": 10826.0,
+     "evidence_id": "E3"
+    },
+    {
+     "text": "13 000",
+     "value": 13000.0,
+     "evidence_id": "E16"
+    }
+   ],
+   "accepted": false,
+   "why": "fair: 0.6715 written beside 67% without its own declaration"
+  },
+  {
+   "run": "69519dd0a995",
+   "index": 6,
+   "passage": "finding 6",
+   "text": "With the warning that the decline fit is poor, the 12-month forecast for F-12 from 2011-01 is about 359,000 Sm3, with a calibrated band from 324,000 to 470,000.",
+   "numbers": [
+    {
+     "text": "359,000",
+     "value": 359007.0,
+     "evidence_id": "E13"
+    },
+    {
+     "text": "324,000",
+     "value": 324192.0,
+     "evidence_id": "E13"
+    },
+    {
+     "text": "470,000",
+     "value": 469712.0,
+     "evidence_id": "E13"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "69519dd0a995",
+   "index": 6,
+   "passage": "finding 6",
+   "text": "Hedged because the fit quality is poor, F-12 is forecast to produce about 359,000 Sm3 over the next 12 months, in the range 324,000 to 470,000.",
+   "numbers": [
+    {
+     "text": "359,000",
+     "value": 359007.0,
+     "evidence_id": "E13"
+    },
+    {
+     "text": "324,000",
+     "value": 324192.0,
+     "evidence_id": "E13"
+    },
+    {
+     "text": "470,000",
+     "value": 469712.0,
+     "evidence_id": "E13"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "69519dd0a995",
+   "index": 6,
+   "passage": "finding 6",
+   "text": "About 359,000 Sm3 is the next-12-month forecast for F-12, hedged as the decline fit is poor, between 324,000 and 470,000.",
+   "numbers": [
+    {
+     "text": "359,000",
+     "value": 359007.0,
+     "evidence_id": "E13"
+    },
+    {
+     "text": "324,000",
+     "value": 324192.0,
+     "evidence_id": "E13"
+    },
+    {
+     "text": "470,000",
+     "value": 469712.0,
+     "evidence_id": "E13"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "69519dd0a995",
+   "index": 6,
+   "passage": "finding 6",
+   "text": "The forecast for the next 12 months for F-12 is about 359,000 Sm3 — 324,000 to 470,000 — but this is hedged given the poor decline fit.",
+   "numbers": [
+    {
+     "text": "359,000",
+     "value": 359007.0,
+     "evidence_id": "E13"
+    },
+    {
+     "text": "324,000",
+     "value": 324192.0,
+     "evidence_id": "E13"
+    },
+    {
+     "text": "470,000",
+     "value": 469712.0,
+     "evidence_id": "E13"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "69519dd0a995",
+   "index": 0,
+   "passage": "summary",
+   "text": "The field remains below design constraints on water cut and total liquid, but F-12 is the most urgent well: oil has dropped steeply from mid-2010, water now dominates production, and the downhole pressure gauge has failed. F-14 is also seeing oil decline as water increases, though with lower priority. For F-12 the fitted decline points to ~359,000 Sm3 over the coming 12 months, with a band of 324,000 to 470,000 Sm3.",
+   "numbers": [
+    {
+     "text": "359,000",
+     "value": 359007.0,
+     "evidence_id": "E13"
+    },
+    {
+     "text": "324,000",
+     "value": 324192.0,
+     "evidence_id": "E13"
+    },
+    {
+     "text": "470,000",
+     "value": 469712.0,
+     "evidence_id": "E13"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "69519dd0a995",
+   "index": 0,
+   "passage": "summary",
+   "text": "F-12 needs the most attention — with a dead downhole gauge, a sharp fall in oil rate since 2010-05-02 to 2010-07-19 and water now accounting for most fluids produced. F-14 shows the same pattern of rising water and falling oil but is less pressing. Water cut and liquid handling for the field as a whole are still within design. The next-12-month oil forecast for F-12 from the fit is 359,000 Sm3, ranging from 324,000 Sm3 to 470,000 Sm3.",
+   "numbers": [
+    {
+     "text": "359,000",
+     "value": 359007.0,
+     "evidence_id": "E13"
+    },
+    {
+     "text": "324,000",
+     "value": 324192.0,
+     "evidence_id": "E13"
+    },
+    {
+     "text": "470,000",
+     "value": 469712.0,
+     "evidence_id": "E13"
+    }
+   ],
+   "accepted": false,
+   "why": "fair: the forecast lost its hedge ('the fit suggests'); 2010-07-19 is in no result"
+  },
+  {
+   "run": "69519dd0a995",
+   "index": 0,
+   "passage": "summary",
+   "text": "At about 359,000 Sm3 (range 324,000 - 470,000 Sm3) is what the fit implies F-12 will produce in the next 12 months. That well is the top priority: since mid-July 2010 its oil has declined markedly, it produces mostly water now, and its downhole pressure reading is unavailable. F-14 likewise has oil going down while water goes up, but less urgently, and overall field water cut and liquid rates stay under designed limits.",
+   "numbers": [
+    {
+     "text": "359,000",
+     "value": 359007.0,
+     "evidence_id": "E13"
+    },
+    {
+     "text": "324,000",
+     "value": 324192.0,
+     "evidence_id": "E13"
+    },
+    {
+     "text": "470,000",
+     "value": 469712.0,
+     "evidence_id": "E13"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "69519dd0a995",
+   "index": 0,
+   "passage": "summary",
+   "text": "Priority 1 is F-12 — oil rate went down sharply after mid-2010 with water now the dominant phase and the downhole gauge inoperative; priority 2 is F-14 where oil is also falling as water climbs. The field overall is still inside water-cut and liquid-handling design limits. Fitted behaviour suggests roughly 359 000 Sm3 for F-12 in the coming year, between 324 000 Sm3 and 470 000 Sm3.",
+   "numbers": [
+    {
+     "text": "359 000",
+     "value": 359007.0,
+     "evidence_id": "E13"
+    },
+    {
+     "text": "324 000",
+     "value": 324192.0,
+     "evidence_id": "E13"
+    },
+    {
+     "text": "470 000",
+     "value": 469712.0,
+     "evidence_id": "E13"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e10e0aaf0542",
+   "index": 1,
+   "passage": "finding 1",
+   "text": "With the choke at about 99%, F-12 is flowing at near 97% water cut and an oil rate of about 174 Sm3/d.",
+   "numbers": [
+    {
+     "text": "99%",
+     "value": 99.16,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "97%",
+     "value": 0.9669,
+     "evidence_id": "E5"
+    },
+    {
+     "text": "174",
+     "value": 174.6,
+     "evidence_id": "E5"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e10e0aaf0542",
+   "index": 1,
+   "passage": "finding 1",
+   "text": "At a 97% water cut and with choke fully open at about 99%, the F-12 oil rate is about 174 Sm3/d.",
+   "numbers": [
+    {
+     "text": "97%",
+     "value": 0.9669,
+     "evidence_id": "E5"
+    },
+    {
+     "text": "99%",
+     "value": 99.16,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "174",
+     "value": 174.6,
+     "evidence_id": "E5"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e10e0aaf0542",
+   "index": 1,
+   "passage": "finding 1",
+   "text": "F-12, with water at 97% and choke at about 99% fully open, produces about 174 Sm3/d of oil.",
+   "numbers": [
+    {
+     "text": "97%",
+     "value": 0.9669,
+     "evidence_id": "E5"
+    },
+    {
+     "text": "99%",
+     "value": 99.16,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "174",
+     "value": 174.6,
+     "evidence_id": "E5"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e10e0aaf0542",
+   "index": 1,
+   "passage": "finding 1",
+   "text": "The oil rate for F-12 is about 174 Sm3/d, water cut was 97% and choke was about 99% open.",
+   "numbers": [
+    {
+     "text": "174",
+     "value": 174.6,
+     "evidence_id": "E5"
+    },
+    {
+     "text": "97%",
+     "value": 0.9669,
+     "evidence_id": "E5"
+    },
+    {
+     "text": "99%",
+     "value": 99.16,
+     "evidence_id": "E2"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e10e0aaf0542",
+   "index": 2,
+   "passage": "finding 2",
+   "text": "In 2014 the well held a liquid rate of about 5136 Sm3/d at a 96% water cut, while oil declined, which points to water occupying capacity rather than a loss of pressure.",
+   "numbers": [
+    {
+     "text": "5136",
+     "value": 5136.0,
+     "evidence_id": "E4"
+    },
+    {
+     "text": "96%",
+     "value": 0.9635,
+     "evidence_id": "E4"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e10e0aaf0542",
+   "index": 2,
+   "passage": "finding 2",
+   "text": "Not a pressure loss but water taking the capacity: oil fell even though liquid stayed at roughly 5 136 Sm3/d in 2014, with water cut 96%.",
+   "numbers": [
+    {
+     "text": "5 136",
+     "value": 5136.0,
+     "evidence_id": "E4"
+    },
+    {
+     "text": "96%",
+     "value": 0.9635,
+     "evidence_id": "E4"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e10e0aaf0542",
+   "index": 2,
+   "passage": "finding 2",
+   "text": "With about 5,136 Sm3/d of liquid in 2014 and a water cut of 96%, the drop in oil shows capacity taken by water, not pressure loss.",
+   "numbers": [
+    {
+     "text": "5,136",
+     "value": 5136.0,
+     "evidence_id": "E4"
+    },
+    {
+     "text": "96%",
+     "value": 0.9635,
+     "evidence_id": "E4"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e10e0aaf0542",
+   "index": 2,
+   "passage": "finding 2",
+   "text": "Oil declined through 2014 while liquid rate remained about 5136 Sm3/d on a 96% water cut, indicating the capacity was taken by water not by pressure loss.",
+   "numbers": [
+    {
+     "text": "5136 Sm3/d",
+     "value": 5136.0,
+     "evidence_id": "E4"
+    },
+    {
+     "text": "96%",
+     "value": 0.9635,
+     "evidence_id": "E4"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e10e0aaf0542",
+   "index": 3,
+   "passage": "finding 3",
+   "text": "All limits have already been exceeded by the well, and according to the WOR trend there is {",
+   "numbers": [
+    {
+     "text": "95%",
+     "value": 0.95,
+     "evidence_id": "E4"
+    },
+    {
+     "text": "0",
+     "value": 0.0,
+     "evidence_id": "E4"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e10e0aaf0542",
+   "index": 3,
+   "passage": "finding 3",
+   "text": "The WOR trend indicates {",
+   "numbers": [
+    {
+     "text": "95%",
+     "value": 0.95,
+     "evidence_id": "E4"
+    },
+    {
+     "text": "0",
+     "value": 0.0,
+     "evidence_id": "E4"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e10e0aaf0542",
+   "index": 3,
+   "passage": "finding 3",
+   "text": "Already past every limit, F-12 shows {",
+   "numbers": [
+    {
+     "text": "95%",
+     "value": 0.95,
+     "evidence_id": "E4"
+    },
+    {
+     "text": "0",
+     "value": 0.0,
+     "evidence_id": "E4"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e10e0aaf0542",
+   "index": 3,
+   "passage": "finding 3",
+   "text": "No oil is left before a water cut of {",
+   "numbers": [
+    {
+     "text": "95%",
+     "value": 0.95,
+     "evidence_id": "E4"
+    },
+    {
+     "text": "0",
+     "value": 0.0,
+     "evidence_id": "E4"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e10e0aaf0542",
+   "index": 4,
+   "passage": "finding 4",
+   "text": "Over the next 12 months the forecast based on the last regime is only around 42,800 Sm3, with a range from 27,000 to 50,700 Sm3.",
+   "numbers": [
+    {
+     "text": "42,800",
+     "value": 42798.0,
+     "evidence_id": "E9"
+    },
+    {
+     "text": "27,000",
+     "value": 26986.0,
+     "evidence_id": "E9"
+    },
+    {
+     "text": "50,700",
+     "value": 50703.0,
+     "evidence_id": "E9"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e10e0aaf0542",
+   "index": 4,
+   "passage": "finding 4",
+   "text": "Only about 42 800 Sm3 are expected in the coming year from the last-regime forecast, in a band of 27 000 Sm3 to 50 700 Sm3.",
+   "numbers": [
+    {
+     "text": "42 800 Sm3",
+     "value": 42798.0,
+     "evidence_id": "E9"
+    },
+    {
+     "text": "27 000 Sm3",
+     "value": 26986.0,
+     "evidence_id": "E9"
+    },
+    {
+     "text": "50 700 Sm3",
+     "value": 50703.0,
+     "evidence_id": "E9"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e10e0aaf0542",
+   "index": 4,
+   "passage": "finding 4",
+   "text": "Sm3 50,700 to Sm3 27,000 is the forecast interval for the next twelve months under the last regime, leaving a central estimate of only about Sm3 42,800.",
+   "numbers": [
+    {
+     "text": "50,700",
+     "value": 50703.0,
+     "evidence_id": "E9"
+    },
+    {
+     "text": "27,000",
+     "value": 26986.0,
+     "evidence_id": "E9"
+    },
+    {
+     "text": "42,800",
+     "value": 42798.0,
+     "evidence_id": "E9"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e10e0aaf0542",
+   "index": 4,
+   "passage": "finding 4",
+   "text": "The last-regime projection leaves just 42,800 Sm3 expected over the coming year, between 27,000 Sm3 and 50,700 Sm3.",
+   "numbers": [
+    {
+     "text": "42,800",
+     "value": 42798.0,
+     "evidence_id": "E9"
+    },
+    {
+     "text": "27,000",
+     "value": 26986.0,
+     "evidence_id": "E9"
+    },
+    {
+     "text": "50,700",
+     "value": 50703.0,
+     "evidence_id": "E9"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e10e0aaf0542",
+   "index": 5,
+   "passage": "finding 5",
+   "text": "Setting a plug at 3,210 m in 2010 was not effective: water cut increased and oil dropped by about 238 Sm3/d.",
+   "numbers": [
+    {
+     "text": "3,210",
+     "value": 3210.0,
+     "evidence_id": "E12"
+    },
+    {
+     "text": "238",
+     "value": 238.0,
+     "evidence_id": "E13"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e10e0aaf0542",
+   "index": 5,
+   "passage": "finding 5",
+   "text": "Oil declined by ~238 Sm3/d and the water cut went up after the 2010 plug at 3,210 m, so it did not help.",
+   "numbers": [
+    {
+     "text": "238",
+     "value": 238.0,
+     "evidence_id": "E13"
+    },
+    {
+     "text": "3,210",
+     "value": 3210.0,
+     "evidence_id": "E12"
+    }
+   ],
+   "accepted": false,
+   "why": "fair: a conclusion with ', so' in a fact"
+  },
+  {
+   "run": "e10e0aaf0542",
+   "index": 5,
+   "passage": "finding 5",
+   "text": "The well's 2010 plug in blank pipe at 3 210 m failed to help — water cut rose while oil fell about 238 Sm3/d.",
+   "numbers": [
+    {
+     "text": "3 210",
+     "value": 3210.0,
+     "evidence_id": "E12"
+    },
+    {
+     "text": "238",
+     "value": 238.0,
+     "evidence_id": "E13"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e10e0aaf0542",
+   "index": 5,
+   "passage": "finding 5",
+   "text": "In 2010 a plug was set at m 3,210; afterwards water cut rose and oil was down about 238 Sm3/d, with no benefit.",
+   "numbers": [
+    {
+     "text": "3,210",
+     "value": 3210.0,
+     "evidence_id": "E12"
+    },
+    {
+     "text": "238",
+     "value": 238.0,
+     "evidence_id": "E13"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e10e0aaf0542",
+   "index": 6,
+   "passage": "finding 6",
+   "text": "According to the final 2010 survey, setting a bridge plug in the blank-pipe interval at would have removed roughly water while removing roughly oil.",
+   "numbers": [
+    {
+     "text": "3,185 m",
+     "value": 3185.0,
+     "evidence_id": "E12"
+    },
+    {
+     "text": "31%",
+     "value": 0.31,
+     "evidence_id": "E12"
+    },
+    {
+     "text": "1%",
+     "value": 0.012,
+     "evidence_id": "E12"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e10e0aaf0542",
+   "index": 6,
+   "passage": "finding 6",
+   "text": "A plug placed at m — which is blank pipe — on the 2010-09-22 log would have shut off about of the oil for about of the water.",
+   "numbers": [
+    {
+     "text": "3 185",
+     "value": 3185.0,
+     "evidence_id": "E12"
+    },
+    {
+     "text": "1%",
+     "value": 0.012,
+     "evidence_id": "E12"
+    },
+    {
+     "text": "31%",
+     "value": 0.31,
+     "evidence_id": "E12"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e10e0aaf0542",
+   "index": 6,
+   "passage": "finding 6",
+   "text": "The last log from 2010 indicates that in blank pipe around m, a plug would have eliminated about of water at a cost of about of oil.",
+   "numbers": [
+    {
+     "text": "3185",
+     "value": 3185.0,
+     "evidence_id": "E12"
+    },
+    {
+     "text": "31 percent",
+     "value": 0.31,
+     "evidence_id": "E12"
+    },
+    {
+     "text": "1 percent",
+     "value": 0.012,
+     "evidence_id": "E12"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e10e0aaf0542",
+   "index": 6,
+   "passage": "finding 6",
+   "text": "At m blank pipe, the September 2010 PLT shows a plug would have cut on the order of water for on the order of oil.",
+   "numbers": [
+    {
+     "text": "3,185",
+     "value": 3185.0,
+     "evidence_id": "E12"
+    },
+    {
+     "text": "31%",
+     "value": 0.31,
+     "evidence_id": "E12"
+    },
+    {
+     "text": "1%",
+     "value": 0.012,
+     "evidence_id": "E12"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e10e0aaf0542",
+   "index": 7,
+   "passage": "finding 7",
+   "text": "With water cut climbing from 63% to 97% since the last survey, which is now 1,500 days old, a fresh log should be run to confirm before doing any work.",
+   "numbers": [
+    {
+     "text": "63%",
+     "value": 0.6307,
+     "evidence_id": "E12"
+    },
+    {
+     "text": "97%",
+     "value": 0.9658,
+     "evidence_id": "E12"
+    },
+    {
+     "text": "1,500",
+     "value": 1500.0,
+     "evidence_id": "E12"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e10e0aaf0542",
+   "index": 7,
+   "passage": "finding 7",
+   "text": "Before any job, run a new log for confirmation: the existing log dates back 1,500 days and the water cut went up from 63% to 97%.",
+   "numbers": [
+    {
+     "text": "1,500",
+     "value": 1500.0,
+     "evidence_id": "E12"
+    },
+    {
+     "text": "63%",
+     "value": 0.6307,
+     "evidence_id": "E12"
+    },
+    {
+     "text": "97%",
+     "value": 0.9658,
+     "evidence_id": "E12"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e10e0aaf0542",
+   "index": 7,
+   "passage": "finding 7",
+   "text": "The water cut was 63% at the time of the last log and is now 97%; that log being 1,500 days old, confirmation with a new log is needed before any intervention.",
+   "numbers": [
+    {
+     "text": "63%",
+     "value": 0.6307,
+     "evidence_id": "E12"
+    },
+    {
+     "text": "97%",
+     "value": 0.9658,
+     "evidence_id": "E12"
+    },
+    {
+     "text": "1,500",
+     "value": 1500.0,
+     "evidence_id": "E12"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e10e0aaf0542",
+   "index": 7,
+   "passage": "finding 7",
+   "text": "Confirm with a new log before any job, as 1,500 days have passed since that survey while water cut rose to 97% from 63%.",
+   "numbers": [
+    {
+     "text": "1,500",
+     "value": 1500.0,
+     "evidence_id": "E12"
+    },
+    {
+     "text": "97%",
+     "value": 0.9658,
+     "evidence_id": "E12"
+    },
+    {
+     "text": "63%",
+     "value": 0.6307,
+     "evidence_id": "E12"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e10e0aaf0542",
+   "index": 0,
+   "passage": "summary",
+   "text": "With the choke at 100% open, F-12's liquid rate has stayed flat because water has replaced oil in the well's throughput. It produces at a water cut near 97% and an oil rate of about 174 Sm3/d, essentially all water. The WOR trend indicates that no economic oil remained prior to 95% water cut, and the 12-month forecast from 2014-11-01 is only about 42,800 Sm3 with a 27,000 to 50,700 Sm3 range, so the well is at its limit and should be readied for shut-in unless a new PL confirms that oil entry is still confined above roughly 3,180 m.",
+   "numbers": [
+    {
+     "text": "97%",
+     "value": 0.9669,
+     "evidence_id": "E5"
+    },
+    {
+     "text": "174",
+     "value": 174.6,
+     "evidence_id": "E5"
+    },
+    {
+     "text": "95%",
+     "value": 0.95,
+     "evidence_id": "E4"
+    },
+    {
+     "text": "42,800",
+     "value": 42798.0,
+     "evidence_id": "E9"
+    },
+    {
+     "text": "27,000",
+     "value": 26986.0,
+     "evidence_id": "E9"
+    },
+    {
+     "text": "50,700",
+     "value": 50703.0,
+     "evidence_id": "E9"
+    },
+    {
+     "text": "3,180",
+     "value": 3180.0,
+     "evidence_id": "E7"
+    }
+   ],
+   "accepted": false,
+   "why": "fair: an unhedged 'because'; '100%' undeclared"
+  },
+  {
+   "run": "e10e0aaf0542",
+   "index": 0,
+   "passage": "summary",
+   "text": "F-12 is making almost entirely water: water cut was 97 percent at about 174 Sm3/d oil on a fully-open choke, liquid rate having held steady as water took over the well's capacity. No economic oil was left before a water cut of 95 percent on the water-oil ratio trend, and the forecast for the coming 12 months is just circa 42 800 Sm3, in the interval 27 000 - 50 700 Sm3. The well has reached its limit and preparation for shut-in is recommended unless a fresh production log verifies oil still enters solely above approximately 3180 m.",
+   "numbers": [
+    {
+     "text": "97 percent",
+     "value": 0.9669,
+     "evidence_id": "E5"
+    },
+    {
+     "text": "174 Sm3/d",
+     "value": 174.6,
+     "evidence_id": "E5"
+    },
+    {
+     "text": "95 percent",
+     "value": 0.95,
+     "evidence_id": "E4"
+    },
+    {
+     "text": "42 800 Sm3",
+     "value": 42798.0,
+     "evidence_id": "E9"
+    },
+    {
+     "text": "27 000",
+     "value": 26986.0,
+     "evidence_id": "E9"
+    },
+    {
+     "text": "50 700",
+     "value": 50703.0,
+     "evidence_id": "E9"
+    },
+    {
+     "text": "3180 m",
+     "value": 3180.0,
+     "evidence_id": "E7"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e10e0aaf0542",
+   "index": 0,
+   "passage": "summary",
+   "text": "The well is at its economic limit and should be made ready for shut-in, unless a new production log confirms oil inflow remains only above about 3,180 m. F-12 now flows at 174 Sm3/d oil with water at 97% and the choke fully open, while liquid rate has been maintained as water filled the capacity. Its WOR trend shows the economic oil was exhausted before 95%, and only about 42,800 Sm3 is forecast for the next year, ranging from 27,000 Sm3 to 50,700 Sm3.",
+   "numbers": [
+    {
+     "text": "97%",
+     "value": 0.9669,
+     "evidence_id": "E5"
+    },
+    {
+     "text": "174",
+     "value": 174.6,
+     "evidence_id": "E5"
+    },
+    {
+     "text": "95%",
+     "value": 0.95,
+     "evidence_id": "E4"
+    },
+    {
+     "text": "42,800",
+     "value": 42798.0,
+     "evidence_id": "E9"
+    },
+    {
+     "text": "27,000",
+     "value": 26986.0,
+     "evidence_id": "E9"
+    },
+    {
+     "text": "50,700",
+     "value": 50703.0,
+     "evidence_id": "E9"
+    },
+    {
+     "text": "3,180 m",
+     "value": 3180.0,
+     "evidence_id": "E7"
+    }
+   ],
+   "accepted": false,
+   "why": "fair: '174' for 174.6 without 'about'"
+  },
+  {
+   "run": "e10e0aaf0542",
+   "index": 0,
+   "passage": "summary",
+   "text": "At a 97% water cut and oil of circa 174 Sm3/d with choke 100% open, F-12 makes almost all water; liquid rate has held as water has taken the well's capacity. Before 95% water cut there was no economic oil left on the water-oil ratio trend. For the next 12 months the forecast is only approximately 42800 Sm3, range 27000 to 50700 Sm3, so it has reached its limit and should be prepared for shut-in unless a new production log confirms oil still enters only above about 3180 m.",
+   "numbers": [
+    {
+     "text": "97%",
+     "value": 0.9669,
+     "evidence_id": "E5"
+    },
+    {
+     "text": "174",
+     "value": 174.6,
+     "evidence_id": "E5"
+    },
+    {
+     "text": "95%",
+     "value": 0.95,
+     "evidence_id": "E4"
+    },
+    {
+     "text": "42800",
+     "value": 42798.0,
+     "evidence_id": "E9"
+    },
+    {
+     "text": "27000",
+     "value": 26986.0,
+     "evidence_id": "E9"
+    },
+    {
+     "text": "50700",
+     "value": 50703.0,
+     "evidence_id": "E9"
+    },
+    {
+     "text": "3180",
+     "value": 3180.0,
+     "evidence_id": "E7"
+    }
+   ],
+   "accepted": false,
+   "why": "fair: '100%' undeclared ('circa 174' itself passes)"
+  },
+  {
+   "run": "e08be5885cb4",
+   "index": 1,
+   "passage": "finding 1",
+   "text": "Around 2010-02-14 F-12's water cut shifted to 51.3% from 2.7% beforehand, and the 50% threshold was crossed on 2010-06-04 about 28 months after first oil.",
+   "numbers": [
+    {
+     "text": "51.3%",
+     "value": 0.5134,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "2.7%",
+     "value": 0.02728,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "50%",
+     "value": 0.5,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "28",
+     "value": 27.69,
+     "evidence_id": "E2"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e08be5885cb4",
+   "index": 1,
+   "passage": "finding 1",
+   "text": "F-12 went from a water cut of 2.7% to 51.3% in the regime change around 2010-02-14, with 50% first exceeded on 2010-06-04, which was about 28 months after first oil.",
+   "numbers": [
+    {
+     "text": "2.7%",
+     "value": 0.02728,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "51.3%",
+     "value": 0.5134,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "50%",
+     "value": 0.5,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "28",
+     "value": 27.69,
+     "evidence_id": "E2"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e08be5885cb4",
+   "index": 1,
+   "passage": "finding 1",
+   "text": "About 28 months after first oil, on 2010-06-04, F-12 crossed 50% water cut, after having jumped around 2010-02-14 from 2.7% before to 51.3%.",
+   "numbers": [
+    {
+     "text": "28",
+     "value": 27.69,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "50%",
+     "value": 0.5,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "2.7%",
+     "value": 0.02728,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "51.3%",
+     "value": 0.5134,
+     "evidence_id": "E2"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e08be5885cb4",
+   "index": 1,
+   "passage": "finding 1",
+   "text": "The water cut for F-12 was 2.7% before the 2010-02-14 shift and 51.3% after it, and on 2010-06-04 — about 28 months after first oil — the 30-day median went above 50%.",
+   "numbers": [
+    {
+     "text": "2.7%",
+     "value": 0.02728,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "51.3%",
+     "value": 0.5134,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "28",
+     "value": 27.69,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "50%",
+     "value": 0.5,
+     "evidence_id": "E2"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e08be5885cb4",
+   "index": 2,
+   "passage": "finding 2",
+   "text": "Around 2010-07-18, F-12 underwent a gradual oil-rate decline rather than an abrupt choke cut, with the weekly mean falling from about 4 050 Sm3/d before to 1 146 Sm3/d after, about 72% lower on average.",
+   "numbers": [
+    {
+     "text": "4 050",
+     "value": 4050.0,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "1 146",
+     "value": 1146.0,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "72%",
+     "value": 0.7171,
+     "evidence_id": "E2"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e08be5885cb4",
+   "index": 2,
+   "passage": "finding 2",
+   "text": "The post-2010-07-18 average oil rate for F-12 was roughly 72% below the pre-period average, declining gradually from 4 050 Sm3/d to 1 146 Sm3/d, not via a choke cut.",
+   "numbers": [
+    {
+     "text": "72%",
+     "value": 0.7171,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "4 050",
+     "value": 4050.0,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "1 146",
+     "value": 1146.0,
+     "evidence_id": "E2"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e08be5885cb4",
+   "index": 2,
+   "passage": "finding 2",
+   "text": "Not a choke cut but a gradual decline: F-12's oil rate after around 18 July 2010 averaged about 72% less than beforehand, at 1 146 Sm3/d versus about 4 050 Sm3/d previously.",
+   "numbers": [
+    {
+     "text": "72%",
+     "value": 0.7171,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "1 146",
+     "value": 1146.0,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "4 050",
+     "value": 4050.0,
+     "evidence_id": "E2"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e08be5885cb4",
+   "index": 2,
+   "passage": "finding 2",
+   "text": "F-12 averaged 1 146 Sm3/d after about 2010-07-18 compared with about 4 050 Sm3/d before, a decline of 72% on average that was gradual and not a choke cut.",
+   "numbers": [
+    {
+     "text": "1 146",
+     "value": 1146.0,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "4 050",
+     "value": 4050.0,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "72%",
+     "value": 0.7171,
+     "evidence_id": "E2"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e08be5885cb4",
+   "index": 3,
+   "passage": "finding 3",
+   "text": "Liquid rate stayed flat even though oil declined, after water increased and F-12's choke was moved to 99% and then to 100%, indicating capacity was taken by water.",
+   "numbers": [
+    {
+     "text": "99%",
+     "value": 99.0,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "100%",
+     "value": 1.0,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "5 130",
+     "value": 5130.0,
+     "evidence_id": "E3"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e08be5885cb4",
+   "index": 3,
+   "passage": "finding 3",
+   "text": "Showing that water occupied capacity, the liquid rate of 5 130 held steady while oil dropped, even after opening F-12's choke from 99% to 100% following the water rise.",
+   "numbers": [
+    {
+     "text": "99%",
+     "value": 99.0,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "100%",
+     "value": 1.0,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "5 130",
+     "value": 5130.0,
+     "evidence_id": "E3"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e08be5885cb4",
+   "index": 3,
+   "passage": "finding 3",
+   "text": "With water at 100% choke the liquid rate was 5 130, and at 99% choke likewise held, while oil fell after the water rise of F-12, showing water took capacity.",
+   "numbers": [
+    {
+     "text": "99%",
+     "value": 99.0,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "100%",
+     "value": 1.0,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "5 130",
+     "value": 5130.0,
+     "evidence_id": "E3"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e08be5885cb4",
+   "index": 3,
+   "passage": "finding 3",
+   "text": "On 2010-07-18 after water rose, F-12's choke went up to 99% then 100% but at a liquid rate of 5 130 oil fell while liquid held, showing water took capacity.",
+   "numbers": [
+    {
+     "text": "99%",
+     "value": 99.0,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "100%",
+     "value": 1.0,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "5 130",
+     "value": 5130.0,
+     "evidence_id": "E3"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e08be5885cb4",
+   "index": 4,
+   "passage": "finding 4",
+   "text": "After July 2010, F-12 entered an exponential decline of about {0.45 per year} with a strong fit.",
+   "numbers": [
+    {
+     "text": "0.45",
+     "value": 0.446,
+     "evidence_id": "E10"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e08be5885cb4",
+   "index": 4,
+   "passage": "finding 4",
+   "text": "With a strong fit, the decline in F-12 after July 2010 was exponential at a rate of about {0.45 per year}.",
+   "numbers": [
+    {
+     "text": "0.45",
+     "value": 0.446,
+     "evidence_id": "E10"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e08be5885cb4",
+   "index": 4,
+   "passage": "finding 4",
+   "text": "F-12 showed a strong exponential fit after July 2010, declining at about {0.45 per year}.",
+   "numbers": [
+    {
+     "text": "0.45",
+     "value": 0.446,
+     "evidence_id": "E10"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e08be5885cb4",
+   "index": 4,
+   "passage": "finding 4",
+   "text": "From July 2010 onward F-12 declined exponentially at about {0.45 per year}, and the fit was strong.",
+   "numbers": [
+    {
+     "text": "0.45",
+     "value": 0.446,
+     "evidence_id": "E10"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e08be5885cb4",
+   "index": 5,
+   "passage": "finding 5",
+   "text": "This schedule is consistent with the 2005 plan, which forecast that injection water breakthrough would occur after about.",
+   "numbers": [
+    {
+     "text": "2 years",
+     "value": 2.0,
+     "evidence_id": "E7"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e08be5885cb4",
+   "index": 5,
+   "passage": "finding 5",
+   "text": "The 2005 development plan anticipated breakthrough of the injected water after about, and this timing aligns with that prediction.",
+   "numbers": [
+    {
+     "text": "2 years",
+     "value": 2.0,
+     "evidence_id": "E7"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e08be5885cb4",
+   "index": 5,
+   "passage": "finding 5",
+   "text": "As predicted in the plan from, injected water was expected to break through after about, which matches this timing.",
+   "numbers": [
+    {
+     "text": "2005",
+     "value": 2005.0,
+     "evidence_id": "E7"
+    },
+    {
+     "text": "2 years",
+     "value": 2.0,
+     "evidence_id": "E7"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e08be5885cb4",
+   "index": 5,
+   "passage": "finding 5",
+   "text": "This is in line with the forecast made in the 2005 plan that breakthrough of injection water would happen after about.",
+   "numbers": [
+    {
+     "text": "2 years",
+     "value": 2.0,
+     "evidence_id": "E7"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e08be5885cb4",
+   "index": 6,
+   "passage": "finding 6",
+   "text": "While staying below the field's liquid and water handling caps of 13 000 Sm3/d, the whole-field water cut climbed to the PUD design value of 80% in 2012-06.",
+   "numbers": [
+    {
+     "text": "13 000",
+     "value": 13000.0,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "80%",
+     "value": 0.8,
+     "evidence_id": "E6"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e08be5885cb4",
+   "index": 6,
+   "passage": "finding 6",
+   "text": "The development plan's maximum water cut — 0,80 with quote 'Maksimum vannkutt 0,80' — was first reached field-wide in June 2012, yet the 13,000 Sm3/d liquid capacity was never met or exceeded.",
+   "numbers": [
+    {
+     "text": "0,80",
+     "value": 0.8,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "13,000",
+     "value": 13000.0,
+     "evidence_id": "E6"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e08be5885cb4",
+   "index": 6,
+   "passage": "finding 6",
+   "text": "At a 80 percent water cut, the field hit its design limit in June 2012; liquid handling, designed for 13000 Sm3/d per day, was never exceeded nor was water handling.",
+   "numbers": [
+    {
+     "text": "80 percent",
+     "value": 0.8,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "13000",
+     "value": 13000.0,
+     "evidence_id": "E6"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e08be5885cb4",
+   "index": 6,
+   "passage": "finding 6",
+   "text": "Never going above its liquid-handling or water-handling limits of 13 000 Sm3/d, the aggregated field still went up to the 80% design water cut in June 2012.",
+   "numbers": [
+    {
+     "text": "13 000 Sm3/d",
+     "value": 13000.0,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "80%",
+     "value": 0.8,
+     "evidence_id": "E6"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e08be5885cb4",
+   "index": 7,
+   "passage": "finding 7",
+   "text": "Driven by producers that started after 2012, the field remained on stream 4 years beyond the final year in the development plan; F-12 alone accounted for about 4.58 million Sm3, which is 46% of the oil recovered from the field.",
+   "numbers": [
+    {
+     "text": "4.58 million",
+     "value": 4579610.0,
+     "evidence_id": "E1"
+    },
+    {
+     "text": "46%",
+     "value": 0.4563,
+     "evidence_id": "E4"
+    }
+   ],
+   "accepted": false,
+   "why": "fair: 'Driven by' states a cause in a fact"
+  },
+  {
+   "run": "e08be5885cb4",
+   "index": 7,
+   "passage": "finding 7",
+   "text": "The field stayed alive for 4 years past the plan's last year thanks to new producers brought on after 2012; of field oil, about 46% — 4.58 million Sm3 — was contributed by F-12.",
+   "numbers": [
+    {
+     "text": "46%",
+     "value": 0.4563,
+     "evidence_id": "E4"
+    },
+    {
+     "text": "4.58 million",
+     "value": 4579610.0,
+     "evidence_id": "E1"
+    }
+   ],
+   "accepted": false,
+   "why": "fair: 'thanks to' states a cause in a fact"
+  },
+  {
+   "run": "e08be5885cb4",
+   "index": 7,
+   "passage": "finding 7",
+   "text": "About 4.58 million Sm3 of oil, or 46% of the field total, came from F-12, while producers that began after 2012 extended field life 4 years beyond the last year envisaged in the plan.",
+   "numbers": [
+    {
+     "text": "4.58 million",
+     "value": 4579610.0,
+     "evidence_id": "E1"
+    },
+    {
+     "text": "46%",
+     "value": 0.4563,
+     "evidence_id": "E4"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e08be5885cb4",
+   "index": 7,
+   "passage": "finding 7",
+   "text": "With roughly 4.58 million Sm3 representing 46% of field oil, F-12 was a major contributor, and with new producers after 2012 the field produced 4 years longer than the plan's last year.",
+   "numbers": [
+    {
+     "text": "4.58 million",
+     "value": 4579610.0,
+     "evidence_id": "E1"
+    },
+    {
+     "text": "46%",
+     "value": 0.4563,
+     "evidence_id": "E4"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e08be5885cb4",
+   "index": 0,
+   "passage": "summary",
+   "text": "The most likely reason F-12's oil rate declined after mid-2010 is breakthrough of injected water, with the well's capacity taken by water: water cut climbed from near zero to 57% in 2010 and later to 86% while liquid remained at capacity and choke did not change. This is consistent with the 2005 plan, which anticipated breakthrough after 2 years — F-12 broke through after 21 months. The field as a whole reached the plan's design water cut of 80% in June 2012, never went over its liquid or water handling limits, and survived beyond the plan's final year of 2012.",
+   "numbers": [
+    {
+     "text": "57%",
+     "value": 0.5711,
+     "evidence_id": "E3"
+    },
+    {
+     "text": "86%",
+     "value": 0.8604,
+     "evidence_id": "E3"
+    },
+    {
+     "text": "2 years",
+     "value": 2.0,
+     "evidence_id": "E7"
+    },
+    {
+     "text": "21 months",
+     "value": 20.6,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "80%",
+     "value": 0.8,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "June 2012",
+     "value": 2012.06,
+     "evidence_id": "E6"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e08be5885cb4",
+   "index": 0,
+   "passage": "summary",
+   "text": "Injected water breaking through most likely explains the post-mid-2010 fall in F-12 oil rate: at unchanged choke and liquid rate held at capacity, water cut went up from near zero to about 57% during 2010 and afterwards to about 86%, so water displaced oil within the capacity. The 2005 development plan had forecast breakthrough after about 2 years, and F-12's timing at about 21 months matches it. At field level the design water cut of 80% was produced at from June 2012 onward without ever exceeding liquid or water handling limits, and production continued past 2012, the plan's last year.",
+   "numbers": [
+    {
+     "text": "57%",
+     "value": 0.5711,
+     "evidence_id": "E3"
+    },
+    {
+     "text": "86%",
+     "value": 0.8604,
+     "evidence_id": "E3"
+    },
+    {
+     "text": "2 years",
+     "value": 2.0,
+     "evidence_id": "E7"
+    },
+    {
+     "text": "21 months",
+     "value": 20.6,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "80%",
+     "value": 0.8,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "June 2012",
+     "value": 2012.06,
+     "evidence_id": "E6"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e08be5885cb4",
+   "index": 0,
+   "passage": "summary",
+   "text": "F-12 most likely declined faster after mid-2010 due to injected-water breakthrough: with water at about 57% in 2010, later about 86%, and liquid rate at capacity with no choke change, water occupied the well's capacity. This aligns with the 2005 plan's expectation of breakthrough after about 2 years; F-12 broke through after about 21 months. From June 2012 the field produced at the plan's 80% design water cut, yet it never exceeded its liquid or water handling limits and it outlasted the 2012 end date of the plan.",
+   "numbers": [
+    {
+     "text": "57%",
+     "value": 0.5711,
+     "evidence_id": "E3"
+    },
+    {
+     "text": "86%",
+     "value": 0.8604,
+     "evidence_id": "E3"
+    },
+    {
+     "text": "2 years",
+     "value": 2.0,
+     "evidence_id": "E7"
+    },
+    {
+     "text": "21 months",
+     "value": 20.6,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "80%",
+     "value": 0.8,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "June 2012",
+     "value": 2012.06,
+     "evidence_id": "E6"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "e08be5885cb4",
+   "index": 0,
+   "passage": "summary",
+   "text": "After mid-2010 the drop in oil rate at F-12 was most likely caused by water breakthrough — water cut rose to 57% from near zero in 2010 and later to 86%, while the choke stayed unchanged and liquid rate stayed at capacity, indicating water took the capacity. The 2005 plan expected breakthrough after about 2 years: at about 21 months, F-12's breakthrough matches that. The field later operated from 2012-06 at the design maximum water cut of 80% foreseen in the plan, never breached its liquid or water handling limits, and outlived the plan, whose last year was 2012.",
+   "numbers": [
+    {
+     "text": "57%",
+     "value": 0.5711,
+     "evidence_id": "E3"
+    },
+    {
+     "text": "86%",
+     "value": 0.8604,
+     "evidence_id": "E3"
+    },
+    {
+     "text": "2 years",
+     "value": 2.0,
+     "evidence_id": "E7"
+    },
+    {
+     "text": "21 months",
+     "value": 20.6,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "80%",
+     "value": 0.8,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "2012-06",
+     "value": 2012.06,
+     "evidence_id": "E6"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "063034849654",
+   "index": 1,
+   "passage": "finding 1",
+   "text": "Page 23 indicates that after a start-up period of about 1 year, the field will produce at a plateau rate of 9,000 Sm3/d, which will continue for about 19 months.",
+   "numbers": [
+    {
+     "text": "1 year",
+     "value": 1.0,
+     "evidence_id": "E1"
+    },
+    {
+     "text": "9,000 Sm3/d",
+     "value": 9000.0,
+     "evidence_id": "E1"
+    },
+    {
+     "text": "19 months",
+     "value": 19.0,
+     "evidence_id": "E1"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "063034849654",
+   "index": 1,
+   "passage": "finding 1",
+   "text": "According to the description on page 23, the plateau rate is 9 000 Sm3/d and it lasts approximately 19 months following an initial ramp-up of approximately 1 year.",
+   "numbers": [
+    {
+     "text": "9 000",
+     "value": 9000.0,
+     "evidence_id": "E1"
+    },
+    {
+     "text": "19 months",
+     "value": 19.0,
+     "evidence_id": "E1"
+    },
+    {
+     "text": "1 year",
+     "value": 1.0,
+     "evidence_id": "E1"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "063034849654",
+   "index": 1,
+   "passage": "finding 1",
+   "text": "Following about 1 year of start-up, the forecast on page 23 has the field producing on plateau at 9,000 Sm3/d for about 19 months.",
+   "numbers": [
+    {
+     "text": "1 year",
+     "value": 1.0,
+     "evidence_id": "E1"
+    },
+    {
+     "text": "9,000",
+     "value": 9000.0,
+     "evidence_id": "E1"
+    },
+    {
+     "text": "19 months",
+     "value": 19.0,
+     "evidence_id": "E1"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "063034849654",
+   "index": 1,
+   "passage": "finding 1",
+   "text": "The page 23 forecast states that the field will reach a 9,000 Sm3/d plateau after about 1 year of start-up and remain there for about 19 months.",
+   "numbers": [
+    {
+     "text": "9,000 Sm3/d",
+     "value": 9000.0,
+     "evidence_id": "E1"
+    },
+    {
+     "text": "1 year",
+     "value": 1.0,
+     "evidence_id": "E1"
+    },
+    {
+     "text": "19 months",
+     "value": 19.0,
+     "evidence_id": "E1"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "063034849654",
+   "index": 2,
+   "passage": "finding 2",
+   "text": "On the same page, Figure 4.2 shows the plateau of the oil rate at about 8,400 Sm3/d, slightly below 9,000 Sm3/d, lasting about 2 years from around 2008 to around 2010.",
+   "numbers": [
+    {
+     "text": "8,400",
+     "value": 8400.0,
+     "evidence_id": "E3"
+    },
+    {
+     "text": "9,000",
+     "value": 9000.0,
+     "evidence_id": "E3"
+    },
+    {
+     "text": "2 years",
+     "value": 2.0,
+     "evidence_id": "E3"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "063034849654",
+   "index": 2,
+   "passage": "finding 2",
+   "text": "The oil-rate plateau plotted in Figure 4.2 on that page is slightly under 9,000 Sm3/d — about 8,400 Sm3/d — and extends for about 2 years, roughly 2008 to 2010.",
+   "numbers": [
+    {
+     "text": "9,000",
+     "value": 9000.0,
+     "evidence_id": "E3"
+    },
+    {
+     "text": "8,400",
+     "value": 8400.0,
+     "evidence_id": "E3"
+    },
+    {
+     "text": "2 years",
+     "value": 2.0,
+     "evidence_id": "E3"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "063034849654",
+   "index": 2,
+   "passage": "finding 2",
+   "text": "At about 8,400 Sm3/d — a little below the 9,000 Sm3/d mark — is the flat top of the oil rate curve in Figure 4.2 on the same page, with the plateau persisting for about 2 years between about 2008 and 2010.",
+   "numbers": [
+    {
+     "text": "8,400",
+     "value": 8400.0,
+     "evidence_id": "E3"
+    },
+    {
+     "text": "9,000",
+     "value": 9000.0,
+     "evidence_id": "E3"
+    },
+    {
+     "text": "2 years",
+     "value": 2.0,
+     "evidence_id": "E3"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "063034849654",
+   "index": 2,
+   "passage": "finding 2",
+   "text": "Figure 4.2 on the same page plots a plateau duration of about 2 years, from circa 2008 until circa 2010, at an oil rate of about 8,400 Sm3/d which is slightly below 9,000 Sm3/d.",
+   "numbers": [
+    {
+     "text": "2 years",
+     "value": 2.0,
+     "evidence_id": "E3"
+    },
+    {
+     "text": "8,400",
+     "value": 8400.0,
+     "evidence_id": "E3"
+    },
+    {
+     "text": "9,000",
+     "value": 9000.0,
+     "evidence_id": "E3"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "063034849654",
+   "index": 0,
+   "passage": "summary",
+   "text": "According to the text on page 23 of the 2005 development plan, after a start-up of about 1 year the oil plateau is forecast at 9,000 Sm3/d for roughly 19 months, while the forecast plot on the same page appears to display a comparable plateau just under 9,000 Sm3/d — about 8,400 Sm3/d — lasting around 2 years.",
+   "numbers": [
+    {
+     "text": "1 year",
+     "value": 1.0,
+     "evidence_id": "E1"
+    },
+    {
+     "text": "9,000 Sm3/d",
+     "value": 9000.0,
+     "evidence_id": "E1"
+    },
+    {
+     "text": "19 months",
+     "value": 19.0,
+     "evidence_id": "E1"
+    },
+    {
+     "text": "9,000 Sm3/d",
+     "value": 9000.0,
+     "evidence_id": "E3"
+    },
+    {
+     "text": "8,400 Sm3/d",
+     "value": 8400.0,
+     "evidence_id": "E3"
+    },
+    {
+     "text": "2 years",
+     "value": 2.0,
+     "evidence_id": "E3"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "063034849654",
+   "index": 0,
+   "passage": "summary",
+   "text": "Page 23 of the February 2005 plan contains both text and a forecast figure: the text forecasts a plateau rate of Sm3/d 9,000 that endures for about 19 months following a ca. 1 year start-up, and the figure on that same page seems to portray a similar plateau a little below Sm3/d 9,000 — at 8,400 Sm3/d — for about 2 years.",
+   "numbers": [
+    {
+     "text": "Sm3/d 9,000",
+     "value": 9000.0,
+     "evidence_id": "E1"
+    },
+    {
+     "text": "19 months",
+     "value": 19.0,
+     "evidence_id": "E1"
+    },
+    {
+     "text": "1 year",
+     "value": 1.0,
+     "evidence_id": "E1"
+    },
+    {
+     "text": "Sm3/d 9,000",
+     "value": 9000.0,
+     "evidence_id": "E3"
+    },
+    {
+     "text": "8,400",
+     "value": 8400.0,
+     "evidence_id": "E3"
+    },
+    {
+     "text": "2 years",
+     "value": 2.0,
+     "evidence_id": "E3"
+    }
+   ],
+   "accepted": false,
+   "why": "fair: 9,000 declared from the model's reading of the figure (warned), unhedged"
+  },
+  {
+   "run": "063034849654",
+   "index": 0,
+   "passage": "summary",
+   "text": "The forecast figure on the same page appears to show about 2 years at about 8,400 Sm3/d, slightly below 9,000 Sm3/d, which is similar to the 2005 plan text on page 23 forecasting an oil plateau of 9,000 Sm3/d for about 19 months after an oppstartsperiode of ca. 1 year.",
+   "numbers": [
+    {
+     "text": "2 years",
+     "value": 2.0,
+     "evidence_id": "E3"
+    },
+    {
+     "text": "8,400 Sm3/d",
+     "value": 8400.0,
+     "evidence_id": "E3"
+    },
+    {
+     "text": "9,000 Sm3/d",
+     "value": 9000.0,
+     "evidence_id": "E3"
+    },
+    {
+     "text": "9,000 Sm3/d",
+     "value": 9000.0,
+     "evidence_id": "E1"
+    },
+    {
+     "text": "19 months",
+     "value": 19.0,
+     "evidence_id": "E1"
+    },
+    {
+     "text": "1 year",
+     "value": 1.0,
+     "evidence_id": "E1"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "063034849654",
+   "index": 0,
+   "passage": "summary",
+   "text": "On page 23, the 2005 plan's written forecast is for a roughly 1 year start-up followed by an approximately 19 months plateau at 9 000 Sm3/d, whereas the plotted forecast on that page looks to indicate a plateau a touch under 9 000 Sm3/d — on the order of 8 400 Sm3/d — persisting for roughly 2 years.",
+   "numbers": [
+    {
+     "text": "1 year",
+     "value": 1.0,
+     "evidence_id": "E1"
+    },
+    {
+     "text": "19 months",
+     "value": 19.0,
+     "evidence_id": "E1"
+    },
+    {
+     "text": "9 000",
+     "value": 9000.0,
+     "evidence_id": "E1"
+    },
+    {
+     "text": "9 000",
+     "value": 9000.0,
+     "evidence_id": "E3"
+    },
+    {
+     "text": "8 400",
+     "value": 8400.0,
+     "evidence_id": "E3"
+    },
+    {
+     "text": "2 years",
+     "value": 2.0,
+     "evidence_id": "E3"
+    }
+   ],
+   "accepted": false,
+   "why": "fair: the figure's values declared from the warned reading, unhedged"
+  },
+  {
+   "run": "3d27b4a64831",
+   "index": 1,
+   "passage": "finding 1",
+   "text": "From 2014-11-30 to 2014-12-31 F-12 was shut in for 32 days and on return its water cut was about 31% compared with about 97% before, with oil up.",
+   "numbers": [
+    {
+     "text": "32 days",
+     "value": 32.0,
+     "evidence_id": "E3"
+    },
+    {
+     "text": "31%",
+     "value": 0.3107,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "97%",
+     "value": 0.9672,
+     "evidence_id": "E2"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "3d27b4a64831",
+   "index": 1,
+   "passage": "finding 1",
+   "text": "F-12 had a 32 days shut-in starting 2014-11-30 and ending 2014-12-31; after it came back the water cut had gone down to about 31% from about 97% and oil rose.",
+   "numbers": [
+    {
+     "text": "32 days",
+     "value": 32.0,
+     "evidence_id": "E3"
+    },
+    {
+     "text": "31%",
+     "value": 0.3107,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "97%",
+     "value": 0.9672,
+     "evidence_id": "E2"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "3d27b4a64831",
+   "index": 1,
+   "passage": "finding 1",
+   "text": "The well F-12 was shut in 32 days between 2014-11-30 and 2014-12-31, returning at a 31% water cut, about 97% beforehand, and higher oil.",
+   "numbers": [
+    {
+     "text": "32 days",
+     "value": 32.0,
+     "evidence_id": "E3"
+    },
+    {
+     "text": "31%",
+     "value": 0.3107,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "97%",
+     "value": 0.9672,
+     "evidence_id": "E2"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "3d27b4a64831",
+   "index": 1,
+   "passage": "finding 1",
+   "text": "At about 97% water cut before the 32 days shut-in from 2014-11-30 to 2014-12-31, F-12 returned with water cut about 31% and oil up.",
+   "numbers": [
+    {
+     "text": "97%",
+     "value": 0.9672,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "32 days",
+     "value": 32.0,
+     "evidence_id": "E3"
+    },
+    {
+     "text": "31%",
+     "value": 0.3107,
+     "evidence_id": "E2"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "3d27b4a64831",
+   "index": 2,
+   "passage": "finding 2",
+   "text": "The intervention performed was a workover from 2014-11-22 through 2014-11-27 that set a 7-in EVO bridge plug whose mid-element is at {x1} and added a new perforated interval from {x2} to {x3} MD.",
+   "numbers": [
+    {
+     "text": "3150 m",
+     "value": 3150.0,
+     "evidence_id": "E4"
+    },
+    {
+     "text": "3126.2 m",
+     "value": 3126.2,
+     "evidence_id": "E8"
+    },
+    {
+     "text": "3130.7 m",
+     "value": 3130.7,
+     "evidence_id": "E4"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "3d27b4a64831",
+   "index": 2,
+   "passage": "finding 2",
+   "text": "Between 22 November 2014 and 27 November 2014 a workover was carried out on F-12: with its middle element at {x1}, a 7-in EVO bridge plug was installed, and the well was newly perforated over {x2} to {x3}.",
+   "numbers": [
+    {
+     "text": "3150 m",
+     "value": 3150.0,
+     "evidence_id": "E4"
+    },
+    {
+     "text": "3126.2 m",
+     "value": 3126.2,
+     "evidence_id": "E8"
+    },
+    {
+     "text": "3130.7 m",
+     "value": 3130.7,
+     "evidence_id": "E4"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "3d27b4a64831",
+   "index": 2,
+   "passage": "finding 2",
+   "text": "What cut the water was the 2014-11-22 - 2014-11-27 workover, which placed at {x1} the mid-element of a 7-in EVO bridge plug and shot a new perforation interval of {x2} - {x3} mMD.",
+   "numbers": [
+    {
+     "text": "3150 m",
+     "value": 3150.0,
+     "evidence_id": "E4"
+    },
+    {
+     "text": "3126.2 m",
+     "value": 3126.2,
+     "evidence_id": "E8"
+    },
+    {
+     "text": "3130.7 m",
+     "value": 3130.7,
+     "evidence_id": "E4"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "3d27b4a64831",
+   "index": 2,
+   "passage": "finding 2",
+   "text": "A new perforation from {x2} to {x3} mMD together with a 7-in EVO bridge plug set with mid-element at {x1} were executed during the workover spanning 2014-11-22 to 2014-11-27.",
+   "numbers": [
+    {
+     "text": "3126.2 m",
+     "value": 3126.2,
+     "evidence_id": "E8"
+    },
+    {
+     "text": "3130.7 m",
+     "value": 3130.7,
+     "evidence_id": "E4"
+    },
+    {
+     "text": "3150 m",
+     "value": 3150.0,
+     "evidence_id": "E4"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "3d27b4a64831",
+   "index": 3,
+   "passage": "finding 3",
+   "text": "On 2010-09-23 a plug was installed with mid element at {3210 m [E6]} in F-12, after which water cut stayed about {64% [E6]} to {68% [E6]} while oil production declined.",
+   "numbers": [
+    {
+     "text": "3210 m",
+     "value": 3210.0,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "64%",
+     "value": 0.638,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "68%",
+     "value": 0.676,
+     "evidence_id": "E6"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "3d27b4a64831",
+   "index": 3,
+   "passage": "finding 3",
+   "text": "Water cut in F-12 remained essentially unchanged at about {64% [E6]} beforehand and {68% [E6]} afterwards, even though a plug had been set at {3210 m [E6]} on 23 September 2010, with oil falling.",
+   "numbers": [
+    {
+     "text": "3210 m",
+     "value": 3210.0,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "64%",
+     "value": 0.638,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "68%",
+     "value": 0.676,
+     "evidence_id": "E6"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "3d27b4a64831",
+   "index": 3,
+   "passage": "finding 3",
+   "text": "Set at {3210 m [E6]} on 2010-09-23, the 2010 plug in F-12 left the water cut at roughly {64% [E6]} before and {68% [E6]} after, while oil fell.",
+   "numbers": [
+    {
+     "text": "3210 m",
+     "value": 3210.0,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "64%",
+     "value": 0.638,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "68%",
+     "value": 0.676,
+     "evidence_id": "E6"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "3d27b4a64831",
+   "index": 3,
+   "passage": "finding 3",
+   "text": "While oil fell, the plug set in F-12 on 2010-09-23 at {3210 m [E6]} did not change water cut, which was about {68% [E6]} after compared to about {64% [E6]} before.",
+   "numbers": [
+    {
+     "text": "3210 m",
+     "value": 3210.0,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "68%",
+     "value": 0.676,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "64%",
+     "value": 0.638,
+     "evidence_id": "E6"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "3d27b4a64831",
+   "index": 4,
+   "passage": "finding 4",
+   "text": "Most water would have remained if a plug had been placed at the 2010 depth, since the log from 2010-09-22 indicates it would remove only about 33% to 38% of the water while removing about 1% of the oil.",
+   "numbers": [
+    {
+     "text": "33%",
+     "value": 0.325,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "38%",
+     "value": 0.376,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "1%",
+     "value": 0.011,
+     "evidence_id": "E6"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "3d27b4a64831",
+   "index": 4,
+   "passage": "finding 4",
+   "text": "The September 2010 log shows that with a plug set at the depth used in 2010, about 1% of oil and only about 33% - 38% of water would have been shut off, leaving most water still entering.",
+   "numbers": [
+    {
+     "text": "1%",
+     "value": 0.011,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "33%",
+     "value": 0.325,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "38%",
+     "value": 0.376,
+     "evidence_id": "E6"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "3d27b4a64831",
+   "index": 4,
+   "passage": "finding 4",
+   "text": "According to the 2010-09 log, setting a plug at the 2010 depth would have eliminated about 33% to about 38% of water and about 1% of oil at most, so the majority of the water remained.",
+   "numbers": [
+    {
+     "text": "33%",
+     "value": 0.325,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "38%",
+     "value": 0.376,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "1%",
+     "value": 0.011,
+     "evidence_id": "E6"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "3d27b4a64831",
+   "index": 4,
+   "passage": "finding 4",
+   "text": "About 1% of oil and about 33% to 38% of water is what the log of 22 September 2010 indicates a plug at the 2010 depth would have cut, meaning most water remained.",
+   "numbers": [
+    {
+     "text": "1%",
+     "value": 0.011,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "33%",
+     "value": 0.325,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "38%",
+     "value": 0.376,
+     "evidence_id": "E6"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "3d27b4a64831",
+   "index": 5,
+   "passage": "finding 5",
+   "text": "Restored oil entry came from a new perforation placed above a plug at 3150 m that shuts off nearly the entire water influx, with the water share below that depth at about 97% to 100%.",
+   "numbers": [
+    {
+     "text": "3150 m",
+     "value": 3150.0,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "97%",
+     "value": 0.971,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "100%",
+     "value": 1.0,
+     "evidence_id": "E6"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "3d27b4a64831",
+   "index": 5,
+   "passage": "finding 5",
+   "text": "With the plug set at 3150 m, almost all water - about 97% up to 100% - is cut off, while oil inflow was re-established by perforating anew above the plug.",
+   "numbers": [
+    {
+     "text": "3150 m",
+     "value": 3150.0,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "97%",
+     "value": 0.971,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "100%",
+     "value": 1.0,
+     "evidence_id": "E6"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "3d27b4a64831",
+   "index": 5,
+   "passage": "finding 5",
+   "text": "Oil inflow was brought back by the new perforation above it, because the 3150 m plug eliminates the water contribution of approximately 97% to 100%.",
+   "numbers": [
+    {
+     "text": "3150 m",
+     "value": 3150.0,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "97%",
+     "value": 0.971,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "100%",
+     "value": 1.0,
+     "evidence_id": "E6"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "3d27b4a64831",
+   "index": 5,
+   "passage": "finding 5",
+   "text": "At 3150 m the plug blocks water almost completely - at about 97% to 100% - and above that barrier the newly perforated interval restored production of oil.",
+   "numbers": [
+    {
+     "text": "3150 m",
+     "value": 3150.0,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "97%",
+     "value": 0.971,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "100%",
+     "value": 1.0,
+     "evidence_id": "E6"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "3d27b4a64831",
+   "index": 0,
+   "passage": "summary",
+   "text": "Most likely, the workover carried out in late 2014 explains why at F-12 the water cut dropped from roughly 97% to around 31%, because it isolated the depleted lower intervals that were watered out and perforated a new oil interval above the plug, which increased oil and reduced water; by contrast the plug installed in 2010 had been placed too deep, cutting off only the lowermost tail of the water influx and therefore leaving the majority of the water to continue.",
+   "numbers": [
+    {
+     "text": "97%",
+     "value": 0.9672,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "31%",
+     "value": 0.3107,
+     "evidence_id": "E2"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "3d27b4a64831",
+   "index": 0,
+   "passage": "summary",
+   "text": "With water at 97% before and 31% after in late 2014, F-12 most likely saw that fall because the late-2014 workover shut off the watered-out lower zones and opened a fresh oil zone above the plug, so oil rose and water was cut; the plug set in 2010 did not do the same, as it was positioned too deep and merely eliminated the bottom tail of water entry, leaving most water still flowing.",
+   "numbers": [
+    {
+     "text": "97%",
+     "value": 0.9672,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "31%",
+     "value": 0.3107,
+     "evidence_id": "E2"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "3d27b4a64831",
+   "index": 0,
+   "passage": "summary",
+   "text": "The late-2014 workover most likely isolated the watered-out lower zones of F-12 and brought a new oil zone on above the plug, and that is the probable reason the water cut went down from about 97% to about 31% in late-2014, lifting oil production while reducing water; the 2010 plug failed to achieve this because it was set too deep and only removed the lowermost portion of water entry, so the bulk of the water remained.",
+   "numbers": [
+    {
+     "text": "97%",
+     "value": 0.9672,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "31%",
+     "value": 0.3107,
+     "evidence_id": "E2"
+    }
+   ],
+   "accepted": false,
+   "why": "fair: after ';' an unhedged 'because'"
+  },
+  {
+   "run": "3d27b4a64831",
+   "index": 0,
+   "passage": "summary",
+   "text": "At the end of 2014 F-12's water cut of 97% declined to 31%, most likely as the workover in late-2014 sealed off the lower watered-out intervals and opened an untouched oil interval situated above the plug, raising oil and cutting water; the plug emplaced in 2010 was too deep in the wellbore and only curtailed the bottom tail of water entry, thus it left most of the water flowing.",
+   "numbers": [
+    {
+     "text": "97%",
+     "value": 0.9672,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "31%",
+     "value": 0.3107,
+     "evidence_id": "E2"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "f7d3faebb139",
+   "index": 1,
+   "passage": "finding 1",
+   "text": "For F-12, the 2011-2013 period yields 36 months of paired monthly averages, with water cut and choke correlated at about 0.60 (Pearson) and about 0.47 (Spearman rank).",
+   "numbers": [
+    {
+     "text": "36",
+     "value": 36.0,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "0.60",
+     "value": 0.5971,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "0.47",
+     "value": 0.4672,
+     "evidence_id": "E6"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "f7d3faebb139",
+   "index": 1,
+   "passage": "finding 1",
+   "text": "There are 36 paired monthly observations for F-12 between 2011 and 2013; the Pearson correlation between monthly water cut and choke is about 0.60 and the rank (Spearman) correlation is about 0.47.",
+   "numbers": [
+    {
+     "text": "36",
+     "value": 36.0,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "0.60",
+     "value": 0.5971,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "0.47",
+     "value": 0.4672,
+     "evidence_id": "E6"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "f7d3faebb139",
+   "index": 1,
+   "passage": "finding 1",
+   "text": "A Pearson correlation of about 0.60 and a Spearman rank correlation of about 0.47 were found between monthly water cut and choke for F-12 over 2011-2013, based on 36 months of paired data.",
+   "numbers": [
+    {
+     "text": "0.60",
+     "value": 0.5971,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "0.47",
+     "value": 0.4672,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "36",
+     "value": 36.0,
+     "evidence_id": "E6"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "f7d3faebb139",
+   "index": 1,
+   "passage": "finding 1",
+   "text": "Over the interval 2011 to 2013, F-12 shows about 0.60 Pearson and about 0.47 Spearman correlation between choke and monthly water cut (n=36 paired months).",
+   "numbers": [
+    {
+     "text": "0.60",
+     "value": 0.5971,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "0.47",
+     "value": 0.4672,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "36",
+     "value": 36.0,
+     "evidence_id": "E6"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "f7d3faebb139",
+   "index": 2,
+   "passage": "finding 2",
+   "text": "Between Jan 2011 and Dec 2013, F-12 monthly water cut climbed from 72.3% to 94.7%, whereas its choke averaged 77.1% per year before increasing to about 99.6% and remaining essentially fully open.",
+   "numbers": [
+    {
+     "text": "72.3%",
+     "value": 0.7232,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "94.7%",
+     "value": 0.9467,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "77.1%",
+     "value": 77.11,
+     "evidence_id": "E4"
+    },
+    {
+     "text": "99.6%",
+     "value": 99.61,
+     "evidence_id": "E4"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "f7d3faebb139",
+   "index": 2,
+   "passage": "finding 2",
+   "text": "While yearly average choke for F-12 went from 77.1% to about 99.6% then held near fully open, monthly water cut was 72.3% in 2011-01 and 94.7% in 2013-12, a rise over the interval.",
+   "numbers": [
+    {
+     "text": "77.1%",
+     "value": 77.11,
+     "evidence_id": "E4"
+    },
+    {
+     "text": "99.6%",
+     "value": 99.61,
+     "evidence_id": "E4"
+    },
+    {
+     "text": "72.3%",
+     "value": 0.7232,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "94.7%",
+     "value": 0.9467,
+     "evidence_id": "E2"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "f7d3faebb139",
+   "index": 2,
+   "passage": "finding 2",
+   "text": "F-12 saw its monthly water cut go up from 72.3% (January 2011) to 94.7% (December 2013); over the same period the yearly average choke rose from 77.1% to about 99.6% and then stayed near fully open.",
+   "numbers": [
+    {
+     "text": "72.3%",
+     "value": 0.7232,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "94.7%",
+     "value": 0.9467,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "77.1%",
+     "value": 77.11,
+     "evidence_id": "E4"
+    },
+    {
+     "text": "99.6%",
+     "value": 99.61,
+     "evidence_id": "E4"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "f7d3faebb139",
+   "index": 2,
+   "passage": "finding 2",
+   "text": "With yearly average choke at 77.1% before moving to about 99.6% and holding near fully open, F-12's water cut on a monthly basis increased — 72.3% in Jan 2011 and 94.7% in Dec 2013.",
+   "numbers": [
+    {
+     "text": "77.1%",
+     "value": 77.11,
+     "evidence_id": "E4"
+    },
+    {
+     "text": "99.6%",
+     "value": 99.61,
+     "evidence_id": "E4"
+    },
+    {
+     "text": "72.3%",
+     "value": 0.7232,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "94.7%",
+     "value": 0.9467,
+     "evidence_id": "E2"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "f7d3faebb139",
+   "index": 3,
+   "passage": "finding 3",
+   "text": "For F-12 between 2011 and 2013, reducing the choke did not bring water cut down, which is consistent with water breakthrough in the reservoir rather than a choke-driven effect; for example in December 2011 the choke was at 58.92% with water cut at 0.7814, while in September 2013 the choke at 77.43% still coincided with high water cut.",
+   "numbers": [
+    {
+     "text": "58.92%",
+     "value": 58.92,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "0.7814",
+     "value": 0.7814,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "77.43%",
+     "value": 77.43,
+     "evidence_id": "E2"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "f7d3faebb139",
+   "index": 3,
+   "passage": "finding 3",
+   "text": "Water cut was not lowered in months when F-12's choke opening was cut back over the 2011-01 to 2013-12 period, consistent with reservoir water breakthrough rather than an effect of the choke: water cut of 0.7814 was seen at a choke of 58.92% in 2011-12, and a choke of 77.43% in 2013-09 was still associated with elevated water cut.",
+   "numbers": [
+    {
+     "text": "0.7814",
+     "value": 0.7814,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "58.92%",
+     "value": 58.92,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "77.43%",
+     "value": 77.43,
+     "evidence_id": "E2"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "f7d3faebb139",
+   "index": 3,
+   "passage": "finding 3",
+   "text": "Consistent with reservoir water breakthrough rather than a choke effect, months with a smaller choke opening on F-12 did not show a lower water cut during 2011 to 2013; the December 2011 record shows 58.92% choke and 0.7814 water cut, compared with 77.43% choke in September 2013 without a reduction in water cut.",
+   "numbers": [
+    {
+     "text": "58.92%",
+     "value": 58.92,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "0.7814",
+     "value": 0.7814,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "77.43%",
+     "value": 77.43,
+     "evidence_id": "E2"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "f7d3faebb139",
+   "index": 3,
+   "passage": "finding 3",
+   "text": "Over 2011-2013 on F-12, water cut did not fall when the choke was choked back, which is consistent with reservoir breakthrough rather than choke control: at 0.7814 water cut the choke pct was 58.92% (2011-12), and a later month 2013-09 with choke pct 77.43% also retained high water cut.",
+   "numbers": [
+    {
+     "text": "0.7814",
+     "value": 0.7814,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "58.92%",
+     "value": 58.92,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "77.43%",
+     "value": 77.43,
+     "evidence_id": "E2"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "f7d3faebb139",
+   "index": 0,
+   "passage": "summary",
+   "text": "Between 2011 and 2013, covering monthly pairs, F-12's water cut climbed from about to. Based on water cut remaining elevated when the choke was reduced, this most likely reflects reservoir water breakthrough rather than choke changes. There is a moderate positive Pearson correlation of about with a rank correlation of about, implying the data suggest only about of the month-to-month variation is associated with the choke.",
+   "numbers": [
+    {
+     "text": "36",
+     "value": 36.0,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "72%",
+     "value": 0.7232,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "95%",
+     "value": 0.9467,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "0.60",
+     "value": 0.5971,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "0.47",
+     "value": 0.4672,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "36%",
+     "value": 0.3565,
+     "evidence_id": "E8"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "f7d3faebb139",
+   "index": 0,
+   "passage": "summary",
+   "text": "Implying the data suggest only about of the month-to-month variation is associated with the choke, the monthly pairs for F-12 between 2011-01-01 and 2013-12-31 give a moderate positive Pearson correlation of about and about for rank correlation. Over those months water cut went up from roughly to, most likely from reservoir water breakthrough rather than choke changes as water cut stayed high even when choke was cut back.",
+   "numbers": [
+    {
+     "text": "72%",
+     "value": 0.7232,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "95%",
+     "value": 0.9467,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "36",
+     "value": 36.0,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "0.60",
+     "value": 0.5971,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "0.47",
+     "value": 0.4672,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "36%",
+     "value": 0.3565,
+     "evidence_id": "E8"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "f7d3faebb139",
+   "index": 0,
+   "passage": "summary",
+   "text": "F-12 saw its water cut at about before and after across the-month period between 2011 and 2013, most likely from reservoir water breakthrough rather than choke changes as water cut stayed high even when choke was cut back. With monthly pairs the Pearson correlation is about and the rank correlation about, which implies the data suggest only about of the month-to-month variation is associated with the choke.",
+   "numbers": [
+    {
+     "text": "72%",
+     "value": 0.7232,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "95%",
+     "value": 0.9467,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "36",
+     "value": 36.0,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "0.60",
+     "value": 0.5971,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "0.47",
+     "value": 0.4672,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "36%",
+     "value": 0.3565,
+     "evidence_id": "E8"
+    }
+   ],
+   "accepted": true
+  },
+  {
+   "run": "f7d3faebb139",
+   "index": 0,
+   "passage": "summary",
+   "text": "With water at earlier and later, F-12's water cut rose over months between 2011 and 2013, most likely from reservoir water breakthrough rather than choke changes as water cut stayed high even when choke was cut back. The analysis of the monthly pairs suggests a moderate positive Pearson correlation of about and rank correlation of about, implying the data suggest only about of the month-to-month variation is associated with the choke.",
+   "numbers": [
+    {
+     "text": "72%",
+     "value": 0.7232,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "95%",
+     "value": 0.9467,
+     "evidence_id": "E2"
+    },
+    {
+     "text": "36",
+     "value": 36.0,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "0.60",
+     "value": 0.5971,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "0.47",
+     "value": 0.4672,
+     "evidence_id": "E6"
+    },
+    {
+     "text": "36%",
+     "value": 0.3565,
+     "evidence_id": "E8"
+    }
+   ],
+   "accepted": true
+  }
+ ]
+}

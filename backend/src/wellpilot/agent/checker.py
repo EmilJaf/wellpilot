@@ -34,6 +34,7 @@ import ast
 import json
 import math
 import re
+import unicodedata
 from collections.abc import Iterable
 from contextlib import suppress
 from dataclasses import dataclass, replace
@@ -59,7 +60,9 @@ _MONTH = (
 )
 # Only years of this or the last century: "Jan 1363" is a month's value, not January 1363.
 _YEAR = r"((?:19|20)\d{2})"
-DAY_MONTH_YEAR = re.compile(rf"\b(\d{{1,2}})(?:st|nd|rd|th)?\s+{_MONTH}\s+{_YEAR}\b")
+# A well name's digits are no day: "for P-2 October 2018" is P-2's October, not 2 October
+# ("post-24 January 2010" keeps its day).
+DAY_MONTH_YEAR = re.compile(rf"(?<![A-Z]-)\b(\d{{1,2}})(?:st|nd|rd|th)?\s+{_MONTH}\s+{_YEAR}\b")
 MONTH_DAY_YEAR = re.compile(rf"\b{_MONTH}\s+(\d{{1,2}})(?:st|nd|rd|th)?,?\s+{_YEAR}\b")
 MONTH_YEAR = re.compile(rf"\b{_MONTH}\s+{_YEAR}\b")
 DOTTED_DATE = re.compile(rf"\b(\d{{1,2}})\.(\d{{1,2}})\.{_YEAR}\b")
@@ -161,11 +164,43 @@ def normalize_dates(text: str) -> str:
 DASHES = str.maketrans(dict.fromkeys("\u2010\u2011\u2012\u2013\u2212", "-"))
 
 
+class _Canonical(dict):
+    """str.translate table, filled as characters come: every space separator (no-break,
+    narrow, thin, ideographic) as a space, the hyphens, the en dash and the minus sign as
+    "-", fullwidth ASCII as ASCII. The em dash, quote marks and the ellipsis stay: rules
+    read them."""
+
+    def __missing__(self, code: int) -> int | str:
+        char = chr(code)
+        if code < 128:
+            value: int | str = code
+        elif unicodedata.category(char) == "Zs":
+            value = " "
+        elif char in "\u2010\u2011\u2012\u2013\u2212\ufe63\uff0d":
+            value = "-"
+        elif 0xFF01 <= code <= 0xFF5E:
+            value = chr(code - 0xFEE0)
+        else:
+            value = code
+        self[code] = value
+        return value
+
+
+CANONICAL = _Canonical()
+WORD_APOSTROPHE = re.compile(r"(?<=\w)[\u2019\u02bc](?=[^\W\d_])")
+
+
+def canonical(text: str) -> str:
+    """Text with its typography made plain, one character for one, so every position still
+    indexes the text as written: "2010\u201107\u201118", "F\u201112" and "4\u202f050" read as
+    "2010-07-18", "F-12" and "4 050"; "F-12\u2019s" as "F-12's". The model's typography varies
+    run to run; each variant used to be a false rejection of its own."""
+    return WORD_APOSTROPHE.sub("'", text.translate(CANONICAL))
+
+
 def _normalize(text: str) -> str:
-    """The claim as the checker reads it: ISO dates, ASCII minus and hyphen. The model
-    sometimes writes "2010\u201107\u201118" and "F\u201112" with non-breaking hyphens; each
-    dash stays one character, so positions still index the text as written."""
-    return normalize_dates(text.translate(DASHES))
+    """The claim as the checker reads it: plain typography (canonical), ISO dates."""
+    return normalize_dates(canonical(text))
 
 
 # Unit conversions a calculation may use without citing them (besides powers of ten): days,
@@ -236,7 +271,7 @@ def _translations_outside(text: str) -> str:
 HEDGE = re.compile(
     r"\b(likely|probabl[ey]|possibly|perhaps|presumabl[ey]|plausibl[ey]|consistent with|"
     r"suggests?|seems?|appears? to|could|would|may|might|hypothes\w*|interpret\w*|"
-    r"points? to|uncertain\w*|low confidence)\b",
+    r"points? to|impl(?:y|ies)|uncertain\w*|low confidence)\b",
     re.IGNORECASE,
 )
 SENTENCE = re.compile(r"(?<=[.;!?])\s+")
@@ -724,6 +759,7 @@ CALENDAR_WINDOW = re.compile(
     r"|\b(?:12\s+months|24\s+hours|(?:90|180|365)\s+days)\b"
     r"|(?:(?<=next )|(?<=first )|(?<=the ))60\s+days\b"
     r"|\b60\s+days(?=\s+(?:after|before|later|on average))"
+    r"|\btwelve[-\s]months?\b"  # "the next twelve months", as "12 months" is
 )
 DECIMAL_COMMA = re.compile(r"\d,\d{1,2}(?!\d)")
 DOTTED_THOUSANDS = re.compile(r"[1-9]\d{0,2}(?:\.\d{3})+")
@@ -823,13 +859,16 @@ def _mask(text: str) -> str:
 
 
 # A number the text ties to a month or day: "0.85 in 2009-06", "1 146 Sm3/d on 2010-07-18".
+# A word between a number and its date may be its unit, not "before" or "after": "97% before
+# and 31% after in late 2014" ties neither to late 2014.
+_UNIT_WORD = r"(?:(?!(?:before|after|later|earlier|prior)\b)[^\W\d]+\d?(?:/[^\W\d]+)?|%)"
 TIED = (
-    r"(?:\s*(?:[^\W\d]+\d?(?:/[^\W\d]+)?|%)){0,3}?"  # a unit or two ("Sm3/d", "%"); no comma
+    rf"(?:\s*{_UNIT_WORD}){{0,3}}?"  # a unit or two ("Sm3/d", "%"); no comma
     r"\s+(?:in|on|at|during|by|for)\s+(\d{4}-\d{2}(?:-\d{2})?)\b"
     r"(?!\s*(?:to|until|through|and|-|–)\s*\d{4})"  # a range of dates is no one row
 )
 PERIOD_TIED = re.compile(
-    r"(?:\s*(?:[^\W\d]+\d?(?:/[^\W\d]+)?|%)){0,3}?\s+(?:in|during)\s+(?:the\s+)?"
+    rf"(?:\s*{_UNIT_WORD}){{0,3}}?\s+(?:in|during)\s+(?:the\s+)?"
     r"(?P<part>early|mid|late)[\s-]+(?P<year>(?:19|20)\d{2})\b"
     r"(?!\s*(?:to|until|through|and|-|–)\s*(?:the\s+)?(?:early|mid|late|(?:19|20)\d{2}\b))",
     re.IGNORECASE,
@@ -921,7 +960,10 @@ def _row_mismatch(
         when = tied.group(1)
         # "Cut to 40% in 2018-11": a level reached by a change during the month, whose row
         # averages the days before and after it; the next row holds it too.
-        reached = bool(re.search(r"\bto\s*$", text[:start]))
+        # ("cut to about 40%" too)
+        reached = bool(
+            re.search(r"\bto\s*(?:(?:about|around|roughly|approximately)\s+|~\s*)?$", text[:start])
+        )
         for table in _tables(item.result):
             columns = [str(c).lower() for c in table["columns"]]
             key = next((i for i, c in enumerate(columns) if c in DATE_COLUMNS), None)
@@ -1348,7 +1390,7 @@ LINK = re.compile(
     r"stood|near|about|around|approximately|roughly|averaged|averaging|first|then|now|"
     r"exceeded|above|below|median|mean|daily|monthly|weekly|rate|production|produced|"
     r"volume|capacity|peak|peaked|total|band|range|forecast|correlation|coefficient|r|"
-    r"stayed|held|holding|remained|high|low|"
+    r"stayed|held|holding|remained|high|low|has|had|have|been|being|"
     # "uptime fell from about 97%": a verb of change, and "from" only right after one
     r"(?:rose|risen|rising|fell|fallen|falling|dropped|dropping|declined|declining|"
     r"increased|decreased|climbed|jumped|went (?:up|down))(?:\s+(?:continuously|steadily|"
@@ -1406,13 +1448,28 @@ def _quantity(blanked: str, start: int, end: int, after: bool = True) -> str | N
             blanked[end:],
             re.IGNORECASE,
         )
+        # "at a liquid rate of 5 130 oil fell": a name with its own verb after it starts the
+        # next clause; the number keeps the name before it.
+        if found and re.match(
+            rf"\s+(?:{FALL_WORDS}|{RISE_WORDS}|held|stayed|remained|went)\b",
+            blanked[end + found.end() :],
+            re.IGNORECASE,
+        ):
+            found = None
         if found:
             name = found.group("name")
             # "97% water": a share of the stream is its water cut.
             # ("38% of the water" is a share of the water, not a water cut.)
             share = found.group("pct") or blanked[start:end].rstrip().endswith("%")
+            # ("shut off 32% water" is a share of the water a plug would cut off.)
+            cut_off = re.search(
+                r"\b(?:shut(?:s|ting)?\s+off|cut(?:s|ting)?(?:\s+off)?|remov\w+|block\w*|"
+                r"isolat\w+|eliminat\w+)\s+(?:about\s+|around\s+|roughly\s+|~\s*)?$",
+                blanked[:start],
+                re.I,
+            )
             if share and re.fullmatch(r"water", name, re.I) and " of" not in found.group(0):
-                return "water cut"
+                return None if cut_off else "water cut"
             # "water makes up 69% of its liquids": a share of the liquid, so a water or oil
             # cut by its subject, which is not read here.
             if share and " of" in found.group(0) and re.fullmatch(r"liquids?", name, re.I):
@@ -1665,9 +1722,7 @@ def _attribution(
                 r"between|period|shift|gradual", _part(blanked, start, commas=False), re.I
             )
         )
-        if (STEP_WORDS.search(_part(blanked, start, commas=False)) or at_date) and _gradual(
-            held, leaves
-        ):
+        if (_steps(_part(blanked, start, commas=False)) or at_date) and _gradual(held, leaves):
             across = _across_text(leaves, {lf.record for lf in held})
             measured = f" {item.id} measures {across} across the change itself;" if across else ""
             return (
@@ -1675,6 +1730,21 @@ def _attribution(
                 f"{measured} call it a gradual shift"
             )
     return None
+
+
+def _steps(part: str) -> list[re.Match]:
+    """The step words a part of a sentence asserts: not one it denies ("a gradual decline
+    rather than an abrupt choke cut", "not a sharp step")."""
+    return [
+        m
+        for m in STEP_WORDS.finditer(part)
+        if not re.search(
+            r"\b(?:rather than|instead of|not|no|nor|never|without|than)\s+(?:an?\s+|the\s+)?"
+            r"(?:\w+\s+)?$",
+            part[: m.start()],
+            re.I,
+        )
+    ]
 
 
 def _part(text: str, start: int, commas: bool = True) -> str:
@@ -1819,7 +1889,9 @@ CROSSING_REACH = re.compile(
 EVENT_REACH = re.compile(
     # A few words in between, a zero reading too ("gauge has read 0 since <date>"), in one
     # clause. A last good reading ("last read 253.9 bar on <date>") dates no failure.
-    r"^(?!.*\b(?:last|good|valid|before|until|prior|worked|working)\b)"
+    # "no gauge issue is present, but from <date> its oil fell": a new clause is not the event.
+    r"^(?!.*\b(?:last|good|valid|before|until|prior|worked|working|but|while|whereas|however|"
+    r"although|yet)\b)"
     r"(?:[\s,]*(?:[^\W\d][\w'’-]*|0)){0,5}?\s*(?P<prep>since|from|on|at|around|in)\s*$",
     re.IGNORECASE,
 )
@@ -1847,6 +1919,11 @@ def _date_events(
             named = None
             for m in re.finditer(words, before, re.IGNORECASE):
                 named = m
+            # An event denied ("no gauge issue", "without a shut-in") dates nothing.
+            if named and re.search(
+                r"\b(?:no|not|without|nor)\s+(?:\w+\s+)?$", before[: named.start()], re.I
+            ):
+                continue
             reach = (
                 (CROSSING_REACH if event == "crossing" else EVENT_REACH).match(
                     before[named.end() :]
@@ -2362,7 +2439,11 @@ def _moved_to(label, text, blanked, declared, unused, items, leaves_of) -> list[
             )
             pattern = QUANTITIES[quantity][1]
             wells = _named(text, start)
-            dates = DATE.findall(text[begin:start])
+            # The clause's dates, else the sentence's ("shut in from 2014-11-30; after it came
+            # back the water cut had gone down to 31%"): a level after a dated event is no
+            # verdict on an earlier change.
+            sentence = max([0, *(m.end() for m in re.finditer(r"(?<=[.!?])\s+", text[:start]))])
+            dates = DATE.findall(text[begin:start]) or DATE.findall(text[sentence:start])
             changes = [
                 (min(lf.record_days), lf, item)
                 for item in items
@@ -2735,8 +2816,9 @@ def lookup_spans(text: str | None, log: EvidenceLog | None) -> list[dict]:
     detail): each number with the first evidence that holds it, and each quote."""
     if not text:
         return []
+    text = canonical(text)
     spans = [s for s in display_spans(text, [], log) if s["kind"] == "quote"]
-    plain = text.replace("\u2212", "-").replace("\u2013", "-")
+    plain = text
     masked = _blank(plain, DATE, WELL, CALENDAR_WINDOW, REFERENCE, DAY_MONTH_YEAR, MONTH_YEAR)
     pools = [(e.id, _Pool([e])) for e in log or []]
     for match in WRITTEN_NUMBER.finditer(masked):
@@ -2768,6 +2850,8 @@ def display_spans(
     slices; it re-implements no rule."""
     if not text:
         return []
+    text = canonical(text)
+    numbers = [n.model_copy(update={"text": canonical(n.text)}) for n in numbers or []]
     spans: list[dict] = []
     for m in QUOTED.finditer(_translations_outside(text)):
         span = {"kind": "quote", "start": m.start(), "end": m.end()}
@@ -2853,7 +2937,7 @@ YEAR = re.compile(r"\b(?:19|20)\d{2}\b")
 def claim_numbers(claim: str) -> list[str]:
     """The numbers a reader meets in a claim: not its dates, years, well names, windows or
     quotes."""
-    outside = QUOTED.sub(" ", _translations_outside(claim))
+    outside = QUOTED.sub(" ", _translations_outside(canonical(claim)))
     return WRITTEN_NUMBER.findall(YEAR.sub(" ", _mask(outside)))
 
 
@@ -2862,6 +2946,7 @@ def readability(submission: Submission) -> list[str]:
     significant digits, no forecaster's or fit labels, at most MAX_CLAIM_NUMBERS numbers in
     a claim. Exact values, labels and the other numbers belong in a finding's detail.
     Numbers inside quotes are the document's and stay as written."""
+    submission = _canonical_submission(submission)
     parts = [
         (f"Finding {n}", "claim", f.claim, f.numbers or [])
         for n, f in enumerate(submission.findings, start=1)
@@ -3104,7 +3189,11 @@ BOUND_BEFORE = re.compile(
     r"last|past|first|the|a)\s*$",
     re.IGNORECASE,
 )
-APPROX = re.compile(r"(?:about|around|roughly|approximately|nearly|almost|some|~|≈)\s*$", re.I)
+APPROX = re.compile(
+    r"(?:about|around|roughly|approximately|nearly|almost|some|circa|ca\.|close to|"
+    r"on the order of|~|≈)\s*$",
+    re.I,
+)
 IN_MONTHS = {"days": 1 / 30.44, "weeks": 1 / 4.345, "months": 1.0, "years": 12.0}
 # A duration the text gives the plan or a report is checked against the reports' own.
 REPORT_TOOLS = {"search_reports", "read_report_page", "look_at_page", "plan_vs_actual"}
@@ -3767,9 +3856,36 @@ def _hyphenated(submission: Submission, log: EvidenceLog) -> Submission:
     )
 
 
+def _canonical_submission(submission: Submission) -> Submission:
+    """Every text the checker reads, in plain typography (positions unchanged)."""
+
+    def declared(numbers: list[DeclaredNumber] | None) -> list[DeclaredNumber] | None:
+        if numbers is None:
+            return None
+        return [d.model_copy(update={"text": canonical(d.text)}) for d in numbers]
+
+    return submission.model_copy(
+        update={
+            "summary": canonical(submission.summary),
+            "summary_numbers": declared(submission.summary_numbers),
+            "findings": [
+                f.model_copy(
+                    update={
+                        "claim": canonical(f.claim),
+                        "detail": canonical(f.detail) if f.detail else f.detail,
+                        "numbers": declared(f.numbers),
+                    }
+                )
+                for f in submission.findings
+            ],
+        }
+    )
+
+
 def check_submission(submission: Submission, log: EvidenceLog, question: str = "") -> list[str]:
     """Return problems as sentences for the model; an empty list means accepted."""
-    submission = _hyphenated(submission, log)
+    submission = _hyphenated(_canonical_submission(submission), log)
+    question = canonical(question)
     free = _question_numbers(question)
     free_dates = REPORT_DATES | set(DATE.findall(_normalize(question)))
     # "Over 2011 to 2013" bounds a window: its years' first and last days need no source.
