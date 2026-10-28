@@ -149,6 +149,12 @@ def test_well_issues_returns_one_wells_issues_uncapped(processed_dir) -> None:
         ("SELECT * FROM repeat_row(1, num_rows = 100000000)", "repeat_row"),
         ("SELECT * FROM duckdb_tables()", "not allowed"),
         ("SELECT * FROM read_text('/etc/passwd')", "not allowed"),
+        # lists built by one scalar call sit outside DuckDB's memory limit (2.4 GB)
+        ("SELECT len(range(20000000)) AS n", "range"),
+        ("SELECT len(generate_series(1, 20000000)) AS n", "generate_series"),
+        ("SELECT len(list_resize([1], 20000000)) AS n", "list_resize"),
+        ("SELECT len(array_resize([1], 20000000)) AS n", "array_resize"),
+        ("SELECT u FROM (SELECT unnest(range(20000000)) AS u) LIMIT 1", "range"),
     ],
 )
 def test_agent_sql_refuses_bloat_recursion_and_settings(processed_dir, sql, message) -> None:

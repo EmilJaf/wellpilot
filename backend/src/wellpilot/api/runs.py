@@ -229,8 +229,10 @@ class RunManager:
         operator_key: str = "",
         trusted_proxy: str = "none",
         sandboxes: SandboxPool | None = None,
+        isolate_sql: bool = False,
     ) -> None:
         self.processed_dir = processed_dir
+        self.isolate_sql = isolate_sql  # agent SQL in a capped worker process
         self.sandboxes = sandboxes  # run_python in Modal; None: the tool is not offered
         self.runs_dir = runs_dir
         self.llm_factory = llm_factory
@@ -303,6 +305,9 @@ class RunManager:
         if self.sandboxes is not None:
             with suppress(TimeoutError):
                 await asyncio.wait_for(self.sandboxes.aclose(), 3)
+        for store in list(self._stores.values()):
+            if store.isolated is not None:
+                store.isolated.close()
 
     def store(
         self, as_of: date | None = None, client: str | None = None, privileged: bool = False
@@ -329,11 +334,13 @@ class RunManager:
                     "pick a date already shown",
                     budget=False,
                 )
-            store = ProductionStore(self.processed_dir, as_of=as_of)
+            store = ProductionStore(self.processed_dir, as_of=as_of, isolated=self.isolate_sql)
             with self._stores_lock:
                 self._stores[as_of] = store
                 while len(self._stores) > STORE_CACHE_SIZE:
-                    self._stores.popitem(last=False)
+                    _, old = self._stores.popitem(last=False)
+                    if old.isolated is not None:  # a run still using it starts a new one
+                        old.isolated.close()
                 self._building.pop(as_of, None)
             return store
 

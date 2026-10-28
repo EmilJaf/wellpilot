@@ -62,6 +62,9 @@ class Settings(BaseSettings):
     checks_per_client_per_hour: int = 120
     stores_per_client_per_hour: int = 30
     python_sandbox: bool = True  # run_python in Modal Sandboxes, when Modal is set up
+    # Agent SQL in a worker process under a hard memory cap (data/sql_worker.py): DuckDB's
+    # own limit does not bound lists built by scalar functions.
+    isolate_sql: bool = True
     # A second opinion on each accepted answer (the same model as a reviewer; about $0.01
     # and, when it raises points, one to three more agent steps).
     review_answers: bool = True

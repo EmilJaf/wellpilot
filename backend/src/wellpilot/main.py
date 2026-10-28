@@ -59,6 +59,7 @@ def create_app(
         operator_key=settings.operator_key,
         trusted_proxy=("fly" if on_fly else "none") if proxy == "auto" else proxy,
         sandboxes=sandboxes,
+        isolate_sql=settings.isolate_sql,
     )
     app.include_router(runs.router)
     app.include_router(data.router)

@@ -17,6 +17,7 @@ from pathlib import Path
 import duckdb
 import pandas as pd
 
+from wellpilot.data.sql_worker import IsolatedSql
 from wellpilot.ingest.operations import OPERATIONS_FILE, STEPS_FILE
 from wellpilot.ingest.production import DAILY_FILE, ISSUES_FILE
 from wellpilot.ingest.production_logs import LOGS_FILE
@@ -47,7 +48,12 @@ DENIED_FUNCTIONS = {
     "repeat", "rpad", "lpad", "printf", "format", "bar",
     "current_setting", "duckdb_settings", "duckdb_secrets", "duckdb_extensions",
     "query", "query_table", "json_execute_serialized_sql", "getvariable",
+    "list_resize", "array_resize",
 }  # fmt: skip
+# As scalars these build a list in one call outside the memory limit (len(range(2e7)) took
+# 2.4 GB); in FROM they only make rows. The public server also runs agent SQL in a capped
+# worker process (sql_worker.py), which this list does not replace.
+LIST_BUILDERS = {"range", "generate_series"}
 # Table functions are allowed by name: query('...') runs a string as SQL past every check
 # here, and the rest read files, settings or the catalog. These three only make rows.
 TABLE_FUNCTIONS = {"range", "generate_series", "unnest"}
@@ -65,6 +71,21 @@ def _table_functions(node) -> list[str]:
     elif isinstance(node, list):
         for value in node:
             found += _table_functions(value)
+    return found
+
+
+def _scalar_functions(node, in_table: bool = False) -> list[str]:
+    """Names of the functions called as scalars (not as a FROM-clause table function)."""
+    found = []
+    if isinstance(node, dict):
+        if node.get("class") == "FUNCTION" and not in_table:
+            found.append(str(node.get("function_name", "?")))
+        for key, value in node.items():
+            table = node.get("type") == "TABLE_FUNCTION" and key == "function"
+            found += _scalar_functions(value, table)
+    elif isinstance(node, list):
+        for value in node:
+            found += _scalar_functions(value)
     return found
 
 
@@ -86,11 +107,14 @@ class ProductionStore:
         *,
         max_rows: int = 5000,
         timeout_s: float = 5.0,
+        isolated: bool = False,
     ) -> None:
         self.as_of = as_of
         self.processed_dir = processed_dir  # report page images live here
         self.max_rows = max_rows
         self.timeout_s = timeout_s
+        # agent SQL in a capped worker process (the public server); see sql_worker.py
+        self.isolated = IsolatedSql(processed_dir, as_of, max_rows, timeout_s) if isolated else None
         self._lock = threading.Lock()
         self._con = duckdb.connect(":memory:")
         self.tables: set[str] = set()
@@ -167,6 +191,8 @@ class ProductionStore:
         """Run SQL the agent wrote: a single SELECT without string-bloating functions,
         recursion or settings, whose text columns come back at most MAX_TEXT characters
         long (cut inside DuckDB, so a huge value never reaches Python)."""
+        if self.isolated is not None:
+            return self.isolated.query(sql)
         with self._lock:
             self._single_select(sql)
             tree = json.loads(
@@ -178,6 +204,7 @@ class ProductionStore:
             used = set(re.findall(r'"function_name": "(\w+)"', text))
             denied = sorted(f for f in used if f in DENIED_FUNCTIONS or f.startswith("pragma_"))
             denied += sorted(set(_table_functions(tree)) - TABLE_FUNCTIONS - set(denied))
+            denied += sorted(set(_scalar_functions(tree)) & LIST_BUILDERS)
             if denied:
                 raise QueryError(f"function(s) not allowed here: {', '.join(denied)}")
             if "RECURSIVE_CTE_NODE" in text:
