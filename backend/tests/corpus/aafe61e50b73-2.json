@@ -6,10 +6,11 @@
   "question": "Is P-3's decline caused by water or by falling reservoir pressure?"
  },
  "to_review": false,
- "note": "Fair (synthetic field): 79% declared as 0.7927 where the evidence holds 79.27 (percent).",
+ "note": "Fair (synthetic field): 79% declared as 0.7927 where the evidence holds 79.27 (percent). Oct 28 night (seventh panel): verdict changed on purpose by the new rules (a conclusion drawn with ', so' in a fact).",
  "expected": {
   "accepted": false,
   "flagged": [
+   "Finding 1",
    "Finding 2",
    "Summary"
   ]

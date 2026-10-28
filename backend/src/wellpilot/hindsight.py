@@ -18,7 +18,13 @@ import re
 import pandas as pd
 
 from wellpilot.agent.checker import WELL
-from wellpilot.agent.tools import OperationsArgs, fit_warnings, well_operations
+from wellpilot.agent.tools import (
+    LogArgs,
+    OperationsArgs,
+    fit_warnings,
+    production_log,
+    well_operations,
+)
 from wellpilot.analysis.decline import fit_decline, forecast, nominal_coverage
 from wellpilot.analysis.inside import PLUG, _back_on
 from wellpilot.analysis.inside import _production as _rates
@@ -34,6 +40,12 @@ BBL_PER_SM3 = 6.2898
 # The value line's price is an assumption the reader can see and change in their head, not
 # a price from the data; Brent was near this in 2015, when F-12's job paid back.
 PRICE_USD_PER_BBL = 50.0
+TREND_WINDOWS = (365, 182, 91)  # days before the job the trend is fitted on
+# Per-well volumes on a platform are allocated from well tests, not metered well by well.
+ALLOCATED = (
+    "Per-well volumes are allocated from well tests; at a water cut near 0.97, a point of "
+    "water cut moves the oil by about a third."
+)
 
 
 def _production(store: ProductionStore, well: str, start=None, end=None) -> pd.DataFrame:
@@ -241,7 +253,36 @@ def _next_year(full: ProductionStore, cut: pd.Timestamp) -> list[dict]:
     return rows
 
 
-def _work_next(full: ProductionStore, cut: pd.Timestamp, wells: list[str]) -> list[dict]:
+def _answer_depths(answer: dict | None) -> list[float]:
+    """Depths the answer gives a plug, in metres: declared numbers of 1,000-6,000 written
+    with "m" in a sentence about a plug."""
+    if not answer:
+        return []
+    found = []
+    parts = [(answer.get("summary") or "", answer.get("summary_numbers") or [])] + [
+        (f.get("claim") or "", f.get("numbers") or []) for f in answer.get("findings") or []
+    ]
+    for text, numbers in parts:
+        for sentence in re.split(r"(?<=[.;])\s+", text):
+            if not re.search(r"\bplug", sentence, re.I):
+                continue
+            for n in numbers:
+                v = n.get("value")
+                text_ = str(n.get("text") or "")
+                if (
+                    isinstance(v, int | float)
+                    and 1000 <= v <= 6000
+                    and text_ in sentence
+                    and re.search(re.escape(text_) + r"\s*m\b", sentence)
+                    and v not in found
+                ):
+                    found.append(float(v))
+    return found
+
+
+def _work_next(
+    full: ProductionStore, cut: pd.Timestamp, wells: list[str], answer: dict | None = None
+) -> list[dict]:
     """Work done on the named wells within WORK_DAYS after the cut, each with the well's
     rate and water cut before and after it, and the oil of the year after it above the
     decline the well was on (an Arps fit on the year before the job, forecast over the same
@@ -270,14 +311,30 @@ def _work_next(full: ProductionStore, cut: pd.Timestamp, wells: list[str]) -> li
             after = _rates(full, well, back, back + pd.Timedelta(days=RATE_DAYS))
             daily = _production(full, well)
             actual = float(daily.loc[daily["date"].between(back, back + YEAR), "oil_sm3"].sum())
-            try:
-                fit = fit_decline(daily, start=start - YEAR, end=start).best
-                trend = float(forecast(fit, 365, n_boot=50, start=back).cumulative["p50"])
-            except (ValueError, RuntimeError):
-                fit, trend = None, None
+            rest = float(daily.loc[daily["date"] >= back, "oil_sm3"].sum())
+            # The decline the well was on, fitted on the 12, 6 and 3 months before the job:
+            # no one window is the right one, so the gain is given as a range.
+            trends = []
+            for days in TREND_WINDOWS:
+                try:
+                    f = fit_decline(daily, start=start - pd.Timedelta(days=days), end=start).best
+                    trends.append(
+                        (days, f, float(forecast(f, 365, n_boot=50, start=back).cumulative["p50"]))
+                    )
+                except (ValueError, RuntimeError):
+                    continue
+            fit, trend = (trends[0][1], trends[0][2]) if trends else (None, None)
             extra = actual - trend if trend is not None else None
+            extras = [actual - t for _, _, t in trends]
             text = " ".join(s["summary"] for s in job["summaries"])
             plug = PLUG.search(text)
+            try:  # the well along its depth, from its logs and reports up to the job
+                log = production_log(
+                    full.__class__(full.processed_dir, as_of=start.date()), LogArgs(well=well)
+                )
+                zones, blank, earlier = log["perforated_m"], log["blank_pipe_m"], log["plugs_set"]
+            except ValueError:
+                zones, blank, earlier = [], [], []
             found.append(
                 {
                     "well": well,
@@ -297,16 +354,60 @@ def _work_next(full: ProductionStore, cut: pd.Timestamp, wells: list[str]) -> li
                     "oil_year_after_sm3": round(actual),
                     "trend_year_after_sm3": round(trend) if trend is not None else None,
                     "trend_fit": (
-                        {"model": fit.model, "from": fit.t0.date().isoformat()} if fit else None
+                        {
+                            "model": fit.model,
+                            "from": fit.t0.date().isoformat(),
+                            "r2_log": round(fit.r2_log, 2),
+                        }
+                        if fit
+                        else None
                     ),
+                    "trend_windows": [
+                        {
+                            "months": round(days / 30.44),
+                            "model": f.model,
+                            "r2_log": round(f.r2_log, 2),
+                            "trend_sm3": round(t),
+                            "extra_sm3": round(actual - t),
+                        }
+                        for days, f, t in trends
+                    ],
+                    "extra_oil_range_sm3": [round(min(extras)), round(max(extras))]
+                    if extras
+                    else None,
+                    "oil_rest_of_life_sm3": round(rest),
                     "extra_oil_sm3": round(extra) if extra is not None else None,
                     "extra_oil_bbl": round(extra * BBL_PER_SM3) if extra is not None else None,
                     "price_usd_per_bbl": PRICE_USD_PER_BBL,
+                    # Gross revenue at an assumed price: before the job's cost and taxes.
                     "extra_value_usd": (
                         round(extra * BBL_PER_SM3 * PRICE_USD_PER_BBL, -5)
                         if extra is not None
                         else None
                     ),
+                    "extra_value_range_usd": [
+                        round(x * BBL_PER_SM3 * PRICE_USD_PER_BBL, -5)
+                        for x in (min(extras), max(extras))
+                    ]
+                    if extras
+                    else None,
+                    "volumes_note": ALLOCATED,
+                    "depth": {
+                        "perforated_m": zones,
+                        "blank_pipe_m": blank,
+                        "earlier_plugs_m": [p["depth_m"] for p in earlier],
+                        # The depth the answer recommends, not the earlier plugs it recalls.
+                        "answer_plug_m": [
+                            d
+                            for d in _answer_depths(answer)
+                            if all(abs(d - p["depth_m"]) > 2 for p in earlier)
+                        ],
+                        "new_perforations_m": [
+                            [float(a), float(b)]
+                            for interval in job["perforations"]
+                            for a, b in re.findall(r"(\d{4}(?:\.\d+)?)-(\d{4}(?:\.\d+)?)", interval)
+                        ],
+                    },
                 }
             )
     return found
@@ -343,7 +444,7 @@ def hindsight(run: dict, full: ProductionStore, past: ProductionStore) -> dict:
         "as_of": cut.date().isoformat(),
         "forecasts": forecasts,
         "wells": _next_year(full, cut),
-        "work_next": _work_next(full, cut, _named_wells(run, full)),
+        "work_next": _work_next(full, cut, _named_wells(run, full), run.get("result")),
         "reasoning": reasoning_check(run, full),
     }
 

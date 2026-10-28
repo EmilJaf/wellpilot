@@ -142,19 +142,34 @@ export function HindsightView({ runId }: { runId: string }) {
   )
 }
 
-/** The work done on a well the answer named, soon after the date: what it was, the well
- * before and after it, and the year after it against the decline it was on. */
+/** The work done on a well the answer named, soon after the date: what it was, set against
+ * what the answer recommended, the well before and after it, and the year after it against
+ * the decline it was on (a range over three fit windows: no one baseline is right). */
 function WorkNext({ w, asOf }: { w: NonNullable<Hindsight['work_next']>[number]; asOf: string }) {
-  const millions = (usd: number) => `$${(usd / 1e6).toFixed(usd >= 1e7 ? 0 : 1)} million`
+  const millions = (usd: number) => `$${Math.round(usd / 1e6)} million`
+  const pick = w.depth?.answer_plug_m[0]
+  const range = w.extra_oil_range_sm3
+  const value = w.extra_value_range_usd
   return (
     <section className="work-next">
       <h4 className="case-title">
         What was done to {w.well} next: {w.start === w.end ? w.start : `${w.start} to ${w.end}`}
       </h4>
+      {w.plug_m !== null && pick !== undefined && (
+        <p className="work-next-verdict">
+          The agent pointed at a plug at about <strong>{pick.toLocaleString('en-US')} m</strong>. The operator set it at{' '}
+          <strong>{w.plug_m.toLocaleString('en-US')} m</strong>
+          {Math.abs(pick - w.plug_m) >= 1 && `, ${Math.abs(Math.round(pick - w.plug_m))} m ${w.plug_m < pick ? 'higher' : 'deeper'}`}
+          {w.depth && w.depth.blank_pipe_m.some(([a, b]) => a <= w.plug_m! && w.plug_m! <= b) && ', in blank pipe'}
+          {w.depth?.new_perforations_m.length
+            ? `, and opened new perforations at ${w.depth.new_perforations_m.map(([a, b]) => `${a}-${b} m`).join(', ')} above it`
+            : ''}
+          .
+        </p>
+      )}
+      {w.depth && <DepthStrip d={w.depth} plug={w.plug_m} />}
       <p className="work-next-what">
-        {w.plug_m !== null ? `A plug set at ${w.plug_m.toLocaleString('en-US')} m` : `A ${w.kind} job`}
-        {w.perforations.length > 0 && `, perforations at ${w.perforations.join(', ')}`}. The daily report says: &ldquo;
-        {w.summary}&rdquo;
+        The daily report says: &ldquo;{w.summary}&rdquo;
       </p>
       <table className="case-table work-next-table">
         <thead>
@@ -179,20 +194,84 @@ function WorkNext({ w, asOf }: { w: NonNullable<Hindsight['work_next']>[number];
           )}
         </tbody>
       </table>
-      {w.extra_oil_sm3 !== null && w.trend_year_after_sm3 !== null && (
+      {range && w.trend_year_after_sm3 !== null && (
         <p className="work-next-worth">
-          In the year after it the well made <strong>{volume(w.oil_year_after_sm3)}</strong> of oil; on the decline it
-          was on before the job ({w.trend_fit?.model} fit from {w.trend_fit?.from}) it would have made about{' '}
-          {volume(w.trend_year_after_sm3)}. The difference, about <strong>{volume(w.extra_oil_sm3)}</strong> (
-          {((w.extra_oil_bbl ?? 0) / 1e6).toFixed(2)} million barrels), is worth about{' '}
-          <strong>{millions(w.extra_value_usd ?? 0)}</strong> at an assumed ${w.price_usd_per_bbl} a barrel.
+          In the year after it the well made <strong>{volume(w.oil_year_after_sm3)}</strong> of oil. On the decline it
+          was on before the job, fitted on the 12, 6 and 3 months before it, it would have made about{' '}
+          {volume(Math.min(...(w.trend_windows ?? []).map((t) => t.trend_sm3)))} to{' '}
+          {volume(Math.max(...(w.trend_windows ?? []).map((t) => t.trend_sm3)))}: the job added about{' '}
+          <strong>
+            {volume(range[0])} to {volume(range[1])}
+          </strong>{' '}
+          of oil that year ({w.oil_rest_of_life_sm3 !== undefined && `${volume(w.oil_rest_of_life_sm3)} to the end of the well's life`}).
+          {value && (
+            <>
+              {' '}
+              At an assumed ${w.price_usd_per_bbl} a barrel that is {millions(value[0])} to {millions(value[1])} of gross
+              revenue, before the job's cost and taxes.
+            </>
+          )}
         </p>
       )}
       <p className="chart-note-line">
-        The agent answered as of {asOf} and could not see this job. Set it beside the answer: did the agent point at
-        the depth where the water came in?
+        {w.trend_fit?.r2_log !== undefined && `The decline fits are poor (r² ${w.trend_fit.r2_log} at best): the range is wide for that reason. `}
+        {w.volumes_note} The agent answered as of {asOf} and could not see this job.
       </p>
     </section>
+  )
+}
+
+/** The well along its depth: perforated zones, blank pipe, the earlier plug, where the answer
+ * pointed and where the operator set the plug, and the new perforations. */
+function DepthStrip({
+  d,
+  plug,
+}: {
+  d: NonNullable<NonNullable<Hindsight['work_next']>[number]['depth']>
+  plug: number | null
+}) {
+  const marks = [...d.perforated_m.flat(), ...d.new_perforations_m.flat(), ...d.earlier_plugs_m, ...d.answer_plug_m, plug ?? NaN].filter(
+    (v) => Number.isFinite(v),
+  )
+  if (!marks.length) return null
+  const top = Math.floor((Math.min(...marks) - 10) / 10) * 10
+  const bottom = Math.ceil((Math.max(...marks) + 10) / 10) * 10
+  const width = 640
+  const x = (m: number) => 70 + ((m - top) / (bottom - top)) * (width - 90)
+  const line = (m: number, label: string, cls: string, row: number) => (
+    <g key={`${cls}-${m}`} className={cls}>
+      <line x1={x(m)} x2={x(m)} y1={18} y2={52} />
+      <text x={x(m)} y={row} textAnchor="middle">
+        {label}
+      </text>
+    </g>
+  )
+  return (
+    <figure className="depth-strip">
+      <svg viewBox={`0 0 ${width} 92`} role="img" aria-label="The well along its depth around the plug">
+        <text x={0} y={40} className="depth-strip-axis">
+          depth, m
+        </text>
+        <rect x={x(top)} y={30} width={x(bottom) - x(top)} height={10} className="depth-pipe" />
+        {d.perforated_m.map(([a, b]) => (
+          <rect key={`z${a}`} x={x(a)} y={26} width={Math.max(2, x(b) - x(a))} height={18} className="depth-zone" />
+        ))}
+        {d.new_perforations_m.map(([a, b]) => (
+          <rect key={`n${a}`} x={x(a)} y={26} width={Math.max(3, x(b) - x(a))} height={18} className="depth-new" />
+        ))}
+        {d.earlier_plugs_m.map((m) => line(m, `2010 plug ${m}`, 'depth-old', 64))}
+        {d.answer_plug_m.slice(0, 1).map((m) => line(m, `agent ${m}`, 'depth-agent', 12))}
+        {plug !== null && line(plug, `operator ${plug}`, 'depth-plug', 64)}
+        {[top, bottom].map((m) => (
+          <text key={m} x={x(m)} y={86} textAnchor="middle" className="depth-strip-axis">
+            {m}
+          </text>
+        ))}
+      </svg>
+      <figcaption>
+        Grey: perforated zones; dark: perforations opened in the job; the gaps are blank pipe, where a plug can be set.
+      </figcaption>
+    </figure>
   )
 }
 

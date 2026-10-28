@@ -6,10 +6,12 @@
   "question": "F-12's water cut fell from about 0.97 to about 0.3 at the end of 2014. What was done to the well, and why did the plug set in 2010 not do the same?"
  },
  "to_review": false,
- "note": "",
+ "note": "Oct 28 night (seventh panel): verdict changed on purpose by the new rules (a conclusion drawn with ', so' in a fact).",
  "expected": {
-  "accepted": true,
-  "flagged": []
+  "accepted": false,
+  "flagged": [
+   "Finding 3"
+  ]
  },
  "submission": {
   "summary": "F-12's water cut most likely fell because its lower water-bearing intervals were isolated and a new oil interval was opened — on 2014-11-26 a plug was set at 3 150 m and a new zone 3126.2 to 3130.7 m was perforated, with monthly water cut from about 97% in late 2014 to about 31% in early 2015.",

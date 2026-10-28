@@ -6,10 +6,12 @@
   "question": "Over 2011 to 2013, how closely did F-12's monthly water cut follow its choke opening? Give the correlation and what it suggests."
  },
  "to_review": false,
- "note": "",
+ "note": "Oct 28 night (seventh panel): verdict changed on purpose by the new rules (a conclusion drawn with ', so' in a fact).",
  "expected": {
-  "accepted": true,
-  "flagged": []
+  "accepted": false,
+  "flagged": [
+   "Finding 2"
+  ]
  },
  "submission": {
   "summary": "Over 2011 to 2013 F-12’s monthly water cut and choke showed a moderate positive co-movement, with water cut rising from about 72% to about 95% while choke was already wide open around 100%; the calculation suggests Pearson correlation about 0.68 (Spearman about 0.48) over 36 months, most likely reflecting concurrent reservoir water advance rather than choke driving water cut.",

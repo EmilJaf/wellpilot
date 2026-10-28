@@ -461,11 +461,23 @@ export type Hindsight = {
     after: { water_cut: number; oil_sm3_per_day: number; days: number } | null
     oil_year_after_sm3: number
     trend_year_after_sm3: number | null
-    trend_fit: { model: string; from: string } | null
+    trend_fit: { model: string; from: string; r2_log?: number } | null
+    trend_windows?: { months: number; model: string; r2_log: number; trend_sm3: number; extra_sm3: number }[]
+    extra_oil_range_sm3?: [number, number] | null
+    oil_rest_of_life_sm3?: number
     extra_oil_sm3: number | null
     extra_oil_bbl: number | null
     price_usd_per_bbl: number
     extra_value_usd: number | null
+    extra_value_range_usd?: [number, number] | null
+    volumes_note?: string
+    depth?: {
+      perforated_m: [number, number][]
+      blank_pipe_m: [number, number][]
+      earlier_plugs_m: number[]
+      answer_plug_m: number[]
+      new_perforations_m: [number, number][]
+    }
   }[]
 }
 

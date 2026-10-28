@@ -6,10 +6,12 @@
   "question": "F-12's water cut fell from about 0.97 to about 0.3 at the end of 2014. What was done to the well, and why did the plug set in 2010 not do the same?"
  },
  "to_review": false,
- "note": "",
+ "note": "Oct 28 night (seventh panel): verdict changed on purpose by the new rules (decline words against the fit's rate).",
  "expected": {
-  "accepted": true,
-  "flagged": []
+  "accepted": false,
+  "flagged": [
+   "Finding 5"
+  ]
  },
  "submission": {
   "summary": "The 2010 jump around 2010-10-24 is most likely a long-window average, not an abrupt +0.30 step caused by the plug, as daily rates stayed near 0.61 to 0.68 and BHP zero was a gauge fault with flow continuing. The late-2014 drop to about 0.31 is consistent with F-12-specific work at 3,150 m plus new perforations, as liquid rate and choke fell sharply while field injection stayed balanced, and the gain persisted through 2015 rather than a transient flush.",

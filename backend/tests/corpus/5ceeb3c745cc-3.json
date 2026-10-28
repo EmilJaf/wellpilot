@@ -6,10 +6,12 @@
   "question": "Why did well F-12 decline faster after 2010? Compare with the 2005 development plan."
  },
  "to_review": false,
- "note": "",
+ "note": "Oct 28 night (seventh panel): verdict changed on purpose by the new rules (a conclusion drawn with ', so' in a fact).",
  "expected": {
-  "accepted": true,
-  "flagged": []
+  "accepted": false,
+  "flagged": [
+   "Finding 6"
+  ]
  },
  "submission": {
   "summary": "F-12's oil most likely fell after mid-2010 because injected water broke through and took the well's liquid capacity: water cut jumped to 0.51 around February 2010 and first exceeded 50% in June 2010, oil rate fell 72% to about 1 146 Sm3/d, then declined at about 0.45 per year while liquid stayed near 5 130 Sm3/d and choke opened to 100%. The 2005 plan expected breakthrough after about 2 years at about 6 million Sm3 cumulative and a 9 000 Sm3/d plateau for about 19 months with a 0.80 water cut limit; F-12 matched that timing but then exceeded the design water cut while the platform stayed under its liquid and oil capacities.",

@@ -6,10 +6,12 @@
   "question": "Is P-3's decline caused by water or by falling reservoir pressure?"
  },
  "to_review": false,
- "note": "",
+ "note": "Oct 28 night (seventh panel): verdict changed on purpose by the new rules (a conclusion drawn with ', so' in a fact).",
  "expected": {
-  "accepted": true,
-  "flagged": []
+  "accepted": false,
+  "flagged": [
+   "Finding 1"
+  ]
  },
  "submission": {
   "summary": "P-3's decline is most likely not caused by water but consistent with falling reservoir pressure. Its water cut has stayed at 1% with no breakthrough, while liquid and oil rates fell about 79% with the choke held open and bottom-hole pressure fell about 46%. The fit suggests a steady exponential decline after 2019.",

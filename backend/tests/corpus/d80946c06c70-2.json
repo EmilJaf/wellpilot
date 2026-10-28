@@ -6,10 +6,12 @@
   "question": "Is P-3's decline caused by water or by falling reservoir pressure?"
  },
  "to_review": false,
- "note": "",
+ "note": "Oct 28 night (seventh panel): verdict changed on purpose by the new rules (a conclusion drawn with ', so' in a fact).",
  "expected": {
-  "accepted": true,
-  "flagged": []
+  "accepted": false,
+  "flagged": [
+   "Finding 2"
+  ]
  },
  "submission": {
   "summary": "P-3's decline is most likely caused by falling reservoir pressure, not water, consistent with the observed pressure drop. Oil rate fell 86% while water cut stayed at 1% and liquid rate fell 79% with the choke held at 55%, and BHP dropped 127 bar from early life to December 2020.",

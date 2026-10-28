@@ -3610,3 +3610,68 @@ code,
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
+
+/* The reveal's verdict and the well along its depth around the plug. */
+.work-next-verdict {
+  max-width: 68ch;
+  margin: 8px 0 0;
+  font-size: 15.5px;
+  line-height: 1.5;
+}
+
+.depth-strip {
+  margin: 12px 0 4px;
+}
+
+.depth-strip svg {
+  width: 100%;
+  max-width: 640px;
+  height: auto;
+  font-size: 11px;
+}
+
+.depth-strip figcaption {
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+
+.depth-pipe {
+  fill: var(--sheet);
+  stroke: var(--rule-strong);
+}
+
+.depth-zone {
+  fill: var(--rule-strong);
+}
+
+.depth-new {
+  fill: var(--ink);
+}
+
+.depth-strip line {
+  stroke-width: 2;
+}
+
+.depth-old line {
+  stroke: var(--ink-3);
+  stroke-dasharray: 3 2;
+}
+
+.depth-agent line {
+  stroke: var(--ink);
+  stroke-dasharray: 1 3;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.depth-plug line {
+  stroke: var(--ink);
+}
+
+.depth-strip text {
+  fill: var(--ink-2, var(--ink));
+}
+
+.depth-strip-axis {
+  fill: var(--ink-3) !important;
+}

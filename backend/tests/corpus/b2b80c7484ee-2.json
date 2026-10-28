@@ -6,10 +6,12 @@
   "question": "Why did well F-12 decline faster after 2010? Compare with the 2005 development plan."
  },
  "to_review": false,
- "note": "",
+ "note": "Oct 28 night (seventh panel): verdict changed on purpose by the new rules (a conclusion drawn with ', so' in a fact).",
  "expected": {
-  "accepted": true,
-  "flagged": []
+  "accepted": false,
+  "flagged": [
+   "Finding 5"
+  ]
  },
  "submission": {
   "summary": "F-12’s oil rate most likely collapsed after mid-2010 because injection water broke through and then took most of its liquid capacity, not because of a sudden operational step; its decline after breakthrough was about 0.45 per year while it produced flat before.",

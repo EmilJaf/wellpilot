@@ -6,10 +6,11 @@
   "question": "Over 2011 to 2013, how closely did F-12's monthly water cut follow its choke opening? Give the correlation and what it suggests."
  },
  "to_review": false,
- "note": "Reviewed (Oct 28): fair; undeclared 100% and 36, and numbers from the agent's own code (now always warned) stated as settled in the summary until hedged.",
+ "note": "Reviewed (Oct 28): fair; undeclared 100% and 36, and numbers from the agent's own code (now always warned) stated as settled in the summary until hedged. Oct 28 night (seventh panel): verdict changed on purpose by the new rules (a conclusion drawn with ', so' in a fact).",
  "expected": {
   "accepted": false,
   "flagged": [
+   "Finding 2",
    "Summary"
   ]
  },

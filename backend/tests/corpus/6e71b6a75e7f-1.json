@@ -1,3332 +1,3333 @@
 {
-  "source": {
-    "run": "6e71b6a75e7f",
-    "submission": 1,
-    "model": "meta-models/muse-spark-open-1026",
-    "question": "Forecast P-2 oil production for the next 12 months and say how confident the forecast is."
-  },
-  "to_review": false,
-  "note": "Fair: 2111 is the model's own difference, computed later (E14), not in the cited E8/E6; a poor-fit 135,000 stated as settled; an unhedged 'due to'. Oct 28 night: a plain hedge later in the sentence ('uncertainty band', 'low confidence', 'likely', 'the forecast is uncertain') now covers a warned number; only a modal after a comma ('as engineers may expect') does not.",
-  "expected": {
-    "accepted": false,
-    "flagged": [
-      "Finding 5"
-    ]
-  },
-  "submission": {
-    "summary": "P-2 is forecast to produce about 135,000 Sm3 oil in the next 12 months from 2019-04-01, with low confidence due to a poor decline fit after a recent choke cut. The central forecast is about 135,000 Sm3 and the calibrated uncertainty band from past forecasts is about 119,000 to 143,000 Sm3, wider than the fit's own scatter, and the band is likely too narrow because earlier tests were in a different operating regime.",
-    "findings": [
-      {
-        "claim": "P-2 is forecast to produce about 135,000 Sm3 oil in the next 12 months (2019-04-01 to 2020-03-30), with a calibrated uncertainty band of about 119,000 to 143,000 Sm3.",
-        "detail": "Harmonic fit on window 2018-11-12 to 2019-03-31 (139 points, r2_log 0.2553, rmse_log 0.05033, qi 467.61 Sm3/d per producing day, di 0.2812 per year, b 1.0, uptime 0.9802) with warning poor fit r2_log 0.255 <0.7. Forecast cumulative p50 134639 Sm3, bootstrap p90 132318 p10 137089, calibrated p90 118953 p10 142528 from 11 past forecasts median_abs_error 0.03509.",
-        "evidence_ids": [
-          "E8"
-        ],
-        "confidence": "inference",
-        "numbers": [
-          {
-            "text": "135,000",
-            "value": 134639,
-            "evidence_id": "E8"
-          },
-          {
-            "text": "119,000",
-            "value": 118953,
-            "evidence_id": "E8"
-          },
-          {
-            "text": "143,000",
-            "value": 142528,
-            "evidence_id": "E8"
-          }
-        ]
-      },
-      {
-        "claim": "The forecast monthly oil rate declines from about 418 Sm3/d in April 2019 to about 340 Sm3/d in March 2020.",
-        "detail": "Monthly p50 rates from forecast: 2019-04 417.91, 2019-05 409.32, 2019-06 401.08, 2019-07 393.16, 2019-08 385.43, 2019-09 378.11, 2019-10 371.06, 2019-11 364.27, 2019-12 357.73, 2020-01 351.32, 2020-02 345.32, 2020-03 339.63 Sm3 per producing day.",
-        "evidence_ids": [
-          "E8"
-        ],
-        "confidence": "inference",
-        "numbers": [
-          {
-            "text": "418",
-            "value": 417.91,
-            "evidence_id": "E8"
-          },
-          {
-            "text": "340",
-            "value": 339.63,
-            "evidence_id": "E8"
-          }
-        ]
-      },
-      {
-        "claim": "P-2 oil rate dropped 41% across the 2018-11-11 regime change after the choke was cut from 70% to 40%.",
-        "detail": "Event oil_rate shifts around 2018-11-11: weekly mean 1426 -> 445.33 (-69%) long period, across change itself 4 weeks each side 786.42 -> 463.29 (-41%). Daily data shows 70% choke through 2018-11-04, shut-in 2018-11-05 to 2018-11-06, then 40% from 2018-11-07 onward. Monthly production: 2018-10 784.73 Sm3/d choke 70.0, 2018-11 511.91 Sm3/d choke 44.29, 2018-12 457.23 Sm3/d choke 40.0.",
-        "evidence_ids": [
-          "E3",
-          "E10",
-          "E5"
-        ],
-        "confidence": "fact",
-        "numbers": [
-          {
-            "text": "41%",
-            "value": 0.4109,
-            "evidence_id": "E3"
-          },
-          {
-            "text": "70%",
-            "value": 70.0,
-            "evidence_id": "E10"
-          },
-          {
-            "text": "40%",
-            "value": 40.0,
-            "evidence_id": "E10"
-          }
-        ]
-      },
-      {
-        "claim": "P-2 water cut remains low at about 0.026 in February 2019 rising to about 0.030 in March 2019, so the rate drop is not water breakthrough.",
-        "detail": "Waterflood monthly: 2018-10 water_cut 0.01749 liquid 798.7, 2018-11 water_cut 0.01911 liquid 521.88 choke 40.0, 2019-02 water_cut 0.02645 liquid 450.16 choke 40.0, 2019-03 water_cut 0.02988. By year 2019 water_cut 0.02645. No WOR trend: too few months with WOR >=1 (0, need 12) to fit. Field voidage replacement_ratio 2018 1.33 (1.28-1.39) and 2019 1.57 (1.52-1.62) at reservoir conditions.",
-        "evidence_ids": [
-          "E4",
-          "E9"
-        ],
-        "confidence": "fact",
-        "numbers": [
-          {
-            "text": "0.026",
-            "value": 0.02645,
-            "evidence_id": "E4"
-          },
-          {
-            "text": "0.030",
-            "value": 0.02988,
-            "evidence_id": "E9"
-          }
-        ]
-      },
-      {
-        "claim": "Forecast confidence is low: the decline fit is poor and the calibrated band is based on 11 prior tests mostly in a different regime.",
-        "detail": "Fit warnings poor fit r2_log 0.2553 <0.7 residual_trend 0.0002013. Calibrated band note: 11 past forecasts, 11 of them before fit window began in another regime so band may be too narrow. p50_by_model exponential 132528, hyperbolic 134639, harmonic 134639 (models agree within 2111 Sm3) but fit poor so model agreement does not imply confidence. Bootstrap band p90 132318 p10 137089 only reflects fit scatter.",
-        "evidence_ids": [
-          "E8",
-          "E6"
-        ],
-        "confidence": "inference",
-        "numbers": [
-          {
-            "text": "11",
-            "value": 11,
-            "evidence_id": "E8"
-          }
-        ]
-      }
-    ],
-    "summary_numbers": [
-      {
-        "text": "135,000",
-        "value": 134639,
-        "evidence_id": "E8"
-      },
-      {
-        "text": "135,000",
-        "value": 134639,
-        "evidence_id": "E8"
-      },
-      {
-        "text": "119,000",
-        "value": 118953,
-        "evidence_id": "E8"
-      },
-      {
-        "text": "143,000",
-        "value": 142528,
-        "evidence_id": "E8"
-      }
-    ]
-  },
-  "evidence": [
-    {
-      "id": "E1",
-      "tool": "list_wells",
-      "arguments": {},
-      "result": {
-        "columns": [
-          "well",
-          "well_types",
-          "first_oil",
-          "last_date",
-          "cum_oil_sm3",
-          "cum_water_sm3",
-          "cum_water_injected_sm3",
-          "producing_days"
-        ],
-        "rows": [
-          [
-            "I-1",
-            "WI",
-            null,
-            "2019-03-31",
-            null,
-            null,
-            4619498,
-            0
-          ],
-          [
-            "I-2",
-            "WI",
-            null,
-            "2019-03-31",
-            null,
-            null,
-            4603075,
-            0
-          ],
-          [
-            "P-1",
-            "OP",
-            "2015-01-15",
-            "2019-03-31",
-            2934352,
-            1696666,
-            null,
-            1512
-          ],
-          [
-            "P-2",
-            "OP",
-            "2015-03-01",
-            "2019-03-31",
-            1915967,
-            21376,
-            0.0,
-            1463
-          ],
-          [
-            "P-3",
-            "OP",
-            "2016-02-01",
-            "2019-03-31",
-            1041143,
-            10517,
-            null,
-            1136
-          ]
-        ]
-      },
-      "code": "wellpilot.agent.tools.list_wells@67bd47cfcdd1",
-      "created_at": "2026-10-27T17:26:18+00:00",
-      "warnings": []
-    },
-    {
-      "id": "E2",
-      "tool": "field_screen",
-      "arguments": {},
-      "result": {
-        "as_of": "2019-03-31",
-        "window_days": 90,
-        "field_oil_sm3": 5891463,
-        "wells": [
-          {
-            "well": "P-1",
-            "role": "producer",
-            "first_oil": "2015-01-15",
-            "cum_oil_sm3": 2934352,
-            "share_of_field_oil": 0.4981,
-            "cum_water_injected_sm3": 0.0,
-            "oil_rate_sm3_per_day": 300.9,
-            "water_cut": 0.8966,
-            "uptime": 0.992,
-            "oil_rate_change_90d": -0.07841,
-            "level": "alarm",
-            "issues": [
-              {
-                "level": "alarm",
-                "kind": "dead_gauge",
-                "since": "2018-04-10",
-                "text": "downhole pressure gauge reads 0 (356 days, 127,719 Sm3 oil produced without pressure data)"
-              },
-              {
-                "level": "caution",
-                "kind": "water_cut",
-                "since": "2018-03-20",
-                "text": "water cut above 0.80 (now 0.90); the platform was designed for 0.80"
-              }
-            ]
-          },
-          {
-            "well": "P-2",
-            "role": "producer",
-            "first_oil": "2015-03-01",
-            "cum_oil_sm3": 1915967,
-            "share_of_field_oil": 0.3252,
-            "cum_water_injected_sm3": 0.0,
-            "oil_rate_sm3_per_day": 433.46,
-            "water_cut": 0.02644,
-            "uptime": 0.9912,
-            "oil_rate_change_90d": -0.09665,
-            "level": "caution",
-            "issues": [
-              {
-                "level": "caution",
-                "kind": "step_down",
-                "since": "2018-11-11",
-                "text": "oil rate dropped 41% across the change (4 weeks each side, 786 -> 463 Sm3/d)"
-              }
-            ]
-          },
-          {
-            "well": "P-3",
-            "role": "producer",
-            "first_oil": "2016-02-01",
-            "cum_oil_sm3": 1041143,
-            "share_of_field_oil": 0.1767,
-            "cum_water_injected_sm3": 0.0,
-            "oil_rate_sm3_per_day": 463.29,
-            "water_cut": 0.01,
-            "uptime": 0.971,
-            "oil_rate_change_90d": -0.09573,
-            "level": null,
-            "issues": []
-          },
-          {
-            "well": "I-1",
-            "role": "injector",
-            "first_oil": null,
-            "cum_oil_sm3": 0.0,
-            "share_of_field_oil": 0.0,
-            "cum_water_injected_sm3": 4619498,
-            "water_inj_sm3_per_day": 3282,
-            "level": null,
-            "issues": []
-          },
-          {
-            "well": "I-2",
-            "role": "injector",
-            "first_oil": null,
-            "cum_oil_sm3": 0.0,
-            "share_of_field_oil": 0.0,
-            "cum_water_injected_sm3": 4603075,
-            "water_inj_sm3_per_day": 3372,
-            "level": null,
-            "issues": []
-          }
-        ],
-        "levels": "alarm: act now; caution: watch; note: for the record"
-      },
-      "code": "wellpilot.agent.tools.field_screen@f53b60160989",
-      "created_at": "2026-10-27T17:26:18+00:00",
-      "warnings": []
-    },
-    {
-      "id": "E3",
-      "tool": "detect_events",
-      "arguments": {
-        "well": "P-2"
-      },
-      "result": [
-        {
-          "kind": "regime_change",
-          "signal": "water_cut",
-          "start": "2018-07-08",
-          "end": null,
-          "summary": "water_cut shifts around 2018-07-08: weekly mean 0.0105 -> 0.017 (+0.01) from the period before to the period after.",
-          "details": {
-            "before_mean": 0.01046,
-            "after_mean": 0.01697,
-            "change": 0.006514,
-            "before_from": "2015-03-01",
-            "after_to": "2018-12-23"
-          }
-        },
-        {
-          "kind": "regime_change",
-          "signal": "oil_rate",
-          "start": "2018-11-11",
-          "end": null,
-          "summary": "oil_rate shifts around 2018-11-11: weekly mean 1,426 -> 445 (-69%) from the period before to the period after; across the change itself, 4 weeks each side, 786 -> 463 (-41%).",
-          "details": {
-            "before_mean": 1426,
-            "after_mean": 445.33,
-            "relative_change": -0.6877,
-            "across_before": 786.42,
-            "across_after": 463.29,
-            "change_across": -0.4109,
-            "before_from": "2015-03-01",
-            "after_to": "2019-03-31"
-          }
-        },
-        {
-          "kind": "regime_change",
-          "signal": "water_cut",
-          "start": "2018-12-30",
-          "end": null,
-          "summary": "water_cut shifts around 2018-12-30: weekly mean 0.017 -> 0.0263 (+0.01) from the period before to the period after.",
-          "details": {
-            "before_mean": 0.01697,
-            "after_mean": 0.02627,
-            "change": 0.009303,
-            "before_from": "2018-07-08",
-            "after_to": "2019-03-31"
-          }
-        }
-      ],
-      "code": "wellpilot.agent.tools.detect_events@0c5c334ef787",
-      "created_at": "2026-10-27T17:26:18+00:00",
-      "warnings": []
-    },
-    {
-      "id": "E4",
-      "tool": "waterflood",
-      "arguments": {
-        "well": "P-2"
-      },
-      "result": {
-        "well": "P-2",
-        "monthly": {
-          "columns": [
-            "month",
-            "cum_oil_sm3",
-            "wor",
-            "water_cut",
-            "liquid_rate_sm3_per_day",
-            "choke_pct"
-          ],
-          "rows": [
-            [
-              "2015-03",
-              74757,
-              0.0101,
-              0.01,
-              2550,
-              70.0
-            ],
-            [
-              "2015-04",
-              147025,
-              0.0101,
-              0.01,
-              2458,
-              70.0
-            ],
-            [
-              "2015-05",
-              221109,
-              0.0101,
-              0.01,
-              2414,
-              70.0
-            ],
-            [
-              "2015-06",
-              284343,
-              0.0101,
-              0.01,
-              2281,
-              70.0
-            ],
-            [
-              "2015-07",
-              351970,
-              0.0101,
-              0.01,
-              2234,
-              70.0
-            ],
-            [
-              "2015-08",
-              417470,
-              0.0101,
-              0.01,
-              2134,
-              70.0
-            ],
-            [
-              "2015-09",
-              474425,
-              0.0101,
-              0.01,
-              2080,
-              70.0
-            ],
-            [
-              "2015-10",
-              536834,
-              0.01011,
-              0.01001,
-              2034,
-              70.0
-            ],
-            [
-              "2015-11",
-              594187,
-              0.01011,
-              0.01001,
-              1984,
-              70.0
-            ],
-            [
-              "2015-12",
-              651372,
-              0.01011,
-              0.01001,
-              1900,
-              70.0
-            ],
-            [
-              "2016-01",
-              707539,
-              0.01011,
-              0.01001,
-              1830,
-              70.0
-            ],
-            [
-              "2016-02",
-              757483,
-              0.01011,
-              0.01001,
-              1762,
-              70.0
-            ],
-            [
-              "2016-03",
-              807799,
-              0.01012,
-              0.01001,
-              1717,
-              70.0
-            ],
-            [
-              "2016-04",
-              855701,
-              0.01012,
-              0.01002,
-              1682,
-              70.0
-            ],
-            [
-              "2016-05",
-              901027,
-              0.01012,
-              0.01002,
-              1621,
-              70.0
-            ],
-            [
-              "2016-06",
-              947533,
-              0.01013,
-              0.01003,
-              1578,
-              70.0
-            ],
-            [
-              "2016-07",
-              991278,
-              0.01013,
-              0.01003,
-              1514,
-              70.0
-            ],
-            [
-              "2016-08",
-              1037409,
-              0.01014,
-              0.01004,
-              1524,
-              70.0
-            ],
-            [
-              "2016-09",
-              1079503,
-              0.01015,
-              0.01005,
-              1443,
-              70.0
-            ],
-            [
-              "2016-10",
-              1121153,
-              0.01016,
-              0.01006,
-              1390,
-              70.0
-            ],
-            [
-              "2016-11",
-              1161146,
-              0.01017,
-              0.01007,
-              1361,
-              70.0
-            ],
-            [
-              "2016-12",
-              1201482,
-              0.01019,
-              0.01009,
-              1340,
-              70.0
-            ],
-            [
-              "2017-01",
-              1240476,
-              0.01021,
-              0.01011,
-              1278,
-              70.0
-            ],
-            [
-              "2017-02",
-              1275069,
-              0.01024,
-              0.01013,
-              1248,
-              70.0
-            ],
-            [
-              "2017-03",
-              1312877,
-              0.01026,
-              0.01016,
-              1248,
-              70.0
-            ],
-            [
-              "2017-04",
-              1347382,
-              0.0103,
-              0.0102,
-              1178,
-              70.0
-            ],
-            [
-              "2017-05",
-              1382625,
-              0.01035,
-              0.01024,
-              1171,
-              70.0
-            ],
-            [
-              "2017-06",
-              1414749,
-              0.0104,
-              0.0103,
-              1159,
-              70.0
-            ],
-            [
-              "2017-07",
-              1448052,
-              0.01047,
-              0.01036,
-              1108,
-              70.0
-            ],
-            [
-              "2017-08",
-              1480417,
-              0.01056,
-              0.01045,
-              1083,
-              70.0
-            ],
-            [
-              "2017-09",
-              1511545,
-              0.01066,
-              0.01055,
-              1053,
-              70.0
-            ],
-            [
-              "2017-10",
-              1543144,
-              0.01078,
-              0.01067,
-              1057,
-              70.0
-            ],
-            [
-              "2017-11",
-              1572478,
-              0.01094,
-              0.01082,
-              1014,
-              70.0
-            ],
-            [
-              "2017-12",
-              1599315,
-              0.01112,
-              0.011,
-              997.02,
-              70.0
-            ],
-            [
-              "2018-01",
-              1629349,
-              0.01136,
-              0.01123,
-              979.84,
-              70.0
-            ],
-            [
-              "2018-02",
-              1654963,
-              0.01163,
-              0.0115,
-              950.65,
-              70.0
-            ],
-            [
-              "2018-03",
-              1682075,
-              0.01197,
-              0.01183,
-              926.7,
-              70.0
-            ],
-            [
-              "2018-04",
-              1705803,
-              0.01237,
-              0.01221,
-              914.48,
-              70.0
-            ],
-            [
-              "2018-05",
-              1731895,
-              0.0129,
-              0.01273,
-              872.37,
-              70.0
-            ],
-            [
-              "2018-06",
-              1755940,
-              0.01355,
-              0.01337,
-              876.95,
-              70.0
-            ],
-            [
-              "2018-07",
-              1778985,
-              0.01428,
-              0.01408,
-              859.96,
-              70.0
-            ],
-            [
-              "2018-08",
-              1801660,
-              0.01522,
-              0.01499,
-              828.94,
-              70.0
-            ],
-            [
-              "2018-09",
-              1825587,
-              0.0164,
-              0.01614,
-              820.28,
-              70.0
-            ],
-            [
-              "2018-10",
-              1849523,
-              0.0178,
-              0.01749,
-              798.7,
-              70.0
-            ],
-            [
-              "2018-11",
-              1863670,
-              0.01948,
-              0.01911,
-              521.88,
-              40.0
-            ],
-            [
-              "2018-12",
-              1877108,
-              0.02163,
-              0.02117,
-              467.12,
-              40.0
-            ],
-            [
-              "2019-01",
-              1890550,
-              0.02418,
-              0.02361,
-              451.78,
-              40.0
-            ],
-            [
-              "2019-02",
-              1902822,
-              0.02717,
-              0.02645,
-              450.16,
-              40.0
-            ],
-            [
-              "2019-03",
-              1915967,
-              0.0308,
-              0.02988,
-              440.9,
-              40.0
-            ]
-          ]
-        },
-        "wor_fit": null,
-        "no_trend": "too few months with WOR >= 1 (water cut 0.5) to fit a trend: 0, need 12",
-        "by_year": {
-          "columns": [
-            "year",
-            "liquid_rate_sm3_per_day",
-            "choke_pct",
-            "water_cut",
-            "oil_sm3"
-          ],
-          "rows": [
-            [
-              2015,
-              2184,
-              70.0,
-              0.01,
-              651372
-            ],
-            [
-              2016,
-              1551,
-              70.0,
-              0.01003,
-              550110
-            ],
-            [
-              2017,
-              1134,
-              70.0,
-              0.01033,
-              397833
-            ],
-            [
-              2018,
-              866.17,
-              70.0,
-              0.01372,
-              277792
-            ],
-            [
-              2019,
-              450.16,
-              40.0,
-              0.02645,
-              38860
-            ]
-          ]
-        },
-        "field_voidage": {
-          "columns": [
-            "year",
-            "injected_sm3",
-            "oil_sm3",
-            "water_sm3",
-            "replacement_ratio",
-            "replacement_ratio_low",
-            "replacement_ratio_high",
-            "surface_ratio"
-          ],
-          "rows": [
-            [
-              2015,
-              1394160,
-              1742572,
-              13192,
-              0.5745,
-              0.5307,
-              0.6262,
-              0.794
-            ],
-            [
-              2016,
-              2406088,
-              2080747,
-              76071,
-              0.8134,
-              0.7526,
-              0.885,
-              1.12
-            ],
-            [
-              2017,
-              2422079,
-              1313979,
-              497033,
-              1.05,
-              0.9814,
-              1.12,
-              1.34
-            ],
-            [
-              2018,
-              2401359,
-              647930,
-              907957,
-              1.33,
-              1.28,
-              1.39,
-              1.54
-            ],
-            [
-              2019,
-              598887,
-              106237,
-              234306,
-              1.57,
-              1.52,
-              1.62,
-              1.76
-            ]
-          ]
-        },
-        "notes": "WOR = water/oil by month; the trend is log10(WOR) against cumulative oil, fitted on up to 36 recent months with WOR >= 1. field_voidage: replacement_ratio is injection over voidage at reservoir conditions (Bo 1.385 m3/Sm3 from PUD p.20, low/high with Bo 1.5/1.27; Bw 1; above the bubble point, so no free gas); surface_ratio is the same in surface volumes, which overstates replacement."
-      },
-      "code": "wellpilot.agent.tools.waterflood_tool@c2104a9650c2",
-      "created_at": "2026-10-27T17:26:18+00:00",
-      "warnings": []
-    },
-    {
-      "id": "E5",
-      "tool": "production_monthly",
-      "arguments": {
-        "well": "P-2",
-        "start": "2018-01-01",
-        "end": "2019-03-31"
-      },
-      "result": {
-        "columns": [
-          "month",
-          "days",
-          "producing_days",
-          "oil_sm3",
-          "water_sm3",
-          "gas_sm3",
-          "water_injected_sm3",
-          "water_cut",
-          "uptime",
-          "oil_rate_per_producing_day",
-          "bhp_bar",
-          "whp_bar",
-          "choke_pct"
-        ],
-        "rows": [
-          [
-            "2018-01",
-            31,
-            31,
-            30034,
-            341.2,
-            4354897,
-            null,
-            0.01123,
-            1.0,
-            968.83,
-            209.04,
-            50.07,
-            70.0
-          ],
-          [
-            "2018-02",
-            28,
-            28,
-            25614,
-            298.01,
-            3714024,
-            null,
-            0.0115,
-            0.9735,
-            939.71,
-            208.48,
-            49.64,
-            70.0
-          ],
-          [
-            "2018-03",
-            31,
-            30,
-            27112,
-            324.54,
-            3931208,
-            0.0,
-            0.01183,
-            0.955,
-            915.74,
-            208.14,
-            49.58,
-            70.0
-          ],
-          [
-            "2018-04",
-            30,
-            27,
-            23729,
-            293.41,
-            3440659,
-            null,
-            0.01221,
-            0.8756,
-            903.31,
-            207.39,
-            50.53,
-            70.0
-          ],
-          [
-            "2018-05",
-            31,
-            31,
-            26091,
-            336.45,
-            3783239,
-            null,
-            0.01273,
-            0.9772,
-            861.26,
-            206.6,
-            49.53,
-            70.0
-          ],
-          [
-            "2018-06",
-            30,
-            28,
-            24045,
-            325.74,
-            3486553,
-            null,
-            0.01337,
-            0.9264,
-            865.23,
-            205.95,
-            49.94,
-            70.0
-          ],
-          [
-            "2018-07",
-            31,
-            28,
-            23045,
-            329.03,
-            3341583,
-            null,
-            0.01408,
-            0.8768,
-            847.86,
-            205.35,
-            49.82,
-            70.0
-          ],
-          [
-            "2018-08",
-            31,
-            28,
-            22675,
-            345.04,
-            3287881,
-            null,
-            0.01499,
-            0.8958,
-            816.52,
-            204.49,
-            49.97,
-            70.0
-          ],
-          [
-            "2018-09",
-            30,
-            30,
-            23927,
-            392.44,
-            3469406,
-            null,
-            0.01614,
-            0.9883,
-            807.04,
-            204.12,
-            49.3,
-            70.0
-          ],
-          [
-            "2018-10",
-            31,
-            31,
-            23935,
-            426.06,
-            3470636,
-            null,
-            0.01749,
-            0.9839,
-            784.73,
-            203.33,
-            49.23,
-            70.0
-          ],
-          [
-            "2018-11",
-            30,
-            28,
-            14147,
-            275.56,
-            2051387,
-            null,
-            0.01911,
-            0.9212,
-            511.91,
-            224.39,
-            51.46,
-            44.29
-          ],
-          [
-            "2018-12",
-            31,
-            30,
-            13437,
-            290.67,
-            1948425,
-            null,
-            0.02117,
-            0.948,
-            457.23,
-            227.35,
-            52.31,
-            40.0
-          ],
-          [
-            "2019-01",
-            31,
-            31,
-            13443,
-            325.08,
-            1949193,
-            null,
-            0.02361,
-            0.983,
-            441.11,
-            226.76,
-            52.06,
-            40.0
-          ],
-          [
-            "2019-02",
-            28,
-            28,
-            12271,
-            333.39,
-            1779323,
-            null,
-            0.02645,
-            1.0,
-            438.26,
-            225.95,
-            51.57,
-            40.0
-          ],
-          [
-            "2019-03",
-            31,
-            31,
-            13146,
-            404.85,
-            1906115,
-            null,
-            0.02988,
-            0.9914,
-            427.73,
-            225.46,
-            52.19,
-            40.0
-          ]
-        ]
-      },
-      "code": "wellpilot.agent.tools.production_monthly@c841520578bb",
-      "created_at": "2026-10-27T17:26:21+00:00",
-      "warnings": []
-    },
-    {
-      "id": "E6",
-      "tool": "fit_decline",
-      "arguments": {
-        "well": "P-2",
-        "start": "2018-11-12",
-        "end": "2019-03-31"
-      },
-      "result": {
-        "best": {
-          "model": "harmonic",
-          "qi_sm3_per_producing_day": 467.61,
-          "di_per_year": 0.2812,
-          "b": 1.0,
-          "window_start": "2018-11-12",
-          "window_end": "2019-03-31",
-          "n_points": 139,
-          "r2_log": 0.2553,
-          "rmse_log": 0.05033,
-          "aic": -826.97,
-          "residual_trend": 0.0002013,
-          "uptime": 0.9802
-        },
-        "warnings": [
-          "poor fit: r2_log 0.255 < 0.7. The window may span a plateau or a regime change; refit after the last regime change, or treat any decline rate from this fit as an inference."
-        ],
-        "other_models": [
-          {
-            "model": "exponential",
-            "aic": -826.88,
-            "r2_log": 0.2548,
-            "b": 0.0
-          },
-          {
-            "model": "hyperbolic",
-            "aic": -824.97,
-            "r2_log": 0.2553,
-            "b": 1.0
-          }
-        ]
-      },
-      "code": "wellpilot.agent.tools.fit_decline_tool@24dd92b35623",
-      "created_at": "2026-10-27T17:26:21+00:00",
-      "warnings": [
-        "poor fit: r2_log 0.255 < 0.7. The window may span a plateau or a regime change; refit after the last regime change, or treat any decline rate from this fit as an inference."
-      ]
-    },
-    {
-      "id": "E7",
-      "tool": "run_sql",
-      "arguments": {
-        "sql": "SELECT date, well, issue, raw_value, action FROM production_issues WHERE well='P-2' ORDER BY date"
-      },
-      "result": {
-        "columns": [
-          "date",
-          "well",
-          "issue",
-          "raw_value",
-          "action"
-        ],
-        "rows": [
-          [
-            "2015-09-04",
-            "P-2",
-            "missing_day",
-            null,
-            "inserted"
-          ],
-          [
-            "2015-09-25",
-            "P-2",
-            "missing_day",
-            null,
-            "inserted"
-          ],
-          [
-            "2017-06-01",
-            "P-2",
-            "missing_day",
-            null,
-            "inserted"
-          ],
-          [
-            "2017-06-23",
-            "P-2",
-            "missing_day",
-            null,
-            "inserted"
-          ],
-          [
-            "2018-03-07",
-            "P-2",
-            "missing_day",
-            null,
-            "inserted"
-          ]
-        ],
-        "row_count": 5,
-        "truncated": false
-      },
-      "code": "wellpilot.agent.tools.run_sql@50068378f8ca",
-      "created_at": "2026-10-27T17:26:21+00:00",
-      "warnings": []
-    },
-    {
-      "id": "E8",
-      "tool": "forecast_production",
-      "arguments": {
-        "well": "P-2",
-        "start": "2018-11-12",
-        "end": "2019-03-31",
-        "model": "auto",
-        "horizon_days": 365
-      },
-      "result": {
-        "fit": {
-          "model": "harmonic",
-          "qi_sm3_per_producing_day": 467.61,
-          "di_per_year": 0.2812,
-          "b": 1.0,
-          "window_start": "2018-11-12",
-          "window_end": "2019-03-31",
-          "n_points": 139,
-          "r2_log": 0.2553,
-          "rmse_log": 0.05033,
-          "aic": -826.97,
-          "residual_trend": 0.0002013,
-          "uptime": 0.9802
-        },
-        "warnings": [
-          "poor fit: r2_log 0.255 < 0.7. The window may span a plateau or a regime change; refit after the last regime change, or treat any decline rate from this fit as an inference."
-        ],
-        "forecast_from": "2019-04-01",
-        "forecast_to": "2020-03-30",
-        "horizon_days": 365,
-        "cumulative_oil_sm3": {
-          "p90": 132318,
-          "p50": 134639,
-          "p10": 137089
-        },
-        "calibrated_band_sm3": {
-          "p90": 118953,
-          "p10": 142528,
-          "past_forecasts": 11,
-          "median_abs_error": 0.03509
-        },
-        "calibrated_band_note": "P90-P10 from the errors of 11 forecasts made the same way from earlier dates on data up to then; use it for confidence, the bootstrap band above only reflects the fit's scatter. 11 of them were made before this fit window began, in another regime, so the band may be too narrow.",
-        "p50_by_model_sm3": {
-          "exponential": 132528,
-          "hyperbolic": 134639,
-          "harmonic": 134639
-        },
-        "p50_by_model_note": "The P50 each Arps model gives on this window: when they differ widely, the choice of model drives the forecast as much as the data does.",
-        "monthly_rate_sm3_per_producing_day": {
-          "columns": [
-            "month",
-            "p90",
-            "p50",
-            "p10"
-          ],
-          "rows": [
-            [
-              "2019-04",
-              414.61,
-              417.91,
-              421.04
-            ],
-            [
-              "2019-05",
-              405.29,
-              409.32,
-              413.33
-            ],
-            [
-              "2019-06",
-              396.31,
-              401.08,
-              405.93
-            ],
-            [
-              "2019-07",
-              387.75,
-              393.16,
-              398.68
-            ],
-            [
-              "2019-08",
-              379.47,
-              385.43,
-              391.64
-            ],
-            [
-              "2019-09",
-              371.6,
-              378.11,
-              384.95
-            ],
-            [
-              "2019-10",
-              364.08,
-              371.06,
-              378.49
-            ],
-            [
-              "2019-11",
-              356.83,
-              364.27,
-              372.24
-            ],
-            [
-              "2019-12",
-              349.84,
-              357.73,
-              366.19
-            ],
-            [
-              "2020-01",
-              343.06,
-              351.32,
-              360.24
-            ],
-            [
-              "2020-02",
-              336.75,
-              345.32,
-              354.67
-            ],
-            [
-              "2020-03",
-              330.76,
-              339.63,
-              349.35
-            ]
-          ]
-        },
-        "note": "P90 = low case, P10 = high case. Volumes = rate x historical uptime."
-      },
-      "code": "wellpilot.agent.tools.forecast_tool@8d1665b627ed",
-      "created_at": "2026-10-27T17:26:24+00:00",
-      "warnings": [
-        "poor fit: r2_log 0.255 < 0.7. The window may span a plateau or a regime change; refit after the last regime change, or treat any decline rate from this fit as an inference."
-      ]
-    },
-    {
-      "id": "E9",
-      "tool": "production_monthly",
-      "arguments": {
-        "well": "P-2",
-        "start": "2018-11-01",
-        "end": "2019-03-31"
-      },
-      "result": {
-        "columns": [
-          "month",
-          "days",
-          "producing_days",
-          "oil_sm3",
-          "water_sm3",
-          "gas_sm3",
-          "water_injected_sm3",
-          "water_cut",
-          "uptime",
-          "oil_rate_per_producing_day",
-          "bhp_bar",
-          "whp_bar",
-          "choke_pct"
-        ],
-        "rows": [
-          [
-            "2018-11",
-            30,
-            28,
-            14147,
-            275.56,
-            2051387,
-            null,
-            0.01911,
-            0.9212,
-            511.91,
-            224.39,
-            51.46,
-            44.29
-          ],
-          [
-            "2018-12",
-            31,
-            30,
-            13437,
-            290.67,
-            1948425,
-            null,
-            0.02117,
-            0.948,
-            457.23,
-            227.35,
-            52.31,
-            40.0
-          ],
-          [
-            "2019-01",
-            31,
-            31,
-            13443,
-            325.08,
-            1949193,
-            null,
-            0.02361,
-            0.983,
-            441.11,
-            226.76,
-            52.06,
-            40.0
-          ],
-          [
-            "2019-02",
-            28,
-            28,
-            12271,
-            333.39,
-            1779323,
-            null,
-            0.02645,
-            1.0,
-            438.26,
-            225.95,
-            51.57,
-            40.0
-          ],
-          [
-            "2019-03",
-            31,
-            31,
-            13146,
-            404.85,
-            1906115,
-            null,
-            0.02988,
-            0.9914,
-            427.73,
-            225.46,
-            52.19,
-            40.0
-          ]
-        ]
-      },
-      "code": "wellpilot.agent.tools.production_monthly@c841520578bb",
-      "created_at": "2026-10-27T17:26:24+00:00",
-      "warnings": []
-    },
-    {
-      "id": "E10",
-      "tool": "run_sql",
-      "arguments": {
-        "sql": "SELECT date, well, oil_sm3, on_stream_hrs, choke_pct, bhp_bar, whp_bar FROM production_daily WHERE well='P-2' AND date BETWEEN '2018-10-01' AND '2019-03-31' ORDER BY date"
-      },
-      "result": {
-        "columns": [
-          "date",
-          "well",
-          "oil_sm3",
-          "on_stream_hrs",
-          "choke_pct",
-          "bhp_bar",
-          "whp_bar"
-        ],
-        "rows": [
-          [
-            "2018-10-01",
-            "P-2",
-            817.16,
-            24.0,
-            70.0,
-            202.98,
-            49.94
-          ],
-          [
-            "2018-10-02",
-            "P-2",
-            780.45,
-            24.0,
-            70.0,
-            203.74,
-            47.38
-          ],
-          [
-            "2018-10-03",
-            "P-2",
-            797.43,
-            24.0,
-            70.0,
-            202.83,
-            50.32
-          ],
-          [
-            "2018-10-04",
-            "P-2",
-            767.94,
-            24.0,
-            70.0,
-            204.11,
-            46.88
-          ],
-          [
-            "2018-10-05",
-            "P-2",
-            817.39,
-            24.0,
-            70.0,
-            204.36,
-            49.69
-          ],
-          [
-            "2018-10-06",
-            "P-2",
-            741.5,
-            24.0,
-            70.0,
-            203.76,
-            50.17
-          ],
-          [
-            "2018-10-07",
-            "P-2",
-            833.34,
-            24.0,
-            70.0,
-            204.8,
-            49.55
-          ],
-          [
-            "2018-10-08",
-            "P-2",
-            814.78,
-            24.0,
-            70.0,
-            204.39,
-            47.76
-          ],
-          [
-            "2018-10-09",
-            "P-2",
-            878.21,
-            24.0,
-            70.0,
-            204.0,
-            49.28
-          ],
-          [
-            "2018-10-10",
-            "P-2",
-            789.83,
-            24.0,
-            70.0,
-            204.76,
-            49.17
-          ],
-          [
-            "2018-10-11",
-            "P-2",
-            787.11,
-            24.0,
-            70.0,
-            202.36,
-            49.53
-          ],
-          [
-            "2018-10-12",
-            "P-2",
-            798.16,
-            24.0,
-            70.0,
-            203.53,
-            51.66
-          ],
-          [
-            "2018-10-13",
-            "P-2",
-            791.27,
-            24.0,
-            70.0,
-            201.8,
-            51.97
-          ],
-          [
-            "2018-10-14",
-            "P-2",
-            784.93,
-            24.0,
-            70.0,
-            203.51,
-            51.8
-          ],
-          [
-            "2018-10-15",
-            "P-2",
-            745.52,
-            24.0,
-            70.0,
-            203.04,
-            48.48
-          ],
-          [
-            "2018-10-16",
-            "P-2",
-            744.91,
-            24.0,
-            70.0,
-            204.3,
-            48.3
-          ],
-          [
-            "2018-10-17",
-            "P-2",
-            765.18,
-            24.0,
-            70.0,
-            203.03,
-            49.46
-          ],
-          [
-            "2018-10-18",
-            "P-2",
-            388.99,
-            12.04,
-            70.0,
-            202.82,
-            50.07
-          ],
-          [
-            "2018-10-19",
-            "P-2",
-            740.33,
-            24.0,
-            70.0,
-            203.33,
-            46.33
-          ],
-          [
-            "2018-10-20",
-            "P-2",
-            740.79,
-            24.0,
-            70.0,
-            203.28,
-            48.5
-          ],
-          [
-            "2018-10-21",
-            "P-2",
-            774.21,
-            24.0,
-            70.0,
-            203.9,
-            52.1
-          ],
-          [
-            "2018-10-22",
-            "P-2",
-            815.27,
-            24.0,
-            70.0,
-            202.5,
-            47.55
-          ],
-          [
-            "2018-10-23",
-            "P-2",
-            776.84,
-            24.0,
-            70.0,
-            201.87,
-            48.3
-          ],
-          [
-            "2018-10-24",
-            "P-2",
-            811.54,
-            24.0,
-            70.0,
-            201.76,
-            48.35
-          ],
-          [
-            "2018-10-25",
-            "P-2",
-            823.27,
-            24.0,
-            70.0,
-            204.45,
-            50.14
-          ],
-          [
-            "2018-10-26",
-            "P-2",
-            814.18,
-            24.0,
-            70.0,
-            202.04,
-            49.3
-          ],
-          [
-            "2018-10-27",
-            "P-2",
-            765.68,
-            24.0,
-            70.0,
-            202.81,
-            48.91
-          ],
-          [
-            "2018-10-28",
-            "P-2",
-            765.82,
-            24.0,
-            70.0,
-            202.16,
-            47.12
-          ],
-          [
-            "2018-10-29",
-            "P-2",
-            710.32,
-            24.0,
-            70.0,
-            204.1,
-            50.31
-          ],
-          [
-            "2018-10-30",
-            "P-2",
-            753.98,
-            24.0,
-            70.0,
-            202.65,
-            49.39
-          ],
-          [
-            "2018-10-31",
-            "P-2",
-            799.1,
-            24.0,
-            70.0,
-            204.4,
-            48.39
-          ],
-          [
-            "2018-11-01",
-            "P-2",
-            737.58,
-            24.0,
-            70.0,
-            202.47,
-            49.42
-          ],
-          [
-            "2018-11-02",
-            "P-2",
-            834.94,
-            24.0,
-            70.0,
-            203.44,
-            50.57
-          ],
-          [
-            "2018-11-03",
-            "P-2",
-            837.8,
-            24.0,
-            70.0,
-            203.88,
-            47.16
-          ],
-          [
-            "2018-11-04",
-            "P-2",
-            763.61,
-            24.0,
-            70.0,
-            204.07,
-            47.05
-          ],
-          [
-            "2018-11-05",
-            "P-2",
-            0.0,
-            0.0,
-            0.0,
-            226.91,
-            85.0
-          ],
-          [
-            "2018-11-06",
-            "P-2",
-            0.0,
-            0.0,
-            0.0,
-            227.71,
-            85.0
-          ],
-          [
-            "2018-11-07",
-            "P-2",
-            441.64,
-            24.0,
-            40.0,
-            227.97,
-            47.79
-          ],
-          [
-            "2018-11-08",
-            "P-2",
-            456.85,
-            24.0,
-            40.0,
-            226.22,
-            51.46
-          ],
-          [
-            "2018-11-09",
-            "P-2",
-            465.52,
-            24.0,
-            40.0,
-            228.71,
-            54.03
-          ],
-          [
-            "2018-11-10",
-            "P-2",
-            460.6,
-            24.0,
-            40.0,
-            228.38,
-            51.87
-          ],
-          [
-            "2018-11-11",
-            "P-2",
-            444.67,
-            24.0,
-            40.0,
-            228.48,
-            53.88
-          ],
-          [
-            "2018-11-12",
-            "P-2",
-            513.41,
-            24.0,
-            40.0,
-            226.57,
-            48.04
-          ],
-          [
-            "2018-11-13",
-            "P-2",
-            471.01,
-            24.0,
-            40.0,
-            228.11,
-            52.18
-          ],
-          [
-            "2018-11-14",
-            "P-2",
-            470.58,
-            24.0,
-            40.0,
-            228.34,
-            54.43
-          ],
-          [
-            "2018-11-15",
-            "P-2",
-            479.84,
-            24.0,
-            40.0,
-            228.91,
-            54.71
-          ],
-          [
-            "2018-11-16",
-            "P-2",
-            467.3,
-            24.0,
-            40.0,
-            227.36,
-            51.6
-          ],
-          [
-            "2018-11-17",
-            "P-2",
-            457.38,
-            24.0,
-            40.0,
-            228.52,
-            51.11
-          ],
-          [
-            "2018-11-18",
-            "P-2",
-            449.55,
-            24.0,
-            40.0,
-            229.78,
-            52.92
-          ],
-          [
-            "2018-11-19",
-            "P-2",
-            425.13,
-            24.0,
-            40.0,
-            227.38,
-            50.51
-          ],
-          [
-            "2018-11-20",
-            "P-2",
-            498.51,
-            24.0,
-            40.0,
-            227.39,
-            51.79
-          ],
-          [
-            "2018-11-21",
-            "P-2",
-            440.37,
-            24.0,
-            40.0,
-            227.45,
-            49.82
-          ],
-          [
-            "2018-11-22",
-            "P-2",
-            423.72,
-            24.0,
-            40.0,
-            226.28,
-            52.46
-          ],
-          [
-            "2018-11-23",
-            "P-2",
-            442.33,
-            24.0,
-            40.0,
-            227.37,
-            52.34
-          ],
-          [
-            "2018-11-24",
-            "P-2",
-            424.47,
-            24.0,
-            40.0,
-            229.32,
-            54.77
-          ],
-          [
-            "2018-11-25",
-            "P-2",
-            509.67,
-            24.0,
-            40.0,
-            226.78,
-            52.86
-          ],
-          [
-            "2018-11-26",
-            "P-2",
-            468.69,
-            24.0,
-            40.0,
-            227.48,
-            51.33
-          ],
-          [
-            "2018-11-27",
-            "P-2",
-            494.01,
-            24.0,
-            40.0,
-            228.84,
-            52.18
-          ],
-          [
-            "2018-11-28",
-            "P-2",
-            494.83,
-            24.0,
-            40.0,
-            228.19,
-            50.38
-          ],
-          [
-            "2018-11-29",
-            "P-2",
-            472.63,
-            24.0,
-            40.0,
-            227.84,
-            52.37
-          ],
-          [
-            "2018-11-30",
-            "P-2",
-            300.85,
-            15.28,
-            40.0,
-            227.26,
-            51.99
-          ],
-          [
-            "2018-12-01",
-            "P-2",
-            441.89,
-            24.0,
-            40.0,
-            227.46,
-            52.94
-          ],
-          [
-            "2018-12-02",
-            "P-2",
-            0.0,
-            0.0,
-            0.0,
-            227.57,
-            85.0
-          ],
-          [
-            "2018-12-03",
-            "P-2",
-            443.98,
-            24.0,
-            40.0,
-            228.22,
-            49.3
-          ],
-          [
-            "2018-12-04",
-            "P-2",
-            458.58,
-            24.0,
-            40.0,
-            227.59,
-            52.79
-          ],
-          [
-            "2018-12-05",
-            "P-2",
-            441.24,
-            24.0,
-            40.0,
-            228.43,
-            53.41
-          ],
-          [
-            "2018-12-06",
-            "P-2",
-            487.5,
-            24.0,
-            40.0,
-            225.63,
-            50.5
-          ],
-          [
-            "2018-12-07",
-            "P-2",
-            474.84,
-            24.0,
-            40.0,
-            228.27,
-            55.15
-          ],
-          [
-            "2018-12-08",
-            "P-2",
-            453.89,
-            24.0,
-            40.0,
-            226.91,
-            51.21
-          ],
-          [
-            "2018-12-09",
-            "P-2",
-            418.77,
-            24.0,
-            40.0,
-            227.43,
-            55.99
-          ],
-          [
-            "2018-12-10",
-            "P-2",
-            471.97,
-            24.0,
-            40.0,
-            226.98,
-            53.47
-          ],
-          [
-            "2018-12-11",
-            "P-2",
-            476.48,
-            24.0,
-            40.0,
-            228.01,
-            53.74
-          ],
-          [
-            "2018-12-12",
-            "P-2",
-            453.57,
-            24.0,
-            40.0,
-            227.24,
-            52.69
-          ],
-          [
-            "2018-12-13",
-            "P-2",
-            426.5,
-            24.0,
-            40.0,
-            227.96,
-            53.8
-          ],
-          [
-            "2018-12-14",
-            "P-2",
-            464.69,
-            24.0,
-            40.0,
-            226.52,
-            50.72
-          ],
-          [
-            "2018-12-15",
-            "P-2",
-            479.26,
-            24.0,
-            40.0,
-            227.49,
-            51.06
-          ],
-          [
-            "2018-12-16",
-            "P-2",
-            356.65,
-            20.79,
-            40.0,
-            228.49,
-            49.32
-          ],
-          [
-            "2018-12-17",
-            "P-2",
-            466.94,
-            24.0,
-            40.0,
-            228.36,
-            53.09
-          ],
-          [
-            "2018-12-18",
-            "P-2",
-            413.23,
-            24.0,
-            40.0,
-            226.89,
-            51.2
-          ],
-          [
-            "2018-12-19",
-            "P-2",
-            454.87,
-            24.0,
-            40.0,
-            227.36,
-            53.4
-          ],
-          [
-            "2018-12-20",
-            "P-2",
-            494.93,
-            24.0,
-            40.0,
-            226.84,
-            53.16
-          ],
-          [
-            "2018-12-21",
-            "P-2",
-            454.56,
-            24.0,
-            40.0,
-            227.06,
-            50.25
-          ],
-          [
-            "2018-12-22",
-            "P-2",
-            463.35,
-            24.0,
-            40.0,
-            227.18,
-            53.31
-          ],
-          [
-            "2018-12-23",
-            "P-2",
-            444.49,
-            24.0,
-            40.0,
-            228.34,
-            52.65
-          ],
-          [
-            "2018-12-24",
-            "P-2",
-            451.38,
-            24.0,
-            40.0,
-            227.7,
-            52.56
-          ],
-          [
-            "2018-12-25",
-            "P-2",
-            508.7,
-            24.0,
-            40.0,
-            228.54,
-            52.94
-          ],
-          [
-            "2018-12-26",
-            "P-2",
-            482.68,
-            24.0,
-            40.0,
-            228.6,
-            52.21
-          ],
-          [
-            "2018-12-27",
-            "P-2",
-            443.48,
-            24.0,
-            40.0,
-            225.81,
-            52.27
-          ],
-          [
-            "2018-12-28",
-            "P-2",
-            441.68,
-            24.0,
-            40.0,
-            227.35,
-            53.83
-          ],
-          [
-            "2018-12-29",
-            "P-2",
-            450.46,
-            24.0,
-            40.0,
-            226.58,
-            50.75
-          ],
-          [
-            "2018-12-30",
-            "P-2",
-            262.63,
-            12.53,
-            40.0,
-            225.41,
-            50.43
-          ],
-          [
-            "2018-12-31",
-            "P-2",
-            454.26,
-            24.0,
-            40.0,
-            225.92,
-            51.09
-          ],
-          [
-            "2019-01-01",
-            "P-2",
-            475.37,
-            24.0,
-            40.0,
-            226.47,
-            53.79
-          ],
-          [
-            "2019-01-02",
-            "P-2",
-            440.6,
-            24.0,
-            40.0,
-            228.59,
-            51.75
-          ],
-          [
-            "2019-01-03",
-            "P-2",
-            420.38,
-            24.0,
-            40.0,
-            227.01,
-            55.11
-          ],
-          [
-            "2019-01-04",
-            "P-2",
-            479.56,
-            24.0,
-            40.0,
-            226.72,
-            47.59
-          ],
-          [
-            "2019-01-05",
-            "P-2",
-            446.23,
-            24.0,
-            40.0,
-            226.85,
-            51.15
-          ],
-          [
-            "2019-01-06",
-            "P-2",
-            430.13,
-            24.0,
-            40.0,
-            226.12,
-            51.55
-          ],
-          [
-            "2019-01-07",
-            "P-2",
-            431.86,
-            24.0,
-            40.0,
-            227.01,
-            52.63
-          ],
-          [
-            "2019-01-08",
-            "P-2",
-            376.47,
-            20.91,
-            40.0,
-            226.73,
-            54.23
-          ],
-          [
-            "2019-01-09",
-            "P-2",
-            327.5,
-            18.14,
-            40.0,
-            225.2,
-            51.94
-          ],
-          [
-            "2019-01-10",
-            "P-2",
-            412.79,
-            24.0,
-            40.0,
-            226.26,
-            50.68
-          ],
-          [
-            "2019-01-11",
-            "P-2",
-            474.36,
-            24.0,
-            40.0,
-            230.07,
-            53.47
-          ],
-          [
-            "2019-01-12",
-            "P-2",
-            454.67,
-            24.0,
-            40.0,
-            227.37,
-            54.54
-          ],
-          [
-            "2019-01-13",
-            "P-2",
-            468.3,
-            24.0,
-            40.0,
-            226.63,
-            48.36
-          ],
-          [
-            "2019-01-14",
-            "P-2",
-            437.58,
-            24.0,
-            40.0,
-            227.36,
-            53.08
-          ],
-          [
-            "2019-01-15",
-            "P-2",
-            452.96,
-            24.0,
-            40.0,
-            225.73,
-            52.65
-          ],
-          [
-            "2019-01-16",
-            "P-2",
-            448.53,
-            24.0,
-            40.0,
-            226.75,
-            50.95
-          ],
-          [
-            "2019-01-17",
-            "P-2",
-            471.83,
-            24.0,
-            40.0,
-            227.51,
-            51.48
-          ],
-          [
-            "2019-01-18",
-            "P-2",
-            462.96,
-            24.0,
-            40.0,
-            225.05,
-            52.63
-          ],
-          [
-            "2019-01-19",
-            "P-2",
-            452.03,
-            24.0,
-            40.0,
-            225.88,
-            52.23
-          ],
-          [
-            "2019-01-20",
-            "P-2",
-            429.14,
-            24.0,
-            40.0,
-            226.19,
-            51.82
-          ],
-          [
-            "2019-01-21",
-            "P-2",
-            416.98,
-            24.0,
-            40.0,
-            226.29,
-            50.43
-          ],
-          [
-            "2019-01-22",
-            "P-2",
-            425.31,
-            24.0,
-            40.0,
-            226.04,
-            52.61
-          ],
-          [
-            "2019-01-23",
-            "P-2",
-            428.64,
-            24.0,
-            40.0,
-            226.79,
-            51.18
-          ],
-          [
-            "2019-01-24",
-            "P-2",
-            430.43,
-            24.0,
-            40.0,
-            227.51,
-            52.31
-          ],
-          [
-            "2019-01-25",
-            "P-2",
-            415.15,
-            24.0,
-            40.0,
-            226.82,
-            51.29
-          ],
-          [
-            "2019-01-26",
-            "P-2",
-            480.77,
-            24.0,
-            40.0,
-            227.47,
-            52.47
-          ],
-          [
-            "2019-01-27",
-            "P-2",
-            447.63,
-            24.0,
-            40.0,
-            227.47,
-            53.3
-          ],
-          [
-            "2019-01-28",
-            "P-2",
-            398.22,
-            24.0,
-            40.0,
-            225.84,
-            52.52
-          ],
-          [
-            "2019-01-29",
-            "P-2",
-            417.12,
-            24.0,
-            40.0,
-            226.67,
-            53.16
-          ],
-          [
-            "2019-01-30",
-            "P-2",
-            411.62,
-            24.0,
-            40.0,
-            226.02,
-            50.08
-          ],
-          [
-            "2019-01-31",
-            "P-2",
-            377.56,
-            20.33,
-            40.0,
-            227.01,
-            52.86
-          ],
-          [
-            "2019-02-01",
-            "P-2",
-            464.61,
-            24.0,
-            40.0,
-            226.0,
-            52.6
-          ],
-          [
-            "2019-02-02",
-            "P-2",
-            418.29,
-            24.0,
-            40.0,
-            226.15,
-            51.21
-          ],
-          [
-            "2019-02-03",
-            "P-2",
-            453.56,
-            24.0,
-            40.0,
-            227.97,
-            51.91
-          ],
-          [
-            "2019-02-04",
-            "P-2",
-            433.1,
-            24.0,
-            40.0,
-            226.11,
-            47.94
-          ],
-          [
-            "2019-02-05",
-            "P-2",
-            465.34,
-            24.0,
-            40.0,
-            224.74,
-            52.27
-          ],
-          [
-            "2019-02-06",
-            "P-2",
-            470.18,
-            24.0,
-            40.0,
-            226.37,
-            51.53
-          ],
-          [
-            "2019-02-07",
-            "P-2",
-            445.35,
-            24.0,
-            40.0,
-            226.52,
-            48.74
-          ],
-          [
-            "2019-02-08",
-            "P-2",
-            454.36,
-            24.0,
-            40.0,
-            225.71,
-            52.9
-          ],
-          [
-            "2019-02-09",
-            "P-2",
-            437.72,
-            24.0,
-            40.0,
-            226.26,
-            51.18
-          ],
-          [
-            "2019-02-10",
-            "P-2",
-            429.28,
-            24.0,
-            40.0,
-            227.17,
-            52.55
-          ],
-          [
-            "2019-02-11",
-            "P-2",
-            412.14,
-            24.0,
-            40.0,
-            225.64,
-            51.77
-          ],
-          [
-            "2019-02-12",
-            "P-2",
-            444.25,
-            24.0,
-            40.0,
-            225.95,
-            52.86
-          ],
-          [
-            "2019-02-13",
-            "P-2",
-            435.1,
-            24.0,
-            40.0,
-            225.42,
-            52.26
-          ],
-          [
-            "2019-02-14",
-            "P-2",
-            427.94,
-            24.0,
-            40.0,
-            226.41,
-            51.69
-          ],
-          [
-            "2019-02-15",
-            "P-2",
-            434.4,
-            24.0,
-            40.0,
-            225.95,
-            52.86
-          ],
-          [
-            "2019-02-16",
-            "P-2",
-            431.72,
-            24.0,
-            40.0,
-            225.15,
-            53.37
-          ],
-          [
-            "2019-02-17",
-            "P-2",
-            413.16,
-            24.0,
-            40.0,
-            225.88,
-            48.71
-          ],
-          [
-            "2019-02-18",
-            "P-2",
-            423.72,
-            24.0,
-            40.0,
-            227.8,
-            52.15
-          ],
-          [
-            "2019-02-19",
-            "P-2",
-            460.9,
-            24.0,
-            40.0,
-            224.32,
-            51.22
-          ],
-          [
-            "2019-02-20",
-            "P-2",
-            429.56,
-            24.0,
-            40.0,
-            224.62,
-            50.45
-          ],
-          [
-            "2019-02-21",
-            "P-2",
-            466.26,
-            24.0,
-            40.0,
-            226.28,
-            54.07
-          ],
-          [
-            "2019-02-22",
-            "P-2",
-            409.43,
-            24.0,
-            40.0,
-            224.58,
-            53.55
-          ],
-          [
-            "2019-02-23",
-            "P-2",
-            405.02,
-            24.0,
-            40.0,
-            227.82,
-            50.55
-          ],
-          [
-            "2019-02-24",
-            "P-2",
-            436.35,
-            24.0,
-            40.0,
-            224.43,
-            50.42
-          ],
-          [
-            "2019-02-25",
-            "P-2",
-            450.64,
-            24.0,
-            40.0,
-            224.6,
-            53.32
-          ],
-          [
-            "2019-02-26",
-            "P-2",
-            418.81,
-            24.0,
-            40.0,
-            225.35,
-            51.15
-          ],
-          [
-            "2019-02-27",
-            "P-2",
-            446.63,
-            24.0,
-            40.0,
-            226.89,
-            51.6
-          ],
-          [
-            "2019-02-28",
-            "P-2",
-            453.36,
-            24.0,
-            40.0,
-            226.6,
-            49.13
-          ],
-          [
-            "2019-03-01",
-            "P-2",
-            456.29,
-            24.0,
-            40.0,
-            226.35,
-            51.88
-          ],
-          [
-            "2019-03-02",
-            "P-2",
-            429.43,
-            24.0,
-            40.0,
-            226.06,
-            53.79
-          ],
-          [
-            "2019-03-03",
-            "P-2",
-            315.86,
-            17.61,
-            40.0,
-            227.02,
-            51.39
-          ],
-          [
-            "2019-03-04",
-            "P-2",
-            396.68,
-            24.0,
-            40.0,
-            223.96,
-            51.9
-          ],
-          [
-            "2019-03-05",
-            "P-2",
-            431.52,
-            24.0,
-            40.0,
-            225.98,
-            54.7
-          ],
-          [
-            "2019-03-06",
-            "P-2",
-            436.9,
-            24.0,
-            40.0,
-            227.09,
-            53.39
-          ],
-          [
-            "2019-03-07",
-            "P-2",
-            462.4,
-            24.0,
-            40.0,
-            224.63,
-            54.21
-          ],
-          [
-            "2019-03-08",
-            "P-2",
-            403.35,
-            24.0,
-            40.0,
-            225.97,
-            53.01
-          ],
-          [
-            "2019-03-09",
-            "P-2",
-            411.86,
-            24.0,
-            40.0,
-            226.83,
-            53.87
-          ],
-          [
-            "2019-03-10",
-            "P-2",
-            408.38,
-            24.0,
-            40.0,
-            226.84,
-            49.56
-          ],
-          [
-            "2019-03-11",
-            "P-2",
-            449.33,
-            24.0,
-            40.0,
-            225.46,
-            50.83
-          ],
-          [
-            "2019-03-12",
-            "P-2",
-            377.49,
-            24.0,
-            40.0,
-            227.39,
-            49.57
-          ],
-          [
-            "2019-03-13",
-            "P-2",
-            405.92,
-            24.0,
-            40.0,
-            226.05,
-            55.39
-          ],
-          [
-            "2019-03-14",
-            "P-2",
-            475.65,
-            24.0,
-            40.0,
-            226.58,
-            52.33
-          ],
-          [
-            "2019-03-15",
-            "P-2",
-            442.71,
-            24.0,
-            40.0,
-            224.47,
-            51.86
-          ],
-          [
-            "2019-03-16",
-            "P-2",
-            400.12,
-            24.0,
-            40.0,
-            224.76,
-            50.91
-          ],
-          [
-            "2019-03-17",
-            "P-2",
-            426.39,
-            24.0,
-            40.0,
-            224.73,
-            50.52
-          ],
-          [
-            "2019-03-18",
-            "P-2",
-            446.11,
-            24.0,
-            40.0,
-            227.18,
-            47.83
-          ],
-          [
-            "2019-03-19",
-            "P-2",
-            439.2,
-            24.0,
-            40.0,
-            223.16,
-            55.41
-          ],
-          [
-            "2019-03-20",
-            "P-2",
-            422.1,
-            24.0,
-            40.0,
-            223.62,
-            51.91
-          ],
-          [
-            "2019-03-21",
-            "P-2",
-            409.82,
-            24.0,
-            40.0,
-            226.17,
-            52.13
-          ],
-          [
-            "2019-03-22",
-            "P-2",
-            444.64,
-            24.0,
-            40.0,
-            225.52,
-            49.92
-          ],
-          [
-            "2019-03-23",
-            "P-2",
-            425.9,
-            24.0,
-            40.0,
-            222.47,
-            51.94
-          ],
-          [
-            "2019-03-24",
-            "P-2",
-            443.56,
-            24.0,
-            40.0,
-            224.95,
-            52.59
-          ],
-          [
-            "2019-03-25",
-            "P-2",
-            434.12,
-            24.0,
-            40.0,
-            225.02,
-            51.9
-          ],
-          [
-            "2019-03-26",
-            "P-2",
-            415.3,
-            24.0,
-            40.0,
-            226.47,
-            52.95
-          ],
-          [
-            "2019-03-27",
-            "P-2",
-            457.07,
-            24.0,
-            40.0,
-            223.41,
-            50.76
-          ],
-          [
-            "2019-03-28",
-            "P-2",
-            414.09,
-            24.0,
-            40.0,
-            224.74,
-            52.5
-          ],
-          [
-            "2019-03-29",
-            "P-2",
-            433.74,
-            24.0,
-            40.0,
-            226.27,
-            53.36
-          ],
-          [
-            "2019-03-30",
-            "P-2",
-            410.77,
-            24.0,
-            40.0,
-            225.96,
-            52.85
-          ],
-          [
-            "2019-03-31",
-            "P-2",
-            418.94,
-            24.0,
-            40.0,
-            224.3,
-            52.58
-          ]
-        ],
-        "row_count": 182,
-        "truncated": false
-      },
-      "code": "wellpilot.agent.tools.run_sql@50068378f8ca",
-      "created_at": "2026-10-27T17:26:24+00:00",
-      "warnings": []
-    },
-    {
-      "id": "E11",
-      "tool": "calculate",
-      "arguments": {
-        "expressions": [
-          "134639 - 118953",
-          "142528 - 134639"
-        ]
-      },
-      "result": {
-        "results": [
-          {
-            "expression": "134639 - 118953",
-            "value": 15686
-          },
-          {
-            "expression": "142528 - 134639",
-            "value": 7889
-          }
-        ]
-      },
-      "code": "wellpilot.agent.tools.calculate@5c1d806d8f4d",
-      "created_at": "2026-10-27T17:26:28+00:00",
-      "warnings": []
-    },
-    {
-      "id": "E12",
-      "tool": "calculate",
-      "arguments": {
-        "expressions": [
-          "786.42 - 463.29",
-          "1426 - 445.33",
-          "70 - 40"
-        ]
-      },
-      "result": {
-        "results": [
-          {
-            "expression": "786.42 - 463.29",
-            "value": 323.13
-          },
-          {
-            "expression": "1426 - 445.33",
-            "value": 980.67
-          },
-          {
-            "expression": "70 - 40",
-            "value": 30.0
-          }
-        ]
-      },
-      "code": "wellpilot.agent.tools.calculate@5c1d806d8f4d",
-      "created_at": "2026-10-27T17:26:35+00:00",
-      "warnings": []
-    },
-    {
-      "id": "E13",
-      "tool": "calculate",
-      "arguments": {
-        "expressions": [
-          "134639/12",
-          "118953/12"
-        ]
-      },
-      "result": {
-        "results": [
-          {
-            "expression": "134639/12",
-            "value": 11220
-          },
-          {
-            "expression": "118953/12",
-            "value": 9913
-          }
-        ]
-      },
-      "code": "wellpilot.agent.tools.calculate@5c1d806d8f4d",
-      "created_at": "2026-10-27T17:26:38+00:00",
-      "warnings": []
-    },
-    {
-      "id": "E14",
-      "tool": "calculate",
-      "arguments": {
-        "expressions": [
-          "134639 - 132528"
-        ]
-      },
-      "result": {
-        "results": [
-          {
-            "expression": "134639 - 132528",
-            "value": 2111
-          }
-        ]
-      },
-      "code": "wellpilot.agent.tools.calculate@5c1d806d8f4d",
-      "created_at": "2026-10-27T17:26:43+00:00",
-      "warnings": []
-    },
-    {
-      "id": "E15",
-      "tool": "calculate",
-      "arguments": {
-        "expressions": [
-          "417.91 - 339.63",
-          "142528 - 118953"
-        ]
-      },
-      "result": {
-        "results": [
-          {
-            "expression": "417.91 - 339.63",
-            "value": 78.28
-          },
-          {
-            "expression": "142528 - 118953",
-            "value": 23575
-          }
-        ]
-      },
-      "code": "wellpilot.agent.tools.calculate@5c1d806d8f4d",
-      "created_at": "2026-10-27T17:26:51+00:00",
-      "warnings": []
-    },
-    {
-      "id": "E16",
-      "tool": "calculate",
-      "arguments": {
-        "expressions": [
-          "0.4109*100",
-          "0.6877*100"
-        ]
-      },
-      "result": {
-        "results": [
-          {
-            "expression": "0.4109*100",
-            "value": 41.09
-          },
-          {
-            "expression": "0.6877*100",
-            "value": 68.77
-          }
-        ]
-      },
-      "code": "wellpilot.agent.tools.calculate@5c1d806d8f4d",
-      "created_at": "2026-10-27T17:26:59+00:00",
-      "warnings": []
-    }
+ "source": {
+  "run": "6e71b6a75e7f",
+  "submission": 1,
+  "model": "meta-models/muse-spark-open-1026",
+  "question": "Forecast P-2 oil production for the next 12 months and say how confident the forecast is."
+ },
+ "to_review": false,
+ "note": "Fair: 2111 is the model's own difference, computed later (E14), not in the cited E8/E6; a poor-fit 135,000 stated as settled; an unhedged 'due to'. Oct 28 night: a plain hedge later in the sentence ('uncertainty band', 'low confidence', 'likely', 'the forecast is uncertain') now covers a warned number; only a modal after a comma ('as engineers may expect') does not. Oct 28 night (seventh panel): verdict changed on purpose by the new rules (a conclusion drawn with ', so' in a fact).",
+ "expected": {
+  "accepted": false,
+  "flagged": [
+   "Finding 4",
+   "Finding 5"
   ]
+ },
+ "submission": {
+  "summary": "P-2 is forecast to produce about 135,000 Sm3 oil in the next 12 months from 2019-04-01, with low confidence due to a poor decline fit after a recent choke cut. The central forecast is about 135,000 Sm3 and the calibrated uncertainty band from past forecasts is about 119,000 to 143,000 Sm3, wider than the fit's own scatter, and the band is likely too narrow because earlier tests were in a different operating regime.",
+  "findings": [
+   {
+    "claim": "P-2 is forecast to produce about 135,000 Sm3 oil in the next 12 months (2019-04-01 to 2020-03-30), with a calibrated uncertainty band of about 119,000 to 143,000 Sm3.",
+    "detail": "Harmonic fit on window 2018-11-12 to 2019-03-31 (139 points, r2_log 0.2553, rmse_log 0.05033, qi 467.61 Sm3/d per producing day, di 0.2812 per year, b 1.0, uptime 0.9802) with warning poor fit r2_log 0.255 <0.7. Forecast cumulative p50 134639 Sm3, bootstrap p90 132318 p10 137089, calibrated p90 118953 p10 142528 from 11 past forecasts median_abs_error 0.03509.",
+    "evidence_ids": [
+     "E8"
+    ],
+    "confidence": "inference",
+    "numbers": [
+     {
+      "text": "135,000",
+      "value": 134639,
+      "evidence_id": "E8"
+     },
+     {
+      "text": "119,000",
+      "value": 118953,
+      "evidence_id": "E8"
+     },
+     {
+      "text": "143,000",
+      "value": 142528,
+      "evidence_id": "E8"
+     }
+    ]
+   },
+   {
+    "claim": "The forecast monthly oil rate declines from about 418 Sm3/d in April 2019 to about 340 Sm3/d in March 2020.",
+    "detail": "Monthly p50 rates from forecast: 2019-04 417.91, 2019-05 409.32, 2019-06 401.08, 2019-07 393.16, 2019-08 385.43, 2019-09 378.11, 2019-10 371.06, 2019-11 364.27, 2019-12 357.73, 2020-01 351.32, 2020-02 345.32, 2020-03 339.63 Sm3 per producing day.",
+    "evidence_ids": [
+     "E8"
+    ],
+    "confidence": "inference",
+    "numbers": [
+     {
+      "text": "418",
+      "value": 417.91,
+      "evidence_id": "E8"
+     },
+     {
+      "text": "340",
+      "value": 339.63,
+      "evidence_id": "E8"
+     }
+    ]
+   },
+   {
+    "claim": "P-2 oil rate dropped 41% across the 2018-11-11 regime change after the choke was cut from 70% to 40%.",
+    "detail": "Event oil_rate shifts around 2018-11-11: weekly mean 1426 -> 445.33 (-69%) long period, across change itself 4 weeks each side 786.42 -> 463.29 (-41%). Daily data shows 70% choke through 2018-11-04, shut-in 2018-11-05 to 2018-11-06, then 40% from 2018-11-07 onward. Monthly production: 2018-10 784.73 Sm3/d choke 70.0, 2018-11 511.91 Sm3/d choke 44.29, 2018-12 457.23 Sm3/d choke 40.0.",
+    "evidence_ids": [
+     "E3",
+     "E10",
+     "E5"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "41%",
+      "value": 0.4109,
+      "evidence_id": "E3"
+     },
+     {
+      "text": "70%",
+      "value": 70.0,
+      "evidence_id": "E10"
+     },
+     {
+      "text": "40%",
+      "value": 40.0,
+      "evidence_id": "E10"
+     }
+    ]
+   },
+   {
+    "claim": "P-2 water cut remains low at about 0.026 in February 2019 rising to about 0.030 in March 2019, so the rate drop is not water breakthrough.",
+    "detail": "Waterflood monthly: 2018-10 water_cut 0.01749 liquid 798.7, 2018-11 water_cut 0.01911 liquid 521.88 choke 40.0, 2019-02 water_cut 0.02645 liquid 450.16 choke 40.0, 2019-03 water_cut 0.02988. By year 2019 water_cut 0.02645. No WOR trend: too few months with WOR >=1 (0, need 12) to fit. Field voidage replacement_ratio 2018 1.33 (1.28-1.39) and 2019 1.57 (1.52-1.62) at reservoir conditions.",
+    "evidence_ids": [
+     "E4",
+     "E9"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "0.026",
+      "value": 0.02645,
+      "evidence_id": "E4"
+     },
+     {
+      "text": "0.030",
+      "value": 0.02988,
+      "evidence_id": "E9"
+     }
+    ]
+   },
+   {
+    "claim": "Forecast confidence is low: the decline fit is poor and the calibrated band is based on 11 prior tests mostly in a different regime.",
+    "detail": "Fit warnings poor fit r2_log 0.2553 <0.7 residual_trend 0.0002013. Calibrated band note: 11 past forecasts, 11 of them before fit window began in another regime so band may be too narrow. p50_by_model exponential 132528, hyperbolic 134639, harmonic 134639 (models agree within 2111 Sm3) but fit poor so model agreement does not imply confidence. Bootstrap band p90 132318 p10 137089 only reflects fit scatter.",
+    "evidence_ids": [
+     "E8",
+     "E6"
+    ],
+    "confidence": "inference",
+    "numbers": [
+     {
+      "text": "11",
+      "value": 11,
+      "evidence_id": "E8"
+     }
+    ]
+   }
+  ],
+  "summary_numbers": [
+   {
+    "text": "135,000",
+    "value": 134639,
+    "evidence_id": "E8"
+   },
+   {
+    "text": "135,000",
+    "value": 134639,
+    "evidence_id": "E8"
+   },
+   {
+    "text": "119,000",
+    "value": 118953,
+    "evidence_id": "E8"
+   },
+   {
+    "text": "143,000",
+    "value": 142528,
+    "evidence_id": "E8"
+   }
+  ]
+ },
+ "evidence": [
+  {
+   "id": "E1",
+   "tool": "list_wells",
+   "arguments": {},
+   "result": {
+    "columns": [
+     "well",
+     "well_types",
+     "first_oil",
+     "last_date",
+     "cum_oil_sm3",
+     "cum_water_sm3",
+     "cum_water_injected_sm3",
+     "producing_days"
+    ],
+    "rows": [
+     [
+      "I-1",
+      "WI",
+      null,
+      "2019-03-31",
+      null,
+      null,
+      4619498,
+      0
+     ],
+     [
+      "I-2",
+      "WI",
+      null,
+      "2019-03-31",
+      null,
+      null,
+      4603075,
+      0
+     ],
+     [
+      "P-1",
+      "OP",
+      "2015-01-15",
+      "2019-03-31",
+      2934352,
+      1696666,
+      null,
+      1512
+     ],
+     [
+      "P-2",
+      "OP",
+      "2015-03-01",
+      "2019-03-31",
+      1915967,
+      21376,
+      0.0,
+      1463
+     ],
+     [
+      "P-3",
+      "OP",
+      "2016-02-01",
+      "2019-03-31",
+      1041143,
+      10517,
+      null,
+      1136
+     ]
+    ]
+   },
+   "code": "wellpilot.agent.tools.list_wells@67bd47cfcdd1",
+   "created_at": "2026-10-27T17:26:18+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E2",
+   "tool": "field_screen",
+   "arguments": {},
+   "result": {
+    "as_of": "2019-03-31",
+    "window_days": 90,
+    "field_oil_sm3": 5891463,
+    "wells": [
+     {
+      "well": "P-1",
+      "role": "producer",
+      "first_oil": "2015-01-15",
+      "cum_oil_sm3": 2934352,
+      "share_of_field_oil": 0.4981,
+      "cum_water_injected_sm3": 0.0,
+      "oil_rate_sm3_per_day": 300.9,
+      "water_cut": 0.8966,
+      "uptime": 0.992,
+      "oil_rate_change_90d": -0.07841,
+      "level": "alarm",
+      "issues": [
+       {
+        "level": "alarm",
+        "kind": "dead_gauge",
+        "since": "2018-04-10",
+        "text": "downhole pressure gauge reads 0 (356 days, 127,719 Sm3 oil produced without pressure data)"
+       },
+       {
+        "level": "caution",
+        "kind": "water_cut",
+        "since": "2018-03-20",
+        "text": "water cut above 0.80 (now 0.90); the platform was designed for 0.80"
+       }
+      ]
+     },
+     {
+      "well": "P-2",
+      "role": "producer",
+      "first_oil": "2015-03-01",
+      "cum_oil_sm3": 1915967,
+      "share_of_field_oil": 0.3252,
+      "cum_water_injected_sm3": 0.0,
+      "oil_rate_sm3_per_day": 433.46,
+      "water_cut": 0.02644,
+      "uptime": 0.9912,
+      "oil_rate_change_90d": -0.09665,
+      "level": "caution",
+      "issues": [
+       {
+        "level": "caution",
+        "kind": "step_down",
+        "since": "2018-11-11",
+        "text": "oil rate dropped 41% across the change (4 weeks each side, 786 -> 463 Sm3/d)"
+       }
+      ]
+     },
+     {
+      "well": "P-3",
+      "role": "producer",
+      "first_oil": "2016-02-01",
+      "cum_oil_sm3": 1041143,
+      "share_of_field_oil": 0.1767,
+      "cum_water_injected_sm3": 0.0,
+      "oil_rate_sm3_per_day": 463.29,
+      "water_cut": 0.01,
+      "uptime": 0.971,
+      "oil_rate_change_90d": -0.09573,
+      "level": null,
+      "issues": []
+     },
+     {
+      "well": "I-1",
+      "role": "injector",
+      "first_oil": null,
+      "cum_oil_sm3": 0.0,
+      "share_of_field_oil": 0.0,
+      "cum_water_injected_sm3": 4619498,
+      "water_inj_sm3_per_day": 3282,
+      "level": null,
+      "issues": []
+     },
+     {
+      "well": "I-2",
+      "role": "injector",
+      "first_oil": null,
+      "cum_oil_sm3": 0.0,
+      "share_of_field_oil": 0.0,
+      "cum_water_injected_sm3": 4603075,
+      "water_inj_sm3_per_day": 3372,
+      "level": null,
+      "issues": []
+     }
+    ],
+    "levels": "alarm: act now; caution: watch; note: for the record"
+   },
+   "code": "wellpilot.agent.tools.field_screen@f53b60160989",
+   "created_at": "2026-10-27T17:26:18+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E3",
+   "tool": "detect_events",
+   "arguments": {
+    "well": "P-2"
+   },
+   "result": [
+    {
+     "kind": "regime_change",
+     "signal": "water_cut",
+     "start": "2018-07-08",
+     "end": null,
+     "summary": "water_cut shifts around 2018-07-08: weekly mean 0.0105 -> 0.017 (+0.01) from the period before to the period after.",
+     "details": {
+      "before_mean": 0.01046,
+      "after_mean": 0.01697,
+      "change": 0.006514,
+      "before_from": "2015-03-01",
+      "after_to": "2018-12-23"
+     }
+    },
+    {
+     "kind": "regime_change",
+     "signal": "oil_rate",
+     "start": "2018-11-11",
+     "end": null,
+     "summary": "oil_rate shifts around 2018-11-11: weekly mean 1,426 -> 445 (-69%) from the period before to the period after; across the change itself, 4 weeks each side, 786 -> 463 (-41%).",
+     "details": {
+      "before_mean": 1426,
+      "after_mean": 445.33,
+      "relative_change": -0.6877,
+      "across_before": 786.42,
+      "across_after": 463.29,
+      "change_across": -0.4109,
+      "before_from": "2015-03-01",
+      "after_to": "2019-03-31"
+     }
+    },
+    {
+     "kind": "regime_change",
+     "signal": "water_cut",
+     "start": "2018-12-30",
+     "end": null,
+     "summary": "water_cut shifts around 2018-12-30: weekly mean 0.017 -> 0.0263 (+0.01) from the period before to the period after.",
+     "details": {
+      "before_mean": 0.01697,
+      "after_mean": 0.02627,
+      "change": 0.009303,
+      "before_from": "2018-07-08",
+      "after_to": "2019-03-31"
+     }
+    }
+   ],
+   "code": "wellpilot.agent.tools.detect_events@0c5c334ef787",
+   "created_at": "2026-10-27T17:26:18+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E4",
+   "tool": "waterflood",
+   "arguments": {
+    "well": "P-2"
+   },
+   "result": {
+    "well": "P-2",
+    "monthly": {
+     "columns": [
+      "month",
+      "cum_oil_sm3",
+      "wor",
+      "water_cut",
+      "liquid_rate_sm3_per_day",
+      "choke_pct"
+     ],
+     "rows": [
+      [
+       "2015-03",
+       74757,
+       0.0101,
+       0.01,
+       2550,
+       70.0
+      ],
+      [
+       "2015-04",
+       147025,
+       0.0101,
+       0.01,
+       2458,
+       70.0
+      ],
+      [
+       "2015-05",
+       221109,
+       0.0101,
+       0.01,
+       2414,
+       70.0
+      ],
+      [
+       "2015-06",
+       284343,
+       0.0101,
+       0.01,
+       2281,
+       70.0
+      ],
+      [
+       "2015-07",
+       351970,
+       0.0101,
+       0.01,
+       2234,
+       70.0
+      ],
+      [
+       "2015-08",
+       417470,
+       0.0101,
+       0.01,
+       2134,
+       70.0
+      ],
+      [
+       "2015-09",
+       474425,
+       0.0101,
+       0.01,
+       2080,
+       70.0
+      ],
+      [
+       "2015-10",
+       536834,
+       0.01011,
+       0.01001,
+       2034,
+       70.0
+      ],
+      [
+       "2015-11",
+       594187,
+       0.01011,
+       0.01001,
+       1984,
+       70.0
+      ],
+      [
+       "2015-12",
+       651372,
+       0.01011,
+       0.01001,
+       1900,
+       70.0
+      ],
+      [
+       "2016-01",
+       707539,
+       0.01011,
+       0.01001,
+       1830,
+       70.0
+      ],
+      [
+       "2016-02",
+       757483,
+       0.01011,
+       0.01001,
+       1762,
+       70.0
+      ],
+      [
+       "2016-03",
+       807799,
+       0.01012,
+       0.01001,
+       1717,
+       70.0
+      ],
+      [
+       "2016-04",
+       855701,
+       0.01012,
+       0.01002,
+       1682,
+       70.0
+      ],
+      [
+       "2016-05",
+       901027,
+       0.01012,
+       0.01002,
+       1621,
+       70.0
+      ],
+      [
+       "2016-06",
+       947533,
+       0.01013,
+       0.01003,
+       1578,
+       70.0
+      ],
+      [
+       "2016-07",
+       991278,
+       0.01013,
+       0.01003,
+       1514,
+       70.0
+      ],
+      [
+       "2016-08",
+       1037409,
+       0.01014,
+       0.01004,
+       1524,
+       70.0
+      ],
+      [
+       "2016-09",
+       1079503,
+       0.01015,
+       0.01005,
+       1443,
+       70.0
+      ],
+      [
+       "2016-10",
+       1121153,
+       0.01016,
+       0.01006,
+       1390,
+       70.0
+      ],
+      [
+       "2016-11",
+       1161146,
+       0.01017,
+       0.01007,
+       1361,
+       70.0
+      ],
+      [
+       "2016-12",
+       1201482,
+       0.01019,
+       0.01009,
+       1340,
+       70.0
+      ],
+      [
+       "2017-01",
+       1240476,
+       0.01021,
+       0.01011,
+       1278,
+       70.0
+      ],
+      [
+       "2017-02",
+       1275069,
+       0.01024,
+       0.01013,
+       1248,
+       70.0
+      ],
+      [
+       "2017-03",
+       1312877,
+       0.01026,
+       0.01016,
+       1248,
+       70.0
+      ],
+      [
+       "2017-04",
+       1347382,
+       0.0103,
+       0.0102,
+       1178,
+       70.0
+      ],
+      [
+       "2017-05",
+       1382625,
+       0.01035,
+       0.01024,
+       1171,
+       70.0
+      ],
+      [
+       "2017-06",
+       1414749,
+       0.0104,
+       0.0103,
+       1159,
+       70.0
+      ],
+      [
+       "2017-07",
+       1448052,
+       0.01047,
+       0.01036,
+       1108,
+       70.0
+      ],
+      [
+       "2017-08",
+       1480417,
+       0.01056,
+       0.01045,
+       1083,
+       70.0
+      ],
+      [
+       "2017-09",
+       1511545,
+       0.01066,
+       0.01055,
+       1053,
+       70.0
+      ],
+      [
+       "2017-10",
+       1543144,
+       0.01078,
+       0.01067,
+       1057,
+       70.0
+      ],
+      [
+       "2017-11",
+       1572478,
+       0.01094,
+       0.01082,
+       1014,
+       70.0
+      ],
+      [
+       "2017-12",
+       1599315,
+       0.01112,
+       0.011,
+       997.02,
+       70.0
+      ],
+      [
+       "2018-01",
+       1629349,
+       0.01136,
+       0.01123,
+       979.84,
+       70.0
+      ],
+      [
+       "2018-02",
+       1654963,
+       0.01163,
+       0.0115,
+       950.65,
+       70.0
+      ],
+      [
+       "2018-03",
+       1682075,
+       0.01197,
+       0.01183,
+       926.7,
+       70.0
+      ],
+      [
+       "2018-04",
+       1705803,
+       0.01237,
+       0.01221,
+       914.48,
+       70.0
+      ],
+      [
+       "2018-05",
+       1731895,
+       0.0129,
+       0.01273,
+       872.37,
+       70.0
+      ],
+      [
+       "2018-06",
+       1755940,
+       0.01355,
+       0.01337,
+       876.95,
+       70.0
+      ],
+      [
+       "2018-07",
+       1778985,
+       0.01428,
+       0.01408,
+       859.96,
+       70.0
+      ],
+      [
+       "2018-08",
+       1801660,
+       0.01522,
+       0.01499,
+       828.94,
+       70.0
+      ],
+      [
+       "2018-09",
+       1825587,
+       0.0164,
+       0.01614,
+       820.28,
+       70.0
+      ],
+      [
+       "2018-10",
+       1849523,
+       0.0178,
+       0.01749,
+       798.7,
+       70.0
+      ],
+      [
+       "2018-11",
+       1863670,
+       0.01948,
+       0.01911,
+       521.88,
+       40.0
+      ],
+      [
+       "2018-12",
+       1877108,
+       0.02163,
+       0.02117,
+       467.12,
+       40.0
+      ],
+      [
+       "2019-01",
+       1890550,
+       0.02418,
+       0.02361,
+       451.78,
+       40.0
+      ],
+      [
+       "2019-02",
+       1902822,
+       0.02717,
+       0.02645,
+       450.16,
+       40.0
+      ],
+      [
+       "2019-03",
+       1915967,
+       0.0308,
+       0.02988,
+       440.9,
+       40.0
+      ]
+     ]
+    },
+    "wor_fit": null,
+    "no_trend": "too few months with WOR >= 1 (water cut 0.5) to fit a trend: 0, need 12",
+    "by_year": {
+     "columns": [
+      "year",
+      "liquid_rate_sm3_per_day",
+      "choke_pct",
+      "water_cut",
+      "oil_sm3"
+     ],
+     "rows": [
+      [
+       2015,
+       2184,
+       70.0,
+       0.01,
+       651372
+      ],
+      [
+       2016,
+       1551,
+       70.0,
+       0.01003,
+       550110
+      ],
+      [
+       2017,
+       1134,
+       70.0,
+       0.01033,
+       397833
+      ],
+      [
+       2018,
+       866.17,
+       70.0,
+       0.01372,
+       277792
+      ],
+      [
+       2019,
+       450.16,
+       40.0,
+       0.02645,
+       38860
+      ]
+     ]
+    },
+    "field_voidage": {
+     "columns": [
+      "year",
+      "injected_sm3",
+      "oil_sm3",
+      "water_sm3",
+      "replacement_ratio",
+      "replacement_ratio_low",
+      "replacement_ratio_high",
+      "surface_ratio"
+     ],
+     "rows": [
+      [
+       2015,
+       1394160,
+       1742572,
+       13192,
+       0.5745,
+       0.5307,
+       0.6262,
+       0.794
+      ],
+      [
+       2016,
+       2406088,
+       2080747,
+       76071,
+       0.8134,
+       0.7526,
+       0.885,
+       1.12
+      ],
+      [
+       2017,
+       2422079,
+       1313979,
+       497033,
+       1.05,
+       0.9814,
+       1.12,
+       1.34
+      ],
+      [
+       2018,
+       2401359,
+       647930,
+       907957,
+       1.33,
+       1.28,
+       1.39,
+       1.54
+      ],
+      [
+       2019,
+       598887,
+       106237,
+       234306,
+       1.57,
+       1.52,
+       1.62,
+       1.76
+      ]
+     ]
+    },
+    "notes": "WOR = water/oil by month; the trend is log10(WOR) against cumulative oil, fitted on up to 36 recent months with WOR >= 1. field_voidage: replacement_ratio is injection over voidage at reservoir conditions (Bo 1.385 m3/Sm3 from PUD p.20, low/high with Bo 1.5/1.27; Bw 1; above the bubble point, so no free gas); surface_ratio is the same in surface volumes, which overstates replacement."
+   },
+   "code": "wellpilot.agent.tools.waterflood_tool@c2104a9650c2",
+   "created_at": "2026-10-27T17:26:18+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E5",
+   "tool": "production_monthly",
+   "arguments": {
+    "well": "P-2",
+    "start": "2018-01-01",
+    "end": "2019-03-31"
+   },
+   "result": {
+    "columns": [
+     "month",
+     "days",
+     "producing_days",
+     "oil_sm3",
+     "water_sm3",
+     "gas_sm3",
+     "water_injected_sm3",
+     "water_cut",
+     "uptime",
+     "oil_rate_per_producing_day",
+     "bhp_bar",
+     "whp_bar",
+     "choke_pct"
+    ],
+    "rows": [
+     [
+      "2018-01",
+      31,
+      31,
+      30034,
+      341.2,
+      4354897,
+      null,
+      0.01123,
+      1.0,
+      968.83,
+      209.04,
+      50.07,
+      70.0
+     ],
+     [
+      "2018-02",
+      28,
+      28,
+      25614,
+      298.01,
+      3714024,
+      null,
+      0.0115,
+      0.9735,
+      939.71,
+      208.48,
+      49.64,
+      70.0
+     ],
+     [
+      "2018-03",
+      31,
+      30,
+      27112,
+      324.54,
+      3931208,
+      0.0,
+      0.01183,
+      0.955,
+      915.74,
+      208.14,
+      49.58,
+      70.0
+     ],
+     [
+      "2018-04",
+      30,
+      27,
+      23729,
+      293.41,
+      3440659,
+      null,
+      0.01221,
+      0.8756,
+      903.31,
+      207.39,
+      50.53,
+      70.0
+     ],
+     [
+      "2018-05",
+      31,
+      31,
+      26091,
+      336.45,
+      3783239,
+      null,
+      0.01273,
+      0.9772,
+      861.26,
+      206.6,
+      49.53,
+      70.0
+     ],
+     [
+      "2018-06",
+      30,
+      28,
+      24045,
+      325.74,
+      3486553,
+      null,
+      0.01337,
+      0.9264,
+      865.23,
+      205.95,
+      49.94,
+      70.0
+     ],
+     [
+      "2018-07",
+      31,
+      28,
+      23045,
+      329.03,
+      3341583,
+      null,
+      0.01408,
+      0.8768,
+      847.86,
+      205.35,
+      49.82,
+      70.0
+     ],
+     [
+      "2018-08",
+      31,
+      28,
+      22675,
+      345.04,
+      3287881,
+      null,
+      0.01499,
+      0.8958,
+      816.52,
+      204.49,
+      49.97,
+      70.0
+     ],
+     [
+      "2018-09",
+      30,
+      30,
+      23927,
+      392.44,
+      3469406,
+      null,
+      0.01614,
+      0.9883,
+      807.04,
+      204.12,
+      49.3,
+      70.0
+     ],
+     [
+      "2018-10",
+      31,
+      31,
+      23935,
+      426.06,
+      3470636,
+      null,
+      0.01749,
+      0.9839,
+      784.73,
+      203.33,
+      49.23,
+      70.0
+     ],
+     [
+      "2018-11",
+      30,
+      28,
+      14147,
+      275.56,
+      2051387,
+      null,
+      0.01911,
+      0.9212,
+      511.91,
+      224.39,
+      51.46,
+      44.29
+     ],
+     [
+      "2018-12",
+      31,
+      30,
+      13437,
+      290.67,
+      1948425,
+      null,
+      0.02117,
+      0.948,
+      457.23,
+      227.35,
+      52.31,
+      40.0
+     ],
+     [
+      "2019-01",
+      31,
+      31,
+      13443,
+      325.08,
+      1949193,
+      null,
+      0.02361,
+      0.983,
+      441.11,
+      226.76,
+      52.06,
+      40.0
+     ],
+     [
+      "2019-02",
+      28,
+      28,
+      12271,
+      333.39,
+      1779323,
+      null,
+      0.02645,
+      1.0,
+      438.26,
+      225.95,
+      51.57,
+      40.0
+     ],
+     [
+      "2019-03",
+      31,
+      31,
+      13146,
+      404.85,
+      1906115,
+      null,
+      0.02988,
+      0.9914,
+      427.73,
+      225.46,
+      52.19,
+      40.0
+     ]
+    ]
+   },
+   "code": "wellpilot.agent.tools.production_monthly@c841520578bb",
+   "created_at": "2026-10-27T17:26:21+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E6",
+   "tool": "fit_decline",
+   "arguments": {
+    "well": "P-2",
+    "start": "2018-11-12",
+    "end": "2019-03-31"
+   },
+   "result": {
+    "best": {
+     "model": "harmonic",
+     "qi_sm3_per_producing_day": 467.61,
+     "di_per_year": 0.2812,
+     "b": 1.0,
+     "window_start": "2018-11-12",
+     "window_end": "2019-03-31",
+     "n_points": 139,
+     "r2_log": 0.2553,
+     "rmse_log": 0.05033,
+     "aic": -826.97,
+     "residual_trend": 0.0002013,
+     "uptime": 0.9802
+    },
+    "warnings": [
+     "poor fit: r2_log 0.255 < 0.7. The window may span a plateau or a regime change; refit after the last regime change, or treat any decline rate from this fit as an inference."
+    ],
+    "other_models": [
+     {
+      "model": "exponential",
+      "aic": -826.88,
+      "r2_log": 0.2548,
+      "b": 0.0
+     },
+     {
+      "model": "hyperbolic",
+      "aic": -824.97,
+      "r2_log": 0.2553,
+      "b": 1.0
+     }
+    ]
+   },
+   "code": "wellpilot.agent.tools.fit_decline_tool@24dd92b35623",
+   "created_at": "2026-10-27T17:26:21+00:00",
+   "warnings": [
+    "poor fit: r2_log 0.255 < 0.7. The window may span a plateau or a regime change; refit after the last regime change, or treat any decline rate from this fit as an inference."
+   ]
+  },
+  {
+   "id": "E7",
+   "tool": "run_sql",
+   "arguments": {
+    "sql": "SELECT date, well, issue, raw_value, action FROM production_issues WHERE well='P-2' ORDER BY date"
+   },
+   "result": {
+    "columns": [
+     "date",
+     "well",
+     "issue",
+     "raw_value",
+     "action"
+    ],
+    "rows": [
+     [
+      "2015-09-04",
+      "P-2",
+      "missing_day",
+      null,
+      "inserted"
+     ],
+     [
+      "2015-09-25",
+      "P-2",
+      "missing_day",
+      null,
+      "inserted"
+     ],
+     [
+      "2017-06-01",
+      "P-2",
+      "missing_day",
+      null,
+      "inserted"
+     ],
+     [
+      "2017-06-23",
+      "P-2",
+      "missing_day",
+      null,
+      "inserted"
+     ],
+     [
+      "2018-03-07",
+      "P-2",
+      "missing_day",
+      null,
+      "inserted"
+     ]
+    ],
+    "row_count": 5,
+    "truncated": false
+   },
+   "code": "wellpilot.agent.tools.run_sql@50068378f8ca",
+   "created_at": "2026-10-27T17:26:21+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E8",
+   "tool": "forecast_production",
+   "arguments": {
+    "well": "P-2",
+    "start": "2018-11-12",
+    "end": "2019-03-31",
+    "model": "auto",
+    "horizon_days": 365
+   },
+   "result": {
+    "fit": {
+     "model": "harmonic",
+     "qi_sm3_per_producing_day": 467.61,
+     "di_per_year": 0.2812,
+     "b": 1.0,
+     "window_start": "2018-11-12",
+     "window_end": "2019-03-31",
+     "n_points": 139,
+     "r2_log": 0.2553,
+     "rmse_log": 0.05033,
+     "aic": -826.97,
+     "residual_trend": 0.0002013,
+     "uptime": 0.9802
+    },
+    "warnings": [
+     "poor fit: r2_log 0.255 < 0.7. The window may span a plateau or a regime change; refit after the last regime change, or treat any decline rate from this fit as an inference."
+    ],
+    "forecast_from": "2019-04-01",
+    "forecast_to": "2020-03-30",
+    "horizon_days": 365,
+    "cumulative_oil_sm3": {
+     "p90": 132318,
+     "p50": 134639,
+     "p10": 137089
+    },
+    "calibrated_band_sm3": {
+     "p90": 118953,
+     "p10": 142528,
+     "past_forecasts": 11,
+     "median_abs_error": 0.03509
+    },
+    "calibrated_band_note": "P90-P10 from the errors of 11 forecasts made the same way from earlier dates on data up to then; use it for confidence, the bootstrap band above only reflects the fit's scatter. 11 of them were made before this fit window began, in another regime, so the band may be too narrow.",
+    "p50_by_model_sm3": {
+     "exponential": 132528,
+     "hyperbolic": 134639,
+     "harmonic": 134639
+    },
+    "p50_by_model_note": "The P50 each Arps model gives on this window: when they differ widely, the choice of model drives the forecast as much as the data does.",
+    "monthly_rate_sm3_per_producing_day": {
+     "columns": [
+      "month",
+      "p90",
+      "p50",
+      "p10"
+     ],
+     "rows": [
+      [
+       "2019-04",
+       414.61,
+       417.91,
+       421.04
+      ],
+      [
+       "2019-05",
+       405.29,
+       409.32,
+       413.33
+      ],
+      [
+       "2019-06",
+       396.31,
+       401.08,
+       405.93
+      ],
+      [
+       "2019-07",
+       387.75,
+       393.16,
+       398.68
+      ],
+      [
+       "2019-08",
+       379.47,
+       385.43,
+       391.64
+      ],
+      [
+       "2019-09",
+       371.6,
+       378.11,
+       384.95
+      ],
+      [
+       "2019-10",
+       364.08,
+       371.06,
+       378.49
+      ],
+      [
+       "2019-11",
+       356.83,
+       364.27,
+       372.24
+      ],
+      [
+       "2019-12",
+       349.84,
+       357.73,
+       366.19
+      ],
+      [
+       "2020-01",
+       343.06,
+       351.32,
+       360.24
+      ],
+      [
+       "2020-02",
+       336.75,
+       345.32,
+       354.67
+      ],
+      [
+       "2020-03",
+       330.76,
+       339.63,
+       349.35
+      ]
+     ]
+    },
+    "note": "P90 = low case, P10 = high case. Volumes = rate x historical uptime."
+   },
+   "code": "wellpilot.agent.tools.forecast_tool@8d1665b627ed",
+   "created_at": "2026-10-27T17:26:24+00:00",
+   "warnings": [
+    "poor fit: r2_log 0.255 < 0.7. The window may span a plateau or a regime change; refit after the last regime change, or treat any decline rate from this fit as an inference."
+   ]
+  },
+  {
+   "id": "E9",
+   "tool": "production_monthly",
+   "arguments": {
+    "well": "P-2",
+    "start": "2018-11-01",
+    "end": "2019-03-31"
+   },
+   "result": {
+    "columns": [
+     "month",
+     "days",
+     "producing_days",
+     "oil_sm3",
+     "water_sm3",
+     "gas_sm3",
+     "water_injected_sm3",
+     "water_cut",
+     "uptime",
+     "oil_rate_per_producing_day",
+     "bhp_bar",
+     "whp_bar",
+     "choke_pct"
+    ],
+    "rows": [
+     [
+      "2018-11",
+      30,
+      28,
+      14147,
+      275.56,
+      2051387,
+      null,
+      0.01911,
+      0.9212,
+      511.91,
+      224.39,
+      51.46,
+      44.29
+     ],
+     [
+      "2018-12",
+      31,
+      30,
+      13437,
+      290.67,
+      1948425,
+      null,
+      0.02117,
+      0.948,
+      457.23,
+      227.35,
+      52.31,
+      40.0
+     ],
+     [
+      "2019-01",
+      31,
+      31,
+      13443,
+      325.08,
+      1949193,
+      null,
+      0.02361,
+      0.983,
+      441.11,
+      226.76,
+      52.06,
+      40.0
+     ],
+     [
+      "2019-02",
+      28,
+      28,
+      12271,
+      333.39,
+      1779323,
+      null,
+      0.02645,
+      1.0,
+      438.26,
+      225.95,
+      51.57,
+      40.0
+     ],
+     [
+      "2019-03",
+      31,
+      31,
+      13146,
+      404.85,
+      1906115,
+      null,
+      0.02988,
+      0.9914,
+      427.73,
+      225.46,
+      52.19,
+      40.0
+     ]
+    ]
+   },
+   "code": "wellpilot.agent.tools.production_monthly@c841520578bb",
+   "created_at": "2026-10-27T17:26:24+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E10",
+   "tool": "run_sql",
+   "arguments": {
+    "sql": "SELECT date, well, oil_sm3, on_stream_hrs, choke_pct, bhp_bar, whp_bar FROM production_daily WHERE well='P-2' AND date BETWEEN '2018-10-01' AND '2019-03-31' ORDER BY date"
+   },
+   "result": {
+    "columns": [
+     "date",
+     "well",
+     "oil_sm3",
+     "on_stream_hrs",
+     "choke_pct",
+     "bhp_bar",
+     "whp_bar"
+    ],
+    "rows": [
+     [
+      "2018-10-01",
+      "P-2",
+      817.16,
+      24.0,
+      70.0,
+      202.98,
+      49.94
+     ],
+     [
+      "2018-10-02",
+      "P-2",
+      780.45,
+      24.0,
+      70.0,
+      203.74,
+      47.38
+     ],
+     [
+      "2018-10-03",
+      "P-2",
+      797.43,
+      24.0,
+      70.0,
+      202.83,
+      50.32
+     ],
+     [
+      "2018-10-04",
+      "P-2",
+      767.94,
+      24.0,
+      70.0,
+      204.11,
+      46.88
+     ],
+     [
+      "2018-10-05",
+      "P-2",
+      817.39,
+      24.0,
+      70.0,
+      204.36,
+      49.69
+     ],
+     [
+      "2018-10-06",
+      "P-2",
+      741.5,
+      24.0,
+      70.0,
+      203.76,
+      50.17
+     ],
+     [
+      "2018-10-07",
+      "P-2",
+      833.34,
+      24.0,
+      70.0,
+      204.8,
+      49.55
+     ],
+     [
+      "2018-10-08",
+      "P-2",
+      814.78,
+      24.0,
+      70.0,
+      204.39,
+      47.76
+     ],
+     [
+      "2018-10-09",
+      "P-2",
+      878.21,
+      24.0,
+      70.0,
+      204.0,
+      49.28
+     ],
+     [
+      "2018-10-10",
+      "P-2",
+      789.83,
+      24.0,
+      70.0,
+      204.76,
+      49.17
+     ],
+     [
+      "2018-10-11",
+      "P-2",
+      787.11,
+      24.0,
+      70.0,
+      202.36,
+      49.53
+     ],
+     [
+      "2018-10-12",
+      "P-2",
+      798.16,
+      24.0,
+      70.0,
+      203.53,
+      51.66
+     ],
+     [
+      "2018-10-13",
+      "P-2",
+      791.27,
+      24.0,
+      70.0,
+      201.8,
+      51.97
+     ],
+     [
+      "2018-10-14",
+      "P-2",
+      784.93,
+      24.0,
+      70.0,
+      203.51,
+      51.8
+     ],
+     [
+      "2018-10-15",
+      "P-2",
+      745.52,
+      24.0,
+      70.0,
+      203.04,
+      48.48
+     ],
+     [
+      "2018-10-16",
+      "P-2",
+      744.91,
+      24.0,
+      70.0,
+      204.3,
+      48.3
+     ],
+     [
+      "2018-10-17",
+      "P-2",
+      765.18,
+      24.0,
+      70.0,
+      203.03,
+      49.46
+     ],
+     [
+      "2018-10-18",
+      "P-2",
+      388.99,
+      12.04,
+      70.0,
+      202.82,
+      50.07
+     ],
+     [
+      "2018-10-19",
+      "P-2",
+      740.33,
+      24.0,
+      70.0,
+      203.33,
+      46.33
+     ],
+     [
+      "2018-10-20",
+      "P-2",
+      740.79,
+      24.0,
+      70.0,
+      203.28,
+      48.5
+     ],
+     [
+      "2018-10-21",
+      "P-2",
+      774.21,
+      24.0,
+      70.0,
+      203.9,
+      52.1
+     ],
+     [
+      "2018-10-22",
+      "P-2",
+      815.27,
+      24.0,
+      70.0,
+      202.5,
+      47.55
+     ],
+     [
+      "2018-10-23",
+      "P-2",
+      776.84,
+      24.0,
+      70.0,
+      201.87,
+      48.3
+     ],
+     [
+      "2018-10-24",
+      "P-2",
+      811.54,
+      24.0,
+      70.0,
+      201.76,
+      48.35
+     ],
+     [
+      "2018-10-25",
+      "P-2",
+      823.27,
+      24.0,
+      70.0,
+      204.45,
+      50.14
+     ],
+     [
+      "2018-10-26",
+      "P-2",
+      814.18,
+      24.0,
+      70.0,
+      202.04,
+      49.3
+     ],
+     [
+      "2018-10-27",
+      "P-2",
+      765.68,
+      24.0,
+      70.0,
+      202.81,
+      48.91
+     ],
+     [
+      "2018-10-28",
+      "P-2",
+      765.82,
+      24.0,
+      70.0,
+      202.16,
+      47.12
+     ],
+     [
+      "2018-10-29",
+      "P-2",
+      710.32,
+      24.0,
+      70.0,
+      204.1,
+      50.31
+     ],
+     [
+      "2018-10-30",
+      "P-2",
+      753.98,
+      24.0,
+      70.0,
+      202.65,
+      49.39
+     ],
+     [
+      "2018-10-31",
+      "P-2",
+      799.1,
+      24.0,
+      70.0,
+      204.4,
+      48.39
+     ],
+     [
+      "2018-11-01",
+      "P-2",
+      737.58,
+      24.0,
+      70.0,
+      202.47,
+      49.42
+     ],
+     [
+      "2018-11-02",
+      "P-2",
+      834.94,
+      24.0,
+      70.0,
+      203.44,
+      50.57
+     ],
+     [
+      "2018-11-03",
+      "P-2",
+      837.8,
+      24.0,
+      70.0,
+      203.88,
+      47.16
+     ],
+     [
+      "2018-11-04",
+      "P-2",
+      763.61,
+      24.0,
+      70.0,
+      204.07,
+      47.05
+     ],
+     [
+      "2018-11-05",
+      "P-2",
+      0.0,
+      0.0,
+      0.0,
+      226.91,
+      85.0
+     ],
+     [
+      "2018-11-06",
+      "P-2",
+      0.0,
+      0.0,
+      0.0,
+      227.71,
+      85.0
+     ],
+     [
+      "2018-11-07",
+      "P-2",
+      441.64,
+      24.0,
+      40.0,
+      227.97,
+      47.79
+     ],
+     [
+      "2018-11-08",
+      "P-2",
+      456.85,
+      24.0,
+      40.0,
+      226.22,
+      51.46
+     ],
+     [
+      "2018-11-09",
+      "P-2",
+      465.52,
+      24.0,
+      40.0,
+      228.71,
+      54.03
+     ],
+     [
+      "2018-11-10",
+      "P-2",
+      460.6,
+      24.0,
+      40.0,
+      228.38,
+      51.87
+     ],
+     [
+      "2018-11-11",
+      "P-2",
+      444.67,
+      24.0,
+      40.0,
+      228.48,
+      53.88
+     ],
+     [
+      "2018-11-12",
+      "P-2",
+      513.41,
+      24.0,
+      40.0,
+      226.57,
+      48.04
+     ],
+     [
+      "2018-11-13",
+      "P-2",
+      471.01,
+      24.0,
+      40.0,
+      228.11,
+      52.18
+     ],
+     [
+      "2018-11-14",
+      "P-2",
+      470.58,
+      24.0,
+      40.0,
+      228.34,
+      54.43
+     ],
+     [
+      "2018-11-15",
+      "P-2",
+      479.84,
+      24.0,
+      40.0,
+      228.91,
+      54.71
+     ],
+     [
+      "2018-11-16",
+      "P-2",
+      467.3,
+      24.0,
+      40.0,
+      227.36,
+      51.6
+     ],
+     [
+      "2018-11-17",
+      "P-2",
+      457.38,
+      24.0,
+      40.0,
+      228.52,
+      51.11
+     ],
+     [
+      "2018-11-18",
+      "P-2",
+      449.55,
+      24.0,
+      40.0,
+      229.78,
+      52.92
+     ],
+     [
+      "2018-11-19",
+      "P-2",
+      425.13,
+      24.0,
+      40.0,
+      227.38,
+      50.51
+     ],
+     [
+      "2018-11-20",
+      "P-2",
+      498.51,
+      24.0,
+      40.0,
+      227.39,
+      51.79
+     ],
+     [
+      "2018-11-21",
+      "P-2",
+      440.37,
+      24.0,
+      40.0,
+      227.45,
+      49.82
+     ],
+     [
+      "2018-11-22",
+      "P-2",
+      423.72,
+      24.0,
+      40.0,
+      226.28,
+      52.46
+     ],
+     [
+      "2018-11-23",
+      "P-2",
+      442.33,
+      24.0,
+      40.0,
+      227.37,
+      52.34
+     ],
+     [
+      "2018-11-24",
+      "P-2",
+      424.47,
+      24.0,
+      40.0,
+      229.32,
+      54.77
+     ],
+     [
+      "2018-11-25",
+      "P-2",
+      509.67,
+      24.0,
+      40.0,
+      226.78,
+      52.86
+     ],
+     [
+      "2018-11-26",
+      "P-2",
+      468.69,
+      24.0,
+      40.0,
+      227.48,
+      51.33
+     ],
+     [
+      "2018-11-27",
+      "P-2",
+      494.01,
+      24.0,
+      40.0,
+      228.84,
+      52.18
+     ],
+     [
+      "2018-11-28",
+      "P-2",
+      494.83,
+      24.0,
+      40.0,
+      228.19,
+      50.38
+     ],
+     [
+      "2018-11-29",
+      "P-2",
+      472.63,
+      24.0,
+      40.0,
+      227.84,
+      52.37
+     ],
+     [
+      "2018-11-30",
+      "P-2",
+      300.85,
+      15.28,
+      40.0,
+      227.26,
+      51.99
+     ],
+     [
+      "2018-12-01",
+      "P-2",
+      441.89,
+      24.0,
+      40.0,
+      227.46,
+      52.94
+     ],
+     [
+      "2018-12-02",
+      "P-2",
+      0.0,
+      0.0,
+      0.0,
+      227.57,
+      85.0
+     ],
+     [
+      "2018-12-03",
+      "P-2",
+      443.98,
+      24.0,
+      40.0,
+      228.22,
+      49.3
+     ],
+     [
+      "2018-12-04",
+      "P-2",
+      458.58,
+      24.0,
+      40.0,
+      227.59,
+      52.79
+     ],
+     [
+      "2018-12-05",
+      "P-2",
+      441.24,
+      24.0,
+      40.0,
+      228.43,
+      53.41
+     ],
+     [
+      "2018-12-06",
+      "P-2",
+      487.5,
+      24.0,
+      40.0,
+      225.63,
+      50.5
+     ],
+     [
+      "2018-12-07",
+      "P-2",
+      474.84,
+      24.0,
+      40.0,
+      228.27,
+      55.15
+     ],
+     [
+      "2018-12-08",
+      "P-2",
+      453.89,
+      24.0,
+      40.0,
+      226.91,
+      51.21
+     ],
+     [
+      "2018-12-09",
+      "P-2",
+      418.77,
+      24.0,
+      40.0,
+      227.43,
+      55.99
+     ],
+     [
+      "2018-12-10",
+      "P-2",
+      471.97,
+      24.0,
+      40.0,
+      226.98,
+      53.47
+     ],
+     [
+      "2018-12-11",
+      "P-2",
+      476.48,
+      24.0,
+      40.0,
+      228.01,
+      53.74
+     ],
+     [
+      "2018-12-12",
+      "P-2",
+      453.57,
+      24.0,
+      40.0,
+      227.24,
+      52.69
+     ],
+     [
+      "2018-12-13",
+      "P-2",
+      426.5,
+      24.0,
+      40.0,
+      227.96,
+      53.8
+     ],
+     [
+      "2018-12-14",
+      "P-2",
+      464.69,
+      24.0,
+      40.0,
+      226.52,
+      50.72
+     ],
+     [
+      "2018-12-15",
+      "P-2",
+      479.26,
+      24.0,
+      40.0,
+      227.49,
+      51.06
+     ],
+     [
+      "2018-12-16",
+      "P-2",
+      356.65,
+      20.79,
+      40.0,
+      228.49,
+      49.32
+     ],
+     [
+      "2018-12-17",
+      "P-2",
+      466.94,
+      24.0,
+      40.0,
+      228.36,
+      53.09
+     ],
+     [
+      "2018-12-18",
+      "P-2",
+      413.23,
+      24.0,
+      40.0,
+      226.89,
+      51.2
+     ],
+     [
+      "2018-12-19",
+      "P-2",
+      454.87,
+      24.0,
+      40.0,
+      227.36,
+      53.4
+     ],
+     [
+      "2018-12-20",
+      "P-2",
+      494.93,
+      24.0,
+      40.0,
+      226.84,
+      53.16
+     ],
+     [
+      "2018-12-21",
+      "P-2",
+      454.56,
+      24.0,
+      40.0,
+      227.06,
+      50.25
+     ],
+     [
+      "2018-12-22",
+      "P-2",
+      463.35,
+      24.0,
+      40.0,
+      227.18,
+      53.31
+     ],
+     [
+      "2018-12-23",
+      "P-2",
+      444.49,
+      24.0,
+      40.0,
+      228.34,
+      52.65
+     ],
+     [
+      "2018-12-24",
+      "P-2",
+      451.38,
+      24.0,
+      40.0,
+      227.7,
+      52.56
+     ],
+     [
+      "2018-12-25",
+      "P-2",
+      508.7,
+      24.0,
+      40.0,
+      228.54,
+      52.94
+     ],
+     [
+      "2018-12-26",
+      "P-2",
+      482.68,
+      24.0,
+      40.0,
+      228.6,
+      52.21
+     ],
+     [
+      "2018-12-27",
+      "P-2",
+      443.48,
+      24.0,
+      40.0,
+      225.81,
+      52.27
+     ],
+     [
+      "2018-12-28",
+      "P-2",
+      441.68,
+      24.0,
+      40.0,
+      227.35,
+      53.83
+     ],
+     [
+      "2018-12-29",
+      "P-2",
+      450.46,
+      24.0,
+      40.0,
+      226.58,
+      50.75
+     ],
+     [
+      "2018-12-30",
+      "P-2",
+      262.63,
+      12.53,
+      40.0,
+      225.41,
+      50.43
+     ],
+     [
+      "2018-12-31",
+      "P-2",
+      454.26,
+      24.0,
+      40.0,
+      225.92,
+      51.09
+     ],
+     [
+      "2019-01-01",
+      "P-2",
+      475.37,
+      24.0,
+      40.0,
+      226.47,
+      53.79
+     ],
+     [
+      "2019-01-02",
+      "P-2",
+      440.6,
+      24.0,
+      40.0,
+      228.59,
+      51.75
+     ],
+     [
+      "2019-01-03",
+      "P-2",
+      420.38,
+      24.0,
+      40.0,
+      227.01,
+      55.11
+     ],
+     [
+      "2019-01-04",
+      "P-2",
+      479.56,
+      24.0,
+      40.0,
+      226.72,
+      47.59
+     ],
+     [
+      "2019-01-05",
+      "P-2",
+      446.23,
+      24.0,
+      40.0,
+      226.85,
+      51.15
+     ],
+     [
+      "2019-01-06",
+      "P-2",
+      430.13,
+      24.0,
+      40.0,
+      226.12,
+      51.55
+     ],
+     [
+      "2019-01-07",
+      "P-2",
+      431.86,
+      24.0,
+      40.0,
+      227.01,
+      52.63
+     ],
+     [
+      "2019-01-08",
+      "P-2",
+      376.47,
+      20.91,
+      40.0,
+      226.73,
+      54.23
+     ],
+     [
+      "2019-01-09",
+      "P-2",
+      327.5,
+      18.14,
+      40.0,
+      225.2,
+      51.94
+     ],
+     [
+      "2019-01-10",
+      "P-2",
+      412.79,
+      24.0,
+      40.0,
+      226.26,
+      50.68
+     ],
+     [
+      "2019-01-11",
+      "P-2",
+      474.36,
+      24.0,
+      40.0,
+      230.07,
+      53.47
+     ],
+     [
+      "2019-01-12",
+      "P-2",
+      454.67,
+      24.0,
+      40.0,
+      227.37,
+      54.54
+     ],
+     [
+      "2019-01-13",
+      "P-2",
+      468.3,
+      24.0,
+      40.0,
+      226.63,
+      48.36
+     ],
+     [
+      "2019-01-14",
+      "P-2",
+      437.58,
+      24.0,
+      40.0,
+      227.36,
+      53.08
+     ],
+     [
+      "2019-01-15",
+      "P-2",
+      452.96,
+      24.0,
+      40.0,
+      225.73,
+      52.65
+     ],
+     [
+      "2019-01-16",
+      "P-2",
+      448.53,
+      24.0,
+      40.0,
+      226.75,
+      50.95
+     ],
+     [
+      "2019-01-17",
+      "P-2",
+      471.83,
+      24.0,
+      40.0,
+      227.51,
+      51.48
+     ],
+     [
+      "2019-01-18",
+      "P-2",
+      462.96,
+      24.0,
+      40.0,
+      225.05,
+      52.63
+     ],
+     [
+      "2019-01-19",
+      "P-2",
+      452.03,
+      24.0,
+      40.0,
+      225.88,
+      52.23
+     ],
+     [
+      "2019-01-20",
+      "P-2",
+      429.14,
+      24.0,
+      40.0,
+      226.19,
+      51.82
+     ],
+     [
+      "2019-01-21",
+      "P-2",
+      416.98,
+      24.0,
+      40.0,
+      226.29,
+      50.43
+     ],
+     [
+      "2019-01-22",
+      "P-2",
+      425.31,
+      24.0,
+      40.0,
+      226.04,
+      52.61
+     ],
+     [
+      "2019-01-23",
+      "P-2",
+      428.64,
+      24.0,
+      40.0,
+      226.79,
+      51.18
+     ],
+     [
+      "2019-01-24",
+      "P-2",
+      430.43,
+      24.0,
+      40.0,
+      227.51,
+      52.31
+     ],
+     [
+      "2019-01-25",
+      "P-2",
+      415.15,
+      24.0,
+      40.0,
+      226.82,
+      51.29
+     ],
+     [
+      "2019-01-26",
+      "P-2",
+      480.77,
+      24.0,
+      40.0,
+      227.47,
+      52.47
+     ],
+     [
+      "2019-01-27",
+      "P-2",
+      447.63,
+      24.0,
+      40.0,
+      227.47,
+      53.3
+     ],
+     [
+      "2019-01-28",
+      "P-2",
+      398.22,
+      24.0,
+      40.0,
+      225.84,
+      52.52
+     ],
+     [
+      "2019-01-29",
+      "P-2",
+      417.12,
+      24.0,
+      40.0,
+      226.67,
+      53.16
+     ],
+     [
+      "2019-01-30",
+      "P-2",
+      411.62,
+      24.0,
+      40.0,
+      226.02,
+      50.08
+     ],
+     [
+      "2019-01-31",
+      "P-2",
+      377.56,
+      20.33,
+      40.0,
+      227.01,
+      52.86
+     ],
+     [
+      "2019-02-01",
+      "P-2",
+      464.61,
+      24.0,
+      40.0,
+      226.0,
+      52.6
+     ],
+     [
+      "2019-02-02",
+      "P-2",
+      418.29,
+      24.0,
+      40.0,
+      226.15,
+      51.21
+     ],
+     [
+      "2019-02-03",
+      "P-2",
+      453.56,
+      24.0,
+      40.0,
+      227.97,
+      51.91
+     ],
+     [
+      "2019-02-04",
+      "P-2",
+      433.1,
+      24.0,
+      40.0,
+      226.11,
+      47.94
+     ],
+     [
+      "2019-02-05",
+      "P-2",
+      465.34,
+      24.0,
+      40.0,
+      224.74,
+      52.27
+     ],
+     [
+      "2019-02-06",
+      "P-2",
+      470.18,
+      24.0,
+      40.0,
+      226.37,
+      51.53
+     ],
+     [
+      "2019-02-07",
+      "P-2",
+      445.35,
+      24.0,
+      40.0,
+      226.52,
+      48.74
+     ],
+     [
+      "2019-02-08",
+      "P-2",
+      454.36,
+      24.0,
+      40.0,
+      225.71,
+      52.9
+     ],
+     [
+      "2019-02-09",
+      "P-2",
+      437.72,
+      24.0,
+      40.0,
+      226.26,
+      51.18
+     ],
+     [
+      "2019-02-10",
+      "P-2",
+      429.28,
+      24.0,
+      40.0,
+      227.17,
+      52.55
+     ],
+     [
+      "2019-02-11",
+      "P-2",
+      412.14,
+      24.0,
+      40.0,
+      225.64,
+      51.77
+     ],
+     [
+      "2019-02-12",
+      "P-2",
+      444.25,
+      24.0,
+      40.0,
+      225.95,
+      52.86
+     ],
+     [
+      "2019-02-13",
+      "P-2",
+      435.1,
+      24.0,
+      40.0,
+      225.42,
+      52.26
+     ],
+     [
+      "2019-02-14",
+      "P-2",
+      427.94,
+      24.0,
+      40.0,
+      226.41,
+      51.69
+     ],
+     [
+      "2019-02-15",
+      "P-2",
+      434.4,
+      24.0,
+      40.0,
+      225.95,
+      52.86
+     ],
+     [
+      "2019-02-16",
+      "P-2",
+      431.72,
+      24.0,
+      40.0,
+      225.15,
+      53.37
+     ],
+     [
+      "2019-02-17",
+      "P-2",
+      413.16,
+      24.0,
+      40.0,
+      225.88,
+      48.71
+     ],
+     [
+      "2019-02-18",
+      "P-2",
+      423.72,
+      24.0,
+      40.0,
+      227.8,
+      52.15
+     ],
+     [
+      "2019-02-19",
+      "P-2",
+      460.9,
+      24.0,
+      40.0,
+      224.32,
+      51.22
+     ],
+     [
+      "2019-02-20",
+      "P-2",
+      429.56,
+      24.0,
+      40.0,
+      224.62,
+      50.45
+     ],
+     [
+      "2019-02-21",
+      "P-2",
+      466.26,
+      24.0,
+      40.0,
+      226.28,
+      54.07
+     ],
+     [
+      "2019-02-22",
+      "P-2",
+      409.43,
+      24.0,
+      40.0,
+      224.58,
+      53.55
+     ],
+     [
+      "2019-02-23",
+      "P-2",
+      405.02,
+      24.0,
+      40.0,
+      227.82,
+      50.55
+     ],
+     [
+      "2019-02-24",
+      "P-2",
+      436.35,
+      24.0,
+      40.0,
+      224.43,
+      50.42
+     ],
+     [
+      "2019-02-25",
+      "P-2",
+      450.64,
+      24.0,
+      40.0,
+      224.6,
+      53.32
+     ],
+     [
+      "2019-02-26",
+      "P-2",
+      418.81,
+      24.0,
+      40.0,
+      225.35,
+      51.15
+     ],
+     [
+      "2019-02-27",
+      "P-2",
+      446.63,
+      24.0,
+      40.0,
+      226.89,
+      51.6
+     ],
+     [
+      "2019-02-28",
+      "P-2",
+      453.36,
+      24.0,
+      40.0,
+      226.6,
+      49.13
+     ],
+     [
+      "2019-03-01",
+      "P-2",
+      456.29,
+      24.0,
+      40.0,
+      226.35,
+      51.88
+     ],
+     [
+      "2019-03-02",
+      "P-2",
+      429.43,
+      24.0,
+      40.0,
+      226.06,
+      53.79
+     ],
+     [
+      "2019-03-03",
+      "P-2",
+      315.86,
+      17.61,
+      40.0,
+      227.02,
+      51.39
+     ],
+     [
+      "2019-03-04",
+      "P-2",
+      396.68,
+      24.0,
+      40.0,
+      223.96,
+      51.9
+     ],
+     [
+      "2019-03-05",
+      "P-2",
+      431.52,
+      24.0,
+      40.0,
+      225.98,
+      54.7
+     ],
+     [
+      "2019-03-06",
+      "P-2",
+      436.9,
+      24.0,
+      40.0,
+      227.09,
+      53.39
+     ],
+     [
+      "2019-03-07",
+      "P-2",
+      462.4,
+      24.0,
+      40.0,
+      224.63,
+      54.21
+     ],
+     [
+      "2019-03-08",
+      "P-2",
+      403.35,
+      24.0,
+      40.0,
+      225.97,
+      53.01
+     ],
+     [
+      "2019-03-09",
+      "P-2",
+      411.86,
+      24.0,
+      40.0,
+      226.83,
+      53.87
+     ],
+     [
+      "2019-03-10",
+      "P-2",
+      408.38,
+      24.0,
+      40.0,
+      226.84,
+      49.56
+     ],
+     [
+      "2019-03-11",
+      "P-2",
+      449.33,
+      24.0,
+      40.0,
+      225.46,
+      50.83
+     ],
+     [
+      "2019-03-12",
+      "P-2",
+      377.49,
+      24.0,
+      40.0,
+      227.39,
+      49.57
+     ],
+     [
+      "2019-03-13",
+      "P-2",
+      405.92,
+      24.0,
+      40.0,
+      226.05,
+      55.39
+     ],
+     [
+      "2019-03-14",
+      "P-2",
+      475.65,
+      24.0,
+      40.0,
+      226.58,
+      52.33
+     ],
+     [
+      "2019-03-15",
+      "P-2",
+      442.71,
+      24.0,
+      40.0,
+      224.47,
+      51.86
+     ],
+     [
+      "2019-03-16",
+      "P-2",
+      400.12,
+      24.0,
+      40.0,
+      224.76,
+      50.91
+     ],
+     [
+      "2019-03-17",
+      "P-2",
+      426.39,
+      24.0,
+      40.0,
+      224.73,
+      50.52
+     ],
+     [
+      "2019-03-18",
+      "P-2",
+      446.11,
+      24.0,
+      40.0,
+      227.18,
+      47.83
+     ],
+     [
+      "2019-03-19",
+      "P-2",
+      439.2,
+      24.0,
+      40.0,
+      223.16,
+      55.41
+     ],
+     [
+      "2019-03-20",
+      "P-2",
+      422.1,
+      24.0,
+      40.0,
+      223.62,
+      51.91
+     ],
+     [
+      "2019-03-21",
+      "P-2",
+      409.82,
+      24.0,
+      40.0,
+      226.17,
+      52.13
+     ],
+     [
+      "2019-03-22",
+      "P-2",
+      444.64,
+      24.0,
+      40.0,
+      225.52,
+      49.92
+     ],
+     [
+      "2019-03-23",
+      "P-2",
+      425.9,
+      24.0,
+      40.0,
+      222.47,
+      51.94
+     ],
+     [
+      "2019-03-24",
+      "P-2",
+      443.56,
+      24.0,
+      40.0,
+      224.95,
+      52.59
+     ],
+     [
+      "2019-03-25",
+      "P-2",
+      434.12,
+      24.0,
+      40.0,
+      225.02,
+      51.9
+     ],
+     [
+      "2019-03-26",
+      "P-2",
+      415.3,
+      24.0,
+      40.0,
+      226.47,
+      52.95
+     ],
+     [
+      "2019-03-27",
+      "P-2",
+      457.07,
+      24.0,
+      40.0,
+      223.41,
+      50.76
+     ],
+     [
+      "2019-03-28",
+      "P-2",
+      414.09,
+      24.0,
+      40.0,
+      224.74,
+      52.5
+     ],
+     [
+      "2019-03-29",
+      "P-2",
+      433.74,
+      24.0,
+      40.0,
+      226.27,
+      53.36
+     ],
+     [
+      "2019-03-30",
+      "P-2",
+      410.77,
+      24.0,
+      40.0,
+      225.96,
+      52.85
+     ],
+     [
+      "2019-03-31",
+      "P-2",
+      418.94,
+      24.0,
+      40.0,
+      224.3,
+      52.58
+     ]
+    ],
+    "row_count": 182,
+    "truncated": false
+   },
+   "code": "wellpilot.agent.tools.run_sql@50068378f8ca",
+   "created_at": "2026-10-27T17:26:24+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E11",
+   "tool": "calculate",
+   "arguments": {
+    "expressions": [
+     "134639 - 118953",
+     "142528 - 134639"
+    ]
+   },
+   "result": {
+    "results": [
+     {
+      "expression": "134639 - 118953",
+      "value": 15686
+     },
+     {
+      "expression": "142528 - 134639",
+      "value": 7889
+     }
+    ]
+   },
+   "code": "wellpilot.agent.tools.calculate@5c1d806d8f4d",
+   "created_at": "2026-10-27T17:26:28+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E12",
+   "tool": "calculate",
+   "arguments": {
+    "expressions": [
+     "786.42 - 463.29",
+     "1426 - 445.33",
+     "70 - 40"
+    ]
+   },
+   "result": {
+    "results": [
+     {
+      "expression": "786.42 - 463.29",
+      "value": 323.13
+     },
+     {
+      "expression": "1426 - 445.33",
+      "value": 980.67
+     },
+     {
+      "expression": "70 - 40",
+      "value": 30.0
+     }
+    ]
+   },
+   "code": "wellpilot.agent.tools.calculate@5c1d806d8f4d",
+   "created_at": "2026-10-27T17:26:35+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E13",
+   "tool": "calculate",
+   "arguments": {
+    "expressions": [
+     "134639/12",
+     "118953/12"
+    ]
+   },
+   "result": {
+    "results": [
+     {
+      "expression": "134639/12",
+      "value": 11220
+     },
+     {
+      "expression": "118953/12",
+      "value": 9913
+     }
+    ]
+   },
+   "code": "wellpilot.agent.tools.calculate@5c1d806d8f4d",
+   "created_at": "2026-10-27T17:26:38+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E14",
+   "tool": "calculate",
+   "arguments": {
+    "expressions": [
+     "134639 - 132528"
+    ]
+   },
+   "result": {
+    "results": [
+     {
+      "expression": "134639 - 132528",
+      "value": 2111
+     }
+    ]
+   },
+   "code": "wellpilot.agent.tools.calculate@5c1d806d8f4d",
+   "created_at": "2026-10-27T17:26:43+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E15",
+   "tool": "calculate",
+   "arguments": {
+    "expressions": [
+     "417.91 - 339.63",
+     "142528 - 118953"
+    ]
+   },
+   "result": {
+    "results": [
+     {
+      "expression": "417.91 - 339.63",
+      "value": 78.28
+     },
+     {
+      "expression": "142528 - 118953",
+      "value": 23575
+     }
+    ]
+   },
+   "code": "wellpilot.agent.tools.calculate@5c1d806d8f4d",
+   "created_at": "2026-10-27T17:26:51+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E16",
+   "tool": "calculate",
+   "arguments": {
+    "expressions": [
+     "0.4109*100",
+     "0.6877*100"
+    ]
+   },
+   "result": {
+    "results": [
+     {
+      "expression": "0.4109*100",
+      "value": 41.09
+     },
+     {
+      "expression": "0.6877*100",
+      "value": 68.77
+     }
+    ]
+   },
+   "code": "wellpilot.agent.tools.calculate@5c1d806d8f4d",
+   "created_at": "2026-10-27T17:26:59+00:00",
+   "warnings": []
+  }
+ ]
 }

@@ -6,10 +6,12 @@
   "question": "Forecast P-2 oil production for the next 12 months and say how confident the forecast is."
  },
  "to_review": false,
- "note": "",
+ "note": "Oct 28 night (seventh panel): verdict changed on purpose by the new rules (a conclusion drawn with ', so' in a fact).",
  "expected": {
-  "accepted": true,
-  "flagged": []
+  "accepted": false,
+  "flagged": [
+   "Finding 4"
+  ]
  },
  "submission": {
   "summary": "The fit suggests P-2 will likely produce about 135,000 Sm3 oil in the next 12 months from 2019-04-01, with low confidence consistent with a poor decline fit after a recent choke cut. The central forecast is about 135,000 Sm3 and the calibrated uncertainty band from past forecasts is about 119,000 to 143,000 Sm3, wider than the fit's own scatter, and the band is likely too narrow because earlier tests were in a different operating regime.",

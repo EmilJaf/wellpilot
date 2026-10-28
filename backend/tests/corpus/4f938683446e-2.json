@@ -6,10 +6,12 @@
   "question": "F-12's water cut is near 0.97 and its oil rate has fallen below 200 Sm3/d. Where along the well does its water come in, and at what depth would a plug shut off most of the water while keeping the oil? Use its production logs and the work done on it before."
  },
  "to_review": false,
- "note": "",
+ "note": "Oct 28 night (seventh panel): rejected on purpose. The summary's 'about 1% of the oil' for the 3,165 m plug is declared from E10, a calculation of 0.011, the oil share below 3,210 m (the 3,165 m row says 0.079): calculations now keep the rows they were computed from, and a log share is tied to the depth its clause names.",
  "expected": {
-  "accepted": true,
-  "flagged": []
+  "accepted": false,
+  "flagged": [
+   "Summary"
+  ]
  },
  "submission": {
   "summary": "F-12 now makes almost all water, about 175 Sm3/d of oil at a water cut of 97%. Its 2010 log shows oil enters from the upper perforations and water from just below around 3,165 m MD. A plug set just below the oil interval at about 3,165 m MD would have shut off about 93% to 100% of the water while losing only about 1% of the oil; the 2010 plug at 3,210 m MD was deeper and removed only about 33% of the water.",

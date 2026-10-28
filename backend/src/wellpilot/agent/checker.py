@@ -67,7 +67,7 @@ SLASHED_DATE = re.compile(rf"\b(\d{{1,2}})/(\d{{1,2}})/{_YEAR}\b")
 # A stretch of a year: "Q2 2010", "early 2010", "spring 2009" (as months, inclusive).
 PERIOD = re.compile(
     rf"\b(?:(?P<q>Q[1-4])|(?P<part>early|mid|late|end of|start of)|"
-    rf"(?P<season>spring|summer|autumn|fall|winter))[\s-]+(?:of\s+)?{_YEAR}\b",
+    rf"(?P<season>spring|summer|autumn|fall|winter))[\s-]+(?:of\s+)?{_YEAR}\b(?![-/]\d)",
     re.IGNORECASE,
 )
 PERIOD_MONTHS = {
@@ -82,7 +82,7 @@ SPACED_THOUSANDS = re.compile(r"\b\d{1,3}(?:[ \u00a0\u202f]\d{3})+\b")
 # Suffixes that scale a number: "4.58 MSm3", "276 kSm3", "1.2 mill Sm3", "75.6 percent".
 NUMBER = re.compile(
     r"(?<![\w.])(\d+(?:\.\d+)?(?:[eE][-+]?\d+)?)"
-    r"(?:\s*(%|percent\b|pct\b|x\b|×|million\b|mill\b\.?|thousand\b|M(?=Sm)|k(?=Sm)|k\b))?"
+    r"(?:\s*(%|percent\b|pct\b|x\b|×|million\b|mill\b\.?|thousand\b|M(?=Sm)|k(?=Sm)|km\b|k\b))?"
     r"(?!\d|\.\d)"
 )
 # A number as the text writes it, so a rejection can name it that way: "0,80", "4 050",
@@ -92,7 +92,7 @@ WRITTEN_NUMBER = re.compile(
     r"(?:\s*(?:%|percent\b|pct\b|x\b|×|million\b|mill\b\.?|thousand\b|M(?=Sm)|k(?=Sm)|k\b))?"
 )
 SUFFIX_AFTER = re.compile(
-    r"\s*(?:%|percent\b|pct\b|million\b|mill\b\.?|thousand\b|M(?=Sm)|k(?=Sm))"
+    r"\s*(?:%|percent\b|pct\b|million\b|mill\b\.?|thousand\b|M(?=Sm)|k(?=Sm)|km\b)"
 )
 SQL_STRING = re.compile(r"'((?:[^']|'')*)'")
 SCALES = {
@@ -105,6 +105,7 @@ SCALES = {
     "M": (1e6,),
     "thousand": (1e3,),
     "k": (1e3,),
+    "km": (1e3,),
 }
 SMALL_INTEGER = 10  # "3 wells", "2 years": too generic to demand evidence for
 # Years and months of the indexed reports: the system prompt names "the February 2005
@@ -186,6 +187,15 @@ CAUSAL = re.compile(
     r"let (?:the )?[\w-]+ (?:recharge|recover|rebuild|repressur\w*)|gave rise to|"
     r"came from (?:the )?(?:shut[\s-]?in|workover|plug|job|choke|injection|stimulation)|"
     r"(?<!water )(?<!water-)cut (?:F-\d+|its|their|the well|oil))\b",
+    re.IGNORECASE,
+)
+# A conclusion drawn in a fact ("..., so water displaced oil", "which shows the water came
+# from the reservoir"): a finding that draws one is an inference. Judged in claims only.
+CONSEQUENCE = re.compile(
+    r",\s*(?:and\s+)?(?:so|thus|hence|therefore)\b(?!\s+(?:far|called|much|many|long)\b)|"
+    r"\b(?:which|this|that)\s+(?:shows|means|proves|implies)\b|\bis behind\b|\bdid it\b|"
+    r"\bproduced (?:the|this|that|most|all|part of the)\s+(?:\w+\s+){0,2}?"
+    r"(?:drop|fall|rise|decline|increase|change|jump|gain|loss)\b",
     re.IGNORECASE,
 )
 # A quoted passage: opened after a space or "(", closed before a space or punctuation, so
@@ -936,6 +946,9 @@ class _Leaf:
     unit: str | None = None  # the suffix a text wrote after it ("%" in "-22%")
     dim: str | None = None  # what it is measured in: rate (Sm3/d), volume (Sm3), days, ...
     sign: int | None = None  # +1 a rise, -1 a fall, where the result says which
+    # A calculation's result: the (evidence id, record) of the values it was computed from,
+    # so a share calculated from the 3,210 m row is still that row's.
+    origin: tuple[tuple[str, int], ...] = ()
 
 
 # The unit a text writes right after a number: what the number is measured in. Digits that
@@ -1207,7 +1220,9 @@ def _leaves(item: Evidence) -> list[_Leaf]:
                         for k in RECORD_DATE_KEYS
                         if isinstance(child.get(k), str) and DATE.match(str(child[k]))
                     )
-                    walk(child, keys, kinds, well, next(records), child_days)
+                    # A record inside a dated one (a log's shares inside its survey) is of
+                    # that date.
+                    walk(child, keys, kinds, well, next(records), child_days or days)
                 else:
                     walk(child, keys, kinds, well, record, days)
         else:
@@ -1243,9 +1258,15 @@ QUANTITIES = {
     ),
     "liquid": (r"\bliquids?\b", r"liquid"),
     "injection": (r"\binject(?:ion|ed|ing|ors?)\b", r"inj"),
-    "P10": (r"\bP10\b", r"(?:^|[|_])p10(?:[|_]|$)"),
+    "P10": (
+        r"\bP10\b|high (?:case|end|estimate)|upper (?:bound|end)",
+        r"(?:^|[|_])p10(?:[|_]|$)",
+    ),
     "P50": (r"\bP50\b|central estimate", r"(?:^|[|_])p50(?:[|_]|$)"),
-    "P90": (r"\bP90\b", r"(?:^|[|_])p90(?:[|_]|$)"),
+    "P90": (
+        r"\bP90\b|low (?:case|end|estimate)|lower (?:bound|end)",
+        r"(?:^|[|_])p90(?:[|_]|$)",
+    ),
     "calibrated range": (r"\bcalibrated\b", r"calibrated"),
     "change across": (r"\bacross\b", r"across"),
     "Pearson": (r"\bPearson\b", r"pearson"),
@@ -1878,6 +1899,40 @@ def _periods(
     return list(dict.fromkeys(wrong))
 
 
+# The date first, the dead gauge after it: "From 2010-10-11 BHP reads zero".
+GAUGE_AFTER_DATE = re.compile(
+    r"\b(?P<prep>from|since|on)\s+(?P<day>\d{4}-\d{2}(?:-\d{2})?),?\s+(?:the\s+)?"
+    r"(?:downhole\s+)?(?:BHP|pressure|gauge)\b[^.;]{0,25}?\b(?:reads?|read|was|is|went|"
+    r"dropped|fell)\s+(?:to\s+)?(?:zero|0)\b",
+    re.IGNORECASE,
+)
+
+
+def _gauge_dated_first(text: str, cited: list[Evidence], leaves_of) -> list[str]:
+    starts = sorted(
+        {
+            min(lf.record_days)
+            for item in cited
+            for lf in leaves_of(item)
+            if lf.record_days
+            and re.search(r"gauge|bhp", lf.labels)
+            and "gauge_failure" in lf.labels
+        }
+    )
+    wrong = []
+    for m in GAUGE_AFTER_DATE.finditer(text):
+        if (
+            starts
+            and m["prep"].lower() in ("from", "since")
+            and not any(s[: len(m["day"])] == m["day"] for s in starts)
+        ):
+            wrong.append(
+                f"{m['day']} is given as the start of the gauge failure, but the gauge failure "
+                f"in its evidence starts on {', '.join(starts)}"
+            )
+    return wrong
+
+
 FROM_TO = re.compile(r"\s*(?:[^\W\d]+(?:/[^\W\d]+)?\s*)?(?:to|->|→)\s*")
 
 
@@ -2016,7 +2071,8 @@ def _time_order(label, blanked, declared, unused, items) -> list[str]:
 
 
 COMPARE = re.compile(
-    r"\b(?P<word>above|higher than|greater than|below|lower than|less than|short of)\b",
+    r"\b(?P<word>above|higher than|greater than|more than|over|exceed\w*|in excess of|beyond|"
+    r"below|lower than|less than|under|short of)\b",
     re.IGNORECASE,
 )
 
@@ -2088,6 +2144,17 @@ def _inconsistent(label, blanked, declared, unused) -> list[str]:
         between = blanked[a_end:b_start]
         m = COMPARE.search(between)
         if not m or re.search(r"[;.]\s", between) or len(between) > 60:
+            continue
+        # The newer words compare only right after the number, with nothing in between that
+        # starts another subject ("10,800 under the 13,000 limit, but injection exceeded its
+        # 16,000"), and "over" is no time span ("down 7.8% over the last 90 days").
+        if re.fullmatch(
+            r"under|over|exceed\w*|more than|in excess of|beyond", m["word"], re.I
+        ) and (
+            m.start() > 20
+            or re.search(r"\b(?:but|while|whereas|and|with)\b", between[: m.start()])
+            or re.match(r"over\s+(?:the\s+)?(?:last|past|next|\d)", between[m.start() :], re.I)
+        ):
             continue
         above = not re.match(r"below|under|lower|less|short", m["word"], re.I)
         x, y = abs(a.value), abs(b.value)
@@ -2881,9 +2948,12 @@ def _within_limits(label: str, text: str, items: list[Evidence]) -> list[str]:
         )
         subject = sentence[stop + 1 if stop >= 0 else 0 : m.start()]
         whole_field = re.search(r"\b(?:field|platform|facilit\w*)\b", subject, re.I)
-        if (WELL.search(subject) or (WELL.search(sentence) and not whole_field)) or re.search(
-            r"\b(?:until|before|through|up to)\b", sentence
-        ):
+        bounded = re.search(
+            r"\b(?:until|before|up to|through)\s+(?:the\s+)?(?:end\s+of\s+|early\s+|mid-?\s*|"
+            r"late\s+)?(?:\d{4}|[A-Z][a-z]+\s+\d{4}|\d{4}-\d{2})",
+            sentence,
+        )
+        if (WELL.search(subject) or (WELL.search(sentence) and not whole_field)) or bounded:
             continue
         # The limits the claim is about: named after it in its clause ("without exceeding
         # liquid capacity"), else before it ("water handling stayed below capacity").
@@ -2913,7 +2983,7 @@ def _within_limits(label: str, text: str, items: list[Evidence]) -> list[str]:
             or re.search(r"\b(?:any|all)\s+(?:\w+\s+){0,2}limits?\b", m.group(0), re.I)
         )
         # "within its oil and liquid design limits" names the ones it means.
-        lead = re.match(r"[\w\s']{0,40}?\blimits?\b", sentence[m.end() :])
+        lead = re.match(r"[\w\s',]{0,70}?\b(?:limits?|capacit\w*)\b", sentence[m.end() :])
         listed = [
             k
             for k, pattern in LIMIT_NAMES.items()
@@ -3111,8 +3181,20 @@ def _model_names(label: str, text: str, items: list[Evidence]) -> list[str]:
     problems = []
     for m in MODEL_CLAIM.finditer(text):
         model = m["model"].lower()
-        if model not in chosen and not re.search(
-            r"\bsaid\b|by model|would", text[m.end() : m.end() + 40]
+        by_model = [
+            float(v)
+            for e in items
+            for k, v in (_get(e.result, "p50_by_model_sm3") or {}).items()
+            if str(k).lower() == model and isinstance(v, int | float)
+        ]
+        nearby = [n for n, _, _ in _numbers_in_text(text[m.end() : m.end() + 60])]
+        own_value = any(
+            abs(n * sc - v) <= 0.01 * v for v in by_model for n in nearby for sc in (1, 1e3)
+        )
+        if (
+            model not in chosen
+            and not own_value
+            and not re.search(r"\bsaid\b|by model|would", text[m.end() : m.end() + 40])
         ):
             problems.append(
                 f"{label} names {m['model']} the fit, but the cited fit is {next(iter(chosen))}."
@@ -3134,10 +3216,13 @@ def _year_records(label, blanked, declared, unused, items, leaves_of) -> list[st
     for d in declared:
         if d in unused:
             continue
-        for start, _ in _standalone(blanked, d.text)[:1]:
+        for start, end in _standalone(blanked, d.text)[:1]:
             m = YEAR_RECORD.search(blanked[max(0, start - 70) : start])
             if not m:
                 continue
+            # "the 2014 plug ... 97% of the water measured in 2010": the text dates the
+            # number itself, after it.
+            after = re.split(r"[;.]\s", blanked[end : end + 60])[0]
             fits = _fits_of(d)
             held = [
                 lf
@@ -3152,14 +3237,15 @@ def _year_records(label, blanked, declared, unused, items, leaves_of) -> list[st
                 for lf in leaves_of(item)
                 if lf.record_days
             )
+            years = sorted({day[:4] for lf in dated for day in lf.record_days})
             if (
                 covered
                 and dated
+                and not any(y in after for y in years)
                 and all(
                     all(not day.startswith(m["year"]) for day in lf.record_days) for lf in dated
                 )
             ):
-                years = sorted({day[:4] for lf in dated for day in lf.record_days})
                 problems.append(
                     f"{label}: '{d.text}' is given to {m['year']}, but the evidence has it "
                     f"only for {', '.join(years)}."
@@ -3181,7 +3267,21 @@ def _gauge_claims(label: str, text: str, dead: set[str]) -> list[str]:
         part_end = min([len(text), *(m.end() + x.end() for x in CLAUSE.finditer(text[m.end() :]))])
         part = text[part_start : m.end()]
         owners = [w.group(0) for w in WELL.finditer(part)]
-        if not owners or DATE.search(text[part_start:part_end]):
+        # The gauge's own part: "oil 34% lower since 2010-01-10, and its gauge is dead"
+        # dates the oil, not the gauge.
+        own_start = max(
+            [part_start, *(part_start + x.end() for x in re.finditer(r",|;|:|\band\b", part))]
+        )
+        own_end = min(
+            [
+                part_end,
+                *(
+                    m.end() + x.start()
+                    for x in re.finditer(r",|;|\band\b", text[m.end() : part_end])
+                ),
+            ]
+        )
+        if not owners or DATE.search(text[own_start:own_end]):
             continue
         if _well_key(owners[-1]) not in dead:
             problems.append(
@@ -3322,6 +3422,234 @@ def _detail_attribution(
     return []
 
 
+def _inherited(
+    item: Evidence, leaves: list[_Leaf], earlier: list[Evidence], leaves_of
+) -> list[_Leaf]:
+    """A calculation's results as what they were computed from: each result takes the well
+    its inputs share, the label they share ("water_share", "oil_rate"), and their records
+    (`origin`), so "1888/4207" from F-12's change stays F-12's, and "0.011*100" stays the
+    share below the depth of its row. Without that, citing a calculation launders a number
+    past the well, quantity and depth checks."""
+    result = item.result if isinstance(item.result, dict) else {}
+    rows = result.get("results") if isinstance(result.get("results"), list) else None
+
+    def expression_of(lf: _Leaf) -> str | None:
+        if rows is not None and lf.record is not None and lf.record < len(rows):
+            return str((rows[lf.record] or {}).get("expression") or "")
+        return str(result.get("expression") or "") or None
+
+    out = []
+    for lf in leaves:
+        expression = expression_of(lf) if lf.value is not None else None
+        if not expression or not lf.labels.endswith("value"):
+            out.append(lf)
+            continue
+        holders: list[tuple[Evidence, _Leaf]] = []
+        for value, decimals, _ in _numbers_in_text(expression):
+            if _is_constant(value) or (decimals <= 0 and value <= SMALL_INTEGER):
+                continue
+            tolerance = 0.5 * 10 ** -max(decimals, 0) + 1e-12
+            holders += [
+                (e, h)
+                for e in earlier
+                for h in leaves_of(e)
+                if h.value is not None and abs(abs(h.value) - value) <= tolerance
+            ]
+        if not holders:
+            out.append(lf)
+            continue
+        wells = {h.well for _, h in holders}
+        own = {"|".join(h.labels.split("|")[:2]) for _, h in holders}
+        out.append(
+            replace(
+                lf,
+                well=next(iter(wells)) if len(wells) == 1 else lf.well,
+                labels=f"{lf.labels}|{next(iter(own))}" if len(own) == 1 else lf.labels,
+                origin=tuple(
+                    dict.fromkeys((e.id, h.record) for e, h in holders if h.record is not None)
+                ),
+            )
+        )
+    return out
+
+
+DEPTH = re.compile(
+    r"(?<![\d.,])(\d{1,2}[,\u00a0\u202f ]?\d{3}(?:\.\d+)?)\s*(?:m|metres?|meters?)\b"
+)
+YEARISH = re.compile(r"\b(\d{4}-\d{2}(?:-\d{2})?|(?:19|20)\d{2})\b")
+
+
+def _depth_ties(label: str, text: str, declared, log: EvidenceLog, leaves_of) -> list[str]:
+    """A share from a production log is the share below one depth in one survey: written
+    next to another depth ("93% of the water" at 3,160 m when 0.934 is below 3,165 m), or in
+    a sentence about another survey's year, it is read off the wrong row. Calculated shares
+    keep their rows (`_Leaf.origin`)."""
+    problems = []
+    text = _normalize(text)
+    blanked = _blank(text, WELL, DATE, CALENDAR_WINDOW, REFERENCE)
+
+    def rows_of(eid: str, record: int) -> tuple[set[float], set[str], bool]:
+        item = log.get(eid)
+        if item is None:
+            return set(), set(), False
+        same = [lf for lf in leaves_of(item) if lf.record == record]
+        depths = {lf.value for lf in same if lf.value is not None and "depth_m" in lf.labels}
+        days = {d for lf in same for d in lf.record_days}
+        share = any("share" in lf.labels for lf in same)
+        return depths, days, share
+
+    for d in declared:
+        item = log.get(d.evidence_id)
+        spans = _standalone(blanked, d.text)
+        if item is None or not spans:
+            continue
+        scales = [d.value, d.value * 100, d.value / 100]
+        # A share as written ("93%", "0.934"), held as a share or calculated from shares.
+        share_text = d.text.rstrip().endswith(("%", "percent")) or abs(d.value) <= 1
+        held = [
+            lf
+            for lf in leaves_of(item)
+            if lf.value is not None
+            and ("share" in lf.labels or (lf.origin and share_text))
+            and any(abs(abs(lf.value) - abs(x)) <= 1e-9 * max(1.0, abs(x)) for x in scales)
+        ]
+        depths: set[float] = set()
+        days: set[str] = set()
+        for lf in held:
+            for eid, record in ((item.id, lf.record), *lf.origin):
+                if record is None:
+                    continue
+                found, when, share = rows_of(eid, record)
+                if share and found:
+                    depths |= found
+                    days |= when
+        if not depths:
+            continue
+        start, end = spans[0]
+        bounds = [0, *(m.end() for m in re.finditer(r"[.;](?=\s)", text)), len(text)]
+        part_start = max(b for b in bounds if b <= start)
+        part_end = min((b for b in bounds if b > start), default=len(text))
+        before = [m for m in DEPTH.finditer(text, part_start, start)]
+        after = [m for m in DEPTH.finditer(text, end, part_end)]
+        written = before[-1] if before else after[0] if after else None
+        if written is not None:
+            depth = float(re.sub(r"[^\d.]", "", written.group(1)))
+            if not any(abs(depth - x) <= 1.5 for x in depths):
+                shown = ", ".join(f"{x:g}" for x in sorted(depths))
+                problems.append(
+                    f"{label}: '{d.text}' is the share below {shown} m in {item.id}, not below "
+                    f"{depth:g} m. Give each share the depth of its own row."
+                )
+                continue
+        # The survey by its year, where the text names it as the survey's: "In 2009 ...
+        # 17%", "by September 2010 ...", "the 2010 log". A plug's year ("the 2014 plug ...
+        # 97% of the water measured in 2010") is not the survey's.
+        part = text[part_start:part_end]
+        named = re.match(r"\s*(?:in|by|during|as of)\s+(?:\w+\s+)?((?:19|20)\d{2})\b", part, re.I)
+        named = named or re.search(
+            r"\b((?:19|20)\d{2})(?:-\d{2})?\s+(?:production\s+)?(?:log|survey|PLT)\b|"
+            r"\b(?:log|survey|PLT|measured)\s+(?:of|from|in)\s+(?:\w+\s+)?((?:19|20)\d{2})\b",
+            part,
+            re.I,
+        )
+        years = [y for y in (named.groups() if named else ()) if y]
+        if years and days and not any(day.startswith(years[-1]) for day in days):
+            problems.append(
+                f"{label}: '{d.text}' is from the survey of {', '.join(sorted(days))} in "
+                f"{item.id}, not from {years[-1]}. Give each share its own survey."
+            )
+    return list(dict.fromkeys(problems))
+
+
+SLOW_DECLINE = re.compile(
+    r"\b(?P<word>slow(?:ly)?|gentl[ey]|mild(?:ly)?|modest(?:ly)?|moderate(?:ly)?|gradual(?:ly)?|"
+    r"persist\w*|sustain\w*|held up|lasting|not (?:a |just a )?transient)\b",
+    re.IGNORECASE,
+)
+FAST_DECLINE = re.compile(
+    r"\b(?P<word>steep(?:ly)?|rapid(?:ly)?|fast|sharp(?:ly)?)\s+decline", re.I
+)
+
+
+def _decline_words(label: str, text: str, cited: list[Evidence]) -> list[str]:
+    """Words about a decline against the decline rate the cited fit gives: "a moderate
+    decline" or "the gain persisted" for a well falling 0.96 a year (62% a year), "a steep
+    decline" for one falling 0.05 a year."""
+    rates = [
+        float(r)
+        for e in cited
+        if e.tool in ("fit_decline", "forecast_production")
+        for r in [
+            _get(_get(e.result, "best"), "di_per_year")
+            or _get(_get(e.result, "fit"), "di_per_year")
+            or _get(e.result, "di_per_year")
+        ]
+        if isinstance(r, int | float)
+    ]
+    if len(rates) != 1:
+        return []
+    rate = rates[0]
+    slow = SLOW_DECLINE.search(text)
+    if slow and rate > 0.5 and re.search(r"declin|gain|rate|oil", text, re.I):
+        return [
+            f"{label} calls the decline '{slow['word']}', but the cited fit falls {rate:.2f} a "
+            f"year ({1 - math.exp(-rate):.0%} a year). Describe it by its rate."
+        ]
+    fast = FAST_DECLINE.search(text)
+    if fast and rate < 0.1:
+        return [
+            f"{label} calls the decline '{fast['word']}', but the cited fit falls only "
+            f"{rate:.2f} a year. Describe it by its rate."
+        ]
+    return []
+
+
+WINDOW_WORD = re.compile(
+    r"\b(?P<word>before|until|up to|after|since|from)\s+"
+    r"(?P<when>\d{4}-\d{2}(?:-\d{2})?|(?:19|20)\d{2})\b",
+    re.IGNORECASE,
+)
+
+
+def _fit_windows(label: str, text: str, declared, log: EvidenceLog) -> list[str]:
+    """A fit's decline rate given to a period its window is not in: "the decline before July
+    2010 fits 0.45 a year" when 0.4461 is the fit from 2010-07-18."""
+    text = _normalize(text)
+    problems = []
+    for d in declared:
+        item = log.get(d.evidence_id)
+        if item is None or item.tool not in ("fit_decline", "forecast_production"):
+            continue
+        best = _get(item.result, "best") or _get(item.result, "fit") or {}
+        rate = _get(best, "di_per_year")
+        if not isinstance(rate, int | float) or abs(abs(rate) - abs(d.value)) > 0.005 * max(
+            1, abs(rate)
+        ):
+            continue
+        spans = _standalone(_blank(text, WELL, DATE, CALENDAR_WINDOW), d.text)
+        if not spans:
+            continue
+        clause_start = max([0, *(m.end() for m in re.finditer(r"[.;](?=\s)", text[: spans[0][0]]))])
+        start, end = str(_get(best, "window_start") or ""), str(_get(best, "window_end") or "")
+        for m in WINDOW_WORD.finditer(text, clause_start, spans[0][0]):
+            when, word = m["when"], m["word"].lower()
+            # "after/since/from" date a fit only right after its name ("the decline after
+            # July 2010"); "forecast from 2011-01-01" is the forecast's period.
+            if word in ("after", "since", "from") and not re.search(
+                r"\b(?:declin\w*|fit\w*|window|trend)\s+(?:\w+\s+){0,2}$",
+                text[clause_start : m.start()],
+            ):
+                continue
+            early = word in ("before", "until", "up to") and start and start[: len(when)] >= when
+            late = word in ("after", "since", "from") and end and end[: len(when)] < when
+            if early or late:
+                problems.append(
+                    f"{label}: '{d.text}' is the fit from {start} to {end} in {item.id}, not one "
+                    f"{word} {when}."
+                )
+    return list(dict.fromkeys(problems))
+
+
 def _hyphenated(submission: Submission, log: EvidenceLog) -> Submission:
     """Well names written without their hyphen ("Well F14") as the evidence writes them
     (F-14), so a value given to them is judged for that well."""
@@ -3361,10 +3689,15 @@ def check_submission(submission: Submission, log: EvidenceLog, question: str = "
     calcs = _calculations(log)
     sound = [e for e in log if not (e.id in calcs and calcs[e.id].unsupported)]
     walked: dict[str, list[_Leaf]] = {}
+    order = {e.id: n for n, e in enumerate(log)}
 
     def leaves_of(item: Evidence) -> list[_Leaf]:
         if item.id not in walked:
-            walked[item.id] = _leaves(item)
+            leaves = _leaves(item)
+            if item.tool == "calculate":
+                earlier = [e for e in log if order[e.id] < order.get(item.id, len(order))]
+                leaves = _inherited(item, leaves, earlier, leaves_of)
+            walked[item.id] = leaves
         return walked[item.id]
 
     days = sorted({lf.day for e in log for lf in leaves_of(e) if lf.day and len(lf.day) == 10})
@@ -3428,7 +3761,9 @@ def check_submission(submission: Submission, log: EvidenceLog, question: str = "
                 f"Finding {n} gives the well its sentence names date(s) {', '.join(misdated)}. "
                 "Cite evidence about that well, or name the well the date belongs to."
             )
-        elif misevent := _date_events(_normalize(finding.claim), cited, leaves_of):
+        elif misevent := _date_events(_normalize(finding.claim), cited, leaves_of) + (
+            _gauge_dated_first(_normalize(finding.claim), cited, leaves_of)
+        ):
             problems.append(f"Finding {n}: {'; '.join(misevent)}. Give each event its own date.")
         elif misperiod := _periods(_normalize(finding.claim), cited, leaves_of):
             problems.append(f"Finding {n}: {'; '.join(misperiod)}. Give each event its own date.")
@@ -3440,13 +3775,19 @@ def check_submission(submission: Submission, log: EvidenceLog, question: str = "
                 "word for word (the original quote or its statement_en) or drop the quotes."
             )
         # A cause inside a quote is the report's claim, which the finding only reports.
-        cause = CAUSAL.search(_own_words(text, pool))
+        cause = CAUSAL.search(_own_words(text, pool)) or CONSEQUENCE.search(
+            _own_words(finding.claim, pool)
+        )
         if finding.confidence == "fact" and cause:
             problems.append(
                 f"Finding {n} states a cause ('{cause.group(0)}') but is marked fact. The data "
                 "shows timing and size, not causes: mark it inference."
             )
         own = _own_words(_normalize(finding.claim), pool)
+        if finding.numbers is not None:
+            problems += _depth_ties(f"Finding {n}", finding.claim, finding.numbers, log, leaves_of)
+            problems += _fit_windows(f"Finding {n}", finding.claim, finding.numbers, log)
+        problems += _decline_words(f"Finding {n}", own, cited)
         about = {_well_key(str(e.arguments["well"])) for e in cited if e.arguments.get("well")}
         problems += _pressure_misread(f"Finding {n}", own, failures, about)
         problems += _within_limits(f"Finding {n}", own, cited)
@@ -3498,6 +3839,10 @@ def check_submission(submission: Submission, log: EvidenceLog, question: str = "
             leaves_of,
         )
         problems += _unhedged_warned(submission.summary, submission.summary_numbers, log, calcs)
+        problems += _depth_ties(
+            "Summary", submission.summary, submission.summary_numbers, log, leaves_of
+        )
+        problems += _fit_windows("Summary", submission.summary, submission.summary_numbers, log)
         numbers = []
     missing = (
         numbers + dates + [f"'{q[:80]}'" for q in _missing_quotes(submission.summary, everything)]

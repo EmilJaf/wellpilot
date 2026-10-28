@@ -92,7 +92,10 @@ def meta_models(events: list[dict], evidence: dict[str, dict], answer: dict | No
             "tool_calls": len(calls),
             "reasoning_shown": any(s.get("reasoning") for s in steps),
             "pages": [eid for eid, item in evidence.items() if item.get("tool") == LOOK],
-            "second_opinion": review.get("outcome") if review else None,
+            # The answer keeps the review's outcome; the review event is sent before the
+            # revision it may lead to, so its own outcome can still be empty.
+            "second_opinion": ((answer or {}).get("review") or {}).get("outcome")
+            or (review.get("outcome") if review else None),
         },
         "sam": {"figures": figures, "logs": logs},
     }

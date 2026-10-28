@@ -946,6 +946,79 @@ def _how_read(store: ProductionStore, survey: str, read_by: str) -> dict:
     }
 
 
+def _depth_work(store: ProductionStore, well: str, surveys: list[dict]) -> dict:
+    """What has been done along the well's depth up to the store's date: its perforated
+    intervals (a survey report's zones and the perforations its daily reports name), the
+    blank pipe between them, each plug already set with the well before and after it, and
+    how old the latest log is against the water cut now."""
+    from wellpilot.analysis.inside import PLUG, _back_on
+    from wellpilot.analysis.inside import _production as rates
+
+    zones = [
+        [float(a), float(b)]
+        for s in surveys
+        for a, b in ((s.get("check") or {}).get("perforated_zones_m") or [])
+    ]
+    plugs = []
+    if "well_operations" in store.tables:
+        for job in well_operations(store, OperationsArgs(well=well))["jobs"]:
+            if job["kind"] in ("drilling", "abandonment"):
+                continue
+            zones += [
+                [float(a), float(b)]
+                for interval in job["perforations"]
+                for a, b in re.findall(r"(\d{4}(?:\.\d+)?)-(\d{4}(?:\.\d+)?)", interval)
+            ]
+            text = " ".join(d["summary"] for d in job["summaries"])
+            for depth in PLUG.findall(text):
+                start, end = pd.Timestamp(job["start"]), pd.Timestamp(job["end"])
+                back = _back_on(store, well, end)
+                plugs.append(
+                    {
+                        "date": job["start"],
+                        "depth_m": float(depth.replace(",", ".")),
+                        "before_60_days": rates(store, well, start - pd.Timedelta(days=60), start),
+                        "after_60_days": rates(store, well, back, back + pd.Timedelta(days=60))
+                        if back is not None
+                        else None,
+                    }
+                )
+    zones = sorted({(min(z), max(z)) for z in zones})
+    # A completion report's overall span ("3130-3281 mMD") over the zones a log report
+    # names one by one is the gun's span, not one open interval: the zones stand.
+    zones = [
+        z for z in zones if sum(1 for y in zones if y != z and z[0] <= y[0] and y[1] <= z[1]) < 2
+    ]
+    blank = [[a[1], b[0]] for a, b in zip(zones, zones[1:], strict=False) if b[0] > a[1]]
+    since = None
+    if surveys:
+        last = surveys[-1]
+        now = store.query(
+            "SELECT max(date) AS d FROM production_daily WHERE well = ? AND on_stream_hrs > 0",
+            [well],
+        ).rows.loc[0, "d"]
+        if pd.notna(now):
+            now = pd.Timestamp(now)
+            cut = store.query(
+                "SELECT median(water_cut) AS w FROM production_daily WHERE well = ? "
+                "AND date BETWEEN ? AND ? AND on_stream_hrs >= 12",
+                [well, now - pd.Timedelta(days=30), now],
+            ).rows.loc[0, "w"]
+            since = {
+                "latest_survey": last["date"],
+                "days": int((now - pd.Timestamp(last["date"])).days),
+                "water_cut_then": last["production_30_days_before"]["water_cut"],
+                "water_cut_now": None if pd.isna(cut) else float(cut),
+                "as_of": now.date().isoformat(),
+            }
+    return {
+        "perforated_m": [list(z) for z in zones],
+        "blank_pipe_m": blank,
+        "plugs_set": plugs,
+        "since_survey": since,
+    }
+
+
 def production_log(store: ProductionStore, args: LogArgs) -> dict:
     """Where along the well the oil and the water came in, from its production logs."""
     _check_well(store, args.well)
@@ -1015,19 +1088,34 @@ def production_log(store: ProductionStore, args: LogArgs) -> dict:
                 },
             }
         )
+    work = _depth_work(store, args.well, surveys)
+    for survey in surveys:
+        for p in survey["passes"]:
+            for row in p["below"]:
+                inside = next(
+                    (z for z in work["perforated_m"] if z[0] < row["depth_m"] < z[1]), None
+                )
+                if inside:
+                    row["inside_perforation_m"] = inside
     return to_jsonable(
         {
             "well": args.well,
             "surveys": surveys,
+            **work,
             "note": "A production log measures the flow passing each depth while the well "
             "flows; going up, it grows past each zone that produces. A share at a depth is "
             "the part of the pass's oil or water entering below that depth (1 at the bottom of "
             "the well's inflow, 0 above the top zone). comes_in_from_m to to_m holds 90% of "
             "each phase's inflow. Only shares are given: the files' rates have no units, and "
             "the plots' are downhole volumes. A plug set at a depth shuts off what enters "
-            "below it: the shares below say what it could remove. Each survey's passes were "
-            "run at several surface rates. A survey read off pictures carries the checks of "
-            "that reading.",
+            "below it: the shares below say what it could remove, not what it did; "
+            "plugs_set gives what each plug already set did to the well (water cut and oil "
+            "before and after). A bridge plug is set in blank pipe, never inside a perforated "
+            "interval (inside_perforation_m names the interval a depth falls in; blank_pipe_m "
+            "lists the gaps). since_survey says how old the latest log is and how far the "
+            "water cut has moved since: an old log may no longer show where the water enters, "
+            "and a new one would settle it. Each survey's passes were run at several surface "
+            "rates. A survey read off pictures carries the checks of that reading.",
         }
     )
 

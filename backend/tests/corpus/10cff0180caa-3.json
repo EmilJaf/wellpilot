@@ -6,10 +6,12 @@
   "question": "What oil plateau rate and duration does the forecast figure on page 23 of the 2005 development plan show?"
  },
  "to_review": false,
- "note": "",
+ "note": "Oct 28 night (seventh panel): verdict changed on purpose by the new rules (a conclusion drawn with ', so' in a fact).",
  "expected": {
-  "accepted": true,
-  "flagged": []
+  "accepted": false,
+  "flagged": [
+   "Finding 4"
+  ]
  },
  "submission": {
   "summary": "Page 23 text states the forecast on which Figure 4.2 is based: plateau rate of 9 000 Sm3/d lasting about 19 months, about 1.58 years, after a ca. 1 year startup period, equivalent to the field oil capacity of 9 000 Sm3/d.",

@@ -70,7 +70,12 @@ shows work done on the well, such as a plug set to shut off water or a new zone 
 which can change a rate overnight). \
 When a well has a production log, production_log shows where along the well its oil and \
 water came in: pass a plug's depth to see what the plug could shut off, and compare that \
-with what the well did after. {drive} When a waterflooded well's water cut rises, check with \
+with what the well did after (plugs_set). Asked where to set a plug, answer with a depth in \
+blank pipe (blank_pipe_m; never inside a perforated interval), what it would cut off of the \
+water and of the oil from the log, whether new perforations above it would be needed to keep \
+the oil, and how old the log is (since_survey): if the water cut has moved far since, say a \
+new log should confirm it first. Lead the answer with the recommendation. {drive} When a \
+waterflooded well's water cut rises, check with \
 waterflood whether liquid held while the choke opened (water taking the well's capacity) and \
 how much oil the WOR trend leaves before the economic water cut; its field voidage \
 replacement_ratio is at reservoir conditions (near 1 means injection kept pace). For a \

@@ -6,10 +6,11 @@
   "question": "Is P-3's decline caused by water or by falling reservoir pressure?"
  },
  "to_review": false,
- "note": "Fair (synthetic field): percentages from uncited calculations; 80% declared as 0.7927.",
+ "note": "Fair (synthetic field): percentages from uncited calculations; 80% declared as 0.7927. Oct 28 night (seventh panel): verdict changed on purpose by the new rules (a conclusion drawn with ', so' in a fact).",
  "expected": {
   "accepted": false,
   "flagged": [
+   "Finding 1",
    "Finding 2",
    "Finding 3",
    "Finding 4",

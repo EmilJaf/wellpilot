@@ -249,12 +249,13 @@ SECOND_BATCH = [
         "fact",
         False,
     ),
-    # 1.5% is the medium-rate pass's share below 3210 m: true
+    # 1.5% is the medium-rate pass's share below 3210 m: true. Its ", so" draws a conclusion,
+    # which a fact may not since Oct 28 night, so it is checked as the inference it is.
     (
         "b2b80c7484ee",
         5,
         "Production logs showed oil from the upper perforations and water from below, so the 2010 plug at 3210 m could only remove about 1.5% of oil and 33% of water.",  # noqa: E501
-        "fact",
+        "inference",
         False,
     ),
     # Attribution to well F-12 is false because E6 has blank wells field-level scope and E21/E22

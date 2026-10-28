@@ -7,6 +7,7 @@ the edited text, so a changed number is checked as the number the reader wrote.
 """
 
 import difflib
+import re
 from dataclasses import asdict
 
 from wellpilot.agent.checker import (
@@ -15,6 +16,7 @@ from wellpilot.agent.checker import (
     DeclaredNumber,
     Finding,
     Submission,
+    _leaves,
     _numbers_in_text,
     _Pool,
     _readings,
@@ -151,6 +153,23 @@ def redeclare(
     return carried + unused
 
 
+def _holds(item, token: str) -> bool:
+    """Does a result hold a number a reader typed? A percentage as the share it is, or in a
+    percent column (a choke opening, "54%")."""
+    reading = _reads(token, False)
+    if reading is None or reading[2] not in ("%", "percent", "pct"):
+        return any(_reads_as(r, _Pool([item]).numbers) for r in _readings(token))
+    share = [(v / 100, u / 100, (1.0,)) for v, u, _ in _readings(token)]
+    pct = [
+        lf.value
+        for lf in _leaves(item)
+        if lf.value is not None and re.search(r"pct|percent|choke", lf.labels)
+    ]
+    return any(_reads_as(r, _Pool([item]).numbers) for r in share) or any(
+        _reads_as((v, u, (1.0,)), pct) for v, u, _ in _readings(token)
+    )
+
+
 def declare_typed(
     edited: str, numbers: list[DeclaredNumber] | None, cited: list[str], log: EvidenceLog
 ) -> list[DeclaredNumber] | None:
@@ -167,21 +186,12 @@ def declare_typed(
         if token in texts or any(a <= m.start() and m.end() <= b for a, b in quoted):
             continue
         reading = _reads(token, False)
-        # Small numbers are found anywhere ("3" in "sam-3.1"): those stay the reader's to
-        # declare. A percentage must be in the source as the share it is.
-        if reading is None or abs(reading[0]) <= 10:
+        # Small whole numbers are found anywhere ("3" in "sam-3.1") and need no declaring
+        # anyway.
+        small = reading is not None and reading[0] <= 10 and float(reading[0]).is_integer()
+        if reading is None or (small and not reading[2]):
             continue
-        percent = reading[2] in ("%", "percent", "pct")
-        readings = [(v / 100, u / 100, sc) for v, u, sc in _readings(token)] if percent else None
-        source = next(
-            (
-                e
-                for e in cited
-                if (item := log.get(e))
-                and any(_reads_as(r, _Pool([item]).numbers) for r in readings or _readings(token))
-            ),
-            None,
-        )
+        source = next((e for e in cited if (item := log.get(e)) and _holds(item, token)), None)
         if source:
             added.append(DeclaredNumber(text=token, value=reading[0], evidence_id=source))
             texts.add(token)

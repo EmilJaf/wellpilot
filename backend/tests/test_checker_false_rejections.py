@@ -687,7 +687,7 @@ def test_M1_a_fact_on_a_poor_fit_is_sent_back_even_when_it_says_so() -> None:
         [d("0.019", 0.01942, "E11")],
     )
     problems = check(f, log=log)
-    assert problems and "rests on evidence with warnings" in problems[0]
+    assert any("rests on evidence with warnings" in p for p in problems)
 
 
 # N. sanity: wrong answers are still rejected

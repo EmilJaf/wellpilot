@@ -6,11 +6,12 @@
   "question": "What oil plateau rate and duration does the forecast figure on page 23 of the 2005 development plan show?"
  },
  "to_review": false,
- "note": " Oct 27 evening: the plan's dotted thousands ('9.000') written again after a declared '9 000' or '9000' read as that number; the rejection was false, so the verdict changed on purpose. Finding 3's '9000 line' is a number written without declaring it: right.",
+ "note": "Oct 27 evening: the plan's dotted thousands ('9.000') written again after a declared '9 000' or '9000' read as that number; the rejection was false, so the verdict changed on purpose. Finding 3's '9000 line' is a number written without declaring it: right. Oct 28 night (seventh panel): verdict changed on purpose by the new rules (a conclusion drawn with ', so' in a fact).",
  "expected": {
   "accepted": false,
   "flagged": [
-   "Finding 3"
+   "Finding 3",
+   "Finding 4"
   ]
  },
  "submission": {

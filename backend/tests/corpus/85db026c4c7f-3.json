@@ -6,10 +6,12 @@
   "question": "Why did well F-12 decline faster after 2010? Compare with the 2005 development plan."
  },
  "to_review": false,
- "note": "",
+ "note": "Oct 28 night (seventh panel): verdict changed on purpose by the new rules (a conclusion drawn with ', so' in a fact).",
  "expected": {
-  "accepted": true,
-  "flagged": []
+  "accepted": false,
+  "flagged": [
+   "Finding 4"
+  ]
  },
  "submission": {
   "summary": "F-12's water breakthrough in early 2010 pushed water cut to about 50% after 28 months and its oil rate fell about 72% around July 2010 with the choke unchanged, declining near 0.45 per year as water filled its liquid capacity. This timing matches the 2005 plan's forecast of breakthrough after about 2 years, while the field later ran above the plan's 80% water cut design but stayed within oil and liquid rate capacities with voidage near 1.",
