@@ -157,9 +157,15 @@ export function PlanChart({ result }: { result: PlanResult }) {
       <p className="plan-summary">
         The plan expected <strong>{result.totals_msm3.plan_p50.toFixed(1)} MSm³</strong> by{' '}
         {result.plan_p50_last_year}. The field produced{' '}
-        <strong>{result.totals_msm3.actual.toFixed(1)} MSm³</strong> by {result.actual_last_year},{' '}
-        <strong>{result.actual_after_plan_p50_ends_msm3.toFixed(1)} MSm³</strong> of it after the plan's last
-        year{lateWells.length > 0 && `, with ${lateWells.join(', ')} coming online then`}.
+        <strong>{result.totals_msm3.actual.toFixed(1)} MSm³</strong> by {result.actual_last_year}
+        {(result.actual_last_year ?? 0) > result.plan_p50_last_year ? (
+          <>
+            , <strong>{result.actual_after_plan_p50_ends_msm3.toFixed(1)} MSm³</strong> of it after the plan's last
+            year{lateWells.length > 0 && `, with ${lateWells.join(', ')} coming online then`}.
+          </>
+        ) : (
+          '.'
+        )}
       </p>
       <p className="chart-note-line">Plan figures: {result.plan_source}, as read from the page.</p>
     </div>
@@ -171,7 +177,7 @@ export function PlanChart({ result }: { result: PlanResult }) {
  * years set the plan's second year against the field's first, so this compares each year of
  * production with the plan's year of the same number.
  */
-export function PlanByProductionYear({ table }: { table: Table }) {
+export function PlanByProductionYear({ table, dataEnds }: { table: Table; dataEnds?: string | null }) {
   const rows = table.rows.filter((r) => r[column(table, 'plan_p50_msm3')] !== null || r[column(table, 'actual_oil_msm3')] !== null)
   const num = (v: unknown) => (typeof v === 'number' ? v : null)
   return (
@@ -202,7 +208,11 @@ export function PlanByProductionYear({ table }: { table: Table }) {
                   </span>
                 </th>
                 <td className="num-col">{fmt(plan)}</td>
-                <td className="num-col">{fmt(actual)}</td>
+                <td className="num-col">
+                  {actual === null && dataEnds && Number(r[column(table, 'actual_year')]) > Number(dataEnds.slice(0, 4))
+                    ? 'not yet'
+                    : fmt(actual)}
+                </td>
                 <td className="num-col">
                   {plan && actual !== null ? `${actual >= plan ? '+' : '−'}${Math.abs(Math.round((actual / plan - 1) * 100))}%` : plan === 0 && actual ? 'not in plan' : ''}
                 </td>

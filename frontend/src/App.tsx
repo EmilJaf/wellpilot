@@ -729,7 +729,9 @@ export default function App() {
                         The field against its 2005 plan{shownEnd ? `, with data up to ${shownEnd}` : ''}
                       </h3>
                       <PlanChart result={plan.result} />
-                      {plan.result.by_production_year && <PlanByProductionYear table={plan.result.by_production_year} />}
+                      {plan.result.by_production_year && (
+                        <PlanByProductionYear table={plan.result.by_production_year} dataEnds={shownEnd} />
+                      )}
                       <PlanFigure end={shownEnd} />
                       {plan.design && (
                         <>

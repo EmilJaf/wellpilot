@@ -276,6 +276,27 @@ function drawOverlay(u: uPlot, key: TrackKey, markers: Marker[], highlights: str
   ctx.textBaseline = 'top'
   ctx.textAlign = 'left'
 
+  // Labels along the top edge: each takes the first of three rows where it overlaps no
+  // other, and goes to the left of its mark where the right edge would cut it. A label
+  // with no room is left out (the key and the hover readout still say what the mark is).
+  const rows: [number, number][][] = [[], [], []]
+  const label = (text: string, x: number, beside = 7 * ratio) => {
+    const w = ctx.measureText(text).width
+    const right = left + width
+    const start = x + beside + w <= right ? x + beside : Math.max(left + 2 * ratio, x - beside - w)
+    const row = rows.findIndex((taken) => taken.every(([a, b]) => start + w + 6 * ratio < a || start > b + 6 * ratio))
+    if (row < 0) return
+    rows[row].push([start, start + w])
+    // A wash behind the text, so a label over the data stays legible.
+    const ink = ctx.fillStyle
+    ctx.fillStyle = css('--panel')
+    ctx.globalAlpha = 0.85
+    ctx.fillRect(start - 2 * ratio, top + (1 + row * 13) * ratio, w + 4 * ratio, 13 * ratio)
+    ctx.globalAlpha = 1
+    ctx.fillStyle = ink
+    ctx.fillText(text, start, top + (2 + row * 13) * ratio)
+  }
+
   for (const m of markers) {
     if (m.track !== 'all' && m.track !== key) continue
     const x0 = xAt(m.at)
@@ -299,7 +320,7 @@ function drawOverlay(u: uPlot, key: TrackKey, markers: Marker[], highlights: str
       if (m.label && x1 > left) {
         // Keep the label in view when zoomed inside the band.
         ctx.fillStyle = css('--caution-ink')
-        ctx.fillText(m.label, Math.max(x0, left) + 6 * ratio, top + 4 * ratio)
+        label(m.label, Math.max(x0, left), 6 * ratio)
       }
     } else if (m.kind === 'work') {
       // Work done on the well (from its daily reports): a dashed rule and, on the oil
@@ -321,12 +342,7 @@ function drawOverlay(u: uPlot, key: TrackKey, markers: Marker[], highlights: str
         ctx.lineTo(x0, top + s * 1.4)
         ctx.closePath()
         ctx.fill()
-        if (m.label) {
-          // Near the right edge the label goes to the left of the mark.
-          const w = ctx.measureText(m.label).width
-          const fits = x0 + 7 * ratio + w < left + width
-          ctx.fillText(m.label, fits ? x0 + 7 * ratio : x0 - 7 * ratio - w, top + 2 * ratio)
-        }
+        if (m.label) label(m.label, x0)
       }
     } else if (m.kind === 'crossing') {
       // A threshold crossing: a short tick down from the top edge.
