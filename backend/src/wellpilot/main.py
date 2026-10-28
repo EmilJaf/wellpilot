@@ -12,7 +12,7 @@ from wellpilot import __version__
 from wellpilot.agent.sandbox import modal_pool
 from wellpilot.api import data, redteam, runs, voice
 from wellpilot.config import Settings, get_settings
-from wellpilot.llm import LLM, make_llm
+from wellpilot.llm import LLM, make_llm, provider_key
 
 
 def create_app(
@@ -67,9 +67,7 @@ def create_app(
 
     @app.get("/api/health")
     async def health() -> dict:
-        key = (
-            settings.model_api_key if settings.llm_provider == "meta" else settings.baseten_api_key
-        )
+        key, _ = provider_key(settings)
         return {
             "status": "ok",
             "version": __version__,

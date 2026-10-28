@@ -1,9 +1,9 @@
-"""One OpenAI-compatible client for both providers, plus JSON-schema helpers.
+"""One OpenAI-compatible client for every provider, plus JSON-schema helpers.
 
-Baseten (Muse Spark Open) and the Meta Model API (Muse Spark) both speak Chat Completions;
-only the base URL, key and model differ. Chat Completions is used for both so the agent
-has one code path. Note: the Meta Model API accepts only tool_choice="auto", so never send
-another value.
+Baseten and Fireworks (Muse Spark Open) and the Meta Model API (Muse Spark) all speak Chat
+Completions; only the base URL, key and model differ. Chat Completions is used for all so
+the agent has one code path. Note: the Meta Model API accepts only tool_choice="auto", so
+never send another value.
 """
 
 from dataclasses import dataclass
@@ -23,14 +23,24 @@ class LLM:
     default_reasoning: str = ""  # used when a caller asks for no particular effort
 
 
+def provider_key(settings: Settings) -> tuple[str, str]:
+    """The configured provider's API key and the name of its variable."""
+    return {
+        "meta": (settings.model_api_key, "MODEL_API_KEY"),
+        "fireworks": (settings.fireworks_api_key, "FIREWORKS_API_KEY"),
+    }.get(settings.llm_provider, (settings.baseten_api_key, "BASETEN_API_KEY"))
+
+
 def make_llm(settings: Settings, *, timeout: float = 90.0) -> LLM:
     """The configured provider's client. The agent's steps answer in seconds, so 90 s per
     request (times the client's two retries) is plenty; page extraction passes more."""
+    key, key_name = provider_key(settings)
     if settings.llm_provider == "meta":
-        key, key_name = settings.model_api_key, "MODEL_API_KEY"
         base_url, model, reasoning = settings.meta_base_url, settings.meta_model, ""
+    elif settings.llm_provider == "fireworks":
+        base_url, model = settings.fireworks_base_url, settings.fireworks_model
+        reasoning = settings.fireworks_reasoning_effort
     else:
-        key, key_name = settings.baseten_api_key, "BASETEN_API_KEY"
         base_url, model = settings.baseten_base_url, settings.baseten_model
         reasoning = settings.baseten_reasoning_effort
     if not key:

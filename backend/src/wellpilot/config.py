@@ -14,7 +14,7 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    llm_provider: Literal["baseten", "meta"] = "baseten"
+    llm_provider: Literal["baseten", "meta", "fireworks"] = "baseten"
 
     baseten_api_key: str = ""
     baseten_base_url: str = "https://inference.baseten.co/v1"
@@ -24,6 +24,14 @@ class Settings(BaseSettings):
     model_api_key: str = ""
     meta_base_url: str = "https://api.meta.ai/v1"
     meta_model: str = "muse-spark-1.3"
+
+    # A second host of the same open-weight model, on credits that do not expire: the live
+    # demo's fallback if the hackathon's Baseten key stops after the deadline. No audio
+    # there (the mic hides). Reasoning effort is left to the model until it has been tried.
+    fireworks_api_key: str = ""
+    fireworks_base_url: str = "https://api.fireworks.ai/inference/v1"
+    fireworks_model: str = "accounts/fireworks/models/muse-spark-open"
+    fireworks_reasoning_effort: str = ""
 
     # Reasoning tokens are billed as output. Page extraction is transcription, so "low"
     # saves most of its output tokens; the agent keeps the model's default unless set.

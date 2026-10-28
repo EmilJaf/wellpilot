@@ -391,6 +391,17 @@ def test_make_llm_needs_a_key() -> None:
     assert str(llm.client.base_url).startswith("https://api.meta.ai/v1")
 
 
+def test_fireworks_hosts_the_same_open_model() -> None:
+    """The fallback host for judging week: Muse Spark Open on Fireworks credits."""
+    with pytest.raises(RuntimeError, match="FIREWORKS_API_KEY"):
+        make_llm(Settings(_env_file=None, llm_provider="fireworks", fireworks_api_key=""))
+
+    llm = make_llm(Settings(_env_file=None, llm_provider="fireworks", fireworks_api_key="k"))
+    assert llm.provider == "fireworks" and llm.model.endswith("/muse-spark-open")
+    assert str(llm.client.base_url).startswith("https://api.fireworks.ai/inference/v1")
+    assert llm.default_reasoning == ""  # left to the model until tried there
+
+
 async def test_provider_default_reasoning_and_visible_reasoning_in_events(store) -> None:
     llm, completions = fake_llm(
         [completion("Done.", reasoning_content="I compare F-12 with the plan.")]
