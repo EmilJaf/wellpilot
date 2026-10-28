@@ -142,6 +142,13 @@ def test_well_issues_returns_one_wells_issues_uncapped(processed_dir) -> None:
             "recursive",
         ),
         ("SELECT 1 AS a, 2 AS a", "distinct name"),
+        # a SQL string run by a table function skipped every check (the outside review)
+        ("SELECT length(x) AS n FROM query('SELECT repeat(''x'', 100000000) AS x')", "query"),
+        ("SELECT * FROM query_table('production_daily')", "not allowed"),
+        ("SELECT * FROM json_execute_serialized_sql('{}')", "not allowed"),
+        ("SELECT * FROM repeat_row(1, num_rows = 100000000)", "repeat_row"),
+        ("SELECT * FROM duckdb_tables()", "not allowed"),
+        ("SELECT * FROM read_text('/etc/passwd')", "not allowed"),
     ],
 )
 def test_agent_sql_refuses_bloat_recursion_and_settings(processed_dir, sql, message) -> None:
@@ -168,3 +175,11 @@ def test_agent_sql_text_values_are_cut_inside_duckdb(processed_dir) -> None:
     assert list(rows.columns) == ["well", "tag"] and rows["tag"].str.len().max() <= 2000
     long = store.query_untrusted("SELECT string_agg(well, ',') AS all_wells FROM production_daily")
     assert len(long.rows.loc[0, "all_wells"]) <= 2000
+
+
+def test_agent_sql_keeps_the_table_functions_that_only_make_rows(processed_dir) -> None:
+    store = ProductionStore(processed_dir)
+
+    assert len(store.query_untrusted("SELECT * FROM range(3)").rows) == 3
+    assert len(store.query_untrusted("SELECT * FROM generate_series(1, 3)").rows) == 3
+    assert len(store.query_untrusted("SELECT unnest([1, 2]) AS u").rows) == 2

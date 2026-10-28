@@ -46,8 +46,26 @@ logger = logging.getLogger(__name__)
 DENIED_FUNCTIONS = {
     "repeat", "rpad", "lpad", "printf", "format", "bar",
     "current_setting", "duckdb_settings", "duckdb_secrets", "duckdb_extensions",
+    "query", "query_table", "json_execute_serialized_sql", "getvariable",
 }  # fmt: skip
+# Table functions are allowed by name: query('...') runs a string as SQL past every check
+# here, and the rest read files, settings or the catalog. These three only make rows.
+TABLE_FUNCTIONS = {"range", "generate_series", "unnest"}
 MAX_TEXT = 2000  # characters of one text value a query may return to the agent
+
+
+def _table_functions(node) -> list[str]:
+    """Names of the table functions in DuckDB's serialized syntax tree."""
+    found = []
+    if isinstance(node, dict):
+        if node.get("type") == "TABLE_FUNCTION":
+            found.append(str((node.get("function") or {}).get("function_name", "?")))
+        for value in node.values():
+            found += _table_functions(value)
+    elif isinstance(node, list):
+        for value in node:
+            found += _table_functions(value)
+    return found
 
 
 class QueryError(ValueError):
@@ -154,14 +172,16 @@ class ProductionStore:
             tree = json.loads(
                 self._con.execute("SELECT json_serialize_sql(?)", [sql]).fetchone()[0]
             )
-            if not tree.get("error"):
-                text = json.dumps(tree)
-                used = set(re.findall(r'"function_name": "(\w+)"', text))
-                denied = sorted(f for f in used if f in DENIED_FUNCTIONS or f.startswith("pragma_"))
-                if denied:
-                    raise QueryError(f"function(s) not allowed here: {', '.join(denied)}")
-                if "RECURSIVE_CTE_NODE" in text:
-                    raise QueryError("recursive queries are not allowed")
+            if tree.get("error"):  # unchecked SQL never runs
+                raise QueryError(f"SQL could not be checked: {tree.get('error_message', '')}")
+            text = json.dumps(tree)
+            used = set(re.findall(r'"function_name": "(\w+)"', text))
+            denied = sorted(f for f in used if f in DENIED_FUNCTIONS or f.startswith("pragma_"))
+            denied += sorted(set(_table_functions(tree)) - TABLE_FUNCTIONS - set(denied))
+            if denied:
+                raise QueryError(f"function(s) not allowed here: {', '.join(denied)}")
+            if "RECURSIVE_CTE_NODE" in text:
+                raise QueryError("recursive queries are not allowed")
             try:
                 described = self._con.execute(f"DESCRIBE {sql}").fetchall()
             except duckdb.Error as e:
