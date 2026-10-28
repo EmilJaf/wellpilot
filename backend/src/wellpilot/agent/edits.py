@@ -68,12 +68,16 @@ def redeclare(
             for tag, i1, i2, j1, j2 in opcodes
             if ((i1 < end and i2 > start) if i1 < i2 else (start < i1 < end))
         ]
-        if all(tag == "equal" for tag, *_ in touched):
-            carried.append(declared)
-            continue
         lo = min(j1 + (start - i1 if tag == "equal" else 0) for tag, i1, i2, j1, j2 in touched)
         hi = max(j1 + (end - i1) if tag == "equal" else j2 for tag, i1, i2, j1, j2 in touched)
         tokens = [m for m in WRITTEN_NUMBER.finditer(edited) if m.start() < hi and m.end() > lo]
+        if all(tag == "equal" for tag, *_ in touched) and (
+            len(tokens) != 1 or tokens[0].group(0).strip() == written
+        ):
+            carried.append(declared)
+            continue
+        # Digits typed against it make another number ("0." before "69%"): that one is
+        # checked, with the same evidence id.
         if len(tokens) != 1:
             continue
         new_text = tokens[0].group(0).strip()

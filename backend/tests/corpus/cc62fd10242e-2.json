@@ -6,10 +6,12 @@
   "question": "Which wells need attention right now, and why? Forecast the next 12 months of oil for the well that needs it most."
  },
  "to_review": false,
- "note": "",
+ "note": "Outside review (Oct 28): 'field water cut 67% below the 80% design limit' reads as a difference from the limit, not the level; now sent back.",
  "expected": {
-  "accepted": true,
-  "flagged": []
+  "accepted": false,
+  "flagged": [
+   "Finding 3"
+  ]
  },
  "submission": {
   "summary": "F-12 needs attention most — alarm for a dead downhole gauge, a 55% step-down and high water cut — with F-14 on caution for a smaller step-down and rising water cut. The fit suggests the next 12-month oil for F-12 is about 359 000 Sm3 P50, with a calibrated band of 324 000 to 470 000 Sm3, but the decline fit is poor so the forecast is uncertain.",

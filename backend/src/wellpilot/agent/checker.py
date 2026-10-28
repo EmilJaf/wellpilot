@@ -492,16 +492,26 @@ def _calculations(log: EvidenceLog) -> dict[str, _Calc]:
     return calcs
 
 
-def _free(value: float, decimals: int, suffix: str | None, pool: _Pool, free: set[float]) -> bool:
+def _free(
+    value: float,
+    decimals: int,
+    suffix: str | None,
+    pool: _Pool,
+    free: set[float],
+    year: bool = True,
+) -> bool:
     """Whole numbers that need no evidence: integers up to 10, years (an evidence year, a
     year the data returns as a number, a report's year) and whole numbers the question
-    itself names ("the next 12 months")."""
+    itself names ("the next 12 months"). year=False: written as no year can be ("2,010",
+    "2010 Sm3/d")."""
     if decimals != 0 or suffix or not value.is_integer():
         return False
     if value <= SMALL_INTEGER or value in free:
         return True
-    return 1900 <= value <= 2100 and (
-        str(int(value)) in pool.years or pool.has_number(value, 0, None)
+    return (
+        year
+        and 1900 <= value <= 2100
+        and (str(int(value)) in pool.years or pool.has_number(value, 0, None))
     )
 
 
@@ -658,6 +668,61 @@ def _pinned(reading: Reading, value: float) -> Reading | None:
     return reading if fitting == (1.0,) else (number, unit, fitting)
 
 
+SCALED_KEYS = re.compile(r"msm3|ksm3|thousand|million|mill|mbbl|kbbl", re.IGNORECASE)
+PERCENT_KEYS = re.compile(r"pct|percent", re.IGNORECASE)
+
+
+def _scale_mismatch(fits: list[Reading], leaves: list["_Leaf"], item: Evidence) -> str | None:
+    """A scale the text writes that the value does not have: "1,551 thousand Sm3/d" for a
+    rate of 1551, "0.69%" for a water cut of 0.69. The number as written may stand for the
+    value only where the evidence keeps that scale too ("4.58" under an msm3 key, "-55%")."""
+    for number, unit, scales in fits:
+        others = tuple(sc for sc in scales if sc != 1.0)
+        if 1.0 not in scales or not others:
+            continue
+        values = [lf for lf in leaves if lf.value is not None]
+        if any(_reads_as((number, unit, others), [lf.value]) for lf in values):
+            return None
+        at_one = [lf for lf in values if _reads_as((number, unit, (1.0,)), [lf.value])]
+        if not at_one:
+            return None
+        held = at_one[0].value
+        if others[0] > 1:
+            if not any(
+                SCALED_KEYS.search(lf.labels) or lf.unit in ("M", "k", "million", "mill", "mill.")
+                for lf in at_one
+            ):
+                return (
+                    f"is written as {number:g} x {others[0]:g}, but {item.id} has {held:g}; "
+                    "drop the scale word"
+                )
+        elif (
+            abs(number) < 1
+            and not (item.tool == "calculate" and re.search(r"\*\s*100\b", str(item.arguments)))
+            and all(
+                abs(lf.value) <= 1 and lf.unit != "%" and not PERCENT_KEYS.search(lf.labels)
+                for lf in at_one
+            )
+        ):
+            return (
+                f"is written as {number:g}%, a share of {number / 100:g}, but {item.id} has "
+                f"{held:g}, which is {held * 100:g}%"
+            )
+    return None
+
+
+# A year is four plain digits with no unit after them: "2,010 Sm3/d" and "2010 bar" are not.
+YEAR_UNIT = re.compile(
+    r"\s*(?:%|percent|pct|x\b|×|bar|psi|m\b|mmd|mtvd|ft\b|feet|°|deg|k?sm|m?bbl|barrels|stb|"
+    r"days?|weeks?|months?|hours?)",
+    re.IGNORECASE,
+)
+
+
+def _yearlike(written: str, after: str) -> bool:
+    return bool(re.fullmatch(r"(?:19|20)\d{2}", written.strip())) and not YEAR_UNIT.match(after)
+
+
 def _standalone(text: str, written: str) -> list[tuple[int, int]]:
     """Spans where a declared text stands as a whole number: "2" in "2 years", not the 2 in
     "2 100", "12", "0.2" or "Sm3"; "276,078" in "P50 276,078"."""
@@ -676,6 +741,12 @@ TIED = (
     r"(?:\s*(?:[^\W\d]+\d?(?:/[^\W\d]+)?|%)){0,3}?"  # a unit or two ("Sm3/d", "%"); no comma
     r"\s+(?:in|on|at|during|by|for)\s+(\d{4}-\d{2}(?:-\d{2})?)\b"
     r"(?!\s*(?:to|until|through|and|-|–)\s*\d{4})"  # a range of dates is no one row
+)
+DATE_FIRST = re.compile(
+    r"\b(?:in|on|during|for)\s+(\d{4}-\d{2}(?:-\d{2})?)\b,?\s+(?:[^\s\d,;.]+\s+){0,6}?"
+    r"(?:was|were|is|had|made|produced|averaged|read|reached|at|of)\s+"
+    r"(?:about|around|roughly|approximately|~)?\s*$",
+    re.IGNORECASE,
 )
 DATE_COLUMNS = {"month", "date", "day", "week", "period"}
 
@@ -706,6 +777,10 @@ def _row_mismatch(
     catches it read off the wrong row. A date with no row in the table is not judged."""
     for start, end in _standalone(text, written):
         tied = re.match(TIED, text[end:])
+        if not tied:
+            # "In 2010-12, F-12's oil was 44,468": the date first, the level after it.
+            begin = max([0, *(m.end() for m in CLAUSE.finditer(text[:start]))])
+            tied = DATE_FIRST.search(text[begin:start])
         if not tied:
             continue
         when = tied.group(1)
@@ -764,7 +839,9 @@ UNIT_AFTER = re.compile(
     r"(?P<per>\s*/\s*(?:producing[\s-])?(?:d|day)\b|\s+(?:per|a)\s+(?:producing[\s-])?day\b"
     r"|\s+daily\b)?"
     r"(?P<other>\s*/\s*(?:month|mo|year|yr)\b|\s+(?:per|a)\s+(?:month|year)\b)?"
-    r"|(?P<dur>days?|dager|weeks?|uker|months?|måneder|mnd|years?|år)\b)",
+    r"|(?P<dur>days?|dager|weeks?|uker|months?|måneder|mnd|years?|år)\b"
+    r"|(?P<psi>psi[ag]?)\b|(?P<bar>bar[ag]?)\b|(?P<ft>ft|feet|foot)\b"
+    r"|(?P<metres>m|metres?|meters?|m\s?MD|m\s?TVD)\b|(?P<degc>°\s?C|deg\s?C)\b|(?P<degf>°\s?F|deg\s?F)\b)",
     re.IGNORECASE,
 )
 DURATIONS = {
@@ -780,6 +857,12 @@ UNIT_NAMES = {
     "weeks": "weeks",
     "months": "months",
     "years": "years",
+    "psi": "psi",
+    "bar": "bar",
+    "ft": "feet",
+    "metres": "metres",
+    "degc": "°C",
+    "degf": "°F",
 }
 
 
@@ -793,6 +876,9 @@ def _written_unit(text: str, end: int) -> str | None:
         return "barrels"
     if m["sm3"]:
         return "rate" if m["per"] else "rate_other" if m["other"] else "volume"
+    for unit in ("psi", "bar", "ft", "metres", "degc", "degf"):
+        if m[unit]:
+            return unit
     word = m["dur"].lower()
     return DURATIONS.get(word) or DURATIONS.get(word.rstrip("s"))
 
@@ -814,6 +900,14 @@ def _key_dim(name: str, cell: bool = False) -> str | None:
             return unit
     if re.search(r"sm3|bbl", n):
         return None if cell else "volume"
+    # Pressures in bar, depths in metres, temperatures in °C: a text writing psi, feet or
+    # °F has read another unit (the numbers would be 14.5, 3.28 or 1.8 times apart).
+    if re.search(r"(?:^|_)bar(?:_|$)", n):
+        return "bar"
+    if re.search(r"(?:^|_)(?:m|mmd|md|tvd)$|depth|(?:^|_)m_md(?:_|$)", n):
+        return "metres"
+    if re.search(r"(?:^|_)(?:c|degc)$|temperature", n):
+        return "degc"
     return None
 
 
@@ -874,6 +968,10 @@ RECORD_LABEL_KEYS = {"signal", "kind", "metric", "column", "field"}
 RECORD_DATE_KEYS = {"start", "end", "since", "date", "day", "month", "week"}
 
 
+SIGNAL_DIMS = {"bar", "metres", "degc"}
+SHARE_KEYS = r"share|ratio|cut|relative|fraction|pct|percent"
+
+
 def _leaves(item: Evidence) -> list[_Leaf]:
     """Every number and date in a tool result, with its labels, well and record.
 
@@ -898,6 +996,13 @@ def _leaves(item: Evidence) -> list[_Leaf]:
                 # a regime change's before_mean is a level.
                 change = any(re.search(CHANGE_LABELS, n) for n in names)
                 sign = -1 if value < 0 else 1 if value > 0 and change else None
+                # A record's signal gives its readings' unit when their own key does not:
+                # a gauge failure on bhp_bar has its last good value in bar.
+                if dim is None and not change and not re.search(SHARE_KEYS, label):
+                    dim = next(
+                        (d for n in labels[len(names) :] if (d := _key_dim(n)) in SIGNAL_DIMS),
+                        None,
+                    )
                 found.append(_Leaf(float(value), None, label, well, record, days, None, dim, sign))
         elif isinstance(value, str) and value not in typed_strings:
             marks = _string_marks(value)
@@ -906,6 +1011,11 @@ def _leaves(item: Evidence) -> list[_Leaf]:
                     if abs(number) not in typed_numbers:
                         dim, sign, extra = marks.get(abs(number), (None, None, ""))
                         sign = -1 if number < 0 else sign
+                        if dim is None and sign is None and suffix is None:
+                            dim = next(
+                                (d for n in labels[1:] if (d := _key_dim(n)) in SIGNAL_DIMS),
+                                None,
+                            )
                         found.append(
                             _Leaf(
                                 number,
@@ -1017,7 +1127,10 @@ FALL_BEFORE = re.compile(
     re.IGNORECASE,
 )
 FALL_AFTER = re.compile(
-    r"^\s*(?:%|percent)?\s*(?:drop|decline|decrease|fall|loss|lower|down|less)\b", re.IGNORECASE
+    r"^\s*(?:%|percent)?\s*(?:drop|decline|decrease|fall|loss|lower|down|less|"
+    r"(?:below|under)(?=\s+(?:the\s+|its\s+|a\s+|an\s+)?(?:[\w%.,]+\s+){0,3}?"
+    r"(?:limit|capacity|plan|design|target|threshold|maximum)\b))\b",
+    re.IGNORECASE,
 )
 # Shares a well holds at a time: written as a change ("down 69%") they are misread.
 LEVELS = r"water_?cut|uptime|on_stream|choke"
@@ -1032,7 +1145,10 @@ MODELS = re.compile(r"exponential|hyperbolic|harmonic", re.IGNORECASE)
 # A number written as a duration: "21 months after first oil", "81 days".
 DURATION_AFTER = re.compile(r"\s*(?:days?|weeks?|months?|years?|hours?)\b", re.IGNORECASE)
 RISE_AFTER = re.compile(
-    r"^\s*(?:%|percent)?\s*(?:increase|rise|jump|gain|growth|higher|more|up)\b", re.IGNORECASE
+    r"^\s*(?:%|percent)?\s*(?:increase|rise|jump|gain|growth|higher|more|up|"
+    r"(?:above|over)(?=\s+(?:the\s+|its\s+|a\s+|an\s+)?(?:[\w%.,]+\s+){0,3}?"
+    r"(?:limit|capacity|plan|design|target|threshold|maximum)\b))\b",
+    re.IGNORECASE,
 )
 # A number tied to the date of one record (an event, an issue): "55% on 2010-05-02",
 # "81 days since 2010-10-12". As TIED, with "around" and "since".
@@ -1072,6 +1188,17 @@ def _named(text: str, start: int) -> set[str]:
     part_end = end if part_end < 0 else part_end
     part_begin = text.rfind(", ", begin, start)
     part_begin = begin if part_begin < 0 else part_begin
+    # "F-14 ... about 61% and F-12's is 34% lower": a well's possessive owns what follows it
+    # in its part, unless it is one of a list ("F-12's and F-14's water cuts").
+    owners = list(WELL.finditer(text, part_begin, start))
+    if owners and re.match(r"['’]s\b", text[owners[-1].end() :]):
+        last = owners[-1]
+        listed = re.search(
+            rf"(?:{WELL.pattern})['’]s\s*(?:,|and|&)\s*$", text[part_begin : last.start()]
+        )
+        listed = listed or re.match(rf"['’]s\s*(?:,|and|&)\s*{WELL.pattern}", text[last.end() :])
+        if not listed:
+            return {_well_key(last.group(0))}
     if wells(text[part_begin:part_end]):
         return wells(text[begin:part_end])
     return wells(text[begin:start]) or wells(text[:begin]) or wells(text)
@@ -1116,8 +1243,10 @@ def _attribution(
     item: Evidence,
     leaves: list[_Leaf],
     own_part: bool = False,
+    spans: list[tuple[int, int]] | None = None,
 ) -> str | None:
     """Why the number, though in its evidence, is not the one the text says, or None.
+    Judged where the text writes it (spans: only there).
 
     Each check judges only what the evidence states outright: a value found anywhere
     without a well, label or sign that rules it out passes.
@@ -1133,7 +1262,7 @@ def _attribution(
         return None
     # Names as written: "P50" is no page reference here.
     names = _blank(text, WELL, DATE, CALENDAR_WINDOW)
-    for start, end in _standalone(blanked, written):
+    for start, end in spans if spans is not None else _standalone(blanked, written):
         # A detail is tool-speak ("12 days, field_wide with F-14"): only a well named next
         # to the number is its well.
         part = _part(text, start)
@@ -1220,6 +1349,12 @@ def _attribution(
                 for q in ("water cut", "uptime", "choke")
                 if re.search(QUANTITIES[q][1], held[0].labels)
             )
+            if re.match(r"\s*(?:%|percent)?\s*(?:below|under|above|over)\b", blanked[end:], re.I):
+                return (
+                    f"reads as a difference from the limit ('{written} below' it), but in "
+                    f"{item.id} it is the {level} itself; write it as the level, e.g. "
+                    f"'{level} of {written}, under the limit'"
+                )
             return f"is written as a change, but in {item.id} it is the {level} itself"
         if rise and all(lf.sign == -1 for lf in held):
             return f"is written as a rise, but {item.id} has it as a fall ({held[0].value:g})"
@@ -1367,7 +1502,11 @@ EVENT_DATES = {
     "step in rate": (r"\bstep(?:ped)?[\s-]down\b|\bregime change\b", r"regime|step"),
 }
 EVENT_REACH = re.compile(
-    r"^(?:[\s,]*[^\W\d][\w'-]*){0,4}?\s*(?:since|from|on|at|around|in)\s*$", re.IGNORECASE
+    # A few words in between, a zero reading too ("gauge has read 0 since <date>"), in one
+    # clause. A last good reading ("last read 253.9 bar on <date>") dates no failure.
+    r"^(?!.*\b(?:last|good|valid|before|until|prior|worked|working)\b)"
+    r"(?:[\s,]*(?:[^\W\d][\w'’-]*|0)){0,5}?\s*(?P<prep>since|from|on|at|around|in)\s*$",
+    re.IGNORECASE,
 )
 
 
@@ -1389,7 +1528,8 @@ def _date_events(text: str, cited: list[Evidence], leaves_of) -> list[str]:
             named = None
             for m in re.finditer(words, before, re.IGNORECASE):
                 named = m
-            if named is None or not EVENT_REACH.match(before[named.end() :]):
+            reach = EVENT_REACH.match(before[named.end() :]) if named else None
+            if reach is None:
                 continue
             dated = {lf.record for lf in leaves if lf.record is not None and day in lf.record_days}
             of_event = {
@@ -1412,6 +1552,19 @@ def _date_events(text: str, cited: list[Evidence], leaves_of) -> list[str]:
                 wrong.append(
                     f"{day} is given as the {event}'s date, but the {event} in its evidence "
                     f"runs from {first}" + (f" to {last}" if last != first else "")
+                )
+                continue
+            # "since"/"from" give its start: a day inside it, or its end, is not when it
+            # began ("gauge dead since 2010-11-01" when it read 0 from 2010-10-12).
+            starts = sorted({a for a, _ in spans})
+            if (
+                reach["prep"].lower() in ("since", "from")
+                and starts
+                and not any(a[: len(day)] == day for a in starts)
+            ):
+                wrong.append(
+                    f"{day} is given as the start of the {event}, but the {event} in its "
+                    f"evidence starts on {', '.join(starts)}"
                 )
     return list(dict.fromkeys(wrong))
 
@@ -1467,6 +1620,107 @@ def _reversed(label, blanked, declared, unused, log, leaves_of) -> list[str]:
     return problems
 
 
+RANGE_BEFORE = re.compile(
+    r"\b(?:range|band|interval|between)\b(?:\s+(?:of|from|is|was))?\s*$", re.IGNORECASE
+)
+RANGE_JOIN = re.compile(r"\s*(?:%|[^\W\d]+\d?(?:/[^\W\d]+)?)?\s*(?:to|and|-|–)\s*")
+
+
+def _range_order(label, blanked, declared, unused) -> list[str]:
+    """A range written high to low ("calibrated range 470,000 to 324,000"): its ends read
+    as each other's."""
+    spans = sorted(
+        (start, end, id(d), d)
+        for d in declared
+        if d not in unused
+        for start, end in _standalone(blanked, d.text)[:1]
+    )
+    problems = []
+    for (a_start, a_end, _, a), (b_start, _, _, b) in zip(spans, spans[1:], strict=False):
+        if (
+            RANGE_BEFORE.search(blanked[max(0, a_start - 40) : a_start])
+            and RANGE_JOIN.fullmatch(blanked[a_end:b_start])
+            and a.value > b.value
+        ):
+            problems.append(
+                f"{label}: the range '{a.text} to {b.text}' runs from high to low; its low "
+                f"end is {b.text}. Write a range low to high."
+            )
+    return problems
+
+
+MOVED_TO = re.compile(
+    rf"\b(?:(?P<rise>{RISE_WORDS}|risen|gone up|went up)|(?P<fall>{FALL_WORDS}|fallen|gone down|"
+    r"went down))\s+to\s*(?:about|around|roughly|nearly|almost|some)?\s*[~≈]?\s*$",
+    re.IGNORECASE,
+)
+
+
+def _moved_to(label, text, blanked, declared, unused, items, leaves_of) -> list[str]:
+    """A level written as reached by a rise or a fall ("water cut has fallen to 69%") where
+    the change its evidence records for that quantity ran the other way. Judged against the
+    change dated in the sentence, else the latest one, of the well the sentence names."""
+    problems = []
+    for d in declared:
+        if d in unused:
+            continue
+        for start, _ in _standalone(blanked, d.text)[:1]:
+            begin = max([0, *(m.end() for m in CLAUSE.finditer(blanked[:start]))])
+            moved = MOVED_TO.search(blanked[begin:start])
+            if not moved:
+                continue
+            names = list(_NAMES.finditer(blanked[begin : begin + moved.start()]))
+            if not names:
+                continue
+            quantity = next(
+                q for q, (t, _) in QUANTITIES.items() if re.fullmatch(t, names[-1].group(0), re.I)
+            )
+            pattern = QUANTITIES[quantity][1]
+            wells = _named(text, start)
+            dates = DATE.findall(text[begin:start])
+            changes = [
+                (min(lf.record_days), lf, item)
+                for item in items
+                for lf in leaves_of(item)
+                if lf.sign is not None
+                and lf.record_days
+                and re.search(pattern, lf.labels)
+                and (not wells or lf.well is None or _well_key(lf.well) in wells)
+            ]
+            if dates:
+                changes = [
+                    c for c in changes if any(day.startswith(dates[-1]) for day in c[1].record_days)
+                ]
+            elif changes:
+                latest = max(c[0] for c in changes)
+                changes = [c for c in changes if c[0] == latest]
+            way = 1 if moved["rise"] else -1
+            if changes and all(lf.sign == -way for _, lf, _ in changes):
+                when, _, item = changes[0]
+                problems.append(
+                    f"{label}: '{d.text}' is written as reached by a "
+                    f"{'rise' if way == 1 else 'fall'}, but in {item.id} the {quantity}'s "
+                    f"change on {when} is a {'fall' if way == 1 else 'rise'}."
+                )
+    return problems
+
+
+# Numbers written as words: fractions and tens ("two thirds" would need declaring as 67%).
+# Multiples up to ten ("twice", "four times") are as free as the digits. "First half of
+# 2010", "half-life" and "half below 3164 m" (the depth half the flow enters below) are not
+# amounts.
+NUMBER_WORDS = re.compile(
+    r"\b(?:(?:two|three)[\s-]+(?:thirds|quarters|fifths)|(?:one|a)[\s-]+(?:third|quarter|fifth)"
+    r"(?=\s+of\b)|one[\s-]+(?:third|quarter)|"
+    r"(?<!first )(?<!second )(?<!latter )(?<!last )(?<!other )half(?![\s-]+(?:life|year|way)\b)"
+    r"(?!\s+(?:of\s+)?(?:the\s+)?(?:\w+\s+){0,3}?(?:below|above|enters|entered|comes|came)\b)|"
+    r"halved|halving|"
+    r"eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|"
+    r"twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)\b",
+    re.IGNORECASE,
+)
+
+
 def _as_written(value: float, decimals: int, suffix: str | None) -> str:
     return f"{value:.{max(decimals, 0)}f}{suffix or ''}"
 
@@ -1497,11 +1751,8 @@ def _declared(
     # declared anyway), so it costs no correction round; it is only named as a hint below.
     unused = [d for d in declared if not _standalone(masked, d.text)]
     masked_dates = _mask_keep_dates(text)
-    for number in declared:
-        if number in unused:
-            continue
-        where = number.evidence_id
-        item = log.get(where)
+
+    def readings_of(number: DeclaredNumber) -> list[Reading]:
         # A unit the text writes right after the declared number scales it too: "4.58"
         # declared, "4.58 MSm3" written.
         unit = SUFFIX_AFTER.match(masked, _standalone(masked, number.text)[0][1])
@@ -1510,8 +1761,43 @@ def _declared(
         # "about 70%" for 69.39%: an approximate number is good to 1% of itself.
         if APPROX.search(masked[: _standalone(masked, number.text)[0][0]]):
             readings = [(v, max(u, 0.01 * abs(v)), sc) for v, u, sc in readings]
+        return readings
+
+    def fits_of(number: DeclaredNumber) -> list[Reading]:
+        return [f for r in readings_of(number) if (f := _pinned(r, number.value))]
+
+    def attributed(number: DeclaredNumber, fits: list[Reading], item: Evidence) -> str | None:
+        """The attribution problem of a declared text where it is written. A text declared
+        twice (P-4's 31% step, P-2's 31% water cut) holds where either declaration does; one
+        written more often than declared repeats a value already checked."""
+        spans = _standalone(blanked, number.text)
+        same = [d for d in declared if d not in unused and d.text == number.text]
+
+        def fails(d: DeclaredNumber, span: tuple[int, int]) -> str | None:
+            other = item if d is number else log.get(d.evidence_id)
+            if other is None:
+                return "comes from unknown evidence"
+            found = fits if d is number else fits_of(d)
+            return _attribution(text, blanked, d.text, found, other, leaves_of(other), spans=[span])
+
+        failing = [(span, wrong) for span in spans if (wrong := fails(number, span))]
+        failing = [
+            (span, wrong)
+            for span, wrong in failing
+            if all(fails(o, span) for o in same if o is not number)
+        ]
+        return failing[0][1] if len(failing) > max(0, len(spans) - len(same)) else None
+
+    for number in declared:
+        if number in unused:
+            continue
+        where = number.evidence_id
+        item = log.get(where)
+        readings = readings_of(number)
         fits = [f for r in readings if (f := _pinned(r, number.value))]
-        exempt = [n for n in _numbers_in_text(number.text) if _free(*n, pool, free)]
+        at = _standalone(masked, number.text)[0][1]
+        year = _yearlike(number.text, masked[at:])
+        exempt = [n for n in _numbers_in_text(number.text) if _free(*n, pool, free, year)]
         if fits and exempt:
             continue  # "3 producers", "2010": declared though it needs no evidence
         if not readings:
@@ -1537,12 +1823,14 @@ def _declared(
             nearest = sorted(set(numbers), key=lambda n: abs(n - abs(number.value)))[:3]
             hint = f" Closest there: {', '.join(f'{n:g}' for n in nearest)}." if nearest else ""
             problems.append(f"{label}: '{number.text}' = {number.value:g} is not in {where}.{hint}")
+        elif wrong := _scale_mismatch(fits, leaves_of(item), item):
+            problems.append(f"{label}: '{number.text}' {wrong}.")
         elif (wrong_row := _row_mismatch(masked_dates, number.text, fits, item)) is not None:
             problems.append(
                 f"{label}: '{number.text}' is in {where}, but not in its {wrong_row[0]} row, "
                 f"which the text ties it to; that row has {wrong_row[1]}."
             )
-        elif wrong := _attribution(text, blanked, number.text, fits, item, leaves_of(item)):
+        elif wrong := attributed(number, fits, item):
             problems.append(f"{label}: '{number.text}' {wrong}. Write what the evidence says.")
         elif record := _record_mismatch(masked_dates, number.text, fits, leaves_of(item)):
             problems.append(
@@ -1551,6 +1839,9 @@ def _declared(
             )
 
     problems += _reversed(label, blanked, declared, unused, log, leaves_of)
+    items = [i for i in (log.get(e) for e in (citable or {d.evidence_id for d in declared})) if i]
+    problems += _moved_to(label, text, blanked, declared, unused, items, leaves_of)
+    problems += _range_order(label, blanked, declared, unused)
     # Numbers inside a quote are checked with the quote.
     rest = _mask(QUOTED.sub(" ", _translations_outside(text)))
     for number in sorted(declared, key=lambda d: -len(d.text)):
@@ -1574,7 +1865,8 @@ def _declared(
         written = match.group(0).strip()
         # Either convention: "0,80" is 0 and 80, or 0.8; "1.234.567" is a number too.
         values = [n for european in (False, True) for n in _numbers_in_text(written, european)]
-        if values and all(_free(*n, pool, free) for n in values):
+        year = _yearlike(written, rest[match.end() :])
+        if values and all(_free(*n, pool, free, year) for n in values):
             continue
         # Read as written: a Norwegian reading counts only with a decimal comma ("0,80").
         if exact(written) & declared_values and (
@@ -1583,6 +1875,12 @@ def _declared(
             continue
         if values and written not in leftover:
             leftover.append(written)
+    words = list(dict.fromkeys(m.group(0) for m in NUMBER_WORDS.finditer(rest)))
+    if words:
+        problems.append(
+            f"{label}: {', '.join(repr(w) for w in words)} is a number in words, which the "
+            "checker cannot check; write the number from the evidence in digits and declare it."
+        )
     if leftover:
         hint = (
             f" Declared but not written as such: {', '.join(repr(d.text) for d in unused)}."
@@ -1605,12 +1903,18 @@ def _suggest(written: list[str], citable: set[str] | None, log: EvidenceLog) -> 
     for text in written[:3]:
         # The value nearest the number as written, so "3 150" is declared as the 3150 the
         # evidence holds rather than a 3147 that also rounds to it; on a tie, the first item.
+        # "0.69%" is no water cut of 0.69: a percent under 1 reads only as a share.
+        def scales(r: Reading, text: str = text) -> tuple[float, ...]:
+            if text.rstrip().endswith(("%", "percent", "pct")) and abs(r[0]) < 1:
+                return tuple(sc for sc in r[2] if sc != 1.0)
+            return r[2]
+
         hits = [
             (min(abs(n - r[0] * sc) / max(abs(r[0] * sc), 1e-9) for sc in r[2]), k, n, item.id)
             for k, item in enumerate(i for i in items if i is not None)
             for n in _Pool([item]).numbers
             for r in _readings(text)
-            if _reads_as(r, [n])
+            if scales(r) and _reads_as((r[0], r[1], scales(r)), [n])
         ]
         if hits:
             _, _, value, evidence_id = min(hits, key=lambda h: (h[0], h[1]))
@@ -1988,9 +2292,12 @@ def _within_limits(label: str, text: str, items: list[Evidence]) -> list[str]:
     results = [e for e in items if e.tool == "field_vs_design" and isinstance(e.result, dict)]
     if not results:
         return []
-    for sentence in FULL_SENTENCE.split(text):
-        m = WITHIN.search(sentence)
-        if not m or not re.search(r"design|limit|capacit|plan", sentence, re.I):
+    for sentence, m in (
+        (part, m) for part in FULL_SENTENCE.split(text) for m in WITHIN.finditer(part)
+    ):
+        # Every such phrase of a sentence: "stayed within oil limits ... and never exceeded
+        # water injection capacity" claims both.
+        if not re.search(r"design|limit|capacit|plan", sentence, re.I):
             continue
         if WELL.search(sentence) or re.search(r"\b(?:until|before|through|up to)\b", sentence):
             continue

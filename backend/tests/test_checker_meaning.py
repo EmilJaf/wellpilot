@@ -182,3 +182,136 @@ def test_a_summary_that_denies_the_collapse_passes() -> None:
     )
     result = check_edits(run["question"], run["result"], log, [], SUMMARY.format(last=last))
     assert result["accepted"], result["problems"]
+
+
+# The outside review (Oct 28): edits of the time machine's answer (0d95b4d9cf46, as of
+# 2010-12-31) that "Try to fool the checker" accepted. Each now comes back.
+TM2 = "0d95b4d9cf46"  # 1: F-12's gauge; 2: its water cut and oil; 4: F-14; 5: limits; 6: forecast
+
+
+def edited(index: int, old: str, new: str) -> tuple[str, int, str | None, str]:
+    run, _ = load(TM2)
+    claim = run["result"]["findings"][index - 1]["claim"]
+    assert old in claim, (index, old)
+    return TM2, index, claim.replace(old, new), run["result"]["findings"][index - 1]["confidence"]
+
+
+REVIEW = [
+    (*edited(1, "since 2010-10-12", "since 2010-10-11"), "runs from 2010-10-12"),
+    (*edited(2, "has risen to", "has fallen to"), "reached by a fall"),
+    (*edited(6, "324,000 to 470,000", "470,000 to 324,000"), "high to low"),
+    (*edited(4, "its oil rate is 34% lower", "F-12's is 34% lower"), "only for F-14"),
+    (
+        *edited(
+            5,
+            "with maximum water cut 67% below the 80% limit, but exceeded water injection "
+            "capacity of 16,000 Sm3/d in 3 months up to 17,206 Sm3/d",
+            "and never exceeded water injection capacity of 16,000 Sm3/d",
+        ),
+        "water injection capacity",
+    ),
+    (*edited(5, "67% below the 80% limit", "67% under the 80% limit"), "difference from the limit"),
+    (*edited(2, "about 69%", "about 0.69%"), "a share of 0.0069"),
+    (*edited(2, "its oil rate is 55% lower than before", "its oil rate is 2,010 Sm3/d"), "2,010"),
+    (*edited(2, "about 69%", "about two thirds"), "number in words"),
+    (*edited(2, "its oil rate is 55% lower than before", "its oil is half what it was"), "words"),
+]
+
+
+@pytest.mark.parametrize("run_id, index, claim, confidence, why", REVIEW)
+def test_the_outside_reviews_edits_are_caught(run_id, index, claim, confidence, why) -> None:
+    run, log = load(run_id)
+    result = check_edits(run["question"], run["result"], log, [(index, claim, confidence)])
+    assert not result["accepted"], claim
+    assert any(why in p for p in result["problems"]), result["problems"]
+
+
+def test_the_outside_reviews_summary_edits_are_caught() -> None:
+    run, log = load(TM2)
+    summary = run["result"]["summary"]
+    for edit, why in [
+        (summary.replace("324,000 to 470,000", "470,000 to 324,000"), "high to low"),
+        (
+            summary.replace(
+                "but exceeded water injection capacity in 3 months",
+                "and never exceeded water injection capacity",
+            ),
+            "water injection capacity",
+        ),
+    ]:
+        result = check_edits(run["question"], run["result"], log, [], edit)
+        assert not result["accepted"]
+        assert any(why in p for p in result["problems"]), result["problems"]
+
+
+def declared(index: int, claim: str, numbers: list[tuple[str, float, str]]) -> list[str]:
+    """The checker's problems for finding `index` rewritten with these declarations, as a
+    careful reader (or the model) would declare them."""
+    from wellpilot.agent.checker import DeclaredNumber, Finding, Submission, check_submission
+
+    run, log = load(TM2)
+    findings = [Finding.model_validate(f) for f in run["result"]["findings"]]
+    findings[index - 1] = findings[index - 1].model_copy(
+        update={
+            "claim": claim,
+            "numbers": [DeclaredNumber(text=t, value=v, evidence_id=e) for t, v, e in numbers],
+        }
+    )
+    summary_numbers = [DeclaredNumber.model_validate(n) for n in run["result"]["summary_numbers"]]
+    submission = Submission(
+        summary=run["result"]["summary"], findings=findings, summary_numbers=summary_numbers
+    )
+    problems = check_submission(submission, log, run["question"])
+    return [p for p in problems if p.startswith(f"Finding {index}")]
+
+
+@pytest.mark.parametrize(
+    "index, claim, numbers, why",
+    [
+        # E16's 2010-11 value given to 2010-12, the date first
+        (2, "In 2010-12 F-12's oil was 44,468 Sm3.", [("44,468", 44468, "E16")], "2010-12 row"),
+        (2, "F-12's water cut has risen to about 0.69%.", [("0.69%", 0.69, "E2")], "0.0069"),
+        (
+            2,
+            "F-12's oil rate is 1,551 thousand Sm3/d.",
+            [("1,551 thousand", 1551, "E2")],
+            "drop the scale word",
+        ),
+        (2, "F-12's oil rate is now 2,010 Sm3/d.", [("2,010", 2010, "E7")], "years"),
+        (
+            1,
+            "F-12's downhole gauge last read 253.9 psi on 2010-10-11.",
+            [("253.9", 253.9, "E5")],
+            "written in psi",
+        ),
+        (3, "A bridge plug was set at 3,210 ft on 2010-09-23.", [("3,210", 3210, "E9")], "feet"),
+    ],
+)
+def test_a_declared_wrong_scale_unit_or_row_is_caught(index, claim, numbers, why) -> None:
+    problems = declared(index, claim, numbers)
+    assert any(why in p for p in problems), problems
+
+
+@pytest.mark.parametrize(
+    "index, claim, numbers",
+    [
+        (2, "In 2010-12 F-12's oil was 45,218 Sm3.", [("45,218", 45218, "E16")]),
+        (2, "F-12's water cut has risen to about 69%.", [("69%", 0.6939, "E2")]),
+        (2, "F-12's oil rate is 1,551 Sm3/d.", [("1,551", 1551, "E2")]),
+        (2, "F-12's water cut rose in the first half of 2010.", []),
+        (1, "F-12's downhole gauge last read 253.9 bar on 2010-10-11.", [("253.9", 253.9, "E5")]),
+        (3, "A bridge plug was set at 3,210 m on 2010-09-23.", [("3,210", 3210, "E9")]),
+        (
+            5,
+            "The field's maximum water cut was 67%, under the 80% limit.",
+            [("67%", 0.6715, "E3"), ("80%", 0.8, "E3")],
+        ),
+        (
+            2,
+            "F-12's oil rate was 1,551 Sm3/d, down 16.5% over the last 90 days.",
+            [("1,551", 1551, "E2"), ("16.5%", -0.165, "E2")],
+        ),
+    ],
+)
+def test_the_true_declared_phrasing_passes(index, claim, numbers) -> None:
+    assert declared(index, claim, numbers) == []

@@ -85,7 +85,10 @@ rests on evidence with warnings must be an inference.
 evidence id it comes from, e.g. {{"text": "4 050", "value": 4050, "evidence_id": "E3"}} \
 or {{"text": "72%", "value": 0.72, "evidence_id": "E9"}}. Write dates as YYYY-MM-DD. \
 Dates, years, well names, integers up to 10, window lengths ("30-day median", "the next 12 \
-months") and numbers from the question need no declaration.
+months") and numbers from the question need no declaration. Write amounts in digits, never \
+in words ("55% lower", not "half"; "67%", not "two thirds"): words cannot be checked. A \
+level against a limit is written as the level ("a water cut of 67%, under the 80% limit"), \
+not as a difference ("67% below the limit"). A range runs low to high.
 - Write for an engineer and their manager. The summary's first sentence answers the \
 question in plain words a manager follows: what is wrong with what ("its downhole pressure \
 gauge is dead; water is now most of what the well makes"), not the tools' labels (alarm, \
