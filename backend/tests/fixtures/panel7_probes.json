@@ -1,0 +1,1429 @@
+{
+ "note": "Edits of the frozen runs by the seventh panel's simulated AI engineer (Oct 28 night), checked like a reader's edit: 'caught' must be sent back, 'true' accepted; 'open' are in-scope false versions still passed and the true ones still rejected, kept to measure progress.",
+ "caught": [
+  {
+   "id": "A02",
+   "run": "69519dd0a995",
+   "index": 1,
+   "text": "F-12 needs attention most: it makes 1 551 Sm3/d oil at a water cut of 69%, with its downhole gauge dead since early 2010.",
+   "conf": "fact",
+   "kind": "date (season)",
+   "scope": "in",
+   "why": "gauge died 2010-10-12"
+  },
+  {
+   "id": "A03",
+   "run": "69519dd0a995",
+   "index": 1,
+   "text": "F-12 needs attention most: it makes 1 551 Sm3/d oil at a water cut of 69%, with its downhole gauge dead since November 2010.",
+   "conf": "fact",
+   "kind": "date (month word)",
+   "scope": "in",
+   "why": "2010-10-12"
+  },
+  {
+   "id": "A05",
+   "run": "69519dd0a995",
+   "index": 1,
+   "text": "F-12 needs attention most: it makes 1 551 Sm3/d oil at a water cut of 69%, with its downhole gauge dead for 6 months.",
+   "conf": "fact",
+   "kind": "duration",
+   "scope": "in",
+   "why": "81 days"
+  },
+  {
+   "id": "A08",
+   "run": "69519dd0a995",
+   "index": 1,
+   "text": "F-12 needs attention most: its oil rate of 1 551 Sm3/d is higher than F-14's 2 175 Sm3/d, at a water cut of 69%.",
+   "conf": "fact",
+   "kind": "comparison of two numbers",
+   "scope": "in",
+   "why": "1551 < 2175"
+  },
+  {
+   "id": "A10",
+   "run": "69519dd0a995",
+   "index": 1,
+   "text": "F-12 needs attention most: it makes 1 551 Sm3/d oil at a water cut of 69%, with its downhole gauge dead since 2010-10-12, a sign its reservoir pressure has dropped.",
+   "conf": "fact",
+   "kind": "pressure misread",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "A11",
+   "run": "69519dd0a995",
+   "index": 1,
+   "text": "F-12 needs attention most: it makes 1 551 Sm3/d of liquid at a water cut of 69%, with its downhole gauge dead since 2010-10-12.",
+   "conf": "fact",
+   "kind": "phase (oil->liquid)",
+   "scope": "in",
+   "why": "1551 is oil rate"
+  },
+  {
+   "id": "A13",
+   "run": "69519dd0a995",
+   "index": 1,
+   "text": "F-12 needs attention most: it makes 1 551 Sm3/d oil at a water cut of 98%, with its downhole gauge dead since 2010-10-12.",
+   "conf": "fact",
+   "kind": "quantity",
+   "scope": "in",
+   "why": "0.98 is uptime"
+  },
+  {
+   "id": "A15",
+   "run": "69519dd0a995",
+   "index": 1,
+   "text": "F-12 needs attention most: it makes 1 551 Sm3/d oil at a water cut of 69%, has produced 3 569 815 Sm3 of water since first oil, with its downhole gauge dead since 2010-10-12.",
+   "conf": "fact",
+   "kind": "phase",
+   "scope": "in",
+   "why": "cum water 965404"
+  },
+  {
+   "id": "A18",
+   "run": "69519dd0a995",
+   "index": 2,
+   "text": "F-12 oil rate shifted down 55% around 2010-05-02 to 1 888 Sm3/d, while choke was opened from 58% to 83%.",
+   "conf": "fact",
+   "kind": "from-to order",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "A23",
+   "run": "69519dd0a995",
+   "index": 2,
+   "text": "F-12 oil rate shifted down 55% around 2010-05-02 to 1 888 Sm3/d, while choke was cut from 83% to 58%, so the choke cut produced the whole drop.",
+   "conf": "fact",
+   "kind": "cause as fact (produced)",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "A24",
+   "run": "69519dd0a995",
+   "index": 2,
+   "text": "F-12 oil rate shifted down 55% around 2010-05-02 to 1 888 Sm3/d, while choke was cut from 83% to 58%; the choke cut accounts for the drop.",
+   "conf": "fact",
+   "kind": "cause as fact (accounts for)",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "A25",
+   "run": "69519dd0a995",
+   "index": 2,
+   "text": "F-12 oil rate shifted down 55% around 2010-05-02 to 1 888 Sm3/d thanks to the choke being cut from 83% to 58%.",
+   "conf": "fact",
+   "kind": "cause as fact (thanks to)",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "A26",
+   "run": "69519dd0a995",
+   "index": 2,
+   "text": "F-12 oil rate shifted down 55% around 2009-05-02 to 1 888 Sm3/d, while choke was cut from 83% to 58%.",
+   "conf": "fact",
+   "kind": "date",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "A30",
+   "run": "69519dd0a995",
+   "index": 3,
+   "text": "A bridge plug was set at 3 210 m on 2010-09-23, which logs show could shut off about 32% of oil for about 1% of water.",
+   "conf": "inference",
+   "kind": "phase swap",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "A31",
+   "run": "69519dd0a995",
+   "index": 3,
+   "text": "A bridge plug was set at 3 210 m on 2009-03-14, which logs show could shut off about 32% of water for about 1% of oil.",
+   "conf": "inference",
+   "kind": "date of other event",
+   "scope": "in",
+   "why": "2009-03-14 is the PLT"
+  },
+  {
+   "id": "A36",
+   "run": "69519dd0a995",
+   "index": 4,
+   "text": "F-14 also needs watch: oil rate is 9% lower since 2010-01-10 at 2 175 Sm3/d and water cut 61%, with no gauge issue.",
+   "conf": "inference",
+   "kind": "small percentage",
+   "scope": "in",
+   "why": "34% / 8% across"
+  },
+  {
+   "id": "A37",
+   "run": "69519dd0a995",
+   "index": 4,
+   "text": "F-14 also needs watch: oil rate is 34% lower since 2010-01-10 at 2 175 Sm3/d and water cut 61%, with the choke cut from 45% to 35%.",
+   "conf": "inference",
+   "kind": "choke invented",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "A39",
+   "run": "69519dd0a995",
+   "index": 4,
+   "text": "F-14 also needs watch: oil rate is 34% higher since 2010-01-10 at 2 175 Sm3/d and water cut 61%, with no gauge issue.",
+   "conf": "inference",
+   "kind": "direction",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "A41",
+   "run": "69519dd0a995",
+   "index": 5,
+   "text": "The field is under design: water cut peaked at 67% under the 80% limit and injection peaked at 17 206 Sm3/d, under its 16 000 Sm3/d capacity.",
+   "conf": "fact",
+   "kind": "inconsistent numbers",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "A42",
+   "run": "69519dd0a995",
+   "index": 5,
+   "text": "The field is under design: water cut peaked at 67% in 2010-06 under the 80% limit and liquid 10 800 Sm3/d under 13 000 Sm3/d capacity.",
+   "conf": "fact",
+   "kind": "row tie",
+   "scope": "in",
+   "why": "max month 2010-12"
+  },
+  {
+   "id": "A45",
+   "run": "69519dd0a995",
+   "index": 5,
+   "text": "The field came close to design: oil peaked at 8 924 Sm3/d in 2009-12, just under the 9 000 Sm3/d capacity.",
+   "conf": "fact",
+   "kind": "row tie",
+   "scope": "in",
+   "why": "2008-12"
+  },
+  {
+   "id": "A48",
+   "run": "69519dd0a995",
+   "index": 6,
+   "text": "F-12 2012 forecast is about 359,000 Sm3, range 324,000 to 470,000, hedged as the decline fit is poor.",
+   "conf": "inference",
+   "kind": "forecast year",
+   "scope": "in",
+   "why": "2011"
+  },
+  {
+   "id": "A49",
+   "run": "69519dd0a995",
+   "index": 6,
+   "text": "F-12 next 12 months forecast is about 359,000 bbl, range 324,000 to 470,000, hedged as the decline fit is poor.",
+   "conf": "inference",
+   "kind": "unit",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "A50",
+   "run": "69519dd0a995",
+   "index": 6,
+   "text": "F-12 next 12 months forecast is about 359,000 Sm3/d, range 324,000 to 470,000, hedged as the decline fit is poor.",
+   "conf": "inference",
+   "kind": "volume as rate",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "A52",
+   "run": "69519dd0a995",
+   "index": 6,
+   "text": "F-12 next 12 months forecast with the exponential model is about 359,000 Sm3, range 324,000 to 470,000, hedged as the decline fit is poor.",
+   "conf": "inference",
+   "kind": "model name",
+   "scope": "in",
+   "why": "exponential 302158"
+  },
+  {
+   "id": "A53",
+   "run": "69519dd0a995",
+   "index": 6,
+   "text": "F-12 next 12 months forecast is about 359,000 Sm3, low case 470,000 and high case 324,000, hedged as the decline fit is poor.",
+   "conf": "inference",
+   "kind": "low/high case swap",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "A59",
+   "run": "69519dd0a995",
+   "index": 6,
+   "text": "F-12 next 12 months forecast is about 359,000 Sm3, with the rate falling from 1 363 Sm3/d in 2011-01 to 841 Sm3/d in 2011-06, hedged as the decline fit is poor.",
+   "conf": "inference",
+   "kind": "row tie",
+   "scope": "in",
+   "why": "2011-06 1065"
+  },
+  {
+   "id": "A63",
+   "run": "69519dd0a995",
+   "index": 6,
+   "text": "F-12 next 12 months forecast is about 359,000 Sm3, more than the 873 828 Sm3 it made in 2010, hedged as the decline fit is poor.",
+   "conf": "inference",
+   "kind": "comparison",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "AS2",
+   "run": "69519dd0a995",
+   "index": "S",
+   "text": "F-12 needs attention most — its downhole pressure has collapsed and water is now most of what the well makes, with oil rate down sharply since mid-2010; F-14 also shows falling oil as water rises but is less urgent. The field is still under its design limits for water cut and liquid handling. The fit suggests F-12 will make about 359,000 Sm3 in the next 12 months, range 324,000 to 470,000.",
+   "conf": null,
+   "kind": "pressure misread (summary)",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "AS3",
+   "run": "69519dd0a995",
+   "index": "S",
+   "text": "F-12 needs attention most because injected water broke through — its downhole pressure gauge is dead and water is now most of what the well makes, with oil rate down sharply since mid-2010; F-14 also shows falling oil as water rises but is less urgent. The field is still under its design limits for water cut and liquid handling. The fit suggests F-12 will make about 359,000 Sm3 in the next 12 months, range 324,000 to 470,000.",
+   "conf": null,
+   "kind": "unhedged cause (summary)",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "AS4",
+   "run": "69519dd0a995",
+   "index": "S",
+   "text": "F-12 needs attention most — its downhole pressure gauge is dead and water is now most of what the well makes, with oil rate down sharply since mid-2010; F-14 also shows falling oil as water rises but is less urgent. The field is still under its design limits for water cut and liquid handling. F-12 will make about 359,000 Sm3 in the next 12 months, range 324,000 to 470,000.",
+   "conf": null,
+   "kind": "warned number unhedged",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "B02",
+   "run": "4f938683446e",
+   "index": 4,
+   "text": "A plug set just below the oil interval at about 3,170 m MD would shut off about 93% of the water while losing only about 8% of the oil.",
+   "conf": "fact",
+   "kind": "depth tie",
+   "scope": "in",
+   "why": "3170: water 0.488, oil 0.019"
+  },
+  {
+   "id": "B03",
+   "run": "4f938683446e",
+   "index": 4,
+   "text": "A plug set just below the oil interval at about 3,160 m MD would shut off about 93% of the water while losing only about 8% of the oil.",
+   "conf": "fact",
+   "kind": "depth tie",
+   "scope": "in",
+   "why": "3160: oil 0.768 lost"
+  },
+  {
+   "id": "B06",
+   "run": "4f938683446e",
+   "index": 4,
+   "text": "A plug set just below the oil interval at about 3,165 m MD would shut off about 93% of the water while losing only about 8% of the oil, according to the March 2009 log.",
+   "conf": "fact",
+   "kind": "survey date",
+   "scope": "in",
+   "why": "2009 log has no water"
+  },
+  {
+   "id": "B07",
+   "run": "4f938683446e",
+   "index": 1,
+   "text": "F-12 fell to about 175 Sm3/d of water at a water cut of about 97% by 2014-10-31.",
+   "conf": "fact",
+   "kind": "phase",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "B08",
+   "run": "4f938683446e",
+   "index": 1,
+   "text": "F-12 fell to about 332 Sm3/d of oil at a water cut of about 91% by 2014-10-31.",
+   "conf": "fact",
+   "kind": "well swap",
+   "scope": "in",
+   "why": "F-14's numbers"
+  },
+  {
+   "id": "B20",
+   "run": "bf4fa9e48aa3",
+   "index": 3,
+   "text": "F-12's water cut fell from about 0.96 to about 0.31 after isolation at 3,210 m and new perforations.",
+   "conf": "fact",
+   "kind": "depth of other job",
+   "scope": "in",
+   "why": "3210 is 2010 plug"
+  },
+  {
+   "id": "B26",
+   "run": "bf4fa9e48aa3",
+   "index": 4,
+   "text": "F-12's liquid fell from 4,923 Sm3/d in 2014-11 to 1,251 in 2015-01 while its choke rose from 100% to 30.28%.",
+   "conf": "fact",
+   "kind": "direction contradicts numbers",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "B27",
+   "run": "bf4fa9e48aa3",
+   "index": 4,
+   "text": "F-12's liquid fell from 4,923 Sm3/d in 2014-11 to 1,251 in 2015-02 while its choke was cut from 100% to 30.28%.",
+   "conf": "fact",
+   "kind": "row tie",
+   "scope": "in",
+   "why": "2015-02 1337"
+  },
+  {
+   "id": "B28",
+   "run": "bf4fa9e48aa3",
+   "index": 5,
+   "text": "The oil gain persisted through 2015 at a moderate decline, not a transient peak, reaching about 0.77 water cut by mid-2015.",
+   "conf": "fact",
+   "kind": "period",
+   "scope": "in",
+   "why": "mid-2015 0.63"
+  },
+  {
+   "id": "B32",
+   "run": "bf4fa9e48aa3",
+   "index": 2,
+   "text": "From 2010-10-11 BHP reads zero while the well kept flowing, indicating a sensor failure not a pressure event.",
+   "conf": "fact",
+   "kind": "event date",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "B35",
+   "run": "bf4fa9e48aa3",
+   "index": 2,
+   "text": "BHP rose from 253.9 bar on 2010-09-23 to 312.1 bar on 2010-10-11, then the gauge read zero while the well kept flowing.",
+   "conf": "fact",
+   "kind": "from-to dates swapped",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "B36",
+   "run": "bf4fa9e48aa3",
+   "index": 2,
+   "text": "From 2010-10-12 BHP reads zero while the well kept flowing at about 1,759 Sm3/d of water, indicating a sensor failure.",
+   "conf": "fact",
+   "kind": "phase",
+   "scope": "in",
+   "why": "1759 oil"
+  },
+  {
+   "id": "C01",
+   "run": "f7d3faebb139",
+   "index": 1,
+   "text": "Over 2011-2013 F-12 has 36 months of paired data with a Pearson correlation of about -0.60 between monthly water cut and choke and a Spearman rank correlation of about 0.47.",
+   "conf": "inference",
+   "kind": "sign",
+   "scope": "in",
+   "why": "r +0.597"
+  },
+  {
+   "id": "C06",
+   "run": "f7d3faebb139",
+   "index": 2,
+   "text": "F-12's monthly water cut rose from 72.3% in Jan 2011 to 94.7% in Dec 2012 while yearly average choke went from 77.1% to about 99.6% and then held near fully open.",
+   "conf": "fact",
+   "kind": "row tie (month word)",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "C09",
+   "run": "f7d3faebb139",
+   "index": 3,
+   "text": "Months where the choke was cut back did not lower water cut, which shows the water came from the reservoir and not from the choke.",
+   "conf": "fact",
+   "kind": "cause as fact (shows)",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "D00",
+   "run": "85db026c4c7f",
+   "index": 4,
+   "text": "Liquid rate stayed near 5,100 Sm3/d while water cut rose to 86% after the choke was opened to 100% in 2012, so water displaced oil within fixed capacity.",
+   "conf": "fact",
+   "kind": "cause as fact in the shipped answer ('so')",
+   "scope": "in",
+   "why": "verified featured finding"
+  },
+  {
+   "id": "D02",
+   "run": "85db026c4c7f",
+   "index": 3,
+   "text": "The decline after July 2010 fits an exponential at about 0.45 per month.",
+   "conf": "inference",
+   "kind": "unit (per month)",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "D06",
+   "run": "85db026c4c7f",
+   "index": 3,
+   "text": "The decline before July 2010 fits an exponential at about 0.45 per year.",
+   "conf": "inference",
+   "kind": "period (before/after)",
+   "scope": "in",
+   "why": "before: 0.0545"
+  },
+  {
+   "id": "D09",
+   "run": "85db026c4c7f",
+   "index": 6,
+   "text": "The 2005 plan predicted breakthrough after about 3 years and F-12 broke through at about 21 months to 28 months; the field stayed within oil and liquid rate limits but exceeded the 80% water cut design.",
+   "conf": "fact",
+   "kind": "duration (plan)",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "D10",
+   "run": "85db026c4c7f",
+   "index": 6,
+   "text": "The 2005 plan predicted breakthrough after about 19 months and F-12 broke through at about 21 months to 28 months; the field stayed within oil and liquid rate limits but exceeded the 80% water cut design.",
+   "conf": "fact",
+   "kind": "duration (plan, other item)",
+   "scope": "in",
+   "why": "19 months is the plateau"
+  },
+  {
+   "id": "D11",
+   "run": "85db026c4c7f",
+   "index": 6,
+   "text": "The 2005 plan predicted breakthrough after about 2 years and F-12 broke through at about 21 months to 28 months; the field stayed within oil, liquid and injection rate limits but exceeded the 80% water cut design.",
+   "conf": "fact",
+   "kind": "within limits",
+   "scope": "in",
+   "why": "injection over 16000"
+  },
+  {
+   "id": "D12",
+   "run": "85db026c4c7f",
+   "index": 6,
+   "text": "The 2005 plan predicted breakthrough after about 2 years and F-12 broke through at about 21 months to 28 months; the field stayed within oil and liquid rate limits but exceeded the 90% water cut design.",
+   "conf": "fact",
+   "kind": "limit value",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "D16",
+   "run": "85db026c4c7f",
+   "index": 5,
+   "text": "The 2009 log report says '~83% of oil produced from the lower 3 completions, the rest from the upper 2'.",
+   "conf": "fact",
+   "kind": "misquote (swapped)",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "D17",
+   "run": "85db026c4c7f",
+   "index": 6,
+   "text": "The 2005 plan says 'Vannproduksjonen kommer først og fremst fra injeksjonsvannet som bryter gjennom i brønnene etter omlag 3 år' and F-12 broke through at about 21 months to 28 months.",
+   "conf": "fact",
+   "kind": "misquote (number)",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "E01",
+   "run": "69519dd0a995",
+   "index": 5,
+   "text": "The field came close to design: injection peaked at 17 206 Sm3/d, under its 16 000 Sm3/d capacity.",
+   "conf": "fact",
+   "kind": "comparison word 'under'",
+   "scope": "in",
+   "why": "17,206 > 16,000"
+  },
+  {
+   "id": "E02",
+   "run": "69519dd0a995",
+   "index": 5,
+   "text": "The field came close to design: injection peaked at 17 206 Sm3/d, below its 16 000 Sm3/d capacity.",
+   "conf": "fact",
+   "kind": "comparison word 'below' (control)",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "E03",
+   "run": "69519dd0a995",
+   "index": 5,
+   "text": "The field came close to design: oil peaked at 8 924 Sm3/d, over its 9 000 Sm3/d capacity.",
+   "conf": "fact",
+   "kind": "comparison word 'over'",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "E04",
+   "run": "69519dd0a995",
+   "index": 5,
+   "text": "The field came close to design: liquid peaked at 10 800 Sm3/d, exceeding its 13 000 Sm3/d capacity.",
+   "conf": "fact",
+   "kind": "comparison word 'exceeding'",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "E05",
+   "run": "69519dd0a995",
+   "index": 5,
+   "text": "The field came close to design: liquid peaked at 10 800 Sm3/d, more than its 13 000 Sm3/d capacity.",
+   "conf": "fact",
+   "kind": "comparison word 'more than'",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "E06",
+   "run": "69519dd0a995",
+   "index": 5,
+   "text": "The field has stayed within its oil, liquid and water injection capacities, with water cut peaking at 67% under the 80% limit.",
+   "conf": "fact",
+   "kind": "within limits (history)",
+   "scope": "in",
+   "why": "injection over 16,000 in 3 months"
+  },
+  {
+   "id": "E07",
+   "run": "69519dd0a995",
+   "index": 5,
+   "text": "Since first oil the field has never gone above its water injection capacity, and water cut peaked at 67% under the 80% limit.",
+   "conf": "fact",
+   "kind": "within limits (never gone above)",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "E09",
+   "run": "69519dd0a995",
+   "index": 4,
+   "text": "F-14 also needs watch: oil rate is 34% lower since 2010-01-10 at 2 175 Sm3/d and water cut 61%, and its downhole gauge is dead.",
+   "conf": "inference",
+   "kind": "gauge (control wording)",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "E10",
+   "run": "69519dd0a995",
+   "index": 2,
+   "text": "F-12 oil rate most likely shifted down 55% around 2010-05-02 to 1 888 Sm3/d because the choke was cut from 83% to 58%.",
+   "conf": "fact",
+   "kind": "hedged cause marked fact",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "E12",
+   "run": "69519dd0a995",
+   "index": 1,
+   "text": "F-12 needs attention most: it makes 1 551 Sm3/d oil at a WOR of 0.69, with its downhole gauge dead since 2010-10-12.",
+   "conf": "fact",
+   "kind": "water cut written as WOR",
+   "scope": "in",
+   "why": "WOR 2.46"
+  },
+  {
+   "id": "E15",
+   "run": "69519dd0a995",
+   "index": 2,
+   "text": "F-12 oil rate shifted down 55% in Q4 2009 to 1 888 Sm3/d, while choke was cut from 83% to 58%.",
+   "conf": "fact",
+   "kind": "quarter (wrong)",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "E16",
+   "run": "69519dd0a995",
+   "index": 1,
+   "text": "F-12 needs attention most: it makes 1 551 Sm3/d oil at a water cut of 69%; its downhole gauge died about 8 weeks after the bridge plug was set.",
+   "conf": "fact",
+   "kind": "relative duration",
+   "scope": "in",
+   "why": "19 days"
+  },
+  {
+   "id": "E17",
+   "run": "69519dd0a995",
+   "index": 6,
+   "text": "F-12 next 12 months forecast is about 350,000 Sm3, range 324,000 to 470,000, hedged as the decline fit is poor.",
+   "conf": "fact",
+   "kind": "rounding",
+   "scope": "in",
+   "why": "359,007"
+  },
+  {
+   "id": "E19",
+   "run": "69519dd0a995",
+   "index": 1,
+   "text": "F-12 needs attention most: it makes 1 551 Sm3/h oil at a water cut of 69%, with its downhole gauge dead since 2010-10-12.",
+   "conf": "fact",
+   "kind": "unit (per hour)",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "E22",
+   "run": "69519dd0a995",
+   "index": 2,
+   "text": "F-12 oil rate shifted down 55% around 2010-05-02 to 1 888 Sm3/d; the choke cut from 83% to 58% is behind the drop.",
+   "conf": "fact",
+   "kind": "cause word 'is behind'",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "E23",
+   "run": "69519dd0a995",
+   "index": 2,
+   "text": "F-12 oil rate shifted down 55% around 2010-05-02 to 1 888 Sm3/d; the choke cut from 83% to 58% is responsible for the drop.",
+   "conf": "fact",
+   "kind": "cause word 'responsible for'",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "E24",
+   "run": "69519dd0a995",
+   "index": 2,
+   "text": "F-12 oil rate shifted down 55% around 2010-05-02 to 1 888 Sm3/d, so it was the choke cut from 83% to 58% that did it.",
+   "conf": "fact",
+   "kind": "cause 'that did it'",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "E26",
+   "run": "69519dd0a995",
+   "index": "S",
+   "text": "F-12 needs attention most — its downhole pressure gauge is dead and water is now most of what the well makes, with oil rate down sharply since mid-2010; F-14 also shows falling oil as water rises but is less urgent. The field is still under its design limits for water cut and liquid handling. The fit suggests F-12 will make about 359,000 Sm3/d in the next 12 months, range 324,000 to 470,000.",
+   "conf": null,
+   "kind": "volume as rate (summary)",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "E27",
+   "run": "69519dd0a995",
+   "index": "S",
+   "text": "F-12 needs attention most — its downhole pressure gauge is dead and water is now most of what the well makes, with oil rate down sharply since mid-2010; F-14 also shows falling oil as water rises but is less urgent. The field is still under its design limits for water cut and liquid handling. The fit suggests F-14 will make about 359,000 Sm3 in the next 12 months, range 324,000 to 470,000.",
+   "conf": null,
+   "kind": "well (summary forecast)",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "E29",
+   "run": "85db026c4c7f",
+   "index": 6,
+   "text": "The field stayed within oil, liquid and injection rate limits but exceeded the 80% water cut design.",
+   "conf": "fact",
+   "kind": "within limits (no 'through' in sentence)",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "E30",
+   "run": "85db026c4c7f",
+   "index": 6,
+   "text": "The 2005 plan predicted breakthrough after about 2 years and F-12 first showed water at about 21 months to 28 months; the field stayed within oil, liquid and injection rate limits but exceeded the 80% water cut design.",
+   "conf": "fact",
+   "kind": "within limits ('broke through' removed)",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "E31",
+   "run": "85db026c4c7f",
+   "index": 2,
+   "text": "Its oil rate fell about 72% around 2010-07-18 to about 1,146 Sm3/d while the choke was cut from 54% to 51%, so the choke drove the fall.",
+   "conf": "fact",
+   "kind": "cause as fact ('drove' after 'so')",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "E32",
+   "run": "85db026c4c7f",
+   "index": 2,
+   "text": "Its oil rate fell about 72% around 2010-07-18 to about 1,146 Sm3/d after the choke was opened from 51% to 54%.",
+   "conf": "fact",
+   "kind": "from-to order (choke)",
+   "scope": "in",
+   "why": "54.2 -> 51.18"
+  }
+ ],
+ "true": [
+  {
+   "id": "A01",
+   "run": "69519dd0a995",
+   "index": 1,
+   "text": "F-12 needs attention most: it makes 1 551 Sm3/d oil at a water cut of 69%, with its downhole gauge dead since mid-October 2010.",
+   "conf": "fact",
+   "kind": "date words",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "A04",
+   "run": "69519dd0a995",
+   "index": 1,
+   "text": "F-12 needs attention most: it makes 1 551 Sm3/d oil at a water cut of 69%, with its downhole gauge dead for 81 days.",
+   "conf": "fact",
+   "kind": "duration",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "A06",
+   "run": "69519dd0a995",
+   "index": 1,
+   "text": "F-12 needs attention most: it makes 1 551 Sm3/d oil at a water cut of 69%, with its downhole gauge dead for about 12 weeks.",
+   "conf": "fact",
+   "kind": "duration",
+   "scope": "in",
+   "why": "81 days = 11.6 weeks"
+  },
+  {
+   "id": "A12",
+   "run": "69519dd0a995",
+   "index": 1,
+   "text": "F-12 needs attention most: it makes 1 551 Sm3/d oil at an uptime of 98%, with its downhole gauge dead since 2010-10-12.",
+   "conf": "fact",
+   "kind": "quantity (true swap)",
+   "scope": "in",
+   "why": "uptime 0.9846"
+  },
+  {
+   "id": "A14",
+   "run": "69519dd0a995",
+   "index": 1,
+   "text": "F-12 needs attention most: it makes 1 551 Sm3/d oil at a water cut of 69%, has produced 3 569 815 Sm3 of oil since first oil, with its downhole gauge dead since 2010-10-12.",
+   "conf": "fact",
+   "kind": "cumulative",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "A16",
+   "run": "69519dd0a995",
+   "index": 1,
+   "text": "F-12 needs attention most: it makes 1 551 Sm3/d oil at a water cut of 69%, makes 58% of the field's oil, with its downhole gauge dead since 2010-10-12.",
+   "conf": "fact",
+   "kind": "share",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "A21",
+   "run": "69519dd0a995",
+   "index": 2,
+   "text": "F-12 oil rate shifted down 21% across 2010-05-02, from 3 196 to 2 538 Sm3/d, while choke was cut from 83% to 58%.",
+   "conf": "fact",
+   "kind": "across change",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "A27",
+   "run": "69519dd0a995",
+   "index": 2,
+   "text": "F-12 oil rate shifted down 55% in May 2010 to 1 888 Sm3/d, while choke was cut from 83% to 58%.",
+   "conf": "fact",
+   "kind": "month word",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "A29",
+   "run": "69519dd0a995",
+   "index": 3,
+   "text": "A bridge plug was set at 3 210 m on 2010-09-23, which logs show could shut off about 38% of water for about 2% of oil.",
+   "conf": "inference",
+   "kind": "other pass (medium rate)",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "A32",
+   "run": "69519dd0a995",
+   "index": 3,
+   "text": "A bridge plug was set at 3.21 km on 2010-09-23, which logs show could shut off about 32% of water for about 1% of oil.",
+   "conf": "inference",
+   "kind": "unit scale (true)",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "A38",
+   "run": "69519dd0a995",
+   "index": 4,
+   "text": "F-14 also needs watch: oil rate is 34% lower since 2010-01-10 at 2 175 Sm3/d and water cut 61%, while its choke was unchanged at 45%.",
+   "conf": "inference",
+   "kind": "choke",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "A40",
+   "run": "69519dd0a995",
+   "index": 5,
+   "text": "The field is under design: water cut peaked at 67% under the 80% limit and liquid 10 800 Sm3/d under 13 000 Sm3/d capacity, and injection under its 16 000 Sm3/d capacity.",
+   "conf": "fact",
+   "kind": "within limits",
+   "scope": "in",
+   "why": "true as a state at the as-of date: injection under 16,000 in late 2010 (it passed it only in 2008-12..2009-02)"
+  },
+  {
+   "id": "A44",
+   "run": "69519dd0a995",
+   "index": 5,
+   "text": "The field came close to design: oil peaked at 8 924 Sm3/d in 2008-12, just under the 9 000 Sm3/d capacity.",
+   "conf": "fact",
+   "kind": "limit",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "A51",
+   "run": "69519dd0a995",
+   "index": 6,
+   "text": "F-12 next 12 months forecast with the exponential model is about 302,000 Sm3, hedged as the decline fit is poor.",
+   "conf": "inference",
+   "kind": "model P50",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "A56",
+   "run": "69519dd0a995",
+   "index": 6,
+   "text": "F-12 next 12 months forecast is about 359,000 Sm3, range 324,000 to 470,000, a range that holds about 67% of outcomes, hedged as the decline fit is poor.",
+   "conf": "inference",
+   "kind": "coverage",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "A58",
+   "run": "69519dd0a995",
+   "index": 6,
+   "text": "F-12 next 12 months forecast is about 359,000 Sm3, with the rate falling from 1 363 Sm3/d in 2011-01 to 841 Sm3/d in 2011-12, hedged as the decline fit is poor.",
+   "conf": "inference",
+   "kind": "monthly rows",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "AS1",
+   "run": "69519dd0a995",
+   "index": "S",
+   "text": "F-12 needs attention most — its downhole pressure gauge is dead and water is now most of what the well makes, with oil rate down sharply since mid-2010; F-14 also shows falling oil as water rises but is less urgent. The field is still under its design limits for water cut, liquid handling and water injection. The fit suggests F-12 will make about 359,000 Sm3 in the next 12 months, range 324,000 to 470,000.",
+   "conf": null,
+   "kind": "within limits (summary)",
+   "scope": "in",
+   "why": "true as a state at the as-of date: injection under 16,000 in late 2010 (it passed it only in 2008-12..2009-02)"
+  },
+  {
+   "id": "B04",
+   "run": "4f938683446e",
+   "index": 4,
+   "text": "A plug set just below the oil interval at about 3,165 m MD would shut off about 99% of the water while losing only about 1% of the oil.",
+   "conf": "fact",
+   "kind": "other pass",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "B12",
+   "run": "4f938683446e",
+   "index": 2,
+   "text": "In 2009 about 17% of the oil came from below 3,210 m; by September 2010 only about 1% did.",
+   "conf": "fact",
+   "kind": "survey years",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "B14",
+   "run": "4f938683446e",
+   "index": 2,
+   "text": "In 2009 oil entered from 3,135 m to 3,221 m; by September 2010 water entered from 3,165 m to 3,243 m.",
+   "conf": "fact",
+   "kind": "depth ranges",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "B30",
+   "run": "bf4fa9e48aa3",
+   "index": 2,
+   "text": "From 2010-10-12 BHP reads zero while the well kept flowing on 1830 days, indicating a sensor failure not a pressure event.",
+   "conf": "fact",
+   "kind": "flowing days",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "B33",
+   "run": "bf4fa9e48aa3",
+   "index": 2,
+   "text": "BHP was last read at 253.9 bar on 2010-10-11; from 2010-10-12 the gauge read zero while the well kept flowing.",
+   "conf": "fact",
+   "kind": "last good reading",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "B34",
+   "run": "bf4fa9e48aa3",
+   "index": 2,
+   "text": "BHP fell from 312.1 bar on 2010-09-23 to 253.9 bar on 2010-10-11, then the gauge read zero while the well kept flowing.",
+   "conf": "fact",
+   "kind": "from-to with dates",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "C05",
+   "run": "f7d3faebb139",
+   "index": 1,
+   "text": "Over 2011-2013 F-12 has 36 months of paired data with a Pearson correlation of about 0.60 between monthly water cut and choke and a Spearman rank correlation of about 0.47, an R2 of about 0.36.",
+   "conf": "inference",
+   "kind": "R2",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "C07",
+   "run": "f7d3faebb139",
+   "index": 2,
+   "text": "F-12's monthly water cut rose from 72.3% in Jan 2011 to 94.7% in Dec 2013 while its monthly choke went from 50% to 95%.",
+   "conf": "fact",
+   "kind": "choke monthly",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "D04",
+   "run": "85db026c4c7f",
+   "index": 3,
+   "text": "The decline after July 2010 fits an exponential at about 0.45 per year, with an r2 of 0.87.",
+   "conf": "inference",
+   "kind": "fit stat",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "D13",
+   "run": "85db026c4c7f",
+   "index": 5,
+   "text": "Production logs show about 90% of oil came from the upper two zones in 2009, but by September 2010 all oil came from the upper interval and water from the lower zones.",
+   "conf": "fact",
+   "kind": "other pass (low rate 0.904)",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "D19",
+   "run": "85db026c4c7f",
+   "index": 1,
+   "text": "F-12's water cut rose from about 3% to 51% around 2010-02-14 and passed 50% on 2010-06-04, about 2 years after first oil.",
+   "conf": "fact",
+   "kind": "duration rounding",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "E14",
+   "run": "69519dd0a995",
+   "index": 2,
+   "text": "F-12 oil rate shifted down 55% in Q2 2010 to 1 888 Sm3/d, while choke was cut from 83% to 58%.",
+   "conf": "fact",
+   "kind": "quarter",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "E21",
+   "run": "69519dd0a995",
+   "index": 3,
+   "text": "A bridge plug was set at 3 210 m on 2010-09-23, below which logs show about 32% of the water and about 1% of the oil entered, so it could not fix the water problem.",
+   "conf": "inference",
+   "kind": "cause as inference? (control)",
+   "scope": "in",
+   "why": "an inference stating a cause is allowed"
+  },
+  {
+   "id": "E33",
+   "run": "85db026c4c7f",
+   "index": 2,
+   "text": "Its oil rate fell about 72% around 2010-07-18 to about 1,146 Sm3/d while the choke was cut from about 54% to 51%.",
+   "conf": "fact",
+   "kind": "choke values",
+   "scope": "in",
+   "why": ""
+  }
+ ],
+ "open": [
+  {
+   "id": "A17",
+   "run": "69519dd0a995",
+   "index": 1,
+   "text": "F-12 needs attention most: it makes 1 551 Sm3/d oil at a water cut of 69%, makes 58% of the field's water, with its downhole gauge dead since 2010-10-12.",
+   "conf": "fact",
+   "kind": "share of wrong phase",
+   "scope": "in",
+   "why": "share_of_field_oil"
+  },
+  {
+   "id": "A19",
+   "run": "69519dd0a995",
+   "index": 2,
+   "text": "F-12 oil rate shifted down 55% around 2010-05-02 to 1 888 Sm3/d, while choke stayed near 83%.",
+   "conf": "fact",
+   "kind": "no-change word",
+   "scope": "in",
+   "why": "choke cut 83->58"
+  },
+  {
+   "id": "A20",
+   "run": "69519dd0a995",
+   "index": 2,
+   "text": "F-12 oil rate shifted down 55% within one week around 2010-05-02 to 1 888 Sm3/d, while choke was cut from 83% to 58%.",
+   "conf": "fact",
+   "kind": "abrupt (synonym)",
+   "scope": "in",
+   "why": "across -21%"
+  },
+  {
+   "id": "A34",
+   "run": "69519dd0a995",
+   "index": 3,
+   "text": "A bridge plug was set at 3 210 m on 2010-09-23, which logs show could shut off about 17% of the oil.",
+   "conf": "inference",
+   "kind": "survey/record mix",
+   "scope": "in",
+   "why": "0.171 is the 2009 high-rate pass"
+  },
+  {
+   "id": "A35",
+   "run": "69519dd0a995",
+   "index": 4,
+   "text": "F-14 also needs watch: oil rate is 34% lower since 2010-01-10 at 2 175 Sm3/d and water cut 61%, with its downhole gauge dead since 2010-02-15.",
+   "conf": "inference",
+   "kind": "gauge claim",
+   "scope": "in",
+   "why": "F-14 gauge recovered after 8 days"
+  },
+  {
+   "id": "A43",
+   "run": "69519dd0a995",
+   "index": 5,
+   "text": "The field is under design: water cut peaked at 67% under the 80% limit and oil 8 924 Sm3/d under its 13 000 Sm3/d oil capacity.",
+   "conf": "fact",
+   "kind": "capacity named",
+   "scope": "in",
+   "why": "oil capacity 9000"
+  },
+  {
+   "id": "A47",
+   "run": "69519dd0a995",
+   "index": 6,
+   "text": "F-12 next 6 months forecast is about 359,000 Sm3, range 324,000 to 470,000, hedged as the decline fit is poor.",
+   "conf": "inference",
+   "kind": "horizon",
+   "scope": "in",
+   "why": "365 days"
+  },
+  {
+   "id": "A55",
+   "run": "69519dd0a995",
+   "index": 6,
+   "text": "F-12 next 12 months forecast is about 359,000 Sm3, range 340,000 to 374,000 from its past errors, hedged as the decline fit is poor.",
+   "conf": "inference",
+   "kind": "bootstrap vs calibrated",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "A61",
+   "run": "69519dd0a995",
+   "index": 6,
+   "text": "F-12 next 12 months forecast is about 359,000 Sm3, about 10% above what it made in 2010, hedged as the decline fit is poor.",
+   "conf": "inference",
+   "kind": "small percentage",
+   "scope": "in",
+   "why": "873828 in 2010"
+  },
+  {
+   "id": "B05",
+   "run": "4f938683446e",
+   "index": 4,
+   "text": "A plug set just below the oil interval at about 3,165 m MD would shut off about 93% of the oil while losing only about 8% of the water.",
+   "conf": "fact",
+   "kind": "phase swap",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "B09",
+   "run": "4f938683446e",
+   "index": 1,
+   "text": "F-12 rose to about 175 Sm3/d of oil at a water cut of about 97% by 2014-10-31.",
+   "conf": "fact",
+   "kind": "direction (level reached)",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "B10",
+   "run": "4f938683446e",
+   "index": 1,
+   "text": "F-12 fell to about 175 Sm3/d of oil at a water cut of about 97% by 2013-06-03.",
+   "conf": "fact",
+   "kind": "date of other event",
+   "scope": "in",
+   "why": "2013-06-03 is when wc passed 0.90"
+  },
+  {
+   "id": "B15",
+   "run": "4f938683446e",
+   "index": 2,
+   "text": "In 2009 water entered from 3,135 m to 3,221 m; by September 2010 oil entered from 3,165 m to 3,243 m.",
+   "conf": "fact",
+   "kind": "phase swap on depth ranges",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "B16",
+   "run": "4f938683446e",
+   "index": 3,
+   "text": "A plug at the depth used in 2010, 3,210 m MD, would remove only about 33% of the water for a loss of about 15% of the oil.",
+   "conf": "fact",
+   "kind": "survey mix",
+   "scope": "in",
+   "why": "0.146 is 2009 medium; 2010 is 0.015"
+  },
+  {
+   "id": "B24",
+   "run": "bf4fa9e48aa3",
+   "index": 3,
+   "text": "F-12's water cut fell from about 0.96 to about 0.31 after isolation at 3,150 m and new perforations, and stayed below 0.50 through 2015.",
+   "conf": "fact",
+   "kind": "level over period",
+   "scope": "in",
+   "why": "0.5125 by 2015-04, 0.77 by 2015-12"
+  },
+  {
+   "id": "B31",
+   "run": "bf4fa9e48aa3",
+   "index": 2,
+   "text": "From 2010-10-12 BHP read zero on 1830 days while the well kept flowing, indicating a sensor failure not a pressure event.",
+   "conf": "fact",
+   "kind": "zero vs flowing days",
+   "scope": "in",
+   "why": "2095 zero days"
+  },
+  {
+   "id": "C02",
+   "run": "f7d3faebb139",
+   "index": 1,
+   "text": "Over 2011-2013 F-12 has 36 months of paired data with a Pearson correlation of about 0.60 between monthly water cut and choke and a Spearman rank correlation of about 0.47, so the choke explains about 60% of the variation.",
+   "conf": "inference",
+   "kind": "r vs R2",
+   "scope": "in",
+   "why": "R2 0.3565"
+  },
+  {
+   "id": "C03",
+   "run": "f7d3faebb139",
+   "index": 1,
+   "text": "Over 2011-2013 F-12 has 36 months of paired data with a Pearson correlation of about 0.60 between monthly water cut and choke with a p-value of about 0.47.",
+   "conf": "inference",
+   "kind": "quantity (p-value)",
+   "scope": "in",
+   "why": "spearman r"
+  },
+  {
+   "id": "C08",
+   "run": "f7d3faebb139",
+   "index": 2,
+   "text": "F-12's monthly water cut rose from 72.3% in Jan 2011 to 94.7% in Dec 2013 while its monthly choke went from 95% to 50%.",
+   "conf": "fact",
+   "kind": "from-to order",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "D03",
+   "run": "85db026c4c7f",
+   "index": 3,
+   "text": "The decline after July 2010 fits a hyperbolic at about 0.45 per year.",
+   "conf": "inference",
+   "kind": "model name",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "D07",
+   "run": "85db026c4c7f",
+   "index": 4,
+   "text": "Liquid rate stayed near 5,100 Sm3/d while water cut rose to 86% after the choke was opened to 100% in 2011.",
+   "conf": "fact",
+   "kind": "row tie (year)",
+   "scope": "in",
+   "why": "100% choke is 2012"
+  },
+  {
+   "id": "D14",
+   "run": "85db026c4c7f",
+   "index": 5,
+   "text": "Production logs show about 83% of water came from the upper two zones in 2009, but by September 2010 all oil came from the upper interval and water from the lower zones.",
+   "conf": "fact",
+   "kind": "phase",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "D20",
+   "run": "85db026c4c7f",
+   "index": 1,
+   "text": "F-12's water cut rose from about 3% to 51% around 2010-02-14 and passed 50% on 2010-06-04, about 3 years after first oil.",
+   "conf": "fact",
+   "kind": "duration",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "D21",
+   "run": "85db026c4c7f",
+   "index": 1,
+   "text": "F-12's water cut rose from about 3% to 51% around 2010-02-14 and passed 50% on 2010-06-04, about 21 months after first oil.",
+   "conf": "fact",
+   "kind": "duration of other event",
+   "scope": "in",
+   "why": "21 months is the 5% crossing"
+  },
+  {
+   "id": "D22",
+   "run": "85db026c4c7f",
+   "index": "S",
+   "text": "F-12's water breakthrough in early 2010 pushed water cut to about 50% after 28 months and its oil rate fell about 72% around July 2010 with the choke unchanged, declining near 0.45 per year as water filled its liquid capacity. This timing matches the 2005 plan's forecast of breakthrough after about 2 years, while the field later ran above the plan's 80% water cut design but stayed within oil and liquid rate capacities with voidage near 1.",
+   "conf": null,
+   "kind": "unhedged cause in the shipped summary ('pushed')",
+   "scope": "in",
+   "why": "verified featured summary"
+  },
+  {
+   "id": "G02",
+   "run": "063034849654",
+   "index": 1,
+   "text": "The text on page 23 states the plateau rate is 9,000 Sm3/d and will last about 19 months after a start-up period of about 2 years.",
+   "conf": "fact",
+   "kind": "duration (plan)",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "G08",
+   "run": "063034849654",
+   "index": 2,
+   "text": "Figure 4.2 on the same page plots the oil rate plateau slightly below 9,000 Sm3/d at about 8,400 Sm3/d of water for about 2 years from around 2008 to 2010.",
+   "conf": "inference",
+   "kind": "phase",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "G09",
+   "run": "063034849654",
+   "index": 2,
+   "text": "Figure 4.2 on the same page plots the oil rate plateau slightly below 9,000 Sm3/d at about 8,400 Sm3/d for about 2 years from around 2011 to 2013.",
+   "conf": "inference",
+   "kind": "period",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "E08",
+   "run": "69519dd0a995",
+   "index": 4,
+   "text": "F-14 also needs watch: oil rate is 34% lower since 2010-01-10 at 2 175 Sm3/d and water cut 61%, and its downhole pressure sensor has stopped working.",
+   "conf": "inference",
+   "kind": "gauge synonym (undated)",
+   "scope": "in",
+   "why": "F-14 gauge back after 8 days"
+  },
+  {
+   "id": "E13",
+   "run": "69519dd0a995",
+   "index": 2,
+   "text": "F-12 oil rate shifted down 55% around 2010-05-02 to 1 888 Sm3/d, while choke was cut from 83 bar to 58 bar.",
+   "conf": "fact",
+   "kind": "unit (% as bar)",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "E18",
+   "run": "69519dd0a995",
+   "index": 6,
+   "text": "F-12 next 12 months forecast is about 0.36 million Sm3, range 0.32 to 0.47 million, hedged as the decline fit is poor.",
+   "conf": "fact",
+   "kind": "scale words",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "E20",
+   "run": "69519dd0a995",
+   "index": 1,
+   "text": "F-12 needs attention most: it makes 1 551 Sm3/d oil at a water cut of 69%, with its downhole gauge dead since 2010-10-12 after 81 days of zero readings in 2009.",
+   "conf": "fact",
+   "kind": "year of event",
+   "scope": "in",
+   "why": ""
+  },
+  {
+   "id": "E25",
+   "run": "69519dd0a995",
+   "index": "S",
+   "text": "F-12 needs attention most — its downhole pressure gauge is dead and water is now most of what the well makes; its oil rate fell sharply in mid-2010 because the choke was cut, as is likely for F-14 too. The field is still under its design limits for water cut and liquid handling. The fit suggests F-12 will make about 359,000 Sm3 in the next 12 months, range 324,000 to 470,000.",
+   "conf": null,
+   "kind": "hedge that governs another clause (summary)",
+   "scope": "in",
+   "why": ""
+  }
+ ]
+}
