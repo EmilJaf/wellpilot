@@ -132,5 +132,27 @@ def test_the_reveal_says_when_the_agents_window_starts_at_a_change_it_found(stor
         (found,) = hindsight(run, full, past)["forecasts"]
         (fixed,) = hindsight(other, full, past)["forecasts"]
 
-    assert found["window_from_change"] == {"date": "2010-05-02", "evidence_id": "E2", "text": "x"}
+    assert found["window_from_change"] == {
+        "date": "2010-05-02",
+        "evidence_id": "E2",
+        "kind": "change",
+        "text": "x",
+    }
     assert fixed["window_from_change"] is None
+
+
+def test_a_window_that_starts_after_work_on_the_well_says_so(stores) -> None:
+    full, past = stores
+    run = run_with_forecast(past, well="F-12", start="2010-09-23")
+    run["evidence"]["E2"] = {
+        "id": "E2",
+        "tool": "well_operations",
+        "arguments": {"well": "F-12"},
+        "result": {"jobs": [{"start": "2010-09-20", "end": "2010-09-23", "kind": "workover"}]},
+    }
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        (f,) = hindsight(run, full, past)["forecasts"]
+
+    assert f["window_from_change"]["kind"] == "work"
+    assert f["window_from_change"]["text"] == "workover on the well, 2010-09-20 to 2010-09-23"

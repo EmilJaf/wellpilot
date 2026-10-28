@@ -154,8 +154,11 @@ function ForecastCase({ f }: { f: Hindsight['forecasts'][number] }) {
         <p className="hindsight-fixed">
           {f.window_from_change ? (
             <>
-              <strong>It chose its own window:</strong> it fitted from {f.window_from_change.date}, where it had found{' '}
-              {f.well}&rsquo;s rate shifting ({f.window_from_change.evidence_id}), not a fixed length of history.{' '}
+              <strong>It chose its own window:</strong> it fitted from {f.window_from_change.date},{' '}
+              {f.window_from_change.kind === 'work'
+                ? `after the work on the well it had found (${f.window_from_change.text}, ${f.window_from_change.evidence_id})`
+                : `where it had found ${f.well}’s rate shifting (${f.window_from_change.evidence_id})`}
+              , not a fixed length of history.{' '}
             </>
           ) : (
             <>It fitted from {agent.window_start}, a window it chose itself. </>

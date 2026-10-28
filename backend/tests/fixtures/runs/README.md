@@ -14,6 +14,11 @@ The same ids go into FEATURED_RUNS for the public deployment.
 
 The featured runs (Muse Spark Open on Baseten, recorded by the eval):
 
+- 033bb064359f, the agent's own Python (Oct 28 afternoon, replaces a5dc0b339ff9): F-12's
+  monthly water cut against its choke over 2011-2013. run_python gave Pearson 0.68 and
+  Spearman 0.48 over 36 months; every finding resting on it is an inference, and the
+  checker sent the summary back twice until it hedged the code's numbers. Second opinion
+  sound. 6 steps, $0.15.
 - 8aef8d548380, the time machine as served (again from Oct 28, after an outside review): "Which wells need attention right now, and why? Forecast
   the next 12 months of oil for the well that needs it most." with data up to 2010-12-31.
   F-12 first (dead gauge; rate 55% lower since May 2010, a gradual shift); its 2011 forecast

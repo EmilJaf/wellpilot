@@ -126,9 +126,22 @@ CHANGE_KINDS = {"regime_change", "shift_down", "step_down"}
 
 
 def _change_at(run: dict, well: str, day: str) -> dict | None:
-    """The change in the well's oil rate that the run's own evidence dates to `day` (a
-    detect_events regime change, a screen's shift or step), or None."""
+    """What the run's own evidence dates to `day`, where the agent's window starts: a change
+    in the well's oil rate (a detect_events regime change, a screen's shift or step), or
+    work on the well ending that day or the day before (well_operations). None if nothing."""
+    after = (pd.Timestamp(day) - pd.Timedelta(days=1)).date().isoformat()
     for item in (run.get("evidence") or {}).values():
+        if item.get("tool") == "well_operations" and item.get("arguments", {}).get("well") == well:
+            for job in (item.get("result") or {}).get("jobs") or []:
+                if str(job.get("end", ""))[:10] in (day, after):
+                    return {
+                        "date": day,
+                        "evidence_id": item["id"],
+                        "kind": "work",
+                        "text": f"{job.get('kind', 'work')} on the well, "
+                        f"{job['start']} to {job['end']}",
+                    }
+            continue
         if item.get("tool") == "detect_events" and item.get("arguments", {}).get("well") == well:
             records = item.get("result") or []
         elif item.get("tool") == "field_screen":
@@ -145,6 +158,7 @@ def _change_at(run: dict, well: str, day: str) -> dict | None:
                 return {
                     "date": day,
                     "evidence_id": item["id"],
+                    "kind": "change",
                     "text": record.get("summary") or record.get("text"),
                 }
     return None
