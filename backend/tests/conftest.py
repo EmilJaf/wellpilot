@@ -9,4 +9,5 @@ def no_modal(monkeypatch) -> None:
     by a test would start one per run and leave it running on the account. run_python is
     tested with a local stand-in (test_sandbox.py)."""
     monkeypatch.setenv("PYTHON_SANDBOX", "false")
-    monkeypatch.setattr("wellpilot.main.modal_pool", lambda *_: None)
+    for where in ("wellpilot.main", "wellpilot.eval", "wellpilot.agent.__main__"):
+        monkeypatch.setattr(f"{where}.modal_pool", lambda *_: None)

@@ -16,6 +16,7 @@ from wellpilot.agent import corpus
 from wellpilot.agent.corpus import CORPUS_DIR
 from wellpilot.agent.loop import MAX_STEPS, SUBMIT, AgentRun, Step, run_agent
 from wellpilot.agent.review import review
+from wellpilot.agent.sandbox import modal_pool, python_tool
 from wellpilot.api.runs import RunRecord, new_run_id
 from wellpilot.config import get_settings
 from wellpilot.data.store import ProductionStore
@@ -111,17 +112,25 @@ async def main() -> None:
 
     record = RunRecord(new_run_id(), args.question, args.as_of)
     record.start(llm)
-    run = await run_agent(
-        args.question,
-        llm,
-        store,
-        max_steps=args.max_steps,
-        reasoning_effort=args.reasoning or settings.agent_reasoning_effort,
-        on_step=print_step,
-        on_event=record.emit,
-        evidence_log=record.log,
-        review_fn=review if settings.review_answers else None,
-    )
+    # run_python as served, when Modal is set up.
+    sandboxes = modal_pool(settings.processed_dir) if settings.python_sandbox else None
+    try:
+        async with python_tool(sandboxes, args.as_of) as python_fn:
+            run = await run_agent(
+                args.question,
+                llm,
+                store,
+                max_steps=args.max_steps,
+                reasoning_effort=args.reasoning or settings.agent_reasoning_effort,
+                on_step=print_step,
+                on_event=record.emit,
+                evidence_log=record.log,
+                review_fn=review if settings.review_answers else None,
+                python_fn=python_fn,
+            )
+    finally:
+        if sandboxes is not None:
+            await sandboxes.aclose()
     print_run(run)
     record.complete(run)
     path = record.save(settings.runs_dir)

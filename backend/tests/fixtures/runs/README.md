@@ -22,6 +22,17 @@ The featured runs (Muse Spark Open on Baseten, recorded by the eval):
 - 3fc72959335a, the plan's forecast chart read by the model (look_at_page): the text says
   9 000 Sm3/d for about 19 months, the figure as drawn about 8 400 Sm3/d for about 2 years.
   Verified on attempt 2; 5 steps, about $0.07.
+- b2b80c7484ee, F-12's decline against the 2005 plan (Oct 28): water broke through at 21
+  months against the plan's "about 2 years"; the 2010-07-18 change; the production logs
+  show the 2010 plug at 3210 m below about 1% of the oil and 33% of the water. The second
+  opinion raised three points and the agent revised its answer, verified again. 10 steps,
+  about $0.53 ($0.31 to the first checked answer).
+- c8501c918af6, the plan's forecast chart (Oct 28): Muse Spark Open read the plateau at
+  about 8 400 Sm3/d, SAM 3.1's measurement of the same curve is 8 464 (within the 250 Sm3/d
+  a quarter gridline allows): the two Meta models agree on one picture. 5 steps, $0.08.
+- b4396314f788, F-12's 2014 water shut-off (Oct 28): the plug at 3150 m and the new zone
+  above it, against the 2010 plug at 3210 m, from the daily drilling reports and the
+  production logs (the 2009 one read off its pictures by SAM 3.1). 6 steps, $0.19.
 
 Earlier frozen runs (fcfb4188de3b, c8b6cbb62280, then cc62fd10242e and 44f49414e399 when the
 regime-change detector changed) were retired when the checker and the tools changed what

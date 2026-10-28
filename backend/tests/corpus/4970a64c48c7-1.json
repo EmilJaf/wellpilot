@@ -6,14 +6,13 @@
   "question": "Forecast F-14 oil production for the next 12 months and say how confident the forecast is."
  },
  "to_review": false,
- "note": "Fair: facts on poor fits, a cause as a fact, warned forecast numbers unhedged in the summary.",
+ "note": "Fair: facts on poor fits, a cause as a fact, warned forecast numbers unhedged in the summary. Oct 28 night: a plain hedge later in the sentence ('uncertainty band', 'low confidence', 'likely', 'the forecast is uncertain') now covers a warned number; only a modal after a comma ('as engineers may expect') does not.",
  "expected": {
   "accepted": false,
   "flagged": [
    "Finding 1",
    "Finding 2",
-   "Finding 4",
-   "Summary"
+   "Finding 4"
   ]
  },
  "submission": {

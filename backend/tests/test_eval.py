@@ -93,7 +93,12 @@ async def test_each_failed_check_is_named(tmp_path) -> None:
     result = await run_case(case, scripted(), tmp_path, FIXTURE, add_to_corpus=False)
 
     failed = {c["check"] for c in result["checks"] if not c["passed"]}
-    assert failed == {"calls look_at_page", "says /2012-06/", "<= 1 steps", "<= $0.01"}
+    assert failed == {
+        "calls look_at_page",
+        "says /2012-06/",
+        "<= 1 steps to the checked answer",
+        "<= $0.01 to the checked answer",
+    }
 
 
 def test_the_cases_cover_every_promise() -> None:

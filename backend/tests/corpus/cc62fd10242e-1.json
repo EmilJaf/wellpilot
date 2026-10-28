@@ -6,14 +6,13 @@
   "question": "Which wells need attention right now, and why? Forecast the next 12 months of oil for the well that needs it most."
  },
  "to_review": false,
- "note": "Fair: 1 888 undeclared, a cause as a fact, warned forecast numbers unhedged in the summary. Cut values in its detail (0.553 for 0.5536) now pass.",
+ "note": "Fair: 1 888 undeclared, a cause as a fact, warned forecast numbers unhedged in the summary. Cut values in its detail (0.553 for 0.5536) now pass. Oct 28 night: a plain hedge later in the sentence ('uncertainty band', 'low confidence', 'likely', 'the forecast is uncertain') now covers a warned number; only a modal after a comma ('as engineers may expect') does not.",
  "expected": {
   "accepted": false,
   "flagged": [
    "Finding 1",
    "Finding 3",
-   "Finding 4",
-   "Summary"
+   "Finding 4"
   ]
  },
  "submission": {

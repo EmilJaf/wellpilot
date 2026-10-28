@@ -6,12 +6,13 @@
   "question": "Which wells need attention right now, and why? Forecast the next 12 months of oil for the well that needs it most."
  },
  "to_review": false,
- "note": "Re-judged when a finding's detail numbers became looked up instead of declared (Oct 27 evening): the remaining problems are undeclared claim numbers, facts on warned evidence, causes as facts or uncited sources, all fair.",
+ "note": "Re-judged when a finding's detail numbers became looked up instead of declared (Oct 27 evening): the remaining problems are undeclared claim numbers, facts on warned evidence, causes as facts or uncited sources, all fair. Oct 28 night: 'within design limits' as of 2010 while E9 has water injection over its 16,000 capacity in 3 months.",
  "expected": {
   "accepted": false,
   "flagged": [
    "Finding 4",
-   "Finding 5"
+   "Finding 5",
+   "Finding 6"
   ]
  },
  "submission": {

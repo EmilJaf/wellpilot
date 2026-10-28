@@ -6,12 +6,11 @@
     "question": "Forecast P-2 oil production for the next 12 months and say how confident the forecast is."
   },
   "to_review": false,
-  "note": "Fair: 2111 is the model's own difference, computed later (E14), not in the cited E8/E6; a poor-fit 135,000 stated as settled; an unhedged 'due to'.",
+  "note": "Fair: 2111 is the model's own difference, computed later (E14), not in the cited E8/E6; a poor-fit 135,000 stated as settled; an unhedged 'due to'. Oct 28 night: a plain hedge later in the sentence ('uncertainty band', 'low confidence', 'likely', 'the forecast is uncertain') now covers a warned number; only a modal after a comma ('as engineers may expect') does not.",
   "expected": {
     "accepted": false,
     "flagged": [
-      "Finding 5",
-      "Summary"
+      "Finding 5"
     ]
   },
   "submission": {

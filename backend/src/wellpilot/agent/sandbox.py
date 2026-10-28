@@ -17,7 +17,8 @@ import asyncio
 import json
 import logging
 import time
-from collections.abc import Awaitable, Callable
+from collections.abc import AsyncIterator, Awaitable, Callable
+from contextlib import asynccontextmanager
 from datetime import date
 from pathlib import Path
 from typing import Protocol
@@ -239,6 +240,35 @@ class SandboxPool:
             with_result = await asyncio.gather(task, return_exceptions=True)
             if isinstance(with_result[0], ModalSandbox):
                 await _quietly(with_result[0].close())
+
+
+@asynccontextmanager
+async def python_tool(
+    pool: "SandboxPool | None", as_of: date | None
+) -> AsyncIterator[Callable[[str], Awaitable[dict]] | None]:
+    """run_python for a run outside the API (the CLI, the eval), as the API does it: the
+    sandbox gets ready while the model takes its first steps and is closed when the run
+    ends. None when there is no pool or it failed recently."""
+    if pool is None or not pool.available:
+        yield None
+        return
+    ready = asyncio.create_task(pool.take(as_of))
+
+    async def python_fn(arguments: str) -> dict:
+        try:
+            sandbox = await ready
+        except Exception as e:
+            logger.warning("sandbox for run_python failed: %s", type(e).__name__)
+            return {"error": "the sandbox is not available now; answer with the other tools"}
+        return await run_python(sandbox, arguments)
+
+    try:
+        yield python_fn
+    finally:
+        if not ready.done():
+            ready.cancel()  # one still starting ends by its own time limit
+        elif not ready.cancelled() and ready.exception() is None:
+            await _quietly(ready.result().close())
 
 
 async def _quietly(close: Awaitable[None]) -> None:

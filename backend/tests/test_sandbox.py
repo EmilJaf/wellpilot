@@ -269,3 +269,35 @@ async def test_after_a_failed_start_the_tool_is_not_offered_for_a_while(monkeypa
     assert not pool.available
     monkeypatch.setattr(SandboxPool, "RETRY_AFTER_S", 0)
     assert pool.available
+
+
+async def test_the_cli_and_eval_tool_runs_in_a_sandbox_and_closes_it() -> None:
+    """python_tool, for runs outside the API: the sandbox is taken for the run's date,
+    the model's call runs in it, and it is closed when the run ends."""
+    from datetime import date
+
+    from wellpilot.agent.sandbox import python_tool
+
+    taken, closed = [], []
+
+    class Box:
+        async def exec(self, *args, limit_s=30):
+            return 0, "", ""
+
+        async def close(self):
+            closed.append(True)
+
+    class Pool:
+        available = True
+
+        async def take(self, as_of):
+            taken.append(as_of)
+            return Box()
+
+    async with python_tool(Pool(), date(2010, 12, 31)) as python_fn:
+        assert python_fn is not None
+        await python_fn('{"purpose": "a check", "code": "result = 1"}')
+    assert taken == [date(2010, 12, 31)] and closed == [True]
+
+    async with python_tool(None, None) as none:
+        assert none is None

@@ -30,8 +30,9 @@ from wellpilot.agent.checker import (
     claim_numbers,
 )
 from wellpilot.agent.corpus import CORPUS_DIR
-from wellpilot.agent.loop import AgentRun, run_agent
+from wellpilot.agent.loop import SUBMIT, AgentRun, run_agent
 from wellpilot.agent.review import review
+from wellpilot.agent.sandbox import SandboxPool, modal_pool, python_tool
 from wellpilot.api.runs import RunRecord, new_run_id
 from wellpilot.config import get_settings
 from wellpilot.data.store import ProductionStore
@@ -255,6 +256,21 @@ def cost(run: AgentRun) -> float:
     return (tokens_in + reviewed) * PRICE_IN + tokens_out * PRICE_OUT
 
 
+def to_answer(run: AgentRun) -> tuple[int, float]:
+    """Steps and cost up to the first answer the checker accepted: the agent's own work, which
+    the budgets measure. A second opinion and the revision it asks for come on top (they
+    were added after the budgets were set); the run's totals are reported apart."""
+    for i, step in enumerate(run.steps, start=1):
+        if any(c["name"] == SUBMIT and c["result"].get("accepted") for c in step.tool_calls):
+            done = run.steps[:i]
+            spent = (
+                sum(s.prompt_tokens for s in done) * PRICE_IN
+                + sum(s.completion_tokens for s in done) * PRICE_OUT
+            )
+            return i, spent
+    return len(run.steps), cost(run)
+
+
 def score(case: Case, run: AgentRun) -> list[tuple[str, bool, str]]:
     """Each check as (name, passed, detail)."""
     called = {e.tool for e in run.evidence}
@@ -274,10 +290,13 @@ def score(case: Case, run: AgentRun) -> list[tuple[str, bool, str]]:
     checks.append(("summary numbers <= 3 significant digits", not long, ", ".join(long)))
     dense = dense_claims([f.claim for f in run.findings])
     checks.append(("claims in plain words", not dense, ", ".join(dense)))
-    steps = len(run.steps)
-    checks.append((f"<= {case.max_steps} steps", steps <= case.max_steps, str(steps)))
-    spent = cost(run)
-    checks.append((f"<= ${case.max_cost:.2f}", spent <= case.max_cost, f"${spent:.2f}"))
+    steps, spent = to_answer(run)
+    checks.append(
+        (f"<= {case.max_steps} steps to the checked answer", steps <= case.max_steps, str(steps))
+    )
+    checks.append(
+        (f"<= ${case.max_cost:.2f} to the checked answer", spent <= case.max_cost, f"${spent:.2f}")
+    )
     if case.as_of:  # a forecast starts after the cut and never sees the data behind it
         starts = [
             str(e.result.get("forecast_from"))
@@ -295,21 +314,24 @@ async def run_case(
     runs_dir: Path,
     processed_dir: Path | None = None,
     add_to_corpus: bool = True,
+    sandboxes: SandboxPool | None = None,
 ) -> dict:
     settings = get_settings()
     store = ProductionStore(processed_dir or settings.processed_dir, as_of=case.as_of)
     record = RunRecord(new_run_id(), case.question, case.as_of)
     record.start(llm)
-    run = await run_agent(
-        case.question,
-        llm,
-        store,
-        reasoning_effort=settings.agent_reasoning_effort,
-        timeout_s=settings.run_timeout_s,
-        on_event=record.emit,
-        evidence_log=record.log,
-        review_fn=review if settings.review_answers else None,  # the product as served
-    )
+    async with python_tool(sandboxes, case.as_of) as python_fn:
+        run = await run_agent(
+            case.question,
+            llm,
+            store,
+            reasoning_effort=settings.agent_reasoning_effort,
+            timeout_s=settings.run_timeout_s,
+            on_event=record.emit,
+            evidence_log=record.log,
+            review_fn=review if settings.review_answers else None,  # the product as served
+            python_fn=python_fn,
+        )
     record.complete(run)
     path = record.save(runs_dir)
     if add_to_corpus and CORPUS_DIR.parent.is_dir():
@@ -360,16 +382,25 @@ async def main() -> None:
     if any(c in SYNTHETIC_CASES for c in cases) != synthetic:
         sys.exit("synthetic cases run on the synthetic field and only there: set DATA_DIR")
     llm = make_llm(settings)
-    print(f"provider: {llm.provider}, model: {llm.model}, {len(cases)} cases")
+    # run_python as served: a Modal sandbox per case, when Modal is set up.
+    sandboxes = modal_pool(settings.processed_dir) if settings.python_sandbox else None
+    print(
+        f"provider: {llm.provider}, model: {llm.model}, {len(cases)} cases, "
+        f"run_python: {'on' if sandboxes else 'off'}"
+    )
     semaphore = asyncio.Semaphore(args.concurrency)
 
     async def one(case: Case) -> dict:
         async with semaphore:
-            result = await run_case(case, llm, settings.runs_dir)
+            result = await run_case(case, llm, settings.runs_dir, sandboxes=sandboxes)
             print(f"  {case.id}: {'pass' if result['passed'] else 'FAIL'}, run {result['run']}")
             return result
 
-    results = await asyncio.gather(*(one(c) for c in cases))
+    try:
+        results = await asyncio.gather(*(one(c) for c in cases))
+    finally:
+        if sandboxes is not None:
+            await sandboxes.aclose()  # the one warming for a next case
     print_report(results, llm.model)
     out = settings.data_dir / "evals"
     out.mkdir(parents=True, exist_ok=True)

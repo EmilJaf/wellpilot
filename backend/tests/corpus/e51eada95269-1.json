@@ -6,11 +6,10 @@
     "question": "Why did well F-12 decline faster after 2010? Compare with the 2005 development plan."
   },
   "to_review": false,
-  "note": "Two false rejections, fixed: Finding 5's quote held its translation inside the quote marks (now read as a translation after the quote), and Finding 3's detail named F-14, which F-12's shut-in record lists as field-wide (a detail may name wells the results name). The rest is fair: a calculation from 6e6 (the plan's '6 MSm3' scaled by the model; evidence text is not unit-scaled for calculate, and the comparison set F-12's cumulative against a field figure), detail numbers not in the cited evidence, undeclared 50%/100%/5,000/22%, an unhedged 'because'.",
+  "note": "Two false rejections, fixed: Finding 5's quote held its translation inside the quote marks (now read as a translation after the quote), and Finding 3's detail named F-14, which F-12's shut-in record lists as field-wide (a detail may name wells the results name). The rest is fair: a calculation from 6e6 (the plan's '6 MSm3' scaled by the model; evidence text is not unit-scaled for calculate, and the comparison set F-12's cumulative against a field figure), detail numbers not in the cited evidence, undeclared 50%/100%/5,000/22%, an unhedged 'because'. Oct 28 night: the plan's 'omlag 6 MSm3' now also reads as 6 million, so E13's calculation from 6000000 is supported (a false rejection the third panel saw as jargon).",
   "expected": {
     "accepted": false,
     "flagged": [
-      "Finding 1",
       "Finding 2",
       "Finding 3",
       "Summary"

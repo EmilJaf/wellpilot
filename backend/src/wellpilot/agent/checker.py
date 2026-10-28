@@ -198,14 +198,27 @@ HEDGE_AFTER_WORDS = 4
 
 
 def _hedged(sentence: str, start: int, end: int, stops: str = ",;") -> bool:
-    """Is what sits at sentence[start:end] hedged: a hedge before it in the sentence, or
-    within a few words after it with no comma (or other stop) between?"""
+    """Is what sits at sentence[start:end] hedged? A hedge before it in the sentence counts;
+    after it, a plain hedge ("the fit suggests", "likely", "low confidence") counts anywhere
+    in the sentence, a modal verb (may, could) only within a few words with no comma (or
+    other stop) between: "as engineers may expect" or ", which could be costly" is about
+    something else."""
     for m in HEDGE.finditer(sentence):
         if m.start() < start:
             return True
+        if m.start() < end:
+            continue
         between = sentence[end : m.start()]
-        near = len(between.split()) <= HEDGE_AFTER_WORDS
-        if m.start() >= end and not any(c in between for c in stops) and near:
+        modal = re.fullmatch(r"could|would|may|might", m.group(0), re.I)
+        near = len(between.split()) <= HEDGE_AFTER_WORDS and not any(c in between for c in stops)
+        if near:
+            return True
+        # After a semicolon, a hedge covers what came before only if it points back to it
+        # ("...; the fit suggests so"), not when it opens its own claim ("...; the figure
+        # likely shows ...").
+        clause = sentence[m.start() :].split(";")[0]
+        own_claim = ";" in between and not re.search(r"\b(?:so|this|that|these|those|it)\b", clause)
+        if not modal and not own_claim:
             return True
     return False
 
@@ -400,11 +413,14 @@ class _Pool:
                     # Report text may use either convention, so keep both readings. A number
                     # the model typed is no evidence in printed text either.
                     for european in (False, True):
-                        self.numbers.extend(
-                            v
-                            for v, _, _ in _numbers_in_text(leaf, european)
-                            if abs(v) not in typed_numbers
-                        )
+                        for v, _, suffix in _numbers_in_text(leaf, european):
+                            if abs(v) not in typed_numbers:
+                                self.numbers.append(v)
+                                # "omlag 6 MSm3" is also 6 million: a claim's "6 million"
+                                # finds it either way.
+                                self.numbers.extend(
+                                    v * k for k in SCALES.get(suffix or "", ()) if k >= 1000
+                                )
         self.years = {d[:4] for d in self.dates}
         self.text = "|".join(texts)
 
@@ -985,12 +1001,15 @@ QUANTITIES = {
 }
 _NAMES = re.compile("|".join(f"(?:{t})" for t, _ in QUANTITIES.values()), re.IGNORECASE)
 RISE_BEFORE = re.compile(
-    r"\b(?:rose|risen|rising|increased|increasing|grew|grown|jumped|climbed|gained|up)"
+    # "up" only as a change ("went up 55%", "up by 55%"), not "makes up 69%"
+    r"\b(?:rose|risen|rising|increased|increasing|grew|grown|jumped|climbed|gained|"
+    r"(?:went|gone|goes|is|was|are|were|been)\s+up|up(?=\s+by\b))"
     r"(?:\s+by)?(?:\s+(?:about|around|some|nearly|almost|roughly))?\s*[~≈]?\s*$",
     re.IGNORECASE,
 )
 FALL_BEFORE = re.compile(
-    r"\b(?:fell|fallen|falling|dropped|dropping|declined|declining|decreased|decreasing|down|"
+    r"\b(?:fell|fallen|falling|dropped|dropping|declined|declining|decreased|decreasing|"
+    r"(?<!shut )(?<!broke )(?<!slowed )(?<!wound )down|"
     r"lost|shrank)(?:\s+by)?(?:\s+(?:about|around|some|nearly|almost|roughly))?\s*[~≈]?\s*$",
     re.IGNORECASE,
 )
@@ -1127,6 +1146,10 @@ def _attribution(
             owners = ", ".join(sorted(wells))
             return f"is in {item.id} only for {owners}, not for the well its sentence names"
         quantity = _quantity(names, start, end, after=not own_part)
+        # Tool-speak names a value before it ("water_cut 0.96") or after it ("51431 oil 99543
+        # water"): with a name on both sides, a detail's number is not judged.
+        if own_part and quantity and _quantity(names, start, end) != quantity:
+            quantity = None
         if quantity == "change across":
             # "with 72% across": the change across the date itself, not between the periods.
             changes = written.rstrip().endswith(("%", "percent")) or all(
@@ -1179,6 +1202,9 @@ def _attribution(
             or blanked[max(0, start - 1) : start] == "+"
         )
         fall = FALL_BEFORE.search(before) or FALL_AFTER.match(blanked[end:])
+        # "rose 0.7232 to 0.9467", "fell 4 207 -> 1 888": where it started, not how much.
+        if re.match(r"\s*(?:%|percent)?\s*(?:to|->|→)\s*-?[\d.]", blanked[end:]):
+            rise = fall = None
         if (rise or fall) and all(
             lf.dim is None
             and lf.sign is None
@@ -1975,6 +2001,16 @@ def _within_limits(label: str, text: str, items: list[Evidence]) -> list[str]:
             for k, pattern in LIMIT_NAMES.items()
             if re.search(pattern, sentence[part_start : m.start()], re.I)
         ]
+        # "stayed within its design limits: peak oil ..., water cut ...": the limits as a
+        # whole, with examples after; "design limits for liquid, oil or water cut" names
+        # the ones it means.
+        whole = re.match(
+            r"[\w\s']{0,40}?\b(?:design\s+)?limits\b(?!\s+(?:for|on|of)\b)",
+            sentence[m.end() - len("within") if m.group(0).endswith("within") else m.end() :],
+            re.I,
+        ) or re.search(r"\b(?:any|all)\s+(?:\w+\s+){0,2}limits?\b", m.group(0), re.I)
+        if whole:
+            named = []
         for item in results:
             against = item.result.get("field_against_limits") or {}
             limits = item.result.get("design_limits") or {}

@@ -6,10 +6,12 @@
   "question": "Which wells need attention right now, and why? Forecast the next 12 months of oil for the well that needs it most."
  },
  "to_review": false,
- "note": "",
+ "note": "Oct 28 night: 'within design limits' as of 2010 while E9 has water injection over its 16,000 capacity in 3 months.",
  "expected": {
-  "accepted": true,
-  "flagged": []
+  "accepted": false,
+  "flagged": [
+   "Finding 6"
+  ]
  },
  "submission": {
   "summary": "F-12 needs attention most (alarm): its oil rate stepped down 55% in May 2010 and its downhole gauge has been dead since October 2010, while water cut is now around 71%. F-14 also needs watching after a 34% step down in January 2010 and water cut near 61%. A 12-month forecast for F-12 from its post-break regime suggests about 359 thousand Sm3 (P50), but the fit is poor so the uncertainty is wide – the calibrated band is about 326 thousand to 469 thousand Sm3.",
