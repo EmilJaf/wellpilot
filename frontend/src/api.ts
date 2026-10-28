@@ -81,7 +81,7 @@ export type MetaModels = {
     pages: string[]
     second_opinion: string | null
   }
-  sam: { figures: { evidence_id: string; agreed: number; compared: number }[]; logs: string[] }
+  sam: { figures: { evidence_id: string; agreed: number; compared: number; not_compared?: number }[]; logs: string[] }
 }
 
 export type RunEvent = { seq: number } & (
@@ -327,7 +327,14 @@ export type Attempt = {
 export type AttackResult = { attempts: Attempt[]; model: string; tokens: number }
 
 /** The source of the tool function that produced an evidence item. */
-export type ToolCode = { ref: string; same_as_run: boolean; file: string; line: number; source: string }
+export type ToolCode = {
+  ref: string
+  same_as_run: boolean
+  file: string
+  line: number
+  source: string
+  depends_on?: string[]
+}
 
 export type MethodSummary = {
   cases: number
@@ -418,10 +425,18 @@ export type Hindsight = {
     classic_warned: boolean
     // Fits on the last 3, 6, 12 and 24 months, made the same day: the fair baselines.
     fixed_windows?: { months: number; p50_sm3: number; error: number | null }[]
+    decomposition?: {
+      rate_forecast: number
+      rate_actual: number
+      rate_error: number
+      uptime_forecast: number
+      uptime_actual: number
+      uptime_error: number
+    } | null
     window_from_change?: { date: string; evidence_id: string; kind: 'change' | 'work'; text: string | null } | null
     agent_range: { p90: number; p10: number }
     p50_by_model?: Record<string, number> | null
-    calibrated_band: { p90: number; p10: number; holds_actual: boolean } | null
+    calibrated_band: { p90: number; p10: number; holds_actual: boolean; past_forecasts?: number | null; coverage?: number | null } | null
   })[]
   wells: {
     well: string

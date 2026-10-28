@@ -101,7 +101,8 @@ export function AgentLog({ state, selectedEvidence, onSelectEvidence }: Props) {
           )}
         </ol>
         {state.status === 'starting' && <p className="thinking">Starting the run</p>}
-        {state.error && (
+        {/* A run that never started is explained once, in the answer panel. */}
+        {state.error && state.id && (
           <div className="flag flag-alarm" role="alert">
             <AlarmIcon />
             <span>

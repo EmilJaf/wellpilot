@@ -145,11 +145,24 @@ function CodeRef({ codeRef }: { codeRef: string }) {
           <div className="tool-code">
             <p className="evidence-sub">
               {code.value.same_as_run
-                ? 'The Python function that produced this result, exactly as it ran (its hash matches).'
-                : 'This tool changed after the run; today’s version is shown.'}{' '}
+                ? 'The Python function that produced this result, exactly as it ran (its hash, taken with the analysis code it calls, matches).'
+                : 'This tool or the analysis code it calls changed after the run; today’s version is shown.'}{' '}
               <a href={`${REPO}/${code.value.file}#L${code.value.line}`} target="_blank" rel="noreferrer">
                 {code.value.file.split('/').pop()}, line {code.value.line}
               </a>
+              {code.value.depends_on?.length ? (
+                <>
+                  {', with '}
+                  {code.value.depends_on.map((f, i) => (
+                    <span key={f}>
+                      {i > 0 && ', '}
+                      <a href={`${REPO}/${f}`} target="_blank" rel="noreferrer">
+                        {f.split('/').pop()}
+                      </a>
+                    </span>
+                  ))}
+                </>
+              ) : null}
             </p>
             <pre className="code">{code.value.source}</pre>
           </div>
@@ -280,6 +293,7 @@ type ReadingResult = {
   }
   cross_check?: {
     label: string
+    muse?: number | string | null
     sam: number | null
     sam_unit?: string
     at?: string
@@ -308,7 +322,12 @@ function PageReading({ result }: { result: ReadingResult }) {
           {sam.colour_check ? `, matching a colour trace of the same pixels within ${sam.colour_check.median_sm3_per_day} Sm³/d` : ''}.
           Each reading is set against it within a quarter of a gridline, fixed before any comparison (
           {sam.tolerances.rate_sm3_per_day} Sm³/d on a rate, {sam.tolerances.months} months on a length). They agree on{' '}
-          {checks.filter((c) => c.agree).length} of {checks.filter((c) => c.agree !== null).length}.
+          {checks.filter((c) => c.agree).length} of {checks.filter((c) => c.agree !== null).length} compared
+          {(() => {
+            const open = checks.filter((c) => c.agree === null && !String(c.note ?? '').includes('not the figure')).length
+            return open ? `; ${open} figure reading${open > 1 ? 's' : ''} could not be compared` : ''
+          })()}
+          .
         </p>
       )}
       {checks ? (
@@ -319,7 +338,14 @@ function PageReading({ result }: { result: ReadingResult }) {
               <li key={i} className={c?.agree === false ? 'is-off' : c?.agree ? 'is-agreed' : undefined}>
                 <span className="cross-label">{r.label}</span>
                 <span>
-                  Muse Spark Open read <strong className={hit(r.value) ? 'hit' : undefined}>{r.value.toLocaleString('en')} {r.unit.split(/[,~(]/)[0].trim()}</strong>
+                  Muse Spark Open read{' '}
+                  <strong className={hit(r.value) ? 'hit' : undefined}>
+                    {typeof c?.muse === 'string'
+                      ? c.muse
+                      : r.value >= 1900 && r.value <= 2100 && Number.isInteger(r.value)
+                        ? `${r.value} (a year)`
+                        : `${r.value.toLocaleString('en')} ${r.unit.split(/[,~(=]/)[0].trim()}`}
+                  </strong>
                 </span>
                 {c?.sam != null ? (
                   <span>

@@ -78,8 +78,8 @@ export function FieldScreen({ asOf, onOpenWell }: { asOf: string; onOpenWell: (w
       <p className="accuracy-lead">
         Every well as of <strong>{result.as_of}</strong>
         {asOf ? ' (the date in the box above)' : ', the last day the field produced; set a date above to screen another day'}.
-        The detectors that the agent uses run over each one: dead gauges, water cut against the platform&rsquo;s design
-        limit, steep declines, shut-ins, steps in rate. {flagged} of {result.wells.length} wells have something to look at.
+        The detectors that the agent uses run over each one: dead gauges, high water cut (0.80 and 0.90), steep
+        declines, shut-ins, steps in rate. {flagged} of {result.wells.length} wells have something to look at.
       </p>
       <ScreenList result={result} onOpenWell={onOpenWell} />
     </div>

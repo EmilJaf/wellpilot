@@ -47,7 +47,11 @@ export function Diff({ pieces }: { pieces: Piece[] }) {
 // declared, not in the cited result).
 const MEANING = /stayed within|is named|is written in|is written as|belongs to|wrong way|only for|dead gauge|states a cause|ties it|date|called the change|model's P50|none of its evidence/
 
-export function CaughtList({ items, max = 4 }: { items: Correction[]; max?: number }) {
+export function CaughtList({ items: all, max = 4 }: { items: Correction[]; max?: number }) {
+  // The same problem raised twice in one answer (a number written twice) is listed once.
+  const items = all.filter(
+    (c, i) => all.findIndex((d) => d.target === c.target && problemText(d) === problemText(c)) === i,
+  )
   const ranked = [...items].sort((a, b) => Number(!MEANING.test(a.problem)) - Number(!MEANING.test(b.problem)))
   const shown = ranked.slice(0, max)
   return (

@@ -4,7 +4,7 @@ import { useWidth } from '../useWidth'
 
 const ISSUE_NAMES: Record<string, string> = {
   dead_gauge: 'dead downhole gauge',
-  water_cut: 'water cut past the design limit',
+  water_cut: 'high water cut',
   decline: 'steep decline',
   shut_in: 'long shut-ins',
   step_down: 'step down in rate',

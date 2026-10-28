@@ -275,7 +275,8 @@ function MetaLine({ m, open }: { m: MetaModels; open: (id: string) => void }) {
   for (const f of m.sam.figures)
     sam.push(
       <span key={f.evidence_id}>
-        measured the chart on that page and agreed with the reading on {f.agreed} of {f.compared} {chip(f.evidence_id)}
+        measured the chart on that page and agreed with Muse on {f.agreed} of the {f.compared} figure readings it could
+        compare{f.not_compared ? ` (${f.not_compared} could not be compared)` : ''} {chip(f.evidence_id)}
       </span>,
     )
   if (m.sam.logs.length)

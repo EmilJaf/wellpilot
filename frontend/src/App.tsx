@@ -31,11 +31,24 @@ const EXAMPLES = [
   },
   { label: 'F-12 decline vs the 2005 plan', question: 'Why did well F-12 decline faster after 2010? Compare with the 2005 development plan.', asOf: '' },
   { label: "Read the plan's forecast chart", question: 'What oil plateau rate and duration does the forecast figure on page 23 of the 2005 development plan show?', asOf: '' },
+  {
+    label: "F-12's 2014 water shut-off",
+    question:
+      "F-12's water cut fell from about 0.97 to about 0.3 at the end of 2014. What was done to the well, and why did the plug set in 2010 not do the same?",
+    asOf: '',
+  },
+  {
+    label: 'Its own Python',
+    question:
+      "Over 2011 to 2013, how closely did F-12's monthly water cut follow its choke opening? Give the correlation and what it suggests.",
+    asOf: '',
+  },
 ]
 
 type EventRow = { kind: string; signal: string; start: string; end: string | null; details: Record<string, unknown> }
 
 const NO_MARKERS: Marker[] = []
+const PAGE_TOOLS = new Set(['look_at_page', 'read_report_page'])
 
 type View = 'screen' | 'history' | 'well' | 'inside' | 'plan' | 'accuracy' | 'hindsight'
 type Group = 'field' | 'well' | 'plan' | 'forecasts'
@@ -132,8 +145,10 @@ export default function App() {
   const [chartsShown, setChartsShown] = useState(true)
   const setSelectedEvidence = (id: string | null, clicked?: Focus) => {
     setSelected(id)
-    // A quote opens its report page: fold the charts away so the page shows large.
-    if (clicked?.quote) setChartsShown(false)
+    // A quote opens its report page, and a result that is a page (the model's reading of
+    // one, a page of the plan): fold the charts away so the page shows large.
+    const tool = state.steps.flatMap((step) => step.tool_calls).find((c) => c.evidence_id === id)?.name
+    if (clicked?.quote || (tool && PAGE_TOOLS.has(tool))) setChartsShown(false)
     // The field and accuracy views fill the column: go back to the well, where evidence shows.
     if (id) setView('well')
     setFocus(clicked ?? null)
@@ -167,6 +182,9 @@ export default function App() {
   const [work, setWork] = useState<{ key: string; list: Marker[] }>({ key: '', list: [] })
   const [markers, setMarkers] = useState<{ key: string; list: Marker[] }>({ key: '', list: [] })
   const [recorded, setRecorded] = useState<RunSummary | null>(null)
+  // Every verified recorded run: an example whose question has one opens it at once (no
+  // tokens, no wait); "Ask the agent" still runs any question live.
+  const [answered, setAnswered] = useState<RunSummary[]>([])
   const [runsLoaded, setRunsLoaded] = useState(false)
   const [plan, setPlan] = useState<{
     end: string | null
@@ -257,6 +275,7 @@ export default function App() {
       // The time machine first: a verified run of the first example's question and date.
       .then((runs) => {
         const verified = runs.filter((r) => r.status === 'done' && r.verified)
+        setAnswered(verified)
         const machine = verified.find((r) => r.question === EXAMPLES[0].question && r.as_of === EXAMPLES[0].asOf)
         setRecorded(machine ?? verified.find((r) => r.as_of) ?? verified[0] ?? null)
       })
@@ -574,24 +593,37 @@ export default function App() {
               </p>
             )}
             <div className="suggestions">
-              <span className="suggestions-label">Try</span>
-              {EXAMPLES.map((e) => (
-                <button
-                  key={e.label}
-                  type="button"
-                  className="suggestion"
-                  title={e.asOf ? `${e.question} (data up to ${e.asOf})` : e.question}
-                  onClick={() => {
-                    setQuestion(e.question)
-                    setAsOf(e.asOf)
-                  }}
-                >
-                  {e.label}
-                </button>
-              ))}
+              <span className="suggestions-label">Recorded answers</span>
+              {EXAMPLES.map((e) => {
+                const saved = answered.find((r) => r.question === e.question && (r.as_of ?? '') === e.asOf)
+                return (
+                  <button
+                    key={e.label}
+                    type="button"
+                    className="suggestion"
+                    disabled={running}
+                    title={
+                      (e.asOf ? `${e.question} (data up to ${e.asOf})` : e.question) +
+                      (saved ? '. Opens its recorded answer; Ask the agent runs it live.' : '')
+                    }
+                    onClick={() => {
+                      setQuestion(e.question)
+                      setAsOf(e.asOf)
+                      if (saved) {
+                        reset()
+                        open(saved.id)
+                        setStep(3)
+                        setView('well')
+                      }
+                    }}
+                  >
+                    {e.label}
+                  </button>
+                )
+              })}
               {recorded && (
                 <button type="button" className="link-button" onClick={() => replay(recorded.id)} disabled={running}>
-                  or watch a recorded run
+                  or watch the 2010 one work
                 </button>
               )}
             </div>

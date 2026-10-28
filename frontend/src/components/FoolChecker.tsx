@@ -141,10 +141,12 @@ export function FoolChecker({
 
   return (
     <section id="fool" className="fool" aria-label="Try to fool the checker">
-      <h3 className="section-label">Try to fool the checker</h3>
+      <h3 className="section-label">Try to slip a wrong number past the checker</h3>
       <p className="fool-lead">
         Change a finding and press Check again. The checker runs on this run's saved tool results; no model is
-        involved.
+        involved. It judges numbers and their units, dates, which well and which quantity, which way a change ran,
+        quotes, and causes stated as facts. It does not judge meaning in words alone: &ldquo;most&rdquo; for
+        &ldquo;least&rdquo; passes.
       </p>
       <div className="fool-pick">
         <label>

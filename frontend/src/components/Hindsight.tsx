@@ -150,6 +150,8 @@ function ForecastCase({ f }: { f: Hindsight['forecasts'][number] }) {
         <span className="bbl" title={BARRELS_NOTE}> ({barrels(f.actual_sm3)} barrels)</span>:
         the forecast was <strong>{signed(agent.error)}</strong>.
       </p>
+      <CaseChart detail={f} />
+      {f.decomposition && <Decomposition d={f.decomposition} />}
       {f.fixed_windows && f.fixed_windows.length > 0 && (
         <p className="hindsight-fixed">
           {f.window_from_change ? (
@@ -190,12 +192,26 @@ function ForecastCase({ f }: { f: Hindsight['forecasts'][number] }) {
       {band && (
         <p className={`hindsight-band${band.holds_actual ? '' : ' is-miss'}`}>
           {band.holds_actual && <CheckIcon />}
-          Its range from past forecast errors, {volume(band.p90)} to {volume(band.p10)},{' '}
+          Its range from {band.past_forecasts ? `${band.past_forecasts} ` : ''}past forecast errors
+          {band.coverage ? ` (a range that holds about ${Math.round(band.coverage * 100)}% of outcomes)` : ''},{' '}
+          {volume(band.p90)} to {volume(band.p10)},{' '}
           {band.holds_actual ? 'held the outcome' : 'missed the outcome'}.
         </p>
       )}
-      <CaseChart detail={f} />
     </section>
+  )
+}
+
+/** A volume is a rate per producing day times the time on stream; say which was off. */
+function Decomposition({ d }: { d: NonNullable<Hindsight['forecasts'][number]['decomposition']> }) {
+  const offset = Math.sign(d.rate_error) !== Math.sign(d.uptime_error) && Math.abs(d.rate_error) > 0.03
+  return (
+    <p className="hindsight-fixed">
+      {offset ? 'Two errors that partly cancel: ' : 'In parts: '}
+      the rate per producing day was {signed(d.rate_error)} ({d.rate_forecast.toLocaleString('en-US')} forecast,{' '}
+      {d.rate_actual.toLocaleString('en-US')} Sm³/d actual) and the time on stream {signed(d.uptime_error)} (the fit
+      window&rsquo;s {Math.round(d.uptime_forecast * 100)}% against {Math.round(d.uptime_actual * 100)}% that year).
+    </p>
   )
 }
 
