@@ -31,7 +31,9 @@ SYSTEM = (
     "You read one page of an oil field report for an engineer. Answer the question from what "
     "the page shows, the picture included. Give each value you read with its label and unit, "
     "and say where it is: a figure, a table or the text. Read figures carefully off their axes "
-    "and give only values you can see; if the page does not show it, say so and give no value."
+    "and give only values you can see; if the page does not show it, say so and give no value. "
+    "A length of time is a number of months or years (unit 'months' or 'years'), never the "
+    "year it starts in."
 )
 
 

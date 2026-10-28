@@ -103,6 +103,13 @@ async def run_python(sandbox: Sandbox, arguments: str) -> dict:
     if "error" in parsed:
         return parsed
     out = parsed["output"]
+    if not out["rows_read"]:
+        # Numbers pasted into the code from earlier results are no analysis of the data:
+        # the call is sent back to read the rows itself.
+        return {
+            "error": "the code read no rows of data: read them with sql(...) or daily(well) "
+            "inside the code instead of typing values in, then compute from them"
+        }
     result = to_jsonable(
         {
             "purpose": args.purpose,
@@ -125,9 +132,10 @@ PYTHON_TOOL = Tool(
     "DuckDB SQL over production_daily, production_issues and production_logs (the same "
     "columns as run_sql's), and daily(well) for one well's days. Data after the as-of date "
     "is not there; there is no network. Assign the answer to `result`. At most "
-    f"{MAX_CALLS_PER_RUN} calls per question, {TIMEOUT_S:.0f} s each. Numbers you type into "
-    "the code are not evidence, and what the code returns is an inference, never a fact; "
-    "on an error, fix the code from the traceback.",
+    f"{MAX_CALLS_PER_RUN} calls per question, {TIMEOUT_S:.0f} s each. Read the rows with sql() "
+    "or daily() inside the code: never paste values from earlier results (code that reads no "
+    "rows is refused). What the code returns is an inference, never a fact; on an error, fix "
+    "the code from the traceback.",
     PythonArgs,
     run_python,
 )

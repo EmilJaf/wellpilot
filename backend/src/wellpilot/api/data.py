@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import FileResponse
 
 from wellpilot.agent.crosscheck import plateau
-from wellpilot.agent.evidence import code_ref
+from wellpilot.agent.evidence import code_deps, code_ref
 from wellpilot.agent.tools import (
     TOOLS,
     NoArgs,
@@ -161,6 +161,8 @@ def tool_code(ref: str) -> dict:
             return {
                 "ref": code_ref(fn),
                 "same_as_run": code_ref(fn) == ref,
+                # Hashed with the tool: the analysis modules it calls into.
+                "depends_on": ["backend/src/" + m.replace(".", "/") + ".py" for m in code_deps(fn)],
                 "file": "backend/src/" + fn.__module__.replace(".", "/") + ".py",
                 "line": first,
                 "source": "".join(lines),

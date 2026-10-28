@@ -148,7 +148,10 @@ def test_the_field_screen_flags_f12_at_the_end_of_2010() -> None:
     kinds = {i["kind"]: i for i in first["issues"]}
 
     assert result["as_of"] == "2010-12-31"
-    assert first["well"] == "F-12" and first["level"] == "alarm"
+    # A dead gauge is a monitoring gap, not an emergency: caution, and F-12 still leads
+    # with two issues against F-14's one.
+    assert first["well"] == "F-12" and first["level"] == "caution"
+    assert len(first["issues"]) > len(result["wells"][1]["issues"])
     assert kinds["dead_gauge"]["since"] == "2010-10-12"
     assert "123,258 Sm3" in kinds["dead_gauge"]["text"]
     # A gradual shift (water taking over), not a step: 55% between the periods, about 20%

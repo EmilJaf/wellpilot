@@ -14,7 +14,7 @@ Only the API calls this, after a run ends; nothing here reaches the agent.
 import pandas as pd
 
 from wellpilot.agent.tools import fit_warnings
-from wellpilot.analysis.decline import fit_decline, forecast
+from wellpilot.analysis.decline import fit_decline, forecast, nominal_coverage
 from wellpilot.backtest import RECENT_MONTHS, _curve, weekly_rate
 from wellpilot.data.store import ProductionStore
 from wellpilot.reasoning_check import reasoning_check
@@ -81,6 +81,27 @@ def _forecast_hindsight(
 
     band = result.get("calibrated_band_sm3")
     window_start = str(args.get("start") or "")[:10]
+    # The volume is a rate per producing day times the time on stream: which one was off?
+    # F-12 in 2011: the rate 12% low and the uptime 20% high made +6%.
+    horizon = daily[daily["date"].between(first, last)]
+    hours = horizon["on_stream_hrs"].fillna(0).clip(upper=24)
+    producing_days = float(hours.sum() / 24)
+    days = (last - first).days + 1
+    rate_forecast = float(reported["p50"]) / (agent_fit.uptime * days) if agent_fit.uptime else None
+    rate_actual = actual / producing_days if producing_days else None
+    uptime_actual = producing_days / days if days else None
+    decomposition = (
+        {
+            "rate_forecast": round(rate_forecast),
+            "rate_actual": round(rate_actual),
+            "rate_error": round(rate_forecast / rate_actual - 1, 4),
+            "uptime_forecast": round(agent_fit.uptime, 4),
+            "uptime_actual": round(uptime_actual, 4),
+            "uptime_error": round(agent_fit.uptime / uptime_actual - 1, 4),
+        }
+        if rate_forecast and rate_actual and uptime_actual
+        else None
+    )
     return {
         "evidence_id": evidence["id"],
         "well": well,
@@ -96,6 +117,7 @@ def _forecast_hindsight(
         ],
         "classic_warned": bool(fit_warnings(classic_fit)),
         "fixed_windows": fixed,
+        "decomposition": decomposition,
         # Why the agent's window starts where it does, when a change it found dates it.
         "window_from_change": _change_at(run, well, window_start) if window_start else None,
         "agent_range": {"p90": reported["p90"], "p10": reported["p10"]},
@@ -105,6 +127,10 @@ def _forecast_hindsight(
                 "p90": band["p90"],
                 "p10": band["p10"],
                 "holds_actual": bool(band["p90"] <= actual <= band["p10"]),
+                "past_forecasts": band.get("past_forecasts"),
+                # Recorded runs predate the field: computed from their count.
+                "coverage": band.get("coverage")
+                or (nominal_coverage(n) if (n := band.get("past_forecasts")) else None),
             }
             if band
             else None

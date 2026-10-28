@@ -156,3 +156,18 @@ def test_a_window_that_starts_after_work_on_the_well_says_so(stores) -> None:
 
     assert f["window_from_change"]["kind"] == "work"
     assert f["window_from_change"]["text"] == "workover on the well, 2010-09-20 to 2010-09-23"
+
+
+def test_the_error_splits_into_rate_and_time_on_stream(stores) -> None:
+    """The reservoir engineer's point: F-12's +6% for 2011 was the rate per producing day
+    too low and the time on stream too high, cancelling. The reveal says so."""
+    full, past = stores
+    run = run_with_forecast(past, well="F-12", start="2010-05-02")
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        (f,) = hindsight(run, full, past)["forecasts"]
+
+    d = f["decomposition"]
+    combined = (1 + d["rate_error"]) * (1 + d["uptime_error"]) - 1
+    assert abs(combined - f["methods"][0]["error"]) < 0.01
+    assert d["uptime_actual"] < d["uptime_forecast"]  # 2011 had more time shut in

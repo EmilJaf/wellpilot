@@ -25,7 +25,7 @@ def test_the_dead_gauge_is_flagged_the_month_it_died_and_work_is_on_the_line(tmp
     assert (gauge["first_flagged"], gauge["since"], gauge["level"]) == (
         "2010-10-31",
         "2010-10-12",
-        "alarm",
+        "caution",  # a monitoring gap, not an emergency
     )
     assert gauge["cleared"] is None
     assert [j["start"] for j in f12["work"]] == ["2010-09-23", "2014-11-22"]

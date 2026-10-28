@@ -214,7 +214,7 @@ async def test_missing_api_key_is_503(settings) -> None:
         response = await client.post("/api/runs", json={"question": "Which well?"})
 
     assert response.status_code == 503
-    assert "MODEL_API_KEY" in response.json()["detail"]
+    assert "live questions are off" in response.json()["detail"]
 
 
 async def test_too_many_active_runs_is_429(settings) -> None:

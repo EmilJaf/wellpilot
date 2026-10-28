@@ -1444,6 +1444,15 @@ def _attribution(
             or blanked[max(0, start - 1) : start] == "+"
         )
         fall = FALL_BEFORE.search(before) or FALL_AFTER.match(blanked[end:])
+        # "a water cut of 67% under the 80% limit", "peaked at 67% below it": a level named
+        # before the number, then compared; not a difference from the limit.
+        if re.search(
+            r"\b(?:of|at|was|were|is|are|reached|peaked\s+at|stood\s+at|=)\s*"
+            r"(?:about|around|roughly|nearly|almost|only|just)?\s*[~≈]?\s*$",
+            before,
+            re.IGNORECASE,
+        ) and re.match(r"\s*(?:%|percent)?\s*(?:below|under|above|over)\b", blanked[end:], re.I):
+            rise = fall = None
         # "rose 0.7232 to 0.9467", "fell 4 207 -> 1 888": where it started, not how much.
         if re.match(r"\s*(?:%|percent)?\s*(?:to|->|→)\s*-?[\d.]", blanked[end:]):
             rise = fall = None
@@ -2647,7 +2656,7 @@ WITHIN = re.compile(
     r"\b(?:never|not|no|without)\s+(?:\w+\s+){0,4}?(?:exceed\w*|surpass\w*|breach\w*|broke|"
     r"went\s+over|gone\s+over|above|over)\b"
     r"|\b(?:stayed|remained|kept|stays|remains|ran|operated)\s+(?:\w+\s+){0,3}?"
-    r"(?:within|below|under)\b"
+    r"(?:within|inside|below|under)\b"
     r"|\bwithin\s+(?:\w+\s+){0,4}?(?:design|limits?|capacit\w*)\b",
     re.IGNORECASE,
 )

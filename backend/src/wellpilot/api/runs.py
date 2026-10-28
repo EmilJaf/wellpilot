@@ -592,7 +592,13 @@ async def start_run(body: RunRequest, request: Request) -> dict:
     except Refused as e:
         raise HTTPException(429, str(e)) from None
     except RuntimeError as e:
-        raise HTTPException(503, str(e)) from None
+        # The key's name is for the operator's log; a visitor is told what still works.
+        logger.warning("run refused: %s", e)
+        raise HTTPException(
+            503,
+            "live questions are off on this server (no model key is set); the recorded "
+            "answers still open",
+        ) from None
     return {**record.summary(), "events_url": f"/api/runs/{record.id}/events"}
 
 

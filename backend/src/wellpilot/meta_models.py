@@ -28,6 +28,12 @@ def meta_models(events: list[dict], evidence: dict[str, dict]) -> dict:
                     "evidence_id": eid,
                     "agreed": sum(1 for c in judged if c["agree"]),
                     "compared": len(judged),
+                    # Figure readings SAM had nothing to set against, or that were no length
+                    "not_compared": sum(
+                        1
+                        for c in result["cross_check"]
+                        if c.get("agree") is None and "not the figure" not in str(c.get("note"))
+                    ),
                 }
             )
         if item.get("tool") == LOG and any(

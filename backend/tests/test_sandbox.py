@@ -22,7 +22,7 @@ from wellpilot.agent import sandbox_runner
 from wellpilot.agent.checker import DeclaredNumber, Finding, Submission, check_submission
 from wellpilot.agent.evidence import EvidenceLog
 from wellpilot.agent.loop import SUBMIT, run_agent
-from wellpilot.agent.sandbox import NO_DATA, OWN_CODE, RUN_PYTHON, run_python
+from wellpilot.agent.sandbox import OWN_CODE, RUN_PYTHON, run_python
 from wellpilot.data.store import ProductionStore
 from wellpilot.llm import LLM
 
@@ -108,11 +108,12 @@ def test_errors_come_back_for_the_agent_to_fix(box, monkeypatch) -> None:
     assert "longer than 1 s" in slow["error"]
 
 
-def test_code_that_reads_no_data_carries_a_warning(box) -> None:
+def test_code_that_reads_no_data_is_sent_back(box) -> None:
+    """The fifth panel: the featured own-code run typed 36 monthly values into its code and
+    read no data. Such a call now comes back as an error asking it to read the rows."""
     payload = call(box, "result = 4050 * 1.0")
 
-    assert payload["result"]["rows_read"] == 0
-    assert payload["result"]["warnings"] == [OWN_CODE, NO_DATA]
+    assert "read no rows" in payload["error"]
 
 
 def test_numbers_typed_into_the_code_are_not_evidence(box) -> None:

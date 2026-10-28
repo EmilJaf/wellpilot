@@ -105,6 +105,27 @@ def test_negative_volume_is_missing() -> None:
     assert issues_for(result, "negative_volume")["raw_value"].tolist() == [-14.19]
 
 
+def test_a_one_day_water_spike_at_steady_oil_is_missing() -> None:
+    """F-12 2008-05-24/25: 8,019.7 Sm3 of water between days of 8-30 Sm3 at unchanged oil;
+    a real rise in water (breakthrough) builds over days and is kept."""
+    days = pd.date_range("2008-05-10", periods=30, freq="D")
+    rows = [
+        {"DATEPRD": d, "BORE_OIL_VOL": 5000.0, "BORE_WAT_VOL": 8019.7 if i == 14 else 20.0}
+        for i, d in enumerate(days)
+    ]
+    rising = [
+        {"DATEPRD": d, "BORE_OIL_VOL": 5000.0 - 100 * i, "BORE_WAT_VOL": 20.0 + 300 * i}
+        for i, d in enumerate(days)
+    ]
+
+    spiked = clean_daily(raw_rows(*rows))
+    kept = clean_daily(raw_rows(*rising))
+
+    assert math.isnan(spiked.daily.loc[14, "water_sm3"])
+    assert issues_for(spiked, "water_spike")["raw_value"].tolist() == [8019.7]
+    assert issues_for(kept, "water_spike").empty
+
+
 def test_water_cut_and_gor() -> None:
     result = clean_daily(
         raw_rows({}, {"BORE_OIL_VOL": 0.0, "BORE_WAT_VOL": 0.0, "BORE_GAS_VOL": 0.0})

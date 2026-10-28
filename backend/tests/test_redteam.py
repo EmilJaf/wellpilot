@@ -17,7 +17,9 @@ from wellpilot.agent.redteam import Attack, attack_run, judge, summarize
 from wellpilot.llm import LLM
 from wellpilot.main import create_app
 
-RUN = json.loads((Path(__file__).parent / "fixtures" / "runs" / "8aef8d548380.json").read_text())
+RUN = json.loads(
+    (Path(__file__).parent / "fixtures" / "retired_runs" / "8aef8d548380.json").read_text()
+)
 ORIGINAL = RUN["result"]["findings"][0]["claim"]  # F-12, "1 551 Sm3/d oil with 69% water cut"
 
 

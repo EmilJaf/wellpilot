@@ -1,0 +1,2026 @@
+{
+ "source": {
+  "run": "870195fd6205",
+  "submission": 1,
+  "model": "meta-models/muse-spark-open-1026",
+  "question": "What oil plateau rate and duration does the forecast figure on page 23 of the 2005 development plan show?"
+ },
+ "to_review": false,
+ "note": "",
+ "expected": {
+  "accepted": true,
+  "flagged": []
+ },
+ "submission": {
+  "summary": "The 2005 development plan's forecast figure on page 23 (Fig 4.2) shows an oil plateau rate of 9,000 Sm3/d lasting about 19 months, after a start-up of about 1 year.",
+  "findings": [
+   {
+    "claim": "The PUD forecast on page 23 shows a plateau oil rate of 9,000 Sm3/d lasting about 19 months.",
+    "detail": "Text on page 23: \"Platåraten på 9.000 Sm3 /d vil vare om lag 19 måneder.\" [The plateau rate of 9,000 Sm3/d will last about 19 months.]; Figure 4.2 caption \"Figur 4.2 - Volve oljerate og kumulativ produksjon\"; design oil capacity 9,000 Sm3/d from Table 4.3 \"Oljekapasitet 9000 Sm3 /d\".",
+    "evidence_ids": [
+     "E1",
+     "E5"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "9,000 Sm3/d",
+      "value": 9000,
+      "evidence_id": "E1"
+     },
+     {
+      "text": "19 months",
+      "value": 19,
+      "evidence_id": "E1"
+     }
+    ]
+   }
+  ],
+  "summary_numbers": [
+   {
+    "text": "9,000 Sm3/d",
+    "value": 9000,
+    "evidence_id": "E1"
+   },
+   {
+    "text": "19 months",
+    "value": 19,
+    "evidence_id": "E1"
+   }
+  ]
+ },
+ "evidence": [
+  {
+   "id": "E1",
+   "tool": "read_report_page",
+   "arguments": {
+    "doc_id": "volve_pud",
+    "page": 23
+   },
+   "result": {
+    "document": {
+     "title": "Plan for utbygging og drift av Volve (PUD, plan for development and operation)",
+     "issued": "2005-02-01"
+    },
+    "page": 23,
+    "pages": 53,
+    "text": "Plan for utbygging og drift av Volve Februar 2005 23 regularitet på 94 % er lagt til grunn for beregning av produksjonsprofilene. Gassløft er inkludert for å sikre oppstart av brønner etter vedlikehold og sikrer produksjonen hvis kommunikasjonen i reservoaret er dårligere enn antatt. Tabell 4.3 - Felt begrensninger Antatt produksjonsstart mars.2007 Væskekapasitet 13000 Sm3 /d Oljekapasitet 9000 Sm3 /d Gass kapasitet 1,5 M Sm3 /d Vanninjeksjons kapasitet 16000 Sm3 /d Maksimum vannkutt 0,80 Maks gassløft rate 0,45 MSm3 /d Antatt produksjonsstart mars 2007 er basert på kontrakten med Maersk. På grunn av værrisiko ved utslep kan produksjonsstart bli utsatt.. Tabell 4.4 - Brønn begrensninger Oljerate 2500-4500 Sm3 /d Minimum Oljerate 100 Sm3 /d Minimum brønnhodetrykk 40 bar Maks gassløft rate 0,15 MSm3/d 4.5.1 Prognose for oljeproduksjon Feltet vil bli startet opp når første brønn er klargjort og etter en oppstartsperiode på ca. 1 år vil feltetprodusere på platårate. Platåraten på 9.000 Sm3 /d vil vare om lag 19 måneder. Produksjonen avtar grunnet økende vannrate. Kumulativ oljeproduksjon inntil minimum økonomisk rate på 2.100 Sm3 /d (gitt Volve oljepris på 18,7 USD/fat) nås er 11,4 MSm3 . Oljerate og kumulativ produksjon er vist i figur 4.2. Denne er basert på forventet produksjon (snitt) estimert fra usikkerhetsstudiet, se kapitel 4.6. Figur 4.2 - Volve oljerate og kumulativ produksjon 4.5.2 Prognose for vannproduksjon Vannproduksjonen kommer først og fremst fra injeksjonsvannet som bryter gjennom i brønnene etter omlag 2 år. På det tidspunkt er kumulativ oljeproduksjon omlag 6 MSm3 . Behovet for vann fra Utsira-formasjonen for injeksjon er ca 12.000 Sm3 /d. Når vannproduksjonen øker, reduseres behovet for Utsiravann. Produsert vann og injisert vann er vist i figur 4.3.",
+    "image": "reports/volve_pud/p023.png",
+    "summary_en": "Page 23 of the Volve PUD presents field and well constraints (Tabell 4.3 and 4.4), assumed production start March 2007, and forecasts for oil production and water production including plateau rate, cumulative volume, economic cutoff, and figure 4.2 for oil rate and cumulative production.",
+    "facts": {
+     "columns": [
+      "topic",
+      "source",
+      "statement_en",
+      "quote",
+      "quote_check",
+      "wells"
+     ],
+     "rows": [
+      [
+       "facility_limits",
+       "table",
+       "The assumed production start for the Volve field is mars.2007.",
+       "Antatt produksjonsstart mars.2007",
+       "exact",
+       ""
+      ],
+      [
+       "facility_limits",
+       "table",
+       "The field liquid capacity is 13000 Sm3/d.",
+       "Væskekapasitet 13000 Sm3 /d",
+       "exact",
+       ""
+      ],
+      [
+       "facility_limits",
+       "table",
+       "The field oil capacity is 9000 Sm3/d.",
+       "Oljekapasitet 9000 Sm3 /d",
+       "exact",
+       ""
+      ],
+      [
+       "facility_limits",
+       "table",
+       "The field gas capacity is 1,5 M Sm3/d.",
+       "Gass kapasitet 1,5 M Sm3 /d",
+       "exact",
+       ""
+      ],
+      [
+       "facility_limits",
+       "table",
+       "The field water injection capacity is 16000 Sm3/d.",
+       "Vanninjeksjons kapasitet 16000 Sm3 /d",
+       "exact",
+       ""
+      ],
+      [
+       "facility_limits",
+       "table",
+       "The field maximum water cut is 0,80.",
+       "Maksimum vannkutt 0,80",
+       "exact",
+       ""
+      ],
+      [
+       "facility_limits",
+       "table",
+       "The field maximum gas lift rate is 0,45 MSm3/d.",
+       "Maks gassløft rate 0,45 MSm3 /d",
+       "exact",
+       ""
+      ],
+      [
+       "facility_limits",
+       "table",
+       "The well oil rate limit is 2500-4500 Sm3/d.",
+       "Oljerate 2500-4500 Sm3 /d",
+       "exact",
+       ""
+      ],
+      [
+       "facility_limits",
+       "table",
+       "The well minimum oil rate is 100 Sm3/d.",
+       "Minimum Oljerate 100 Sm3 /d",
+       "exact",
+       ""
+      ],
+      [
+       "facility_limits",
+       "table",
+       "The well minimum wellhead pressure is 40 bar.",
+       "Minimum brønnhodetrykk 40 bar",
+       "exact",
+       ""
+      ],
+      [
+       "facility_limits",
+       "table",
+       "The well maximum gas lift rate is 0,15 MSm3/d.",
+       "Maks gassløft rate 0,15 MSm3/d",
+       "exact",
+       ""
+      ],
+      [
+       "production_forecast",
+       "text",
+       "A regularity of 94% is assumed as basis for calculation of the production profiles.",
+       "regularitet på 94 % er lagt til grunn for beregning av produksjonsprofilene.",
+       "exact",
+       ""
+      ],
+      [
+       "facility_limits",
+       "text",
+       "Gas lift is included to ensure start-up of wells after maintenance and to secure production if reservoir communication is worse than assumed.",
+       null,
+       "tokens",
+       ""
+      ],
+      [
+       "schedule",
+       "text",
+       "The assumed production start in march 2007 is based on the contract with Maersk and may be postponed due to weather risk at offloading.",
+       "Antatt produksjonsstart mars 2007 er basert på kontrakten med Maersk. På grunn av værrisiko ved utslep kan produksjonsstart bli utsatt..",
+       "exact",
+       ""
+      ],
+      [
+       "production_forecast",
+       "text",
+       "The field will start up when the first well is completed and after a start-up period of about 1 year it will produce at plateau rate.",
+       "Feltet vil bli startet opp når første brønn er klargjort og etter en oppstartsperiode på ca. 1 år vil feltetprodusere på platårate.",
+       "exact",
+       ""
+      ],
+      [
+       "production_forecast",
+       "text",
+       "The plateau rate of 9.000 Sm3/d will last about 19 months.",
+       "Platåraten på 9.000 Sm3 /d vil vare om lag 19 måneder.",
+       "exact",
+       ""
+      ],
+      [
+       "production_forecast",
+       "text",
+       "Cumulative oil production until the minimum economic rate of 2.100 Sm3/d at a Volve oil price of 18,7 USD/fat is 11,4 MSm3.",
+       "Kumulativ oljeproduksjon inntil minimum økonomisk rate på 2.100 Sm3 /d (gitt Volve oljepris på 18,7 USD/fat) nås er 11,4 MSm3",
+       "exact",
+       ""
+      ],
+      [
+       "production_forecast",
+       "figure",
+       "Figure 4.2 shows Volve oil rate and cumulative production versus year from 2007 to 2017, with oil rate on left axis in Sm3/d and cumulative oil in mill Sm3 on right axis.",
+       "Figur 4.2 - Volve oljerate og kumulativ produksjon",
+       "exact",
+       ""
+      ],
+      [
+       "water",
+       "text",
+       "Water production comes primarily from injection water that breaks through in the wells after about 2 years.",
+       "Vannproduksjonen kommer først og fremst fra injeksjonsvannet som bryter gjennom i brønnene etter omlag 2 år.",
+       "exact",
+       ""
+      ],
+      [
+       "water",
+       "text",
+       "At the time of water breakthrough the cumulative oil production is about 6 MSm3.",
+       "På det tidspunkt er kumulativ oljeproduksjon omlag 6 MSm3",
+       "exact",
+       ""
+      ],
+      [
+       "injection",
+       "text",
+       "The need for water from the Utsira formation for injection is about 12.000 Sm3/d, decreasing as water production increases.",
+       "Behovet for vann fra Utsira-formasjonen for injeksjon er ca 12.000 Sm3 /d. Når vannproduksjonen øker, reduseres behovet for Utsiravann.",
+       "exact",
+       ""
+      ]
+     ]
+    }
+   },
+   "code": "wellpilot.agent.tools.read_report_page@d467451f92da",
+   "created_at": "2026-10-28T14:30:18+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E2",
+   "tool": "search_reports",
+   "arguments": {
+    "query": "plateau rate forecast",
+    "limit": 20
+   },
+   "result": {
+    "documents": {
+     "f11b_completion": {
+      "title": "Final Well Report, Completion, 15/9-F-11 B",
+      "issued": "2013-09-04"
+     },
+     "volve_pud": {
+      "title": "Plan for utbygging og drift av Volve (PUD, plan for development and operation)",
+      "issued": "2005-02-01"
+     }
+    },
+    "facts": {
+     "columns": [
+      "doc_id",
+      "page",
+      "topic",
+      "source",
+      "statement_en",
+      "quote",
+      "quote_check",
+      "wells"
+     ],
+     "rows": [
+      [
+       "f11b_completion",
+       43,
+       "wells",
+       "text",
+       "On 12.Jul.2013 well F-11 B RIH with perforating BHA # 1RR to perforating depth at 4539 m, Perforated interval # 1, POOH to tool string inside tool catcher, verified guns fired.",
+       "12.Jul.2013 RIH with perforating BHA # 1RR to perforating depth at 4539 m. Perforated interval # 1. POOH to tool string inside tool catcher. Wireline cable released from cablehead. Broke lubricator and secured tool string with C-plate. Verified guns fired and L/D lubricator and BHA # 1RR.",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "volve_pud",
+       23,
+       "production_forecast",
+       "text",
+       "The field will start up when the first well is completed and after a start-up period of about 1 year it will produce at plateau rate.",
+       "Feltet vil bli startet opp når første brønn er klargjort og etter en oppstartsperiode på ca. 1 år vil feltetprodusere på platårate.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       23,
+       "production_forecast",
+       "text",
+       "The plateau rate of 9.000 Sm3/d will last about 19 months.",
+       "Platåraten på 9.000 Sm3 /d vil vare om lag 19 måneder.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       24,
+       "production_forecast",
+       "figure",
+       "Figure 4.4 shows the gas production rate in mill Sm3/d versus year from 2007 to 2017, with a plateau around 1.2 MSm3/d in 2008-2010.",
+       "Figur 4.4 - Gassproduksjons rate",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       49,
+       "facility_limits",
+       "table",
+       "The operator's annual operating cost at plateau rate for Logistics (helicopter, supply etc.) is 31 million NOK 2005 per 12 months production.",
+       "Logistikk (helikopter, forsyning etc.) | 31",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       49,
+       "facility_limits",
+       "table",
+       "The operator's annual operating cost at plateau rate for the operator's operating organization is 37 million NOK 2005 per 12 months production.",
+       "Operatørens driftsorganisasjon | 37",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       49,
+       "facility_limits",
+       "table",
+       "The operator's annual operating cost at plateau rate for production chemicals is 12 million NOK 2005 per 12 months production.",
+       "Produksjonskjemikalier | 12",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       49,
+       "facility_limits",
+       "table",
+       "The operator's annual operating cost at plateau rate for well intervention costs is 27 million NOK 2005 per 12 months production.",
+       "Brønn intervensjonskostnader | 27",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       49,
+       "facility_limits",
+       "table",
+       "The operator's annual operating cost at plateau rate for Co2-fee / Nox fee is 19 million NOK 2005 per 12 months production.",
+       "Co2 – avgift / Nox avgift | 19",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       49,
+       "facility_limits",
+       "table",
+       "The operator's annual operating cost at plateau rate for Miscellaneous is 29 million NOK 2005 per 12 months production.",
+       "Diverse | 29",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       49,
+       "facility_limits",
+       "table",
+       "The total operator's annual operating cost at plateau rate is 155 million NOK 2005 per 12 months production.",
+       "Sum | 155",
+       "exact",
+       ""
+      ],
+      [
+       "f11b_completion",
+       4,
+       "wells",
+       "text",
+       "Well F-11 B was brought on production after being perforated using tractor conveyed orientated guns",
+       "The well has been brought on production after being perforated using tractor conveyed orientated guns.",
+       "exact",
+       "F-11"
+      ],
+      [
+       "f11b_completion",
+       4,
+       "wells",
+       "text",
+       "Well F-11 B completion incorporates a 7” x 9 5/8” production packer, single DHG for reservoir pressure and temperature monitoring and a TRSCSSV down hole safety valve",
+       "The completion incorporates: 7” x 9 5/8” production packer, single DHG for reservoir pressure and temperature monitoring and a TRSCSSV down hole safety valve.",
+       "exact",
+       "F-11"
+      ],
+      [
+       "f11b_completion",
+       4,
+       "wells",
+       "text",
+       "Well F-11 B has been perforated using wirelinetractor conveyed oriented guns",
+       "The well has been perforated using wirelinetractor conveyed oriented guns.",
+       "exact",
+       "F-11"
+      ],
+      [
+       "f11b_completion",
+       5,
+       "wells",
+       "text",
+       "Well F-11 B was perforated using oriented guns on wire-line tractor with an estimated perforated interval in 7’’ liner of 8 runs, approximately 12,5 meter pr. run.",
+       "The well has been perforated using oriented guns on wire-line tractor. Estimated perforated interval in 7’’ liner is 8 runs, approximately 12,5 meter pr. run.",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       19,
+       "wells",
+       "text",
+       "The objective for well F-11 B was to perforate the well with Wireline/tractor in 8 intervals.",
+       "- Perforate Well with Wireline/ tractor (8 intervals)",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       19,
+       "wells",
+       "text",
+       "Perf #1 for well F-11 B was perforated from 4527 to 4539 m MD.",
+       "Perf#1 (From 4527 to 4539 m MD)",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       41,
+       "schedule",
+       "table",
+       "On 24.Jun.2013 guide wires were run and attached in wellhead template, riser connector disconnected and high pressure drilling riser pulled out of hole on well F-11 B.",
+       "24.Jun.2013 Ran guide wires and attached same in wellhead template. Disconnected riser connector. Pulled out of hole with high pressure drilling riser.",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       43,
+       "wells",
+       "text",
+       "On 13.Jul.2013 well F-11 B M/U perforation BHA # 2 and RIH to perforation depth, Perforated interval # 2 from 4480 m to 4500 m, POOH with perforation BHA # 2 and L/O guns.",
+       "13.Jul.2013 M/U perforation BHA # 2 and RIH to perforation depth. Perforated interval # 2 from 4480 m to 4500 m. POOH with perforation BHA # 2 and L/O guns.",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       43,
+       "wells",
+       "text",
+       "On 15.Jul.2013 well F-11 B RIH with perforation BHA # 3RR, correlated and positioned guns between 4355 m to 4367 m, Perforated interval # 3 and POOH, L/O perforation BHA # 3RR and RIH with perforation BHA # 4 to 3825 m.",
+       "15.Jul.2013 RIH with perforation BHA # 3RR. Correlated and positioned guns between 4355 m to 4367 m. Perforated interval # 3 and POOH. L/O perforation BHA # 3RR and re-buil cablehead. P/U and M/U perforation BHA # 4 and RIH to 3825 m",
+       "exact",
+       "F-11 B"
+      ]
+     ]
+    }
+   },
+   "code": "wellpilot.agent.tools.search_reports@5907b6347b0e",
+   "created_at": "2026-10-28T14:30:18+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E3",
+   "tool": "plan_vs_actual",
+   "arguments": {},
+   "result": {
+    "unit": "million Sm3 (MSm3) of oil per calendar year, whole field",
+    "plan_source": "Plan for utbygging og drift av Volve (PUD, plan for development and operation), page 25, Table 4.5",
+    "plan_rows_quoted": [
+     "mars 2007 1,53 1,44 1,53 1,54",
+     "2008 3,10 3,10 3,10 3,10",
+     "2009 2,96 2,83 2,96 3,15",
+     "2010 2,14 1,49 2,13 2,82",
+     "2011 1,25 0,10 1,22 1,82",
+     "2012 0,40 - 0,40 1,25",
+     "2013 - - - 0,88",
+     "2014 - - - 0,75"
+    ],
+    "years": {
+     "columns": [
+      "year",
+      "actual_oil_msm3",
+      "plan_p90_msm3",
+      "plan_p50_msm3",
+      "plan_p10_msm3"
+     ],
+     "rows": [
+      [
+       2007,
+       null,
+       1.44,
+       1.53,
+       1.54
+      ],
+      [
+       2008,
+       1.76,
+       3.1,
+       3.1,
+       3.1
+      ],
+      [
+       2009,
+       2.68,
+       2.83,
+       2.96,
+       3.15
+      ],
+      [
+       2010,
+       1.69,
+       1.49,
+       2.13,
+       2.82
+      ],
+      [
+       2011,
+       0.848,
+       0.1,
+       1.22,
+       1.82
+      ],
+      [
+       2012,
+       0.5742,
+       0.0,
+       0.4,
+       1.25
+      ],
+      [
+       2013,
+       0.558,
+       0.0,
+       0.0,
+       0.88
+      ],
+      [
+       2014,
+       0.7431,
+       0.0,
+       0.0,
+       0.75
+      ],
+      [
+       2015,
+       0.8617,
+       null,
+       null,
+       null
+      ],
+      [
+       2016,
+       0.3134,
+       null,
+       null,
+       null
+      ]
+     ]
+    },
+    "by_production_year": {
+     "columns": [
+      "production_year",
+      "plan_year",
+      "plan_p50_msm3",
+      "actual_year",
+      "actual_oil_msm3"
+     ],
+     "rows": [
+      [
+       1,
+       2007,
+       1.53,
+       2008,
+       1.76
+      ],
+      [
+       2,
+       2008,
+       3.1,
+       2009,
+       2.68
+      ],
+      [
+       3,
+       2009,
+       2.96,
+       2010,
+       1.69
+      ],
+      [
+       4,
+       2010,
+       2.13,
+       2011,
+       0.848
+      ],
+      [
+       5,
+       2011,
+       1.22,
+       2012,
+       0.5742
+      ],
+      [
+       6,
+       2012,
+       0.4,
+       2013,
+       0.558
+      ],
+      [
+       7,
+       2013,
+       0.0,
+       2014,
+       0.7431
+      ],
+      [
+       8,
+       2014,
+       0.0,
+       2015,
+       0.8617
+      ],
+      [
+       9,
+       2015,
+       null,
+       2016,
+       0.3134
+      ]
+     ]
+    },
+    "totals_msm3": {
+     "actual": 10.04,
+     "plan_p90": 8.96,
+     "plan_p50": 11.34,
+     "plan_p10": 15.31
+    },
+    "plan_p50_last_year": 2012,
+    "actual_last_year": 2016,
+    "actual_data_ends": "2016-12-01",
+    "actual_after_plan_p50_ends_msm3": 2.48,
+    "wells_first_oil_after_plan_p50_ends": {
+     "columns": [
+      "well",
+      "first_oil"
+     ],
+     "rows": [
+      [
+       "F-11",
+       "2013-07-24"
+      ],
+      [
+       "F-15 D",
+       "2014-01-16"
+      ],
+      [
+       "F-1 C",
+       "2014-04-22"
+      ],
+      [
+       "F-5",
+       "2016-04-20"
+      ]
+     ]
+    },
+    "note": "years: calendar years. The plan assumed first oil in March 2007 and the field started in February 2008, so by_production_year compares each year of production with the plan's year of the same number (plan 2007 with field 2008)."
+   },
+   "code": "wellpilot.agent.tools.plan_vs_actual@35745b0e000f",
+   "created_at": "2026-10-28T14:30:18+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E4",
+   "tool": "field_vs_design",
+   "arguments": {},
+   "result": {
+    "scope": "whole field, all producers and injectors summed per day, then per month",
+    "plan_source": "Plan for utbygging og drift av Volve (PUD, plan for development and operation), page 23, Table 4.3",
+    "design_limits": {
+     "liquid_sm3_per_day": {
+      "limit": "field liquid capacity",
+      "value": 13000,
+      "quote": "Væskekapasitet 13000 Sm3 /d"
+     },
+     "oil_sm3_per_day": {
+      "limit": "field oil capacity",
+      "value": 9000,
+      "quote": "Oljekapasitet 9000 Sm3 /d"
+     },
+     "water_cut": {
+      "limit": "maximum water cut",
+      "value": 0.8,
+      "quote": "Maksimum vannkutt 0,80"
+     },
+     "water_inj_sm3_per_day": {
+      "limit": "field water injection capacity",
+      "value": 16000,
+      "quote": "Vanninjeksjons kapasitet 16000 Sm3 /d"
+     },
+     "water_sm3_per_day": {
+      "limit": "field water handling (derived: liquid capacity x maximum water cut)",
+      "value": 10400,
+      "quote": null
+     }
+    },
+    "field_against_limits": {
+     "liquid_sm3_per_day": {
+      "first_month_at_or_above": null,
+      "months_at_or_above": 0,
+      "max": 11438,
+      "max_month": "2014-06"
+     },
+     "oil_sm3_per_day": {
+      "first_month_at_or_above": null,
+      "months_at_or_above": 0,
+      "max": 8924,
+      "max_month": "2008-12"
+     },
+     "water_cut": {
+      "first_month_at_or_above": "2012-06",
+      "months_at_or_above": 27,
+      "max": 0.8606,
+      "max_month": "2016-04"
+     },
+     "water_inj_sm3_per_day": {
+      "first_month_at_or_above": "2008-12",
+      "months_at_or_above": 3,
+      "max": 17206,
+      "max_month": "2008-12"
+     },
+     "water_sm3_per_day": {
+      "first_month_at_or_above": null,
+      "months_at_or_above": 0,
+      "max": 9070,
+      "max_month": "2014-10",
+      "max_day": 10240,
+      "max_day_month": "2013-10"
+     }
+    },
+    "months": {
+     "columns": [
+      "month",
+      "days",
+      "oil_sm3_per_day",
+      "liquid_sm3_per_day",
+      "water_cut",
+      "water_sm3_per_day",
+      "water_inj_sm3_per_day",
+      "max_day_liquid_sm3",
+      "max_day_water_sm3"
+     ],
+     "rows": [
+      [
+       "2008-02",
+       29,
+       1693,
+       1707,
+       0.008335,
+       14.23,
+       0.0,
+       3127,
+       385.01
+      ],
+      [
+       "2008-03",
+       31,
+       2689,
+       2690,
+       0.0003288,
+       0.8845,
+       0.0,
+       3193,
+       3.39
+      ],
+      [
+       "2008-04",
+       30,
+       2484,
+       2501,
+       0.006614,
+       16.54,
+       991.76,
+       3306,
+       153.36
+      ],
+      [
+       "2008-05",
+       31,
+       4048,
+       4055,
+       0.001914,
+       7.76,
+       7140,
+       5096,
+       29.8
+      ],
+      [
+       "2008-06",
+       30,
+       4793,
+       4809,
+       0.003288,
+       15.81,
+       7060,
+       5242,
+       184.78
+      ],
+      [
+       "2008-07",
+       31,
+       5364,
+       5377,
+       0.002497,
+       13.43,
+       7485,
+       6853,
+       36.05
+      ],
+      [
+       "2008-08",
+       31,
+       5337,
+       5355,
+       0.003474,
+       18.6,
+       7368,
+       9258,
+       90.81
+      ],
+      [
+       "2008-09",
+       30,
+       6409,
+       6424,
+       0.002408,
+       15.47,
+       5447,
+       9078,
+       74.97
+      ],
+      [
+       "2008-10",
+       31,
+       7651,
+       7674,
+       0.003049,
+       23.4,
+       11476,
+       9017,
+       40.42
+      ],
+      [
+       "2008-11",
+       30,
+       8344,
+       8430,
+       0.0102,
+       86.01,
+       14730,
+       9346,
+       804.33
+      ],
+      [
+       "2008-12",
+       31,
+       8924,
+       8958,
+       0.003852,
+       34.51,
+       17206,
+       9076,
+       71.83
+      ],
+      [
+       "2009-01",
+       31,
+       8685,
+       8730,
+       0.005053,
+       44.11,
+       16139,
+       9232,
+       298.19
+      ],
+      [
+       "2009-02",
+       28,
+       8421,
+       8511,
+       0.01061,
+       90.33,
+       15973,
+       9102,
+       152.76
+      ],
+      [
+       "2009-03",
+       31,
+       5923,
+       5977,
+       0.009062,
+       54.17,
+       4608,
+       9137,
+       207.66
+      ],
+      [
+       "2009-04",
+       30,
+       7930,
+       7980,
+       0.006236,
+       49.76,
+       7046,
+       9031,
+       124.94
+      ],
+      [
+       "2009-05",
+       31,
+       8297,
+       8508,
+       0.02482,
+       211.18,
+       14963,
+       9429,
+       456.62
+      ],
+      [
+       "2009-06",
+       30,
+       7303,
+       7582,
+       0.03688,
+       279.66,
+       8773,
+       9372,
+       620.77
+      ],
+      [
+       "2009-07",
+       31,
+       5515,
+       5840,
+       0.05558,
+       324.59,
+       12796,
+       6571,
+       507.3
+      ],
+      [
+       "2009-08",
+       31,
+       7255,
+       8088,
+       0.103,
+       832.83,
+       12593,
+       10519,
+       1623
+      ],
+      [
+       "2009-09",
+       30,
+       6015,
+       6599,
+       0.08845,
+       583.66,
+       11185,
+       10363,
+       1361
+      ],
+      [
+       "2009-10",
+       31,
+       7214,
+       8276,
+       0.1283,
+       1062,
+       12353,
+       10182,
+       2994
+      ],
+      [
+       "2009-11",
+       30,
+       7802,
+       9479,
+       0.1769,
+       1677,
+       13760,
+       10430,
+       2121
+      ],
+      [
+       "2009-12",
+       31,
+       7984,
+       10355,
+       0.2289,
+       2371,
+       14354,
+       11620,
+       3250
+      ],
+      [
+       "2010-01",
+       31,
+       7480,
+       10713,
+       0.3018,
+       3233,
+       15298,
+       11704,
+       3920
+      ],
+      [
+       "2010-02",
+       28,
+       5897,
+       9655,
+       0.3892,
+       3758,
+       13751,
+       11350,
+       4915
+      ],
+      [
+       "2010-03",
+       31,
+       5437,
+       9262,
+       0.4129,
+       3824,
+       10609,
+       11732,
+       5518
+      ],
+      [
+       "2010-04",
+       30,
+       5310,
+       9905,
+       0.4639,
+       4595,
+       12194,
+       11636,
+       5515
+      ],
+      [
+       "2010-05",
+       31,
+       5320,
+       10473,
+       0.492,
+       5153,
+       16282,
+       11430,
+       6002
+      ],
+      [
+       "2010-06",
+       30,
+       4831,
+       10826,
+       0.5538,
+       5995,
+       14279,
+       11645,
+       6560
+      ],
+      [
+       "2010-07",
+       31,
+       4311,
+       10642,
+       0.5949,
+       6331,
+       13286,
+       11074,
+       6664
+      ],
+      [
+       "2010-08",
+       31,
+       2211,
+       5799,
+       0.6188,
+       3588,
+       7385,
+       11173,
+       7038
+      ],
+      [
+       "2010-09",
+       30,
+       3557,
+       8755,
+       0.5937,
+       5198,
+       10281,
+       11026,
+       6793
+      ],
+      [
+       "2010-10",
+       31,
+       4200,
+       10667,
+       0.6063,
+       6467,
+       12755,
+       11406,
+       7232
+      ],
+      [
+       "2010-11",
+       30,
+       3567,
+       10208,
+       0.6505,
+       6640,
+       11863,
+       11198,
+       7500
+      ],
+      [
+       "2010-12",
+       31,
+       3519,
+       10712,
+       0.6715,
+       7193,
+       12316,
+       10927,
+       7349
+      ],
+      [
+       "2011-01",
+       31,
+       3422,
+       10778,
+       0.6825,
+       7357,
+       12198,
+       10972,
+       7481
+      ],
+      [
+       "2011-02",
+       28,
+       2615,
+       8500,
+       0.6923,
+       5885,
+       9816,
+       10970,
+       7669
+      ],
+      [
+       "2011-03",
+       31,
+       3036,
+       10479,
+       0.7103,
+       7443,
+       11917,
+       11111,
+       7981
+      ],
+      [
+       "2011-04",
+       30,
+       2988,
+       10929,
+       0.7266,
+       7942,
+       12314,
+       11104,
+       8277
+      ],
+      [
+       "2011-05",
+       31,
+       2849,
+       10878,
+       0.7381,
+       8029,
+       12246,
+       11093,
+       8206
+      ],
+      [
+       "2011-06",
+       30,
+       1774,
+       6968,
+       0.7454,
+       5194,
+       7868,
+       10990,
+       8239
+      ],
+      [
+       "2011-07",
+       31,
+       1054,
+       3438,
+       0.6934,
+       2384,
+       4046,
+       10959,
+       7414
+      ],
+      [
+       "2011-08",
+       31,
+       2778,
+       9485,
+       0.7072,
+       6708,
+       10806,
+       11863,
+       8491
+      ],
+      [
+       "2011-09",
+       30,
+       2702,
+       10849,
+       0.751,
+       8148,
+       12020,
+       12592,
+       9959
+      ],
+      [
+       "2011-10",
+       31,
+       1111,
+       4639,
+       0.7604,
+       3528,
+       5289,
+       10784,
+       8259
+      ],
+      [
+       "2011-11",
+       30,
+       1894,
+       6873,
+       0.7244,
+       4979,
+       7778,
+       10931,
+       8020
+      ],
+      [
+       "2011-12",
+       31,
+       1686,
+       6173,
+       0.7269,
+       4488,
+       6989,
+       10967,
+       7964
+      ],
+      [
+       "2012-01",
+       31,
+       1469,
+       5384,
+       0.7272,
+       3915,
+       6045,
+       11518,
+       8386
+      ],
+      [
+       "2012-02",
+       29,
+       2212,
+       8738,
+       0.7468,
+       6525,
+       10045,
+       11227,
+       9182
+      ],
+      [
+       "2012-03",
+       31,
+       1981,
+       8511,
+       0.7672,
+       6529,
+       9486,
+       9033,
+       6896
+      ],
+      [
+       "2012-04",
+       30,
+       2020,
+       9051,
+       0.7768,
+       7031,
+       10009,
+       9254,
+       7259
+      ],
+      [
+       "2012-05",
+       31,
+       1854,
+       9050,
+       0.7952,
+       7196,
+       9900,
+       10140,
+       8248
+      ],
+      [
+       "2012-06",
+       30,
+       1752,
+       8894,
+       0.803,
+       7142,
+       9731,
+       9274,
+       7687
+      ],
+      [
+       "2012-07",
+       31,
+       1747,
+       8977,
+       0.8054,
+       7230,
+       9857,
+       9195,
+       7442
+      ],
+      [
+       "2012-08",
+       31,
+       699.62,
+       3556,
+       0.8033,
+       2857,
+       4005,
+       9291,
+       7550
+      ],
+      [
+       "2012-09",
+       30,
+       88.97,
+       336.68,
+       0.7357,
+       247.71,
+       469.75,
+       8296,
+       6238
+      ],
+      [
+       "2012-10",
+       31,
+       1728,
+       7579,
+       0.772,
+       5851,
+       7385,
+       9875,
+       7791
+      ],
+      [
+       "2012-11",
+       30,
+       1798,
+       9203,
+       0.8046,
+       7405,
+       11037,
+       9354,
+       7602
+      ],
+      [
+       "2012-12",
+       31,
+       1498,
+       8762,
+       0.829,
+       7264,
+       9661,
+       9526,
+       7874
+      ],
+      [
+       "2013-01",
+       31,
+       1535,
+       9263,
+       0.8343,
+       7728,
+       10180,
+       10037,
+       8517
+      ],
+      [
+       "2013-02",
+       28,
+       1489,
+       9290,
+       0.8398,
+       7802,
+       10239,
+       9488,
+       7975
+      ],
+      [
+       "2013-03",
+       31,
+       810.4,
+       4931,
+       0.8357,
+       4121,
+       5892,
+       9817,
+       8306
+      ],
+      [
+       "2013-04",
+       30,
+       1174,
+       7254,
+       0.8381,
+       6080,
+       7923,
+       10088,
+       8460
+      ],
+      [
+       "2013-05",
+       31,
+       1419,
+       9700,
+       0.8538,
+       8281,
+       10564,
+       11576,
+       10140
+      ],
+      [
+       "2013-06",
+       30,
+       1140,
+       8006,
+       0.8576,
+       6866,
+       9026,
+       10017,
+       8584
+      ],
+      [
+       "2013-07",
+       31,
+       1238,
+       7908,
+       0.8434,
+       6670,
+       8542,
+       10764,
+       9337
+      ],
+      [
+       "2013-08",
+       31,
+       2010,
+       9912,
+       0.7972,
+       7902,
+       11028,
+       11090,
+       8908
+      ],
+      [
+       "2013-09",
+       30,
+       1696,
+       8327,
+       0.7964,
+       6631,
+       9055,
+       10963,
+       8771
+      ],
+      [
+       "2013-10",
+       31,
+       1963,
+       9583,
+       0.7951,
+       7620,
+       10076,
+       12493,
+       10240
+      ],
+      [
+       "2013-11",
+       30,
+       2060,
+       9744,
+       0.7886,
+       7684,
+       10799,
+       11071,
+       8895
+      ],
+      [
+       "2013-12",
+       31,
+       1806,
+       9165,
+       0.803,
+       7359,
+       10267,
+       11391,
+       9139
+      ],
+      [
+       "2014-01",
+       31,
+       1997,
+       8387,
+       0.7619,
+       6390,
+       9257,
+       11120,
+       8874
+      ],
+      [
+       "2014-02",
+       28,
+       2034,
+       9519,
+       0.7863,
+       7485,
+       9675,
+       11677,
+       9262
+      ],
+      [
+       "2014-03",
+       31,
+       2005,
+       9507,
+       0.7891,
+       7501,
+       10402,
+       11788,
+       9415
+      ],
+      [
+       "2014-04",
+       30,
+       2540,
+       10878,
+       0.7665,
+       8338,
+       11856,
+       12756,
+       9099
+      ],
+      [
+       "2014-05",
+       31,
+       2704,
+       8943,
+       0.6976,
+       6239,
+       10053,
+       12585,
+       9186
+      ],
+      [
+       "2014-06",
+       30,
+       2651,
+       11438,
+       0.7682,
+       8787,
+       12426,
+       12106,
+       9308
+      ],
+      [
+       "2014-07",
+       31,
+       2419,
+       10971,
+       0.7795,
+       8552,
+       12136,
+       12596,
+       10120
+      ],
+      [
+       "2014-08",
+       31,
+       1593,
+       8691,
+       0.8167,
+       7098,
+       9878,
+       11742,
+       9362
+      ],
+      [
+       "2014-09",
+       30,
+       2080,
+       10879,
+       0.8088,
+       8799,
+       12018,
+       11907,
+       9677
+      ],
+      [
+       "2014-10",
+       31,
+       2081,
+       11151,
+       0.8134,
+       9070,
+       12466,
+       11677,
+       9544
+      ],
+      [
+       "2014-11",
+       30,
+       1764,
+       9593,
+       0.8161,
+       7829,
+       10442,
+       11853,
+       9797
+      ],
+      [
+       "2014-12",
+       31,
+       591.4,
+       3931,
+       0.8495,
+       3339,
+       5238,
+       4315,
+       3645
+      ],
+      [
+       "2015-01",
+       31,
+       2621,
+       6735,
+       0.6108,
+       4114,
+       6388,
+       7752,
+       4554
+      ],
+      [
+       "2015-02",
+       28,
+       2367,
+       7082,
+       0.6658,
+       4715,
+       8905,
+       8724,
+       5919
+      ],
+      [
+       "2015-03",
+       31,
+       2637,
+       7734,
+       0.6591,
+       5097,
+       8544,
+       9858,
+       6439
+      ],
+      [
+       "2015-04",
+       30,
+       3007,
+       8210,
+       0.6337,
+       5203,
+       9689,
+       9352,
+       6208
+      ],
+      [
+       "2015-05",
+       31,
+       2809,
+       7938,
+       0.6462,
+       5130,
+       8513,
+       9432,
+       6246
+      ],
+      [
+       "2015-06",
+       30,
+       2795,
+       8495,
+       0.671,
+       5700,
+       10244,
+       9682,
+       6453
+      ],
+      [
+       "2015-07",
+       31,
+       2387,
+       8114,
+       0.7058,
+       5727,
+       8838,
+       9207,
+       6890
+      ],
+      [
+       "2015-08",
+       31,
+       1816,
+       6664,
+       0.7275,
+       4848,
+       7351,
+       9409,
+       6670
+      ],
+      [
+       "2015-09",
+       30,
+       2103,
+       7961,
+       0.7358,
+       5858,
+       8734,
+       9364,
+       7089
+      ],
+      [
+       "2015-10",
+       31,
+       1861,
+       8029,
+       0.7682,
+       6168,
+       8717,
+       9622,
+       7590
+      ],
+      [
+       "2015-11",
+       30,
+       2016,
+       8856,
+       0.7724,
+       6840,
+       9837,
+       10114,
+       7909
+      ],
+      [
+       "2015-12",
+       31,
+       1930,
+       8580,
+       0.7751,
+       6651,
+       9623,
+       9587,
+       7425
+      ],
+      [
+       "2016-01",
+       31,
+       1664,
+       8818,
+       0.8113,
+       7154,
+       9694,
+       10168,
+       8551
+      ],
+      [
+       "2016-02",
+       29,
+       1633,
+       8877,
+       0.816,
+       7243,
+       10768,
+       9490,
+       7836
+      ],
+      [
+       "2016-03",
+       31,
+       1381,
+       8920,
+       0.8452,
+       7539,
+       9065,
+       9567,
+       8203
+      ],
+      [
+       "2016-04",
+       30,
+       1077,
+       7727,
+       0.8606,
+       6650,
+       8010,
+       9126,
+       7865
+      ],
+      [
+       "2016-05",
+       31,
+       1259,
+       8000,
+       0.8426,
+       6741,
+       8686,
+       10416,
+       9106
+      ],
+      [
+       "2016-06",
+       30,
+       1189,
+       7937,
+       0.8502,
+       6749,
+       8576,
+       8223,
+       6993
+      ],
+      [
+       "2016-07",
+       31,
+       1002,
+       5794,
+       0.8271,
+       4792,
+       6386,
+       8118,
+       6936
+      ],
+      [
+       "2016-08",
+       31,
+       804.99,
+       4065,
+       0.802,
+       3260,
+       4270,
+       5776,
+       4879
+      ],
+      [
+       "2016-09",
+       30,
+       286.97,
+       1846,
+       0.8446,
+       1559,
+       2040,
+       3581,
+       3037
+      ]
+     ]
+    },
+    "plan_end_quote": "Kumulativ oljeproduksjon inntil minimum økonomisk rate på 2.100 Sm3 /d (gitt Volve oljepris på 18,7 USD/fat) nås er 11,4 MSm3",
+    "note": "These are field and platform limits (PUD p.35 lists the same platform capacities); compare them with field totals, never one well. The maximum water cut is a share at full liquid rate: the water the platform can handle is liquid capacity x maximum water cut (water_sm3_per_day). The field reaching that share at a lower liquid rate means it ran at the design water cut, not over its water capacity. Rates are per calendar day of each month."
+   },
+   "code": "wellpilot.agent.tools.field_vs_design@e3763197bb3a",
+   "created_at": "2026-10-28T14:30:18+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E5",
+   "tool": "search_reports",
+   "arguments": {
+    "query": "Platåraten på 9.000",
+    "limit": 5
+   },
+   "result": {
+    "documents": {
+     "f11b_completion": {
+      "title": "Final Well Report, Completion, 15/9-F-11 B",
+      "issued": "2013-09-04"
+     },
+     "volve_pud": {
+      "title": "Plan for utbygging og drift av Volve (PUD, plan for development and operation)",
+      "issued": "2005-02-01"
+     }
+    },
+    "facts": {
+     "columns": [
+      "doc_id",
+      "page",
+      "topic",
+      "source",
+      "statement_en",
+      "quote",
+      "quote_check",
+      "wells"
+     ],
+     "rows": [
+      [
+       "volve_pud",
+       23,
+       "production_forecast",
+       "text",
+       "The plateau rate of 9.000 Sm3/d will last about 19 months.",
+       "Platåraten på 9.000 Sm3 /d vil vare om lag 19 måneder.",
+       "exact",
+       ""
+      ],
+      [
+       "f11b_completion",
+       9,
+       "injection",
+       "table",
+       "On 27.jun.2013 RIG-E03 BOP stack/valves incident no 1366412 Attempted to pressure test annular BOP on stump had Quality cost 3000 NOK and 8471 NOK/d with Total hrs 8,5 Comp share 100% Comp share hrs 8,5.",
+       "27.jun.2013 RIG-E03 BOP stack/valves 1366412 Attempted to pressure test annular BOP on stump. 3000 8471 8,5 100 8,5",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       9,
+       "injection",
+       "table",
+       "On 02.jul.2013 RIG-E345 Elevator incident no 1366883 Observed hydraulic leak from elevator fitting, replaced same had Quality cost 20500 NOK and 1968000 NOK/d with Total hrs 0,3 Comp share 100% Comp share hrs 0,3.",
+       "02.jul.2013 RIG-E345 Elevator 1366883 Observed hydraulic leak from elevator fitting, replaced same 20500 1968000 0,3 100 0,3",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       9,
+       "injection",
+       "table",
+       "On 10.jul.2013 TRAC-E03 Electronic tractor failure Synergi no 1368443 Wireline Tractor Failure had Quality cost 3000 NOK and 3692 NOK/d with Total hrs 19,5 Comp share 100% Comp share hrs 19,5 for SERVICE COMPANY Tractor TRAC Aker Well Service.",
+       "10.jul.2013 TRAC-E03 Electronic tractor failure 1368443 Wireline Tractor Failure 3000 3692 19,5 100 19,5",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       9,
+       "injection",
+       "table",
+       "On 13.jul.2013 TRAC-E01 Cable head Synergi no 1368445 Lost Communication with Perforation assembly had Quality cost 3000 NOK and 4174 NOK/d with Total hrs 17,3 Comp share 100% Comp share hrs 17,3.",
+       "13.jul.2013 TRAC-E01 Cable head 1368445 Lost Communication with Perforation assembly 3000 4174 17,3 100 17,3",
+       "exact",
+       "F-11 B"
+      ]
+     ]
+    }
+   },
+   "code": "wellpilot.agent.tools.search_reports@5907b6347b0e",
+   "created_at": "2026-10-28T14:32:24+00:00",
+   "warnings": []
+  }
+ ]
+}

@@ -331,6 +331,15 @@ def error_quantiles(errors: list[float], band: tuple[float, float] = BAND) -> tu
     return ordered[low - 1], ordered[high - 1]
 
 
+def nominal_coverage(n: int, band: tuple[float, float] = BAND) -> float:
+    """How often the order-statistic interval of n past errors holds a new one: (k_high -
+    k_low) / (n + 1). With 5 errors the band runs from the smallest to the largest seen and
+    holds about 67% of outcomes, not 80%; it reaches 80% from 9 errors on."""
+    low = max(math.floor((n + 1) * band[0]), 1)
+    high = min(math.ceil((n + 1) * band[1]), n)
+    return round((high - low) / (n + 1), 2)
+
+
 def calibrated_band(p50: float, errors: list[float], min_errors: int = 5) -> dict | None:
     """An 80% band from past errors: if forecasts like this one erred by e (forecast /
     actual - 1), the actual lies at p50 / (1 + e); the error quantiles bound it."""
@@ -341,5 +350,6 @@ def calibrated_band(p50: float, errors: list[float], min_errors: int = 5) -> dic
         "p90": p50 / (1 + q_high),  # low case
         "p10": p50 / (1 + q_low),  # high case
         "past_forecasts": len(errors),
+        "coverage": nominal_coverage(len(errors)),
         "median_abs_error": float(np.median(np.abs(errors))),
     }

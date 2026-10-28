@@ -39,7 +39,13 @@ YEAR = re.compile(r"\b(20\d{2})\b")
 RATE_UNIT = re.compile(r"m3\s*/\s*d|m³\s*/\s*d|m3/day|m³/day", re.IGNORECASE)
 # The model writes units and labels in the report's language too: "måneder", "år", "platå".
 MONTHS_UNIT = re.compile(r"^\s*(?:months?|måneder|mnd)\b", re.IGNORECASE)
-YEARS_UNIT = re.compile(r"^\s*(?:years?|år)\b", re.IGNORECASE)
+YEARS_UNIT = re.compile(r"^\s*(?:years?|yrs?|år|ar)\b", re.IGNORECASE)
+# A length the model wrote in its own words: "~ 2 to 2.5 years", "about 19 months".
+LENGTH = re.compile(
+    r"(?P<a>\d+(?:[.,]\d+)?)\s*(?:(?:to|-|–)\s*(?P<b>\d+(?:[.,]\d+)?))?\s*"
+    r"(?P<unit>years?|yrs?|år|months?|måneder|mnd)\b",
+    re.IGNORECASE,
+)
 PLATEAU = re.compile(r"plateau|plat[åa]|peak|max", re.IGNORECASE)
 FIGURE = re.compile(r"^\s*fig", re.IGNORECASE)
 
@@ -119,6 +125,20 @@ def cross_check(readings: list[dict], sam: dict) -> list[dict]:
         years = YEARS_UNIT.match(unit)
         if (years or MONTHS_UNIT.match(unit)) and PLATEAU.search(label):
             months = value * 12 if years else value
+            if 1900 <= value <= 2100:
+                # A year given for a length ("2008", unit "Ar"): take the length the model
+                # wrote in its own words, if it did, else say it could not be compared.
+                said = LENGTH.search(where)
+                if not said:
+                    check["note"] = "the reading gives a year, not a length"
+                    checks.append(check)
+                    continue
+                a = float(said["a"].replace(",", "."))
+                b = float((said["b"] or said["a"]).replace(",", "."))
+                length = (a + b) / 2
+                months = length * 12 if said["unit"].lower().startswith(("y", "å")) else length
+                check["muse"] = said.group(0)
+                check["note"] = f"the length it wrote: '{said.group(0)}'"
             sam_months = sam["plateau"]["months"]
             check.update(
                 {

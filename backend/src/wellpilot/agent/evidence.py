@@ -7,6 +7,7 @@ that produced it.
 
 import hashlib
 import inspect
+import sys
 from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -14,11 +15,32 @@ from functools import cache
 from typing import Any
 
 
+def code_deps(fn: Callable) -> list[str]:
+    """The wellpilot modules a tool function calls into (one level): the analysis code that
+    computes its result, not only the wrapper ("fit_decline_tool" -> analysis.decline)."""
+    names: set[str] = set()
+    codes = [fn.__code__]
+    while codes:
+        code = codes.pop()
+        names.update(code.co_names)
+        codes += [c for c in code.co_consts if inspect.iscode(c)]
+    modules = set()
+    for name in names:
+        obj = fn.__globals__.get(name)
+        module = obj.__name__ if inspect.ismodule(obj) else getattr(obj, "__module__", None)
+        if module and module.startswith("wellpilot.") and module != fn.__module__:
+            modules.add(module)
+    return sorted(modules)
+
+
 @cache
 def code_ref(fn: Callable) -> str:
-    """'module.function@sha256[:12]' of the function's source."""
-    digest = hashlib.sha256(inspect.getsource(fn).encode()).hexdigest()[:12]
-    return f"{fn.__module__}.{fn.__qualname__}@{digest}"
+    """'module.function@sha256[:12]' of the function's source and of the source of every
+    wellpilot module it calls into, so a change to the analysis shows as changed code."""
+    digest = hashlib.sha256(inspect.getsource(fn).encode())
+    for module in code_deps(fn):
+        digest.update(inspect.getsource(sys.modules[module]).encode())
+    return f"{fn.__module__}.{fn.__qualname__}@{digest.hexdigest()[:12]}"
 
 
 @dataclass(frozen=True)

@@ -4,11 +4,11 @@ An engineer looking after a field does not start from one well; they start from 
 and ask which wells need a look. This runs the deterministic detectors over every well,
 as of the end of the data (or the as-of date the store is cut at), and ranks the issues:
 
-- alarm: a downhole gauge still dead at the end (decisions are made without pressure), a
-  water cut at or above 0.90;
-- caution: a water cut at or above 0.80 (the platform's design limit, PUD p.23), an oil
-  rate down 30% or more over the last 90 days against the 90 before, 30 or more shut-in
-  days in the last 180, a step down or a shift to a lower regime in oil rate in the last year;
+- alarm: a water cut at or above 0.90;
+- caution: a downhole gauge still dead at the end (a monitoring gap: the well flows on, but
+  decisions are made without pressure), a water cut at or above 0.80, an oil rate down 30%
+  or more over the last 90 days against the 90 before, 30 or more shut-in days in the last
+  180, a step down or a shift to a lower regime in oil rate in the last year;
 - note: a well that has stopped producing, an injector that stopped injecting.
 
 No model is involved; every number comes from the data and every issue says how it was
@@ -85,11 +85,12 @@ def _issues(store: ProductionStore, well: str, end: pd.Timestamp) -> tuple[dict,
             d = failure.details
             issues.append(
                 Issue(
-                    "alarm",
+                    "caution",
                     "dead_gauge",
                     str(failure.start.date()),
                     f"downhole pressure gauge reads 0 ({d['zero_days']} days, "
-                    f"{d['oil_sm3_during']:,.0f} Sm3 oil produced without pressure data)",
+                    f"{d['oil_sm3_during']:,.0f} Sm3 oil produced without pressure data): a "
+                    "monitoring gap, the well flows on",
                 )
             )
     for threshold, level in ((0.9, "alarm"), (0.8, "caution")):
@@ -100,8 +101,7 @@ def _issues(store: ProductionStore, well: str, end: pd.Timestamp) -> tuple[dict,
                     level,
                     "water_cut",
                     str(crossing.start.date()),
-                    f"water cut above {threshold:.2f} (now {state['water_cut']:.2f})"
-                    + ("; the platform was designed for 0.80" if threshold == 0.8 else ""),
+                    f"water cut above {threshold:.2f} (now {state['water_cut']:.2f})",
                 )
             )
             break

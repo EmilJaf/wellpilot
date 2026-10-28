@@ -94,6 +94,25 @@ class _IssueLog:
         return issues.sort_values(["well", "date", "field"]).reset_index(drop=True)
 
 
+def _water_spikes(df: pd.DataFrame) -> pd.Series:
+    """Days whose water is over 1000 Sm3 and 50 times the well's median of the 15 days
+    around it, while its oil stays within 10% of theirs: a keying error, not water
+    breaking in (F-12 2008-05-24/25: 8,019.7 Sm3 between days of 8-30 Sm3, at 5,000 Sm3/d
+    of oil and an unchanged choke). Breakthrough builds over weeks and moves the oil."""
+    spikes = pd.Series(False, index=df.index)
+    for _, g in df.sort_values("date").groupby("well"):
+        water, oil = g["water_sm3"], g["oil_sm3"]
+        around = water.rolling(15, center=True, min_periods=5).median()
+        oil_around = oil.rolling(15, center=True, min_periods=5).median()
+        hit = (
+            (water > 1000)
+            & (water > 50 * around.clip(lower=1))
+            & ((oil - oil_around).abs() <= 0.1 * oil_around)
+        )
+        spikes.loc[g.index] = hit.fillna(False)
+    return spikes
+
+
 def clean_daily(raw: pd.DataFrame) -> CleanResult:
     missing = set(RAW_COLUMNS) - set(raw.columns)
     if missing:
@@ -118,6 +137,7 @@ def clean_daily(raw: pd.DataFrame) -> CleanResult:
     )
     for column in VOLUME_COLUMNS:
         log.set_missing(df[column] < 0, column, "negative_volume")
+    log.set_missing(_water_spikes(df), "water_sm3", "water_spike")
 
     # Kept as-is but flagged, so analyses can decide whether to exclude them.
     log.keep(df["on_stream_hrs"] > 24, "on_stream_hrs", "dst_25_hour_day")

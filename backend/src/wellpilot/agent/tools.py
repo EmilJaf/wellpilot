@@ -368,7 +368,9 @@ def forecast_tool(store: ProductionStore, args: ForecastArgs) -> dict:
             "calibrated_band_note": (
                 f"P90-P10 from the errors of {calibrated['past_forecasts']} forecasts made the "
                 "same way from earlier dates on data up to then; use it for confidence, the "
-                "bootstrap band above only reflects the fit's scatter."
+                "bootstrap band above only reflects the fit's scatter. With "
+                f"{calibrated['past_forecasts']} past forecasts such a range holds about "
+                f"{calibrated['coverage']:.0%} of outcomes."
                 + (
                     f" {earlier} of them were made before this fit window began, in another "
                     "regime, so the band may be too narrow."
