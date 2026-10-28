@@ -13,7 +13,7 @@ Lower estimates exist (up to 30%). That is the part of the work the agent takes 
 
 ## 1. "Which wells need attention right now, and why? Forecast the next 12 months of oil for the well that needs it most." (as of 2010-12-31)
 
-| Work | By hand | With WellPilot (run 8aef8d548380) |
+| Work | By hand | With WellPilot (run 9291bac14418) |
 |---|---|---|
 | Rank the wells | Pull the daily production of the 4 wells active by then: 4,544 daily rows (1,054 for F-12). Compute each well's oil change over 90 days, its water cut and uptime. | `field_screen`: one call |
 | A pressure that "fell to zero" | Notice F-12's downhole pressure reads 0 on 81 days from 2010-10-12 while oil keeps flowing; total the oil produced meanwhile (123,258 Sm3) to see it is a dead gauge. | flagged by the screen and `detect_events` |
@@ -22,7 +22,7 @@ Lower estimates exist (up to 30%). That is the part of the work the agent takes 
 | The plan's limits | Find the design limits in the 53-page development plan, in Norwegian (Table 4.3, page 23), and compare the field's totals. | `field_vs_design`: one call |
 | Forecast with a range | Fit Arps declines on candidate windows (the agent tried 5), forecast 2011, and put a range on it from how far earlier forecasts made the same way were off. | `fit_decline` 5, `forecast_production` 2 |
 | Write it up | A source for every number. | Every number, date and quote checked; 3 problems sent back and fixed |
-| **Total** | | **9 steps, 18 tool calls, 35 s of model and tool time, about $0.23** |
+| **Total** | | **8 steps, 17 tool calls, 36 s of model and tool time, about $0.23** |
 
 What happened next: the forecast said 359,000 Sm3 for 2011; F-12 produced 340,000 (+6%).
 Decline fits on fixed windows made the same day said +2% to +24%, the whole-history fit
@@ -30,12 +30,12 @@ Decline fits on fixed windows made the same day said +2% to +24%, the whole-hist
 
 ## 2. "F-12's water cut fell from about 0.97 to about 0.3 at the end of 2014. What was done to the well, and why did the plug set in 2010 not do the same?"
 
-| Work | By hand | With WellPilot (run e8f9b5d63312) |
+| Work | By hand | With WellPilot (run 3dbb4c8e390f) |
 |---|---|---|
 | Find the jobs | Search F-12's 165 daily drilling reports for the 2010 and 2014 work; read the plug depths (3210 m, 3150 m) and the new perforations (3126.2-3130.7 m). | `well_operations`: 3 calls |
 | Where the water came in | Open the 2010 production log (3 LAS passes, about 4,200 depth samples) and the March 2009 survey, which exists only as plot pictures in a 17-page PDF; work out how much oil and water entered below each plug depth. | `production_log`: 6 calls (the 2009 pictures read by SAM 3.1 at ingest) |
 | Before and after | Water cut and oil 60 days before and after each job. | `production_monthly`, `run_sql` |
-| **Total** | | **7 steps, 14 tool calls, 33 s, about $0.27** |
+| **Total** | | **9 steps, 13 tool calls, 46 s, about $0.33** |
 
 ## Protocol for the timed comparison
 

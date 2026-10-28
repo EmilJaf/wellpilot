@@ -23,8 +23,14 @@ ROOT = Path(__file__).resolve().parents[1]
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 FONT = ROOT / "frontend/node_modules/@fontsource-variable/archivo/files"
 
-run_id = sys.argv[1] if len(sys.argv) > 1 else "8aef8d548380"
-saved = json.loads((ROOT / f"backend/tests/fixtures/runs/{run_id}.json").read_text())
+run_id = sys.argv[1] if len(sys.argv) > 1 else "9291bac14418"
+saved = json.loads(
+    next(
+        path
+        for folder in ("runs", "retired_runs")
+        if (path := ROOT / f"backend/tests/fixtures/{folder}/{run_id}.json").exists()
+    ).read_text()
+)
 cut = date.fromisoformat(saved["as_of"])
 processed = ROOT / "data/processed"
 h = hindsight(
