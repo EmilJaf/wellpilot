@@ -66,6 +66,25 @@ SHARES = {"water_cut"}  # signals that are fractions of a whole
 SMOOTH_SHIFT = 0.1
 SMOOTH_WEEKS = 8
 ACROSS_WEEKS = 4  # the change across a change point: medians of 4 weeks each side
+# A choke moved this many points (or by half, at small openings) across an oil change
+# point, the same way as the rate, is the operator's hand in it: F-12 on 2010-05-02 went
+# 83 -> 58% while its downhole pressure rose (choked back); depletion or water taking over
+# would leave the choke where it was.
+CHOKE_POINTS = 10.0
+CHOKE_RATIO = 1.5
+
+
+def _choke_across(daily: pd.DataFrame, at: pd.Timestamp) -> tuple[float, float] | None:
+    """Median weekly choke opening (%) in the ACROSS_WEEKS weeks either side of a date."""
+    if "choke_pct" not in daily or daily["choke_pct"].notna().sum() == 0:
+        return None
+    choke = weekly_signal(daily, "choke_pct")
+    span = pd.Timedelta(weeks=ACROSS_WEEKS)
+    before = choke[(choke.index < at) & (choke.index >= at - span)]
+    after = choke[(choke.index >= at) & (choke.index < at + span)]
+    if before.empty or after.empty:
+        return None
+    return float(before.median()), float(after.median())
 
 
 def _hyperbolic_log(t: np.ndarray, log_qi: float, di: float, b: float) -> np.ndarray:
@@ -153,6 +172,25 @@ def regime_changes(
                 f"; across the change itself, {ACROSS_WEEKS} weeks each side, "
                 f"{_fmt(across_before)} -> {_fmt(across_after)} ({step:+.0%})"
             )
+            choke = _choke_across(daily, start) if signal == "oil_rate" else None
+            if choke is not None:
+                moved = choke[1] - choke[0]
+                ratio = max(choke) / min(choke) if min(choke) > 0 else 1.0
+                operator = (abs(moved) >= CHOKE_POINTS or ratio >= CHOKE_RATIO) and (moved > 0) == (
+                    step > 0
+                )
+                change |= {
+                    "choke_before_pct": choke[0],
+                    "choke_after_pct": choke[1],
+                    "choke_moved": operator,
+                }
+                across += (
+                    f"; the choke was {'opened' if moved > 0 else 'cut'} at the same time "
+                    f"({choke[0]:.0f} -> {choke[1]:.0f}%), so part of the change is the "
+                    "operator's, not the reservoir's"
+                    if operator
+                    else f"; the choke stayed about the same ({choke[0]:.0f} -> {choke[1]:.0f}%)"
+                )
         events.append(
             Event(
                 kind="regime_change",

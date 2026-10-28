@@ -4,6 +4,7 @@ before it reaches a recording.
 """
 
 import json
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -46,6 +47,22 @@ def test_f12_regime_change_water_and_gauge(store) -> None:
 
     jan_2012 = by[("shut_in", "on_stream_hrs", "2012-01-03")]
     assert jan_2012["details"]["days"] == 11 and jan_2012["details"]["field_wide"]
+
+
+def test_a_change_point_says_whether_the_choke_moved_with_it(store) -> None:
+    """Seen from the end of 2010, F-12's shift around 2010-05-02 came with a choke cut from
+    about 83 to 58% (the operator's hand); over the whole history its 2010-07-18 change had
+    the choke where it was, as water took over."""
+    as_of = ProductionStore(PROCESSED, as_of=date(2010, 12, 31))
+    may = next(e for e in call(as_of, "detect_events", well="F-12") if e["start"] == "2010-05-02")
+    july = next(e for e in call(store, "detect_events", well="F-12") if e["start"] == "2010-07-18")
+
+    assert may["details"]["choke_moved"] is True
+    assert round(may["details"]["choke_before_pct"]) == 83
+    assert round(may["details"]["choke_after_pct"]) == 58
+    assert "the choke was cut at the same time (83 -> 58%)" in may["summary"]
+    assert july["details"]["choke_moved"] is False
+    assert "the choke stayed about the same" in july["summary"]
 
 
 def test_f12_decline_after_the_regime_change(store) -> None:

@@ -7,6 +7,8 @@ submit again; if the revision does not pass the checker, the checked answer stan
 
 import asyncio
 import json
+import re
+from datetime import date
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -17,6 +19,9 @@ from wellpilot.llm import LLM, json_schema
 
 TIMEOUT_S = 90.0
 MAX_POINTS = 3
+NEAR_DAYS = 45  # an event this close to a date the answer names is worth the reviewer's look
+MAX_LEADS = 8
+DAY = re.compile(r"\b(\d{4})-(\d{2})(?:-(\d{2}))?\b")
 
 SYSTEM = """\
 You are a senior reservoir and production engineer reviewing a colleague's answer about an \
@@ -30,8 +35,12 @@ detect_events for shut-ins and gauge failures, waterflood for liquid and choke, 
 fit on a window after the last change, the plan's limits for the whole field rather than \
 one well.
 Raise at most three points, only ones that could change the conclusion and that the tools \
-can settle. If the reasoning is sound, return verdict "sound" and no points. Write plainly; \
-each point names the check that would settle it."""
+can settle. You are also given what the agent's own tool results recorded near the dates \
+the answer names (a choke moved with a rate change, a shut-in, a gauge failure, work on \
+the well): an answer that explains such a change by the reservoir without saying why the \
+recorded event does not explain it has a point to answer. If the reasoning is sound, \
+return verdict "sound" and no points. Write plainly; each point names the check that \
+would settle it."""
 
 
 class Point(BaseModel):
@@ -67,10 +76,64 @@ def _brief(question: str, answer: Submission, log: EvidenceLog) -> str:
             "summary": answer.summary,
             "findings": findings,
             "tools_called": called,
+            "recorded_near_the_answers_dates": _leads(answer, log),
         },
         ensure_ascii=False,
         indent=1,
     )
+
+
+def _days(text: str) -> list[date]:
+    found = []
+    for y, m, d in DAY.findall(text):
+        try:
+            found.append(date(int(y), int(m), int(d or 15)))
+        except ValueError:
+            continue
+    return found
+
+
+def _records(result) -> list[tuple[str, str]]:
+    """(date, text) of the events and issues in a tool result: detect_events' list,
+    field_screen's issues and well_operations' jobs."""
+    if isinstance(result, list):
+        return [
+            (str(e.get("start", "")), str(e.get("summary", "")))
+            for e in result
+            if isinstance(e, dict)
+        ]
+    if not isinstance(result, dict):
+        return []
+    found = []
+    for well in result.get("wells", []) if isinstance(result.get("wells"), list) else []:
+        for issue in well.get("issues", []):
+            if issue.get("since"):
+                found.append((str(issue["since"]), f"{well.get('well')}: {issue.get('text', '')}"))
+    for job in result.get("jobs", []) if isinstance(result.get("jobs"), list) else []:
+        found.append(
+            (
+                str(job.get("start", "")),
+                f"{job.get('kind')} job {job.get('start')} to {job.get('end')}",
+            )
+        )
+    return found
+
+
+def _leads(answer: Submission, log: EvidenceLog) -> list[str]:
+    """What the agent's own results recorded within NEAR_DAYS of a date the answer names:
+    the deterministic part of a second opinion, for the reviewer to weigh."""
+    text = " ".join([answer.summary, *(f.claim + " " + (f.detail or "") for f in answer.findings)])
+    named = _days(text)
+    leads: list[str] = []
+    for e in log:
+        for day, what in _records(e.result):
+            when = _days(day)
+            if not when or not any(abs((when[0] - d).days) <= NEAR_DAYS for d in named):
+                continue
+            lead = f"{e.id} {e.tool}: {what[:300]}"
+            if lead not in leads:
+                leads.append(lead)
+    return leads[:MAX_LEADS]
 
 
 async def review(

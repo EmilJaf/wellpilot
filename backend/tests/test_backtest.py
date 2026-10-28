@@ -1,6 +1,8 @@
+
 """Backtest on a synthetic well; the agent method uses a scripted fake LLM (no tokens)."""
 
 import json
+from pathlib import Path
 from types import SimpleNamespace
 
 import numpy as np
@@ -13,6 +15,7 @@ from wellpilot.analysis.decline import DAYS_PER_YEAR, arps_rate
 from wellpilot.backtest import (
     HORIZON_DAYS,
     RESULTS_FILE,
+    RULE_MIN_DAYS,
     Case,
     agent_row,
     cached_model,
@@ -22,6 +25,7 @@ from wellpilot.backtest import (
     closer,
     decline_methods,
     film,
+    rule_start,
     summarize,
 )
 from wellpilot.data.store import ProductionStore
@@ -225,7 +229,9 @@ def test_case_detail_shows_each_fit_on_data_up_to_the_cutoff(processed_dir) -> N
     assert detail["cutoff"] == "2010-01-31" and detail["horizon_end"] == "2011-01-31"
     assert detail["actual_sm3"] == round(found[1].actual_sm3)
     assert detail["rate"]["date"][-1] <= "2011-01-31"
-    assert methods == {"classic", "recent_3m", "recent_6m", "recent_12m", "recent_24m"}
+    assert methods == {
+        "classic", "after_change", "recent_3m", "recent_6m", "recent_12m", "recent_24m"
+    }  # fmt: skip
     assert [m["method"] for m in detail["methods"]] == ["classic", "recent_12m"]
     assert detail["agent"] is None  # no cached agent run for this case
     for method in detail["methods"]:
@@ -290,3 +296,18 @@ def test_the_film_holds_every_cutoff_of_a_well_in_order(processed_dir) -> None:
     assert film(processed_dir, store, "F-12") is reel  # built once, kept
     with pytest.raises(ValueError, match="no backtest cases"):
         film(processed_dir, store, "F-99")
+
+
+def test_the_rule_fits_after_the_later_of_the_last_change_and_the_last_job() -> None:
+    """F-12 seen from 2011-02-28: its rate shifted around 2010-05-02 and the plug job ran
+    2010-09-20..23, so the rule fits from the day after the job; seen from 2010-11-30 the
+    job leaves under 90 days, so it fits from the change."""
+    store = ProductionStore(Path(__file__).parent / "fixtures" / "processed")
+    daily = store.well_daily("F-12")
+    production = daily[daily["flow_kind"] == "production"]
+
+    after_job = rule_start(store, Case("F-12", pd.Timestamp("2011-02-28"), 0.0), production)
+    after_change = rule_start(store, Case("F-12", pd.Timestamp("2010-11-30"), 0.0), production)
+
+    assert after_job == pd.Timestamp("2010-09-24")
+    assert after_change == pd.Timestamp("2010-05-02") and RULE_MIN_DAYS == 90

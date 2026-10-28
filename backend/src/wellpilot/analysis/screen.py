@@ -124,6 +124,12 @@ def _issues(store: ProductionStore, well: str, end: pd.Timestamp) -> tuple[dict,
     for change in regime_changes(daily, "oil_rate"):
         d = change.details
         relative, across = d.get("relative_change"), d.get("change_across")
+        choke = (
+            f"; the choke was {'opened' if d['choke_after_pct'] > d['choke_before_pct'] else 'cut'}"
+            f" at the same time ({d['choke_before_pct']:.0f} -> {d['choke_after_pct']:.0f}%)"
+            if d.get("choke_moved")
+            else ""
+        )
         if change.start <= end - pd.Timedelta(days=365) or relative is None:
             continue
         if across is not None and across <= -STEP:
@@ -134,7 +140,7 @@ def _issues(store: ProductionStore, well: str, end: pd.Timestamp) -> tuple[dict,
                     "step_down",
                     str(change.start.date()),
                     f"oil rate dropped {-across:.0%} across the change (4 weeks each side, "
-                    f"{d['across_before']:,.0f} -> {d['across_after']:,.0f} Sm3/d)",
+                    f"{d['across_before']:,.0f} -> {d['across_after']:,.0f} Sm3/d){choke}",
                 )
             )
         elif relative < -0.3:
@@ -146,7 +152,7 @@ def _issues(store: ProductionStore, well: str, end: pd.Timestamp) -> tuple[dict,
                     str(change.start.date()),
                     f"oil rate {-relative:.0%} lower in the period after than before "
                     f"(weekly mean {d['before_mean']:,.0f} -> {d['after_mean']:,.0f} Sm3/d), "
-                    f"a gradual change: {-(across or 0):.0%} across it",
+                    f"a gradual change: {-(across or 0):.0%} across it{choke}",
                 )
             )
     return state, issues

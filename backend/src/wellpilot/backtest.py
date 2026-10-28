@@ -8,6 +8,10 @@ with the actual volume. Methods:
 - recent_3m, recent_6m, recent_12m, recent_24m: Arps fitted on the last 3, 6, 12 or 24
   months only. Fixed windows: which one does best is known only after the fact, so the
   best of them is a hindsight bar for the agent, not a method anyone could have chosen.
+- after_change: the agent's method written as a rule, no model: fit from the last oil
+  regime change or the end of the last well-work job (whichever is later, at least 90 days
+  before the cutoff), else the whole history. What the agent adds beyond this rule is the
+  model's part.
 - agent: the WellPilot agent, given data up to the cutoff, picks its own window and
   runs forecast_production; its forecast is read from its evidence. This one calls the
   LLM (spends tokens), so it runs on a subset of cases and is cached per case.
@@ -32,7 +36,8 @@ import numpy as np
 import pandas as pd
 
 from wellpilot.agent.loop import run_agent
-from wellpilot.agent.tools import fit_warnings, to_jsonable
+from wellpilot.agent.tools import OperationsArgs, fit_warnings, to_jsonable, well_operations
+from wellpilot.analysis.anomalies import regime_changes
 from wellpilot.analysis.decline import (
     calibrated_band,
     error_quantiles,
@@ -49,6 +54,7 @@ STEP_MONTHS = 6
 FIRST_CUTOFF_MONTHS = 18
 PRODUCERS = ("F-12", "F-14", "F-11", "F-15 D", "F-1 C")
 RECENT_MONTHS = (3, 6, 12, 24)  # fixed fit windows compared with the agent's own choice
+RULE_MIN_DAYS = 90  # the rule's window needs this much data before the cutoff
 MIN_PAST_ERRORS = 5  # errors needed before a calibrated band is given
 RESULTS_FILE = "backtest_results.parquet"
 SUMMARY_FILE = "backtest_summary.json"
@@ -120,11 +126,30 @@ def _production(store: ProductionStore, well: str) -> pd.DataFrame:
     return daily[daily["flow_kind"] == "production"]
 
 
+def rule_start(store: ProductionStore, case: Case, daily: pd.DataFrame) -> pd.Timestamp | None:
+    """Where the after_change rule starts its fit: the later of the last oil regime change
+    and the day after the last well-work job since first oil, both seen from the cutoff,
+    that leaves RULE_MIN_DAYS of data; None (the whole history) when there is none."""
+    history = daily[daily["date"] <= case.cutoff]
+    starts = [change.start for change in regime_changes(history, "oil_rate")]
+    if "well_operations" in store.tables:
+        first_oil = history.loc[history["oil_sm3"] > 0, "date"].min()
+        jobs = well_operations(store, OperationsArgs(well=case.well, end=case.cutoff.date()))
+        starts += [
+            pd.Timestamp(job["end"]) + pd.Timedelta(days=1)
+            for job in jobs["jobs"]
+            if pd.Timestamp(job["start"]) >= first_oil
+        ]
+    room = [s for s in starts if (case.cutoff - s).days >= RULE_MIN_DAYS]
+    return max(room) if room else None
+
+
 def decline_methods(store: ProductionStore, all_cases: list[Case]) -> list[dict]:
     rows = []
     for case in all_cases:
         daily = _production(store, case.well)
         rows.append(_decline_row(case, daily, "classic"))
+        rows.append(_decline_row(case, daily, "after_change", start=rule_start(store, case, daily)))
         for months in RECENT_MONTHS:
             start = case.cutoff - pd.DateOffset(months=months)
             rows.append(_decline_row(case, daily, f"recent_{months}m", start=start))
@@ -474,7 +499,7 @@ async def run(with_agent: bool, agent_limit: int, refresh: bool = False) -> dict
         summary["agent_cases"] = summarize(same_cases(results, "agent"))
         summary["agent_closer"] = {
             than: closer(results, "agent", than)
-            for than in ("classic", *(f"recent_{m}m" for m in RECENT_MONTHS))
+            for than in ("classic", "after_change", *(f"recent_{m}m" for m in RECENT_MONTHS))
         }
         agent_rows = results[results["method"] == "agent"]
         summary["agent_models"] = agent_rows["model"].value_counts().to_dict()

@@ -1091,9 +1091,11 @@ TOOLS = [
         "regime change gives the mean of the periods before and after it (relative_change) "
         "and the change across it, 4 weeks each side (change_across): call it a step only "
         "when the change across is large; a large change between periods with a small one "
-        "across is a gradual shift (water taking over, depletion), not a step. A regime "
-        "change's date is where the data seen so far splits best: with data cut at an "
-        "earlier date it can move by weeks, so name it as 'around' that date.",
+        "across is a gradual shift (water taking over, depletion), not a step. It also gives "
+        "the choke 4 weeks each side: choke_moved true means the operator cut or opened the "
+        "choke at the same time, so part of the change is the operator's, not the "
+        "reservoir's. A regime change's date is where the data seen so far splits best: with "
+        "data cut at an earlier date it can move by weeks, so name it as 'around' that date.",
         WellArgs,
         detect_events,
     ),

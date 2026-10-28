@@ -7,6 +7,7 @@ import { ForecastFilm } from './ForecastFilm'
 
 const METHODS: { key: string; label: string }[] = [
   { key: 'agent', label: 'WellPilot agent, its own window' },
+  { key: 'after_change', label: 'Rule, no model: fit after the last change or well job' },
   { key: 'recent_3m', label: 'Decline fit, last 3 months' },
   { key: 'recent_6m', label: 'Decline fit, last 6 months' },
   { key: 'recent_12m', label: 'Decline fit, last 12 months' },
@@ -141,8 +142,20 @@ export function AccuracyView() {
           Against the textbook default, a fit on the whole history, it was closer in {closer.classic.closer} of{' '}
           {closer.classic.cases} and cut the median error from{' '}
           {Math.round((summary.all_cases.classic?.median_abs_error ?? 0) * 100)}% to{' '}
-          {Math.round((agentStats?.median_abs_error ?? 0) * 100)}%. All forecasts are below, misses included; they come
-          from three wells of one field, so read them as a check, not a benchmark.
+          {Math.round((agentStats?.median_abs_error ?? 0) * 100)}%.
+          {closer.after_change && summary.all_cases.after_change && (
+            <>
+              {' '}
+              A rule that does what the agent is told, with no model (fit after the last change point or the last well
+              job), had a median error of {Math.round(summary.all_cases.after_change.median_abs_error * 100)}%; the
+              agent was closer in {closer.after_change.closer} of {closer.after_change.cases}, with a mean error of{' '}
+              {Math.round((agentStats?.mean_abs_error ?? 0) * 100)}% against the rule&rsquo;s{' '}
+              {Math.round(summary.all_cases.after_change.mean_abs_error * 100)}%: about even case by case, with smaller
+              misses where the rule picked a bad window.
+            </>
+          )}{' '}
+          All forecasts are below, misses included; they come from three wells of one field, so read them as a check,
+          not a benchmark.
         </p>
       )}
       {agentStats?.bootstrap_band_coverage !== undefined && (

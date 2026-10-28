@@ -787,3 +787,30 @@ async def test_no_review_near_the_step_limit(store) -> None:
     run = await run_agent("Days?", llm, store, review_fn=review_fn, max_steps=4)
 
     assert run.verified and run.review is None and calls == []
+
+
+def test_the_reviewer_is_shown_what_the_evidence_recorded_near_the_answers_dates() -> None:
+    from wellpilot.agent.checker import Submission
+    from wellpilot.agent.evidence import EvidenceLog
+    from wellpilot.agent.review import _leads
+
+    log = EvidenceLog()
+    events = [
+        {"kind": "regime_change", "start": "2010-05-02", "summary": "oil_rate shifts around "
+         "2010-05-02 ...; the choke was cut at the same time (83 -> 58%), so part of the change "
+         "is the operator's, not the reservoir's."},
+        {"kind": "shut_in", "start": "2013-03-01", "summary": "Shut in for 9 days."},
+    ]  # fmt: skip
+    log.add("detect_events", {"well": "F-12"}, events, lambda: None)
+    answer = Submission.model_validate(
+        {
+            "summary": "F-12's rate fell in May 2010 as water broke through.",
+            "summary_numbers": [],
+            "findings": [{"claim": "F-12 shifted down around 2010-05-02.", "evidence_ids": ["E1"],
+                          "confidence": "inference", "numbers": []}],
+        }
+    )  # fmt: skip
+
+    leads = _leads(answer, log)
+
+    assert len(leads) == 1 and "choke was cut" in leads[0] and leads[0].startswith("E1 ")
