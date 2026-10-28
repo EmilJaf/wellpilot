@@ -54,6 +54,11 @@ def test_a_forecast_from_the_end_of_2010_against_2011(stores) -> None:
     assert agent["p50_sm3"] == round(reported["p50"]) and agent["window_start"] == "2010-07-18"
     # The classic fit over the whole history, plateau included, about doubles 2011.
     assert classic["error"] > 0.8 and abs(agent["error"]) < 0.15
+    # The fair baselines: fits on the last 3, 6, 12 and 24 months, made the same day, none
+    # of them as far off as the whole history.
+    fixed = {w["months"]: w["error"] for w in f["fixed_windows"]}
+    assert set(fixed) == {3, 6, 12, 24}
+    assert all(abs(e) < abs(classic["error"]) for e in fixed.values())
     # The data after the cut is there now: weekly rates run to the end of the forecast.
     assert f["forecast_from"] == "2011-01-01" and f["horizon_end"] == "2011-12-31"
     assert f["rate"]["date"][-1] > "2011-12-01" and f["data_ends"] is None

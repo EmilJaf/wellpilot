@@ -15,7 +15,7 @@ import pandas as pd
 
 from wellpilot.agent.tools import fit_warnings
 from wellpilot.analysis.decline import fit_decline, forecast
-from wellpilot.backtest import _curve, weekly_rate
+from wellpilot.backtest import RECENT_MONTHS, _curve, weekly_rate
 from wellpilot.data.store import ProductionStore
 from wellpilot.reasoning_check import reasoning_check
 
@@ -61,6 +61,23 @@ def _forecast_hindsight(
     reported = result["cumulative_oil_sm3"]
     classic_fit = fit_decline(_production(past, well)).best
     classic = forecast(classic_fit, result["horizon_days"], n_boot=100, start=first)
+    # Fits on fixed recent windows, made the same day: the fair baselines. Which one would
+    # have been right is known only afterwards; the agent chose its own window.
+    fixed = []
+    for months in RECENT_MONTHS:
+        recent = _production(past, well, cut - pd.DateOffset(months=months), cut)
+        try:
+            fit = fit_decline(recent).best
+        except (ValueError, RuntimeError):
+            continue
+        p50 = float(forecast(fit, result["horizon_days"], n_boot=50, start=first).cumulative["p50"])
+        fixed.append(
+            {
+                "months": months,
+                "p50_sm3": round(p50),
+                "error": round(p50 / actual - 1, 4) if actual > 0 else None,
+            }
+        )
 
     band = result.get("calibrated_band_sm3")
     return {
@@ -77,6 +94,7 @@ def _forecast_hindsight(
             _method("classic", classic_fit, float(classic.cumulative["p50"]), actual, future),
         ],
         "classic_warned": bool(fit_warnings(classic_fit)),
+        "fixed_windows": fixed,
         "agent_range": {"p90": reported["p90"], "p10": reported["p10"]},
         "p50_by_model": result.get("p50_by_model_sm3"),  # what each Arps model would say
         "calibrated_band": (

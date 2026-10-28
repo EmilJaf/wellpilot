@@ -148,9 +148,25 @@ function ForecastCase({ f }: { f: Hindsight['forecasts'][number] }) {
         {f.forecast_from} to {f.horizon_end}
         {f.data_ends && ` (the data ends on ${f.data_ends})`}. The well produced <strong>{volume(f.actual_sm3)}</strong>
         <span className="bbl" title={BARRELS_NOTE}> ({barrels(f.actual_sm3)} barrels)</span>:
-        the forecast was <strong>{signed(agent.error)}</strong>. The classic decline fit over the whole history, made the
-        same day, said {volume(classic.p50_sm3)} ({signed(classic.error)}).
+        the forecast was <strong>{signed(agent.error)}</strong>.
       </p>
+      {f.fixed_windows && f.fixed_windows.length > 0 && (
+        <p className="hindsight-fixed">
+          Decline fits made the same day on fixed windows said{' '}
+          {f.fixed_windows
+            .filter((w) => w.error !== null)
+            .map((w) => `${signed(w.error!)} (last ${w.months} months)`)
+            .join(', ')}
+          , and on the whole history {signed(classic.error)}. Which window was right is known only afterwards; the agent
+          chose its own, from {agent.window_start}.
+        </p>
+      )}
+      {!f.fixed_windows?.length && (
+        <p className="hindsight-fixed">
+          The decline fit over the whole history, made the same day, said {volume(classic.p50_sm3)} (
+          {signed(classic.error)}).
+        </p>
+      )}
       {f.p50_by_model && Object.keys(f.p50_by_model).length > 1 && (
         <p className="hindsight-models">
           On the same window the three Arps models said{' '}
