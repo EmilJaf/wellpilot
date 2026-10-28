@@ -203,8 +203,8 @@ function Intro({ recorded, onReplay }: { recorded: RunSummary | null; onReplay: 
       )}
       <p className="intro-who">
         <strong>For production and reservoir engineers.</strong> Why output fell, whether a gauge or the reservoir is
-        to blame, what next year brings, how the field compares with its plan: questions that take hours across
-        databases, PDFs and spreadsheets, answered in about a minute.
+        to blame, what next year brings, how the field compares with its plan: questions that mean working across
+        databases, PDF reports and spreadsheets, answered in about a minute.
       </p>
       <p className="intro-note">
         Runs on Muse Spark Open, Meta&rsquo;s open-weight model, so an operator can host it next to well data that

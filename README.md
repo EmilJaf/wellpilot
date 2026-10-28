@@ -66,7 +66,7 @@ Volve is a public dataset, and a model may have read about it. Three things keep
 
 ## Who it is for
 
-A production engineer reviewing a well asks questions like: why did output fall, is that a reservoir problem or a dead gauge, what will the well make next year, and how does it compare with the development plan? Answering one today means hours across a production database, PDF reports (here a 53-page plan in Norwegian), scripts and spreadsheets, and the result is hard to audit.
+A production engineer reviewing a well asks questions like: why did output fall, is that a reservoir problem or a dead gauge, what will the well make next year, and how does it compare with the development plan? Answering one today means working across a production database, PDF reports (here a 53-page plan in Norwegian), daily drilling reports, scripts and spreadsheets, and the result is hard to audit.
 
 WellPilot turns that into one question, answered in under a minute (a median of 36 s and $0.15 of model time over the 12 eval questions; $0.06-0.48), where every figure links to the exact tool result, the data behind it and the Python that produced it. The decisions it supports are the everyday ones: next year's forecast for a budget, which wells need a gauge or a workover, and whether the field is running against the limits it was designed for.
 
