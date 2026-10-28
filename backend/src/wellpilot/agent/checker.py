@@ -752,6 +752,10 @@ def _scale_mismatch(fits: list[Reading], leaves: list["_Leaf"], item: Evidence) 
             return None
         held = at_one[0].value
         if others[0] > 1:
+            # A calculation carries no unit: "1.76 + 2.68" adds the plan's MSm3, so "4.44
+            # MSm3" is how its result reads (run d2f409964a50 ended unverified on this).
+            if item.tool == "calculate":
+                return None
             if not any(
                 SCALED_KEYS.search(lf.labels) or lf.unit in ("M", "k", "million", "mill", "mill.")
                 for lf in at_one
@@ -1372,6 +1376,12 @@ def _quantity(blanked: str, start: int, end: int, after: bool = True) -> str | N
                 return None
     if name is None:
         before = blanked[max(0, start - 60) : start]
+        # "a correlation between water cut and choke of 0.60": the number is the
+        # correlation's, not the last quantity named before it.
+        if re.search(
+            r"\b(?:correlation|coefficient|Pearson|Spearman)\b[^.;]*\bbetween\b", before, re.I
+        ):
+            return None
         last = None
         for m in _NAMES.finditer(before):
             last = m
@@ -1438,6 +1448,15 @@ def _attribution(
         # water"): with a name on both sides, a detail's number is not judged.
         if own_part and quantity and _quantity(names, start, end) != quantity:
             quantity = None
+        # Tool-speak's "water 0.3107 to 0.7745" is the water cut: a fraction named water
+        # that the evidence holds only as a water cut (a log's water share stays water).
+        if (
+            own_part
+            and quantity == "water"
+            and all(abs(lf.value) <= 1 for lf in held)
+            and not any(re.search(QUANTITIES["water"][1], lf.labels) for lf in held)
+        ):
+            quantity = "water cut"
         if quantity == "change across":
             # "with 72% across": the change across the date itself, not between the periods.
             changes = written.rstrip().endswith(("%", "percent")) or all(

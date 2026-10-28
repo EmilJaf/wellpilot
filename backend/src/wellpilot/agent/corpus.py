@@ -138,6 +138,14 @@ def check(corpus: Path = CORPUS_DIR) -> int:
     return changed
 
 
+SFT_SYSTEM = (
+    "You answer a petroleum engineer's question about an oil field from the tool results "
+    "given. Reply with one JSON object: summary, summary_numbers, findings (claim, "
+    "evidence_ids, confidence fact|inference, numbers). Every number you write is declared "
+    "with its value and the id of the result it comes from; causes are inferences."
+)
+
+
 def export(corpus: Path = CORPUS_DIR, out: Path | None = None) -> dict:
     """The corpus as training data a checker labelled, for an open-weight model:
     - preferences.jsonl: within one run, an answer the checker sent back and the answer it
@@ -178,6 +186,26 @@ def export(corpus: Path = CORPUS_DIR, out: Path | None = None) -> dict:
         (out / f"{name}.jsonl").write_text(
             "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows)
         )
+    # The accepted answers as chat examples for supervised fine-tuning (Fireworks and most
+    # trainers read {"messages": [...]} per line): the question and the tool results in,
+    # the checked submission out.
+    sft = [
+        {
+            "messages": [
+                {"role": "system", "content": SFT_SYSTEM},
+                {
+                    "role": "user",
+                    "content": json.dumps(
+                        {"question": a["question"], "tool_results": a["evidence"]},
+                        ensure_ascii=False,
+                    ),
+                },
+                {"role": "assistant", "content": json.dumps(a["answer"], ensure_ascii=False)},
+            ]
+        }
+        for a in accepted
+    ]
+    (out / "sft.jsonl").write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in sft))
     return {
         "cases": len(cases),
         "runs": len(by_run),

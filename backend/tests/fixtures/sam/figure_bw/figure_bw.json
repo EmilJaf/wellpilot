@@ -1,0 +1,21 @@
+{
+ "source": {
+  "doc_id": "f11b_completion",
+  "page": 47,
+  "figure": "Time vs depth curve, NO 15/9-F-11 B"
+ },
+ "prompt": "black plot line",
+ "plot_area_px": [
+  516,
+  1110,
+  2313,
+  2073
+ ],
+ "sam_confidence": 0.7344398498535156,
+ "columns_compared": 1002,
+ "dark_trace_off_curve_share": 0.103,
+ "median_gap_px": 0.9,
+ "dark_trace_jumps": 85,
+ "sam_trace_jumps": 39,
+ "read": "dark-pixel trace (no model) against SAM 3.1's mask, per column of the plot area"
+}

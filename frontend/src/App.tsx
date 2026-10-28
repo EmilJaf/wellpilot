@@ -29,6 +29,12 @@ const EXAMPLES = [
     question: 'Which wells need attention right now, and why? Forecast the next 12 months of oil for the well that needs it most.',
     asOf: '2010-12-31',
   },
+  {
+    label: 'Where to plug F-12 (2014)',
+    question:
+      "F-12's water cut is near 0.97 and its oil rate has fallen below 200 Sm3/d. Where along the well does its water come in, and at what depth would a plug shut off most of the water while keeping the oil? Use its production logs and the work done on it before.",
+    asOf: '2014-10-31',
+  },
   { label: 'F-12 decline vs the 2005 plan', question: 'Why did well F-12 decline faster after 2010? Compare with the 2005 development plan.', asOf: '' },
   { label: "Read the plan's forecast chart", question: 'What oil plateau rate and duration does the forecast figure on page 23 of the 2005 development plan show?', asOf: '' },
   {
