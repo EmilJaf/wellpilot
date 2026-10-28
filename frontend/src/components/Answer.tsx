@@ -41,9 +41,16 @@ function bySpans(
   const plain = (from: number, to: number, quoted = false): ReactNode[] => {
     const parts: ReactNode[] = []
     let at = from
+    let previous: (typeof numbers)[number] | null = null
     for (const n of numbers) {
       if (n.start < at || n.end > to) continue
       const written = text.slice(n.start, n.end)
+      // "324 192 to 469 712 Sm3": the unit after the second number is the first one's too.
+      const first =
+        previous && /^\s*(?:to|-|–)\s*$/.test(text.slice(previous.end, n.start))
+          ? text.slice(previous.start, previous.end)
+          : null
+      previous = n
       parts.push(text.slice(at, n.start))
       parts.push(
         <button
@@ -60,11 +67,13 @@ function bySpans(
       // An oil volume in Sm³ also in barrels, set apart as the page's own conversion.
       const oil = quoted ? null : volumeAt(written, text.slice(at, to))
       if (oil) {
+        const low = first ? volumeAt(first, text.slice(at, to)) : null
         parts.push(text.slice(at, at + oil.length))
         parts.push(
           <span key={`b${n.start}`} className="bbl" title={BARRELS_NOTE}>
             {' '}
-            (about {barrels(oil.sm3)} {oil.perDay ? 'barrels a day' : 'barrels'})
+            (about {low ? `${barrels(low.sm3)} to ` : ''}
+            {barrels(oil.sm3)} {oil.perDay ? 'barrels a day' : 'barrels'})
           </span>,
         )
         at += oil.length

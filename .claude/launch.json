@@ -60,6 +60,24 @@
         "--strictPort"
       ],
       "port": 5174
+    },
+    {
+      "name": "api-nokey",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "BASETEN_API_KEY=",
+        "MODEL_API_KEY=",
+        "PYTHON_SANDBOX=false",
+        "uv",
+        "run",
+        "--directory",
+        "backend",
+        "uvicorn",
+        "wellpilot.main:app",
+        "--port",
+        "8001"
+      ],
+      "port": 8001
     }
   ]
 }
