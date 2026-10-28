@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react'
 import type { MetaModels, RunSummary, Span, StepEvent } from '../api'
 import { AlarmIcon, CheckIcon, RedoIcon } from '../icons'
-import { plainProblem, compact, describeArgs, toolName } from '../labels'
+import { BARRELS_NOTE, barrels, plainProblem, compact, describeArgs, modelName, toolName, volumeAt } from '../labels'
 import type { RunState } from '../useRun'
 import { corrections } from '../corrections'
-import { CorrectionList } from './Corrections'
+import { CaughtList, CorrectionList } from './Corrections'
 import { FoolChecker } from './FoolChecker'
 
 /** What the reader clicked: a number (its value marked in the evidence) or a quote (marked
@@ -37,7 +37,8 @@ function bySpans(
 ): ReactNode[] {
   if (!spans) return [text]
   const numbers = spans.filter((s) => s.kind === 'number')
-  const plain = (from: number, to: number): ReactNode[] => {
+  // Inside a quote the words are the report's own, so they stay as written.
+  const plain = (from: number, to: number, quoted = false): ReactNode[] => {
     const parts: ReactNode[] = []
     let at = from
     for (const n of numbers) {
@@ -56,6 +57,18 @@ function bySpans(
         </button>,
       )
       at = n.end
+      // An oil volume in Sm³ also in barrels, set apart as the page's own conversion.
+      const oil = quoted ? null : volumeAt(written, text.slice(at, to))
+      if (oil) {
+        parts.push(text.slice(at, at + oil.length))
+        parts.push(
+          <span key={`b${n.start}`} className="bbl" title={BARRELS_NOTE}>
+            {' '}
+            (about {barrels(oil.sm3)} {oil.perDay ? 'barrels a day' : 'barrels'})
+          </span>,
+        )
+        at += oil.length
+      }
     }
     parts.push(text.slice(at, to))
     return parts
@@ -81,10 +94,10 @@ function bySpans(
             open(source, { text: inner, value: Number.NaN, quote: true })
           }}
         >
-          {plain(q.start + 1, q.end - 1)}
+          {plain(q.start + 1, q.end - 1, true)}
         </q>
       ) : (
-        <q key={`q${q.start}`}>{plain(q.start + 1, q.end - 1)}</q>
+        <q key={`q${q.start}`}>{plain(q.start + 1, q.end - 1, true)}</q>
       ),
     )
     at = q.end
@@ -234,12 +247,6 @@ function Live({ steps, thinking, asOf }: { steps: StepEvent[]; thinking: number 
   )
 }
 
-const MODEL_NAMES: Record<string, string> = {
-  'meta-models/muse-spark-open-1026': 'Muse Spark Open',
-  'muse-spark-1.3': 'Muse Spark',
-  'muse-spark-1.1': 'Muse Spark',
-}
-
 /** One line on what each Meta model did for this answer, its evidence a click away. */
 function MetaLine({ m, open }: { m: MetaModels; open: (id: string) => void }) {
   const chip = (id: string) => (
@@ -249,7 +256,7 @@ function MetaLine({ m, open }: { m: MetaModels; open: (id: string) => void }) {
   )
   const parts: ReactNode[] = [
     <span key="muse">
-      <strong>{MODEL_NAMES[m.muse.model ?? ''] ?? m.muse.model}</strong> planned and ran {m.muse.tool_calls} tool calls
+      <strong>{m.muse.model ? modelName(m.muse.model) : 'The agent'}</strong> planned and ran {m.muse.tool_calls} tool calls
       over {m.muse.steps} steps{m.muse.reasoning_shown && ', its reasoning in the log'}
       {m.muse.pages.length > 0 && <>, looked at a report page {m.muse.pages.map(chip)}</>}
       {m.muse.second_opinion && <>, and gave its answer a second opinion</>}
@@ -278,7 +285,8 @@ function MetaLine({ m, open }: { m: MetaModels; open: (id: string) => void }) {
     )
   return (
     <p className="meta-line">
-      <span className="meta-line-label">Meta models in this answer:</span> {parts}.
+      <span className="meta-line-label">Meta models in this answer</span>
+      {parts}.
     </p>
   )
 }
@@ -342,9 +350,14 @@ function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSe
             </p>
           </div>
         </div>
+        {sentBack.length > 0 && fixes.length > 0 && <CaughtList items={fixes} />}
         <details className="status-more">
           <summary>
-            {sentBack.length > 0 ? `What the checker caught (${problems})` : 'What the checker checks'}
+            {sentBack.length > 0
+              ? fixes.length > 0
+                ? 'How the agent fixed each, and what the checker checks'
+                : `What the checker caught (${problems})`
+              : 'What the checker checks'}
           </summary>
           <p className="status-note">
             Every number, date and quote in the answer was found in the tool result it cites, as the well,
@@ -354,6 +367,8 @@ function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSe
           {rounds.length > 0 && sentBack.length > 0 && history}
         </details>
       </div>
+
+      {final.meta_models && <MetaLine m={final.meta_models} open={onSelectEvidence} />}
 
       {state.asOf && (
         <div className="past">
@@ -367,8 +382,6 @@ function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSe
           )}
         </div>
       )}
-
-      {final.meta_models && <MetaLine m={final.meta_models} open={onSelectEvidence} />}
 
       {review && (
         <section className={`second-opinion${review.points.length ? '' : ' is-sound'}`} aria-label="Second opinion">

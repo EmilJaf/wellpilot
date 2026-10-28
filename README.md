@@ -15,7 +15,7 @@ Built for the Meta Global AI Developer Hackathon (Oct 26 - Nov 4, 2026), Indie t
 
 1. **Go back to the end of 2010.** The first example asks the agent which wells need attention, with the data cut at 2010-12-31: it cannot see anything later.
 2. **It finds F-12, and a broken sensor rather than a dying reservoir.** F-12's downhole pressure reads zero from 2010-10-12, while its oil and water flow on smoothly: the gauge died, not the reservoir. Its rate fell as injection water broke through, about two years after first oil, as the 2005 development plan expected.
-3. **It forecasts 2011.** 359,000 m³ of oil, with a range from its own past errors. "Show what happened next" opens the rest: F-12 made 340,000 (+6%, inside the range). The textbook decline fit, made the same day, said 685,000 (+102%).
+3. **It forecasts 2011.** 359,000 m³ of oil (about 2.3 million barrels), with a range from its own past errors. "Show what happened next" opens the rest: F-12 made 340,000 (+6%, inside the range). The textbook decline fit, made the same day, said 685,000 (+102%).
 4. **Click any number.** It opens the exact tool result it came from, the value marked, with the Python that produced it.
 5. **Try to fool the checker.** Change a number, add a cause, give the value to another well, and the checker sends it back, citing the source. Or let the model try: it wrote 36 false versions of verified answers; the checker caught 30, and the four real holes it found are closed.
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api, type Hindsight, type ReasoningCheck } from '../api'
 import { CautionIcon, CheckIcon } from '../icons'
-import { signed, volume } from '../labels'
+import { BARRELS_NOTE, barrels, signed, volume } from '../labels'
 import { CaseChart } from './AccuracyView'
 
 /** What the model's reasoning holds from the hidden period, in words that promise no more
@@ -143,8 +143,11 @@ function ForecastCase({ f }: { f: Hindsight['forecasts'][number] }) {
     <section className="case hindsight-forecast" aria-label={`${f.well} forecast against the outcome`}>
       <h4 className="case-title">{f.well}: forecast against the outcome</h4>
       <p className="hindsight-verdict">
-        The agent forecast <strong>{volume(agent.p50_sm3)}</strong> of oil for {f.forecast_from} to {f.horizon_end}
-        {f.data_ends && ` (the data ends on ${f.data_ends})`}. The well produced <strong>{volume(f.actual_sm3)}</strong>:
+        The agent forecast <strong>{volume(agent.p50_sm3)}</strong>
+        <span className="bbl" title={BARRELS_NOTE}> (about {barrels(agent.p50_sm3)} barrels)</span> of oil for{' '}
+        {f.forecast_from} to {f.horizon_end}
+        {f.data_ends && ` (the data ends on ${f.data_ends})`}. The well produced <strong>{volume(f.actual_sm3)}</strong>
+        <span className="bbl" title={BARRELS_NOTE}> ({barrels(f.actual_sm3)} barrels)</span>:
         the forecast was <strong>{signed(agent.error)}</strong>. The classic decline fit over the whole history, made the
         same day, said {volume(classic.p50_sm3)} ({signed(classic.error)}).
       </p>

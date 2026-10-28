@@ -1,4 +1,4 @@
-import { useEffect, useEffectEvent, useMemo, useRef, useState } from 'react'
+import { useEffect, useEffectEvent, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { api, type OperationJob, type RunSummary, type Table } from './api'
 import { AgentLog } from './components/AgentLog'
 import { StoryBar } from './components/StoryBar'
@@ -154,6 +154,14 @@ export default function App() {
     seconds: 0,
   })
   const recording = useRef<Recording | null>(null)
+  const questionBox = useRef<HTMLTextAreaElement>(null)
+  // The box is as tall as the question it holds.
+  useLayoutEffect(() => {
+    const box = questionBox.current
+    if (!box) return
+    box.style.height = 'auto'
+    box.style.height = `${box.scrollHeight + 2}px`
+  }, [question])
   const [wells, setWells] = useState<string[]>([])
   const [daily, setDaily] = useState<{ well: string; table: Table | null; error?: string } | null>(null)
   const [work, setWork] = useState<{ key: string; list: Marker[] }>({ key: '', list: [] })
@@ -361,7 +369,7 @@ export default function App() {
       setAsOf(EXAMPLES[0].asOf)
       setLogOpen(false)
       scrollToId('ask')
-      ;(document.getElementById('question') as HTMLInputElement | null)?.focus({ preventScroll: true })
+      ;questionBox.current?.focus({ preventScroll: true })
       return
     }
     if (target === 2) {
@@ -455,7 +463,7 @@ export default function App() {
       const { question: heard } = await api.transcribe(toBase64(wav))
       setQuestion(heard)
       setVoice({ status: 'idle', seconds: 0 })
-      ;(document.getElementById('question') as HTMLInputElement | null)?.focus()
+      ;questionBox.current?.focus()
     } catch (e) {
       recording.current = null
       const message = e instanceof DOMException && (e.name === 'NotAllowedError' || e.name === 'SecurityError')
@@ -469,7 +477,7 @@ export default function App() {
   const askAboutSpan = () => {
     if (!span) return
     setQuestion(`What happened to ${span.well} between ${span.start} and ${span.end}, and why?`)
-    const input = document.getElementById('question') as HTMLInputElement | null
+    const input = questionBox.current
     input?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     input?.focus()
   }
@@ -489,74 +497,82 @@ export default function App() {
         {/* The story column: the question, the agent working on it, its checked answer. One
             boundary per part: a bad evidence render must not hide the live log. */}
         <div className="story-col">
-            <form id="ask" className="ask" onSubmit={submit} aria-label="Ask the agent">
-              <div className="ask-row">
-                <label className="sr-only" htmlFor="question">
-                  Question
-                </label>
-                <input
-                  id="question"
-                  type="text"
-                  value={question}
-                  onChange={(e) => setQuestion(e.target.value)}
-                  placeholder="Ask about a well, e.g. why F-12 declined after 2010"
-                />
-                {voiceOn !== false && (
-                  <button
-                    type="button"
-                    className={`mic-button${voice.status === 'recording' ? ' is-recording' : ''}`}
-                    onClick={toggleVoice}
-                    disabled={voice.status === 'transcribing' || running}
-                    aria-pressed={voice.status === 'recording'}
-                    aria-label={voice.status === 'recording' ? 'Stop recording' : 'Ask by voice'}
-                    title={voice.status === 'recording' ? 'Stop recording' : 'Ask by voice: up to 15 seconds, transcribed by the same model'}
-                  >
-                    {voice.status === 'recording' ? <StopIcon /> : <MicIcon />}
-                    <span className="mic-state">
-                      {voice.status === 'recording'
-                        ? `0:${String(voice.seconds).padStart(2, '0')}`
-                        : voice.status === 'transcribing'
-                          ? 'Transcribing'
-                          : 'Voice'}
-                    </span>
-                  </button>
-                )}
-                <label className="as-of" title="For backtests: the agent sees no data after this day, as if it were that day.">
-                  <span className="as-of-label">Data up to</span>
-                  <input type="date" value={asOf} min="2008-01-01" max="2016-12-01" onChange={(e) => setAsOf(e.target.value)} />
-                </label>
-                <button className="run-button" type="submit" disabled={running}>
-                  {running ? 'Running' : 'Ask the agent'}
+          <form id="ask" className="ask" onSubmit={submit} aria-label="Ask the agent">
+            <div className="ask-row">
+              <label className="sr-only" htmlFor="question">
+                Question
+              </label>
+              {/* Wraps and grows with the question, so a phone shows all of it; Enter still asks. */}
+              <textarea
+                id="question"
+                ref={questionBox}
+                rows={1}
+                value={question}
+                onChange={(e) => setQuestion(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+                    e.preventDefault()
+                    e.currentTarget.form?.requestSubmit()
+                  }
+                }}
+                placeholder="Ask about a well, e.g. why F-12 declined after 2010"
+              />
+              {voiceOn !== false && (
+                <button
+                  type="button"
+                  className={`mic-button${voice.status === 'recording' ? ' is-recording' : ''}`}
+                  onClick={toggleVoice}
+                  disabled={voice.status === 'transcribing' || running}
+                  aria-pressed={voice.status === 'recording'}
+                  aria-label={voice.status === 'recording' ? 'Stop recording' : 'Ask by voice'}
+                  title={voice.status === 'recording' ? 'Stop recording' : 'Ask by voice: up to 15 seconds, transcribed by the same model'}
+                >
+                  {voice.status === 'recording' ? <StopIcon /> : <MicIcon />}
+                  <span className="mic-state">
+                    {voice.status === 'recording'
+                      ? `0:${String(voice.seconds).padStart(2, '0')}`
+                      : voice.status === 'transcribing'
+                        ? 'Transcribing'
+                        : 'Voice'}
+                  </span>
                 </button>
-              </div>
-              {voice.note && (
-                <p className="voice-note" role="status">
-                  {voice.note}
-                </p>
               )}
-              <div className="suggestions">
-                <span className="suggestions-label">Try</span>
-                {EXAMPLES.map((e) => (
-                  <button
-                    key={e.label}
-                    type="button"
-                    className="suggestion"
-                    title={e.asOf ? `${e.question} (data up to ${e.asOf})` : e.question}
-                    onClick={() => {
-                      setQuestion(e.question)
-                      setAsOf(e.asOf)
-                    }}
-                  >
-                    {e.label}
-                  </button>
-                ))}
-                {recorded && (
-                  <button type="button" className="link-button" onClick={() => replay(recorded.id)} disabled={running}>
-                    or watch a recorded run
-                  </button>
-                )}
-              </div>
-            </form>
+              <label className="as-of" title="For backtests: the agent sees no data after this day, as if it were that day.">
+                <span className="as-of-label">Data up to</span>
+                <input type="date" value={asOf} min="2008-01-01" max="2016-12-01" onChange={(e) => setAsOf(e.target.value)} />
+              </label>
+              <button className="run-button" type="submit" disabled={running}>
+                {running ? 'Running' : 'Ask the agent'}
+              </button>
+            </div>
+            {voice.note && (
+              <p className="voice-note" role="status">
+                {voice.note}
+              </p>
+            )}
+            <div className="suggestions">
+              <span className="suggestions-label">Try</span>
+              {EXAMPLES.map((e) => (
+                <button
+                  key={e.label}
+                  type="button"
+                  className="suggestion"
+                  title={e.asOf ? `${e.question} (data up to ${e.asOf})` : e.question}
+                  onClick={() => {
+                    setQuestion(e.question)
+                    setAsOf(e.asOf)
+                  }}
+                >
+                  {e.label}
+                </button>
+              ))}
+              {recorded && (
+                <button type="button" className="link-button" onClick={() => replay(recorded.id)} disabled={running}>
+                  or watch a recorded run
+                </button>
+              )}
+            </div>
+          </form>
           <ErrorBoundary>
             <WorkBar state={state} open={logOpen} onToggle={() => setLogOpen(!logOpen)}>
               <AgentLog state={state} selectedEvidence={selectedEvidence} onSelectEvidence={setSelectedEvidence} />

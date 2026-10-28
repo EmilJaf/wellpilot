@@ -1,20 +1,13 @@
 import { Fragment, useEffect, useRef } from 'react'
 import type { StepEvent, ToolCallView } from '../api'
 import { AlarmIcon, CautionIcon, CheckIcon } from '../icons'
-import { plainProblem, compact, describeArgs, shortWarning, toolName } from '../labels'
+import { plainProblem, compact, describeArgs, modelName, shortWarning, toolName } from '../labels'
 import type { RunState } from '../useRun'
 
 type Props = {
   state: RunState
   selectedEvidence: string | null
   onSelectEvidence: (id: string) => void
-}
-
-/** "meta-models/muse-spark-open-1026" as people say it. */
-function modelName(model: string): string {
-  if (model.includes('muse-spark-open')) return 'Muse Spark Open'
-  const spark = model.match(/muse-spark-([\d.]+)/)
-  return spark ? `Muse Spark ${spark[1]}` : model
 }
 
 /** The agent's work as a log track: time runs down, every tool call is a tick. */

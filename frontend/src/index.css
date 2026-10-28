@@ -380,7 +380,8 @@ button {
   gap: 2px;
 }
 
-.work-step i {
+.work-step i,
+.work-key i {
   display: block;
   width: 3px;
   height: 10px;
@@ -388,19 +389,44 @@ button {
   background: var(--ink-3);
 }
 
-.work-step i.tick-error {
+.work-step i.tick-error,
+.work-key i.tick-error {
   background: var(--alarm);
 }
 
 .work-step i.tick-accepted,
-.work-step i.tick-rejected {
+.work-step i.tick-rejected,
+.work-key i.tick-accepted,
+.work-key i.tick-rejected {
   width: 4px;
   height: 14px;
   background: var(--ink);
 }
 
-.work-step i.tick-rejected {
+.work-step i.tick-rejected,
+.work-key i.tick-rejected {
   background: var(--alarm);
+}
+
+/* what the ticks mean, after them on the same line */
+.work-key {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 12px;
+  margin-left: 6px;
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+
+.work-key > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.work-key i {
+  display: inline-block;
 }
 
 .work-log .log-panel {
@@ -456,7 +482,7 @@ button {
   gap: 8px;
 }
 
-.ask-row input[type="text"] {
+.ask-row textarea {
   flex: 1 1 100%;
 }
 
@@ -500,9 +526,13 @@ button {
   color: var(--ink-2);
 }
 
-.ask input[type="text"] {
+.ask textarea {
+  display: block;
+  resize: none;
+  overflow: hidden;
   font: inherit;
   font-size: 16px;
+  line-height: 1.4;
   padding: 10px 14px;
   border: 1px solid #8f99a3; /* 3:1 against the sheet, a visible control edge */
   border-radius: 6px;
@@ -520,7 +550,7 @@ button {
   }
 }
 
-.ask input[type="text"]:focus-visible {
+.ask textarea:focus-visible {
   outline: 2px solid var(--brand);
   outline-offset: -1px;
 }
@@ -1640,17 +1670,22 @@ code,
 }
 
 /* what each Meta model did for this answer: one quiet line under the status */
+/* which Meta model did what for this answer: a strip under the status, as plain to see */
 .meta-line {
-  margin: 8px 0 14px;
-  font-size: 13px;
-  line-height: 1.6;
+  margin: 0 0 18px;
+  padding: 9px 14px 10px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 6px;
+  font-size: 14px;
+  line-height: 1.55;
   color: var(--ink-2);
 }
 
 .meta-line-label {
-  color: var(--ink-3);
-  font-weight: 600;
-  font-stretch: var(--narrow);
+  display: block;
+  margin-bottom: 2px;
+  color: var(--ink);
+  font-weight: 700;
 }
 
 .meta-line strong {
@@ -2805,6 +2840,63 @@ code,
   color: var(--alarm-ink);
 }
 
+/* the checker's catches, in sight: red marks for what was wrong, then "Fixed." in ink */
+.caught {
+  padding: 9px 14px 10px 42px;
+  border-top: 1px solid var(--rule);
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+.caught-title {
+  margin: 0 0 5px;
+  font-weight: 650;
+  color: var(--ink);
+}
+
+.caught ul {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.caught li {
+  display: grid;
+  grid-template-columns: 15px minmax(0, 1fr);
+  gap: 7px;
+  line-height: 1.45;
+}
+
+.caught li svg {
+  width: 14px;
+  height: 14px;
+  margin-top: 3px;
+  color: var(--alarm);
+}
+
+.caught li strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.caught-fixed {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.caught-more {
+  margin: 4px 0 0;
+  font-size: 13px;
+}
+
+@media (max-width: 700px) {
+  .caught {
+    padding-left: 14px;
+  }
+}
+
 .status-more {
   padding: 7px 14px 9px;
   border-top: 1px solid var(--rule);
@@ -3418,5 +3510,14 @@ code,
 }
 
 .tabs button {
+  white-space: nowrap;
+}
+
+/* Barrels beside an oil volume in Sm³: the page's own conversion, quieter than the agent's
+   words and marked as such in its title. */
+.bbl {
+  color: var(--ink-3);
+  font-weight: 450;
+  font-size: 0.9em;
   white-space: nowrap;
 }

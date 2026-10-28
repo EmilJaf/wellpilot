@@ -108,11 +108,52 @@ export const SHORT: Record<string, string> = {
   recent_24m: 'last 24 months',
 }
 
+/** "meta-models/muse-spark-open-1026" as people say it. */
+export function modelName(model: string): string {
+  if (model.includes('muse-spark-open')) return 'Muse Spark Open'
+  const spark = model.match(/muse-spark-([\d.]+)/)
+  return spark ? `Muse Spark ${spark[1]}` : model
+}
+
 /** A relative forecast error as a signed percent, e.g. +7% or −52%. */
 export const signed = (e: number) => `${e >= 0 ? '+' : '−'}${Math.abs(Math.round(e * 100))}%`
 
 /** An oil volume, in k Sm³ or MSm³. */
 export const volume = (sm3: number) => (sm3 >= 1e6 ? `${(sm3 / 1e6).toFixed(2)} MSm³` : `${Math.round(sm3 / 1000)}k Sm³`)
+
+/** Barrels in a standard cubic metre of oil: the unit a reader outside the industry, and the
+    oil market, counts in. */
+export const BARRELS_PER_SM3 = 6.2898
+export const BARRELS_NOTE = 'Converted by this page, not written by the agent: 1 Sm³ (a standard cubic metre) = 6.29 barrels'
+
+/** A volume in Sm³ as barrels, to two significant digits: "2.3 million barrels", "9,800". */
+export function barrels(sm3: number): string {
+  const bbl = sm3 * BARRELS_PER_SM3
+  const digits = Math.max(0, Math.floor(Math.log10(Math.abs(bbl))) - 1)
+  const rounded = Math.round(bbl / 10 ** digits) * 10 ** digits
+  return rounded >= 1e6 ? `${(rounded / 1e6).toLocaleString('en-US', { maximumFractionDigits: 1 })} million` : rounded.toLocaleString('en-US')
+}
+
+const SCALES: Record<string, number> = { thousand: 1e3, k: 1e3, million: 1e6, mill: 1e6, m: 1e6 }
+
+/**
+ * The oil volume a number written in the answer stands for, when Sm³ follows it: "359
+ * thousand Sm3", "1 551 Sm3/d", "1.13 MSm3". Returns the volume, whether it is per day, and
+ * how many characters of `after` the unit takes, so the barrels can go right after it.
+ */
+export function volumeAt(written: string, after: string): { sm3: number; perDay: boolean; length: number } | null {
+  const number = written.match(/^\s*([\d][\d\s\u00a0\u202f,]*(?:\.\d+)?)\s*(thousand|million|mill|k|m)?\s*$/i)
+  if (!number) return null
+  const unit = after.match(/^(\s*(thousand|million|mill)\b)?\s*(k|M)?Sm(?:3|³)(\s*\/\s*d(?:ay)?\b|\s+(?:per|a)\s+day\b)?/)
+  if (!unit) return null
+  const value = Number(number[1].replace(/[\s\u00a0\u202f,]/g, ''))
+  if (!Number.isFinite(value) || value <= 0) return null
+  const scale =
+    (SCALES[(number[2] ?? '').toLowerCase()] ?? 1) *
+    (SCALES[(unit[2] ?? '').toLowerCase()] ?? 1) *
+    (unit[3] ? SCALES[unit[3].toLowerCase()] : 1)
+  return { sm3: value * scale, perDay: Boolean(unit[4]), length: unit[0].length }
+}
 
 /** A tool warning as a short label for the log ("poor fit: r2_log 0.688 < 0.7"); the full
     text is in its title and in the evidence. */

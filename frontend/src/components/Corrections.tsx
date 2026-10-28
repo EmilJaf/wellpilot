@@ -1,4 +1,5 @@
 import { type Correction, type Piece } from '../corrections'
+import { AlarmIcon } from '../icons'
 import { plainProblem } from '../labels'
 
 /** The problem as one plain sentence, without the "Finding 3" the list already shows. */
@@ -34,6 +35,35 @@ export function Diff({ pieces }: { pieces: Piece[] }) {
         </span>
       ))}
     </p>
+  )
+}
+
+/**
+ * What the checker caught before the reader saw the answer, one plain line each, in sight:
+ * the proof that the checker is not a formality. How each was fixed sits behind a disclosure.
+ */
+export function CaughtList({ items, max = 4 }: { items: Correction[]; max?: number }) {
+  const shown = items.slice(0, max)
+  return (
+    <div className="caught">
+      <p className="caught-title">The checker caught {items.length === 1 ? 'this' : `these ${items.length}`} before you saw the answer:</p>
+      <ul>
+        {shown.map((c, i) => {
+          const fixed = c.changes.length > 0 && !c.changes[0].startsWith('The run ended')
+          return (
+            <li key={i}>
+              <AlarmIcon />
+              <span>
+                {c.target && <strong>{c.target}: </strong>}
+                {problemText(c)}
+                {fixed && <span className="caught-fixed"> Fixed.</span>}
+              </span>
+            </li>
+          )
+        })}
+      </ul>
+      {items.length > max && <p className="caught-more">and {items.length - max} more, below.</p>}
+    </div>
   )
 }
 

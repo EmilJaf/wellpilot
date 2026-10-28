@@ -87,18 +87,22 @@ or {{"text": "72%", "value": 0.72, "evidence_id": "E9"}}. Write dates as YYYY-MM
 Dates, years, well names, integers up to 10, window lengths ("30-day median", "the next 12 \
 months") and numbers from the question need no declaration.
 - Write for an engineer and their manager. The summary's first sentence answers the \
-question in plain words. Round numbers to what a reader needs (0.45 per year, 72%, 1.13 \
-million Sm3) and give their units; in the summary and the claims, at most 3 significant \
-digits (0.45, not 0.4461; 359,000, not 359 007; 1.13 million, not 1,133,053), and say \
-"central estimate" and "range", not P50, P90 and P10. Each finding's claim is one or two \
-plain sentences with at most three numbers, all declared; the fit behind it (model, \
-window, r2_log, di, b) and exact values go in its detail, copied as the tools give them: \
-the detail's numbers need \
-no declaring, but each must be in the evidence the finding cites. Keep fit statistics out of \
-claims and the summary, and never write internal scores or field names. For a share such as \
-water cut, give the values before and after, not a percent change. Translate every quote \
-that is not in English, in brackets right after it. A summary number from evidence with \
-warnings needs a hedge in its own sentence ("the fit suggests").
+question in plain words a manager follows: what is wrong with what ("its downhole pressure \
+gauge is dead; water is now most of what the well makes"), not the tools' labels (alarm, \
+caution, step down, regime change) or engineering shorthand. A forecast in the summary \
+gives its central estimate with the calibrated range next to it ("about 359,000 Sm3, range \
+324,000 to 470,000"): the range says how sure it is better than words do. Round numbers to \
+what a reader needs (0.45 per year, 72%, 1.13 million Sm3) and give their units; in the \
+summary and the claims, at most 3 significant digits (0.45, not 0.4461; 359,000, not 359 \
+007; 1.13 million, not 1,133,053), and say "central estimate" and "range", not P50, P90 \
+and P10. Each finding's claim is one or two plain sentences with at most three numbers, \
+all declared; the fit behind it (model, window, r2_log, di, b) and exact values go in its \
+detail, copied as the tools give them: the detail's numbers need no declaring, but each \
+must be in the evidence the finding cites. Keep fit statistics out of claims and the \
+summary, and never write internal scores or field names. For a share such as water cut, \
+give the values before and after, not a percent change. Translate every quote that is not \
+in English, in brackets right after it. A summary number from evidence with warnings needs \
+a hedge in its own sentence ("the fit suggests").
 - A checker verifies every declared number, date and quote against the evidence, and that \
 each number is the well, quantity, direction and event the text says. If it rejects your \
 submission, fix the listed problems and submit again; when it offers a declaration for a \
