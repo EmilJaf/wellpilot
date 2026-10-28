@@ -72,7 +72,7 @@ function bySpans(
         parts.push(
           <span key={`b${n.start}`} className="bbl" title={BARRELS_NOTE}>
             {' '}
-            (about {low ? `${barrels(low.sm3)} to ` : ''}
+            (about {low && barrels(low.sm3) !== barrels(oil.sm3) ? `${barrels(low.sm3)} to ` : ''}
             {barrels(oil.sm3)} {oil.perDay ? 'barrels a day' : 'barrels'})
           </span>,
         )
