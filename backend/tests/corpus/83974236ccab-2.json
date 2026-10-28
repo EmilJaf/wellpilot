@@ -1,0 +1,1598 @@
+{
+ "source": {
+  "run": "83974236ccab",
+  "submission": 2,
+  "model": "meta-models/muse-spark-open-1026",
+  "question": "When did the Volve field reach the maximum water cut the 2005 plan designed the platform for?"
+ },
+ "to_review": false,
+ "note": "",
+ "expected": {
+  "accepted": true,
+  "flagged": []
+ },
+ "submission": {
+  "summary": "The Volve platform was designed for a maximum water cut of 80%. The field first reached that design share in June 2012, when the monthly water cut was about 80.3%, and later peaked at about 86.1% in April 2016.",
+  "findings": [
+   {
+    "claim": "The 2005 plan designed the platform for a maximum water cut of 80%.",
+    "detail": "PUD Table 4.3 p.23: \"Maksimum vannkutt 0,80\" [Maximum water cut 0.80]; PUD p.35 same limit as \"Maks vanninnhold 80 %\" [Max water content 80%]. Design limits are field/platform limits: liquid 13000 Sm3/d, oil 9000 Sm3/d, water injection 16000 Sm3/d, max water cut 0.8.",
+    "evidence_ids": [
+     "E1",
+     "E2"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "80%",
+      "value": 0.8,
+      "evidence_id": "E1"
+     }
+    ]
+   },
+   {
+    "claim": "The field as a whole first reached that design water cut in June 2012, with a monthly average of about 80.3%.",
+    "detail": "field_vs_design: first_month_at_or_above water_cut = 2012-06, months_at_or_above 27. Monthly row 2012-06: water_cut 0.803, oil 1752 Sm3/d, liquid 8894 Sm3/d, water 7142 Sm3/d. Field totals only; limit is not per well.",
+    "evidence_ids": [
+     "E2"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "80.3%",
+      "value": 0.803,
+      "evidence_id": "E2"
+     }
+    ]
+   },
+   {
+    "claim": "The field's water cut peaked at about 86.1% in April 2016 and stayed above the 80% design for 27 months.",
+    "detail": "field_vs_design field_against_limits water_cut max 0.8606 in 2016-04, months_at_or_above 27, first 2012-06. Water handling capacity (13000 x 0.8 = 10400 Sm3/d) was never exceeded: max monthly water rate 9070 Sm3/d in 2014-10, max daily water rate in that period 10240 Sm3/d in 2013-10.",
+    "evidence_ids": [
+     "E2"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "86.1%",
+      "value": 0.8606,
+      "evidence_id": "E2"
+     },
+     {
+      "text": "80%",
+      "value": 0.8,
+      "evidence_id": "E2"
+     },
+     {
+      "text": "27 months",
+      "value": 27,
+      "evidence_id": "E2"
+     }
+    ]
+   }
+  ],
+  "summary_numbers": [
+   {
+    "text": "80%",
+    "value": 0.8,
+    "evidence_id": "E1"
+   },
+   {
+    "text": "80.3%",
+    "value": 0.803,
+    "evidence_id": "E2"
+   },
+   {
+    "text": "86.1%",
+    "value": 0.8606,
+    "evidence_id": "E2"
+   }
+  ]
+ },
+ "evidence": [
+  {
+   "id": "E1",
+   "tool": "search_reports",
+   "arguments": {
+    "query": "maximum water cut design platform",
+    "topic": "facility_limits"
+   },
+   "result": {
+    "documents": {
+     "volve_pud": {
+      "title": "Plan for utbygging og drift av Volve (PUD, plan for development and operation)",
+      "issued": "2005-02-01"
+     }
+    },
+    "facts": {
+     "columns": [
+      "doc_id",
+      "page",
+      "topic",
+      "source",
+      "statement_en",
+      "quote",
+      "quote_check",
+      "wells"
+     ],
+     "rows": [
+      [
+       "volve_pud",
+       35,
+       "facility_limits",
+       "table",
+       "The platform maximum water content design capacity is 80 %.",
+       "Maks vanninnhold 80 %",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       8,
+       "facility_limits",
+       "text",
+       "The process plant on the jack-up platform is designed for the following capacities: oil production 9,000 Sm3/d, rich gas 1.5 MSm3/d, water treatment 10,400 m3/d, gas lift 0.45 MSm3/d, total liquid treatment 13,000 m3/d and water injection 16,000 m3/d.",
+       "Prosessanlegget på den oppjekkbare plattformen er designet for følgende kapasiteter.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       23,
+       "facility_limits",
+       "table",
+       "The field maximum water cut is 0,80.",
+       "Maksimum vannkutt 0,80",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       35,
+       "facility_limits",
+       "table",
+       "The platform water injection rate design capacity is 5.000 – 16.000 Sm3/d.",
+       "Vann injeksjons-rate: 5.000 – 16.000 Sm³/d",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       35,
+       "facility_limits",
+       "table",
+       "The platform water injection pressure design capacity is 330 bara.",
+       "Vann injeksjonstrykk: 330 bara",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       35,
+       "facility_limits",
+       "text",
+       "The rig is designed for a maximum water depth of 150 meter.",
+       "Riggen er designet for et maksimum havdyp på 150 meter",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       6,
+       "facility_limits",
+       "text",
+       "The Volve oil field is located in block 15/9 ca. 200 km west of Stavanger and ca. 8 km north of the Sleipner A platform with water depth in the area of ca. 90 m.",
+       "Volve er et oljefelt beliggende i blokk 15/9 ca 200 km vest for Stavanger og ca 8 km nord av Sleipner A plattformen, se figur 1.1. Vanndypet i området er ca. 90 m.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       8,
+       "facility_limits",
+       "table",
+       "The table row shows water treatment 10,400 m3/d and gas lift 0.45 MSm3/d as design capacities.",
+       "Vannbehandling | 10.400 m3/d | Gass løft | 0,45 MSm3/d",
+       "exact",
+       ""
+      ]
+     ]
+    }
+   },
+   "code": "wellpilot.agent.tools.search_reports@5907b6347b0e",
+   "created_at": "2026-10-28T23:18:56+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E2",
+   "tool": "field_vs_design",
+   "arguments": {},
+   "result": {
+    "scope": "whole field, all producers and injectors summed per day, then per month",
+    "plan_source": "Plan for utbygging og drift av Volve (PUD, plan for development and operation), page 23, Table 4.3",
+    "design_limits": {
+     "liquid_sm3_per_day": {
+      "limit": "field liquid capacity",
+      "value": 13000,
+      "quote": "Væskekapasitet 13000 Sm3 /d"
+     },
+     "oil_sm3_per_day": {
+      "limit": "field oil capacity",
+      "value": 9000,
+      "quote": "Oljekapasitet 9000 Sm3 /d"
+     },
+     "water_cut": {
+      "limit": "maximum water cut",
+      "value": 0.8,
+      "quote": "Maksimum vannkutt 0,80"
+     },
+     "water_inj_sm3_per_day": {
+      "limit": "field water injection capacity",
+      "value": 16000,
+      "quote": "Vanninjeksjons kapasitet 16000 Sm3 /d"
+     },
+     "water_sm3_per_day": {
+      "limit": "field water handling (derived: liquid capacity x maximum water cut)",
+      "value": 10400,
+      "quote": null
+     }
+    },
+    "field_against_limits": {
+     "liquid_sm3_per_day": {
+      "first_month_at_or_above": null,
+      "months_at_or_above": 0,
+      "max": 11438,
+      "max_month": "2014-06"
+     },
+     "oil_sm3_per_day": {
+      "first_month_at_or_above": null,
+      "months_at_or_above": 0,
+      "max": 8924,
+      "max_month": "2008-12"
+     },
+     "water_cut": {
+      "first_month_at_or_above": "2012-06",
+      "months_at_or_above": 27,
+      "max": 0.8606,
+      "max_month": "2016-04"
+     },
+     "water_inj_sm3_per_day": {
+      "first_month_at_or_above": "2008-12",
+      "months_at_or_above": 3,
+      "max": 17206,
+      "max_month": "2008-12"
+     },
+     "water_sm3_per_day": {
+      "first_month_at_or_above": null,
+      "months_at_or_above": 0,
+      "max": 9070,
+      "max_month": "2014-10",
+      "max_day": 10240,
+      "max_day_month": "2013-10"
+     }
+    },
+    "months": {
+     "columns": [
+      "month",
+      "days",
+      "oil_sm3_per_day",
+      "liquid_sm3_per_day",
+      "water_cut",
+      "water_sm3_per_day",
+      "water_inj_sm3_per_day",
+      "max_day_liquid_sm3",
+      "max_day_water_sm3"
+     ],
+     "rows": [
+      [
+       "2008-02",
+       29,
+       1693,
+       1707,
+       0.008335,
+       14.23,
+       0.0,
+       3127,
+       385.01
+      ],
+      [
+       "2008-03",
+       31,
+       2689,
+       2690,
+       0.0003288,
+       0.8845,
+       0.0,
+       3193,
+       3.39
+      ],
+      [
+       "2008-04",
+       30,
+       2484,
+       2501,
+       0.006614,
+       16.54,
+       991.76,
+       3306,
+       153.36
+      ],
+      [
+       "2008-05",
+       31,
+       4048,
+       4055,
+       0.001914,
+       7.76,
+       7140,
+       5096,
+       29.8
+      ],
+      [
+       "2008-06",
+       30,
+       4793,
+       4809,
+       0.003288,
+       15.81,
+       7060,
+       5242,
+       184.78
+      ],
+      [
+       "2008-07",
+       31,
+       5364,
+       5377,
+       0.002497,
+       13.43,
+       7485,
+       6853,
+       36.05
+      ],
+      [
+       "2008-08",
+       31,
+       5337,
+       5355,
+       0.003474,
+       18.6,
+       7368,
+       9258,
+       90.81
+      ],
+      [
+       "2008-09",
+       30,
+       6409,
+       6424,
+       0.002408,
+       15.47,
+       5447,
+       9078,
+       74.97
+      ],
+      [
+       "2008-10",
+       31,
+       7651,
+       7674,
+       0.003049,
+       23.4,
+       11476,
+       9017,
+       40.42
+      ],
+      [
+       "2008-11",
+       30,
+       8344,
+       8430,
+       0.0102,
+       86.01,
+       14730,
+       9346,
+       804.33
+      ],
+      [
+       "2008-12",
+       31,
+       8924,
+       8958,
+       0.003852,
+       34.51,
+       17206,
+       9076,
+       71.83
+      ],
+      [
+       "2009-01",
+       31,
+       8685,
+       8730,
+       0.005053,
+       44.11,
+       16139,
+       9232,
+       298.19
+      ],
+      [
+       "2009-02",
+       28,
+       8421,
+       8511,
+       0.01061,
+       90.33,
+       15973,
+       9102,
+       152.76
+      ],
+      [
+       "2009-03",
+       31,
+       5923,
+       5977,
+       0.009062,
+       54.17,
+       4608,
+       9137,
+       207.66
+      ],
+      [
+       "2009-04",
+       30,
+       7930,
+       7980,
+       0.006236,
+       49.76,
+       7046,
+       9031,
+       124.94
+      ],
+      [
+       "2009-05",
+       31,
+       8297,
+       8508,
+       0.02482,
+       211.18,
+       14963,
+       9429,
+       456.62
+      ],
+      [
+       "2009-06",
+       30,
+       7303,
+       7582,
+       0.03688,
+       279.66,
+       8773,
+       9372,
+       620.77
+      ],
+      [
+       "2009-07",
+       31,
+       5515,
+       5840,
+       0.05558,
+       324.59,
+       12796,
+       6571,
+       507.3
+      ],
+      [
+       "2009-08",
+       31,
+       7255,
+       8088,
+       0.103,
+       832.83,
+       12593,
+       10519,
+       1623
+      ],
+      [
+       "2009-09",
+       30,
+       6015,
+       6599,
+       0.08845,
+       583.66,
+       11185,
+       10363,
+       1361
+      ],
+      [
+       "2009-10",
+       31,
+       7214,
+       8276,
+       0.1283,
+       1062,
+       12353,
+       10182,
+       2994
+      ],
+      [
+       "2009-11",
+       30,
+       7802,
+       9479,
+       0.1769,
+       1677,
+       13760,
+       10430,
+       2121
+      ],
+      [
+       "2009-12",
+       31,
+       7984,
+       10355,
+       0.2289,
+       2371,
+       14354,
+       11620,
+       3250
+      ],
+      [
+       "2010-01",
+       31,
+       7480,
+       10713,
+       0.3018,
+       3233,
+       15298,
+       11704,
+       3920
+      ],
+      [
+       "2010-02",
+       28,
+       5897,
+       9655,
+       0.3892,
+       3758,
+       13751,
+       11350,
+       4915
+      ],
+      [
+       "2010-03",
+       31,
+       5437,
+       9262,
+       0.4129,
+       3824,
+       10609,
+       11732,
+       5518
+      ],
+      [
+       "2010-04",
+       30,
+       5310,
+       9905,
+       0.4639,
+       4595,
+       12194,
+       11636,
+       5515
+      ],
+      [
+       "2010-05",
+       31,
+       5320,
+       10473,
+       0.492,
+       5153,
+       16282,
+       11430,
+       6002
+      ],
+      [
+       "2010-06",
+       30,
+       4831,
+       10826,
+       0.5538,
+       5995,
+       14279,
+       11645,
+       6560
+      ],
+      [
+       "2010-07",
+       31,
+       4311,
+       10642,
+       0.5949,
+       6331,
+       13286,
+       11074,
+       6664
+      ],
+      [
+       "2010-08",
+       31,
+       2211,
+       5799,
+       0.6188,
+       3588,
+       7385,
+       11173,
+       7038
+      ],
+      [
+       "2010-09",
+       30,
+       3557,
+       8755,
+       0.5937,
+       5198,
+       10281,
+       11026,
+       6793
+      ],
+      [
+       "2010-10",
+       31,
+       4200,
+       10667,
+       0.6063,
+       6467,
+       12755,
+       11406,
+       7232
+      ],
+      [
+       "2010-11",
+       30,
+       3567,
+       10208,
+       0.6505,
+       6640,
+       11863,
+       11198,
+       7500
+      ],
+      [
+       "2010-12",
+       31,
+       3519,
+       10712,
+       0.6715,
+       7193,
+       12316,
+       10927,
+       7349
+      ],
+      [
+       "2011-01",
+       31,
+       3422,
+       10778,
+       0.6825,
+       7357,
+       12198,
+       10972,
+       7481
+      ],
+      [
+       "2011-02",
+       28,
+       2615,
+       8500,
+       0.6923,
+       5885,
+       9816,
+       10970,
+       7669
+      ],
+      [
+       "2011-03",
+       31,
+       3036,
+       10479,
+       0.7103,
+       7443,
+       11917,
+       11111,
+       7981
+      ],
+      [
+       "2011-04",
+       30,
+       2988,
+       10929,
+       0.7266,
+       7942,
+       12314,
+       11104,
+       8277
+      ],
+      [
+       "2011-05",
+       31,
+       2849,
+       10878,
+       0.7381,
+       8029,
+       12246,
+       11093,
+       8206
+      ],
+      [
+       "2011-06",
+       30,
+       1774,
+       6968,
+       0.7454,
+       5194,
+       7868,
+       10990,
+       8239
+      ],
+      [
+       "2011-07",
+       31,
+       1054,
+       3438,
+       0.6934,
+       2384,
+       4046,
+       10959,
+       7414
+      ],
+      [
+       "2011-08",
+       31,
+       2778,
+       9485,
+       0.7072,
+       6708,
+       10806,
+       11863,
+       8491
+      ],
+      [
+       "2011-09",
+       30,
+       2702,
+       10849,
+       0.751,
+       8148,
+       12020,
+       12592,
+       9959
+      ],
+      [
+       "2011-10",
+       31,
+       1111,
+       4639,
+       0.7604,
+       3528,
+       5289,
+       10784,
+       8259
+      ],
+      [
+       "2011-11",
+       30,
+       1894,
+       6873,
+       0.7244,
+       4979,
+       7778,
+       10931,
+       8020
+      ],
+      [
+       "2011-12",
+       31,
+       1686,
+       6173,
+       0.7269,
+       4488,
+       6989,
+       10967,
+       7964
+      ],
+      [
+       "2012-01",
+       31,
+       1469,
+       5384,
+       0.7272,
+       3915,
+       6045,
+       11518,
+       8386
+      ],
+      [
+       "2012-02",
+       29,
+       2212,
+       8738,
+       0.7468,
+       6525,
+       10045,
+       11227,
+       9182
+      ],
+      [
+       "2012-03",
+       31,
+       1981,
+       8511,
+       0.7672,
+       6529,
+       9486,
+       9033,
+       6896
+      ],
+      [
+       "2012-04",
+       30,
+       2020,
+       9051,
+       0.7768,
+       7031,
+       10009,
+       9254,
+       7259
+      ],
+      [
+       "2012-05",
+       31,
+       1854,
+       9050,
+       0.7952,
+       7196,
+       9900,
+       10140,
+       8248
+      ],
+      [
+       "2012-06",
+       30,
+       1752,
+       8894,
+       0.803,
+       7142,
+       9731,
+       9274,
+       7687
+      ],
+      [
+       "2012-07",
+       31,
+       1747,
+       8977,
+       0.8054,
+       7230,
+       9857,
+       9195,
+       7442
+      ],
+      [
+       "2012-08",
+       31,
+       699.62,
+       3556,
+       0.8033,
+       2857,
+       4005,
+       9291,
+       7550
+      ],
+      [
+       "2012-09",
+       30,
+       88.97,
+       336.68,
+       0.7357,
+       247.71,
+       469.75,
+       8296,
+       6238
+      ],
+      [
+       "2012-10",
+       31,
+       1728,
+       7579,
+       0.772,
+       5851,
+       7385,
+       9875,
+       7791
+      ],
+      [
+       "2012-11",
+       30,
+       1798,
+       9203,
+       0.8046,
+       7405,
+       11037,
+       9354,
+       7602
+      ],
+      [
+       "2012-12",
+       31,
+       1498,
+       8762,
+       0.829,
+       7264,
+       9661,
+       9526,
+       7874
+      ],
+      [
+       "2013-01",
+       31,
+       1535,
+       9263,
+       0.8343,
+       7728,
+       10180,
+       10037,
+       8517
+      ],
+      [
+       "2013-02",
+       28,
+       1489,
+       9290,
+       0.8398,
+       7802,
+       10239,
+       9488,
+       7975
+      ],
+      [
+       "2013-03",
+       31,
+       810.4,
+       4931,
+       0.8357,
+       4121,
+       5892,
+       9817,
+       8306
+      ],
+      [
+       "2013-04",
+       30,
+       1174,
+       7254,
+       0.8381,
+       6080,
+       7923,
+       10088,
+       8460
+      ],
+      [
+       "2013-05",
+       31,
+       1419,
+       9700,
+       0.8538,
+       8281,
+       10564,
+       11576,
+       10140
+      ],
+      [
+       "2013-06",
+       30,
+       1140,
+       8006,
+       0.8576,
+       6866,
+       9026,
+       10017,
+       8584
+      ],
+      [
+       "2013-07",
+       31,
+       1238,
+       7908,
+       0.8434,
+       6670,
+       8542,
+       10764,
+       9337
+      ],
+      [
+       "2013-08",
+       31,
+       2010,
+       9912,
+       0.7972,
+       7902,
+       11028,
+       11090,
+       8908
+      ],
+      [
+       "2013-09",
+       30,
+       1696,
+       8327,
+       0.7964,
+       6631,
+       9055,
+       10963,
+       8771
+      ],
+      [
+       "2013-10",
+       31,
+       1963,
+       9583,
+       0.7951,
+       7620,
+       10076,
+       12493,
+       10240
+      ],
+      [
+       "2013-11",
+       30,
+       2060,
+       9744,
+       0.7886,
+       7684,
+       10799,
+       11071,
+       8895
+      ],
+      [
+       "2013-12",
+       31,
+       1806,
+       9165,
+       0.803,
+       7359,
+       10267,
+       11391,
+       9139
+      ],
+      [
+       "2014-01",
+       31,
+       1997,
+       8387,
+       0.7619,
+       6390,
+       9257,
+       11120,
+       8874
+      ],
+      [
+       "2014-02",
+       28,
+       2034,
+       9519,
+       0.7863,
+       7485,
+       9675,
+       11677,
+       9262
+      ],
+      [
+       "2014-03",
+       31,
+       2005,
+       9507,
+       0.7891,
+       7501,
+       10402,
+       11788,
+       9415
+      ],
+      [
+       "2014-04",
+       30,
+       2540,
+       10878,
+       0.7665,
+       8338,
+       11856,
+       12756,
+       9099
+      ],
+      [
+       "2014-05",
+       31,
+       2704,
+       8943,
+       0.6976,
+       6239,
+       10053,
+       12585,
+       9186
+      ],
+      [
+       "2014-06",
+       30,
+       2651,
+       11438,
+       0.7682,
+       8787,
+       12426,
+       12106,
+       9308
+      ],
+      [
+       "2014-07",
+       31,
+       2419,
+       10971,
+       0.7795,
+       8552,
+       12136,
+       12596,
+       10120
+      ],
+      [
+       "2014-08",
+       31,
+       1593,
+       8691,
+       0.8167,
+       7098,
+       9878,
+       11742,
+       9362
+      ],
+      [
+       "2014-09",
+       30,
+       2080,
+       10879,
+       0.8088,
+       8799,
+       12018,
+       11907,
+       9677
+      ],
+      [
+       "2014-10",
+       31,
+       2081,
+       11151,
+       0.8134,
+       9070,
+       12466,
+       11677,
+       9544
+      ],
+      [
+       "2014-11",
+       30,
+       1764,
+       9593,
+       0.8161,
+       7829,
+       10442,
+       11853,
+       9797
+      ],
+      [
+       "2014-12",
+       31,
+       591.4,
+       3931,
+       0.8495,
+       3339,
+       5238,
+       4315,
+       3645
+      ],
+      [
+       "2015-01",
+       31,
+       2621,
+       6735,
+       0.6108,
+       4114,
+       6388,
+       7752,
+       4554
+      ],
+      [
+       "2015-02",
+       28,
+       2367,
+       7082,
+       0.6658,
+       4715,
+       8905,
+       8724,
+       5919
+      ],
+      [
+       "2015-03",
+       31,
+       2637,
+       7734,
+       0.6591,
+       5097,
+       8544,
+       9858,
+       6439
+      ],
+      [
+       "2015-04",
+       30,
+       3007,
+       8210,
+       0.6337,
+       5203,
+       9689,
+       9352,
+       6208
+      ],
+      [
+       "2015-05",
+       31,
+       2809,
+       7938,
+       0.6462,
+       5130,
+       8513,
+       9432,
+       6246
+      ],
+      [
+       "2015-06",
+       30,
+       2795,
+       8495,
+       0.671,
+       5700,
+       10244,
+       9682,
+       6453
+      ],
+      [
+       "2015-07",
+       31,
+       2387,
+       8114,
+       0.7058,
+       5727,
+       8838,
+       9207,
+       6890
+      ],
+      [
+       "2015-08",
+       31,
+       1816,
+       6664,
+       0.7275,
+       4848,
+       7351,
+       9409,
+       6670
+      ],
+      [
+       "2015-09",
+       30,
+       2103,
+       7961,
+       0.7358,
+       5858,
+       8734,
+       9364,
+       7089
+      ],
+      [
+       "2015-10",
+       31,
+       1861,
+       8029,
+       0.7682,
+       6168,
+       8717,
+       9622,
+       7590
+      ],
+      [
+       "2015-11",
+       30,
+       2016,
+       8856,
+       0.7724,
+       6840,
+       9837,
+       10114,
+       7909
+      ],
+      [
+       "2015-12",
+       31,
+       1930,
+       8580,
+       0.7751,
+       6651,
+       9623,
+       9587,
+       7425
+      ],
+      [
+       "2016-01",
+       31,
+       1664,
+       8818,
+       0.8113,
+       7154,
+       9694,
+       10168,
+       8551
+      ],
+      [
+       "2016-02",
+       29,
+       1633,
+       8877,
+       0.816,
+       7243,
+       10768,
+       9490,
+       7836
+      ],
+      [
+       "2016-03",
+       31,
+       1381,
+       8920,
+       0.8452,
+       7539,
+       9065,
+       9567,
+       8203
+      ],
+      [
+       "2016-04",
+       30,
+       1077,
+       7727,
+       0.8606,
+       6650,
+       8010,
+       9126,
+       7865
+      ],
+      [
+       "2016-05",
+       31,
+       1259,
+       8000,
+       0.8426,
+       6741,
+       8686,
+       10416,
+       9106
+      ],
+      [
+       "2016-06",
+       30,
+       1189,
+       7937,
+       0.8502,
+       6749,
+       8576,
+       8223,
+       6993
+      ],
+      [
+       "2016-07",
+       31,
+       1002,
+       5794,
+       0.8271,
+       4792,
+       6386,
+       8118,
+       6936
+      ],
+      [
+       "2016-08",
+       31,
+       804.99,
+       4065,
+       0.802,
+       3260,
+       4270,
+       5776,
+       4879
+      ],
+      [
+       "2016-09",
+       30,
+       286.97,
+       1846,
+       0.8446,
+       1559,
+       2040,
+       3581,
+       3037
+      ]
+     ]
+    },
+    "plan_end_quote": "Kumulativ oljeproduksjon inntil minimum økonomisk rate på 2.100 Sm3 /d (gitt Volve oljepris på 18,7 USD/fat) nås er 11,4 MSm3",
+    "note": "These are field and platform limits (PUD p.35 lists the same platform capacities); compare them with field totals, never one well. The maximum water cut is a share at full liquid rate: the water the platform can handle is liquid capacity x maximum water cut (water_sm3_per_day). The field reaching that share at a lower liquid rate means it ran at the design water cut, not over its water capacity. Rates are per calendar day of each month."
+   },
+   "code": "wellpilot.agent.tools.field_vs_design@e3763197bb3a",
+   "created_at": "2026-10-28T23:18:56+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E3",
+   "tool": "list_wells",
+   "arguments": {},
+   "result": {
+    "columns": [
+     "well",
+     "well_types",
+     "first_oil",
+     "last_date",
+     "cum_oil_sm3",
+     "cum_water_sm3",
+     "cum_water_injected_sm3",
+     "producing_days"
+    ],
+    "rows": [
+     [
+      "F-1 C",
+      "OP/WI",
+      "2014-04-22",
+      "2016-04-21",
+      177709,
+      207302,
+      null,
+      438
+     ],
+     [
+      "F-11",
+      "OP",
+      "2013-07-24",
+      "2016-09-17",
+      1147849,
+      1090806,
+      0.0,
+      1122
+     ],
+     [
+      "F-12",
+      "OP",
+      "2008-02-12",
+      "2016-09-17",
+      4579610,
+      6817753,
+      0.0,
+      2838
+     ],
+     [
+      "F-14",
+      "OP",
+      "2008-07-13",
+      "2016-09-17",
+      3942233,
+      7121310,
+      0.0,
+      2724
+     ],
+     [
+      "F-15 D",
+      "OP",
+      "2014-01-16",
+      "2016-09-17",
+      148519,
+      52366,
+      0.0,
+      769
+     ],
+     [
+      "F-4",
+      "WI",
+      null,
+      "2016-12-01",
+      0.0,
+      0.0,
+      16240727,
+      0
+     ],
+     [
+      "F-5",
+      "OP/WI",
+      "2016-04-20",
+      "2016-09-18",
+      41161,
+      13533,
+      14089406,
+      129
+     ]
+    ]
+   },
+   "code": "wellpilot.agent.tools.list_wells@67bd47cfcdd1",
+   "created_at": "2026-10-28T23:18:56+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E4",
+   "tool": "calculate",
+   "arguments": {
+    "expressions": [
+     "0.8030*100"
+    ]
+   },
+   "result": {
+    "results": [
+     {
+      "expression": "0.8030*100",
+      "value": 80.3
+     }
+    ]
+   },
+   "code": "wellpilot.agent.tools.calculate@5c1d806d8f4d",
+   "created_at": "2026-10-28T23:18:59+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E5",
+   "tool": "calculate",
+   "arguments": {
+    "expressions": [
+     "0.8606*100"
+    ]
+   },
+   "result": {
+    "results": [
+     {
+      "expression": "0.8606*100",
+      "value": 86.06
+     }
+    ]
+   },
+   "code": "wellpilot.agent.tools.calculate@5c1d806d8f4d",
+   "created_at": "2026-10-28T23:19:02+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E6",
+   "tool": "calculate",
+   "arguments": {
+    "expressions": [
+     "0.803*100",
+     "0.8606*100"
+    ]
+   },
+   "result": {
+    "results": [
+     {
+      "expression": "0.803*100",
+      "value": 80.3
+     },
+     {
+      "expression": "0.8606*100",
+      "value": 86.06
+     }
+    ]
+   },
+   "code": "wellpilot.agent.tools.calculate@5c1d806d8f4d",
+   "created_at": "2026-10-28T23:19:04+00:00",
+   "warnings": []
+  }
+ ]
+}

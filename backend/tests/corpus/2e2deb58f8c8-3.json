@@ -1,0 +1,1410 @@
+{
+ "source": {
+  "run": "2e2deb58f8c8",
+  "submission": 3,
+  "model": "meta-models/muse-spark-open-1026",
+  "question": "When was well F-11 B completed, and how does its completion report's timing compare with when it started producing?"
+ },
+ "to_review": false,
+ "note": "Reviewed Oct 29 (eval): every rejection was false and the run ended unverified on them: times of day ('14:15', '20:00') read as numbers, the report table's '30.Jun.2013' not read as a date, 'F-11 B' (the reports' wellbore) not matched with 'F-11' (the production data's name), '3 days' from a calculation (24 - 21) not taken as a duration. All fixed; every round is now accepted.",
+ "expected": {
+  "accepted": true,
+  "flagged": []
+ },
+ "submission": {
+  "summary": "Well F-11 started producing on 2013-07-24, about 20 days after its Run Completion ended and about 42 days before its Final Well Report was issued on 2013-09-04.",
+  "findings": [
+   {
+    "claim": "Well F-11 B’s Run Completion on MÆRSK INSPIRER started 30.Jun.2013 and ended 04.Jul.2013.",
+    "detail": "Final Well Report, Completion, 15/9-F-11 B page 5: 'NO 15/9-F-11 B Run Completion 30.Jun.2013 14:15 04.Jul.2013 20:00 MÆRSK INSPIRER' quote_check exact. Also 'NO 15/9 -F-11B IOR11 B, Run completion, Completion (30.06.2013 14:15)' exact.",
+    "evidence_ids": [
+     "E2",
+     "E5"
+    ],
+    "confidence": "fact",
+    "numbers": []
+   },
+   {
+    "claim": "Perforation of F-11 B ran from 09.Jul.2013 to 21.Jul.2013, ending just before first oil on 2013-07-24.",
+    "detail": "Page 5 table: 'NO 15/9-F-11 B Perforation 09.Jul.2013 00:45 21.Jul.2013 23:00 MÆRSK INSPIRER' quote_check exact. First oil for F-11 is 2013-07-24 with daily production on that date showing 17.85 Sm3 on 7 hrs.",
+    "evidence_ids": [
+     "E1",
+     "E4",
+     "E5"
+    ],
+    "confidence": "fact",
+    "numbers": []
+   },
+   {
+    "claim": "The Final Well Report valid from 2013-09-04 was issued after first oil on 2013-07-24.",
+    "detail": "Report header: 'FINAL WELL REPORT Completion License: NO PL046BS Well: NO 15/9-F-11 B Doc. No. xxx Valid from Rev. no. 2013-09-04 1:00' quote_check exact. Document issued 2013-09-04. First oil 2013-07-24. Gap from Run Completion end to first oil is 20 days (E10) and from first oil to report is 42 days (E8).",
+    "evidence_ids": [
+     "E1",
+     "E2",
+     "E6",
+     "E8",
+     "E10"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "20",
+      "value": 20,
+      "evidence_id": "E10"
+     },
+     {
+      "text": "42",
+      "value": 42,
+      "evidence_id": "E8"
+     }
+    ]
+   }
+  ],
+  "summary_numbers": [
+   {
+    "text": "20",
+    "value": 20,
+    "evidence_id": "E10"
+   },
+   {
+    "text": "42",
+    "value": 42,
+    "evidence_id": "E8"
+   }
+  ]
+ },
+ "evidence": [
+  {
+   "id": "E1",
+   "tool": "list_wells",
+   "arguments": {},
+   "result": {
+    "columns": [
+     "well",
+     "well_types",
+     "first_oil",
+     "last_date",
+     "cum_oil_sm3",
+     "cum_water_sm3",
+     "cum_water_injected_sm3",
+     "producing_days"
+    ],
+    "rows": [
+     [
+      "F-1 C",
+      "OP/WI",
+      "2014-04-22",
+      "2016-04-21",
+      177709,
+      207302,
+      null,
+      438
+     ],
+     [
+      "F-11",
+      "OP",
+      "2013-07-24",
+      "2016-09-17",
+      1147849,
+      1090806,
+      0.0,
+      1122
+     ],
+     [
+      "F-12",
+      "OP",
+      "2008-02-12",
+      "2016-09-17",
+      4579610,
+      6817753,
+      0.0,
+      2838
+     ],
+     [
+      "F-14",
+      "OP",
+      "2008-07-13",
+      "2016-09-17",
+      3942233,
+      7121310,
+      0.0,
+      2724
+     ],
+     [
+      "F-15 D",
+      "OP",
+      "2014-01-16",
+      "2016-09-17",
+      148519,
+      52366,
+      0.0,
+      769
+     ],
+     [
+      "F-4",
+      "WI",
+      null,
+      "2016-12-01",
+      0.0,
+      0.0,
+      16240727,
+      0
+     ],
+     [
+      "F-5",
+      "OP/WI",
+      "2016-04-20",
+      "2016-09-18",
+      41161,
+      13533,
+      14089406,
+      129
+     ]
+    ]
+   },
+   "code": "wellpilot.agent.tools.list_wells@67bd47cfcdd1",
+   "created_at": "2026-10-28T23:24:19+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E2",
+   "tool": "search_reports",
+   "arguments": {
+    "query": "F-11 B completion"
+   },
+   "result": {
+    "documents": {
+     "f11b_completion": {
+      "title": "Final Well Report, Completion, 15/9-F-11 B",
+      "issued": "2013-09-04"
+     }
+    },
+    "facts": {
+     "columns": [
+      "doc_id",
+      "page",
+      "topic",
+      "source",
+      "statement_en",
+      "quote",
+      "quote_check",
+      "wells"
+     ],
+     "rows": [
+      [
+       "f11b_completion",
+       3,
+       "schedule",
+       "text",
+       "For well F-11 B the Run completion, Completion IOR activity occurred on 30.06.2013 14:15.",
+       "NO 15/9 -F-11B IOR11 B, Run completion, Completion (30.06.2013 14:15)",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       4,
+       "wells",
+       "text",
+       "Well F-11 B primary objective is oil production from Hugin formation and completion type is 7” monobore",
+       "Primary objective: Oil production from Hugin formation Completion type: 7” monobore",
+       "exact",
+       "F-11"
+      ],
+      [
+       "f11b_completion",
+       4,
+       "wells",
+       "text",
+       "Well F-11 B objective is to provide for production of oil from the Hugin reservoir",
+       "The completion is to provide for production of oil from the Hugin reservoir.",
+       "exact",
+       "F-11"
+      ],
+      [
+       "f11b_completion",
+       4,
+       "wells",
+       "text",
+       "Well F-11 B IOR completion is a 7” monobore design with 7” production tubing and 7” cemented liner",
+       "The F-11B IOR completion is a 7” monobore design with 7” production tubing and 7” cemented liner.",
+       "exact",
+       "F-11"
+      ],
+      [
+       "f11b_completion",
+       4,
+       "wells",
+       "text",
+       "Well F-11 B completion incorporates a 7” x 9 5/8” production packer, single DHG for reservoir pressure and temperature monitoring and a TRSCSSV down hole safety valve",
+       "The completion incorporates: 7” x 9 5/8” production packer, single DHG for reservoir pressure and temperature monitoring and a TRSCSSV down hole safety valve.",
+       "exact",
+       "F-11"
+      ],
+      [
+       "f11b_completion",
+       4,
+       "wells",
+       "text",
+       "Well F-11 B has a 10 ¾” surface tieback casing installed from the subsea WH to the surface WH inside the 14” Production Riser",
+       "Prior to the completion a 10 ¾” surface tieback casing is installed from the subsea WH to the surface WH inside the 14” Production Riser, connecting the subsea and surface WH.",
+       "exact",
+       "F-11"
+      ],
+      [
+       "f11b_completion",
+       5,
+       "schedule",
+       "table",
+       "F-11 B Run Completion operation on MÆRSK INSPIRER started 30.Jun.2013 14:15 and ended 04.Jul.2013 20:00.",
+       "NO 15/9-F-11 B Run Completion 30.Jun.2013 14:15 04.Jul.2013 20:00 MÆRSK INSPIRER",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       6,
+       "wells",
+       "text",
+       "Page 6 is the Final Well Report Completion for License NO PL046BS Well NO 15/9-F-11 B valid from 2013-09-04 Rev 1:00.",
+       "FINAL WELL REPORT Completion License: NO PL046BS Well: NO 15/9-F-11 B Doc. No. xxx Valid from Rev. no. 2013-09-04 1:00",
+       "exact",
+       "F-11 B"
+      ]
+     ]
+    }
+   },
+   "code": "wellpilot.agent.tools.search_reports@5907b6347b0e",
+   "created_at": "2026-10-28T23:24:19+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E3",
+   "tool": "production_monthly",
+   "arguments": {
+    "well": "F-11"
+   },
+   "result": {
+    "columns": [
+     "month",
+     "days",
+     "producing_days",
+     "oil_sm3",
+     "water_sm3",
+     "gas_sm3",
+     "water_injected_sm3",
+     "water_cut",
+     "uptime",
+     "oil_rate_per_producing_day",
+     "bhp_bar",
+     "whp_bar",
+     "choke_pct"
+    ],
+    "rows": [
+     [
+      "2013-07",
+      24,
+      8,
+      3923,
+      0.0,
+      590505,
+      null,
+      0.0,
+      0.196,
+      833.85,
+      163.59,
+      102.12,
+      9.27
+     ],
+     [
+      "2013-08",
+      31,
+      25,
+      25496,
+      520.01,
+      3871942,
+      null,
+      0.01999,
+      0.7886,
+      1043,
+      269.08,
+      92.86,
+      9.71
+     ],
+     [
+      "2013-09",
+      30,
+      27,
+      23775,
+      1574,
+      3661574,
+      0.0,
+      0.06208,
+      0.7485,
+      1059,
+      263.24,
+      87.83,
+      9.62
+     ],
+     [
+      "2013-10",
+      31,
+      31,
+      34114,
+      1927,
+      5272724,
+      null,
+      0.05345,
+      0.912,
+      1207,
+      255.81,
+      82.74,
+      10.28
+     ],
+     [
+      "2013-11",
+      30,
+      30,
+      35386,
+      3791,
+      5413486,
+      null,
+      0.09677,
+      0.9889,
+      1193,
+      253.28,
+      80.82,
+      10.57
+     ],
+     [
+      "2013-12",
+      31,
+      31,
+      33406,
+      4963,
+      5190659,
+      null,
+      0.1294,
+      0.8899,
+      1211,
+      248.96,
+      77.27,
+      10.46
+     ],
+     [
+      "2014-01",
+      31,
+      30,
+      34552,
+      4343,
+      5193353,
+      0.0,
+      0.1117,
+      0.898,
+      1241,
+      245.45,
+      75.36,
+      11.03
+     ],
+     [
+      "2014-02",
+      28,
+      26,
+      28190,
+      2841,
+      4255283,
+      0.0,
+      0.09156,
+      0.8373,
+      1202,
+      242.34,
+      72.92,
+      10.96
+     ],
+     [
+      "2014-03",
+      31,
+      31,
+      33291,
+      3692,
+      5039850,
+      null,
+      0.09984,
+      0.881,
+      1219,
+      237.81,
+      70.06,
+      11.1
+     ],
+     [
+      "2014-04",
+      30,
+      30,
+      35429,
+      4124,
+      5301959,
+      null,
+      0.1043,
+      0.9604,
+      1230,
+      236.07,
+      68.9,
+      11.1
+     ],
+     [
+      "2014-05",
+      31,
+      31,
+      34832,
+      5017,
+      4902619,
+      null,
+      0.1259,
+      0.9832,
+      1143,
+      228.6,
+      63.41,
+      11.81
+     ],
+     [
+      "2014-06",
+      30,
+      30,
+      33899,
+      6084,
+      4990685,
+      null,
+      0.1522,
+      0.9852,
+      1147,
+      223.65,
+      58.52,
+      12.32
+     ],
+     [
+      "2014-07",
+      31,
+      31,
+      33760,
+      6801,
+      5035917,
+      null,
+      0.1677,
+      0.9982,
+      1091,
+      219.73,
+      55.3,
+      12.18
+     ],
+     [
+      "2014-08",
+      31,
+      26,
+      26038,
+      6077,
+      4033770,
+      null,
+      0.1892,
+      0.8053,
+      1043,
+      231.07,
+      60.61,
+      10.56
+     ],
+     [
+      "2014-09",
+      30,
+      30,
+      33222,
+      8349,
+      5220329,
+      null,
+      0.2008,
+      0.9593,
+      1154,
+      224.19,
+      56.0,
+      11.6
+     ],
+     [
+      "2014-10",
+      31,
+      31,
+      33852,
+      10288,
+      5237208,
+      null,
+      0.2331,
+      1.0,
+      1091,
+      219.98,
+      52.77,
+      11.79
+     ],
+     [
+      "2014-11",
+      30,
+      30,
+      26612,
+      9404,
+      4153116,
+      null,
+      0.2611,
+      0.9617,
+      922.42,
+      226.59,
+      54.84,
+      10.34
+     ],
+     [
+      "2014-12",
+      31,
+      31,
+      8548,
+      3079,
+      1413112,
+      null,
+      0.2648,
+      0.9864,
+      279.55,
+      283.1,
+      79.77,
+      4.25
+     ],
+     [
+      "2015-01",
+      31,
+      30,
+      29562,
+      13861,
+      4358979,
+      null,
+      0.3192,
+      0.9521,
+      1002,
+      225.06,
+      53.19,
+      11.25
+     ],
+     [
+      "2015-02",
+      28,
+      28,
+      25347,
+      14061,
+      3836074,
+      null,
+      0.3568,
+      0.9407,
+      962.3,
+      210.31,
+      44.87,
+      15.5
+     ],
+     [
+      "2015-03",
+      31,
+      31,
+      44316,
+      19387,
+      6516700,
+      null,
+      0.3043,
+      0.9998,
+      1430,
+      220.06,
+      52.48,
+      19.04
+     ],
+     [
+      "2015-04",
+      30,
+      30,
+      54556,
+      23840,
+      7956467,
+      null,
+      0.3041,
+      1.0,
+      1819,
+      220.71,
+      51.67,
+      21.17
+     ],
+     [
+      "2015-05",
+      31,
+      31,
+      55029,
+      24426,
+      8027510,
+      null,
+      0.3074,
+      1.0,
+      1775,
+      220.04,
+      49.86,
+      21.41
+     ],
+     [
+      "2015-06",
+      30,
+      30,
+      48231,
+      22892,
+      7065852,
+      null,
+      0.3219,
+      0.9984,
+      1610,
+      221.28,
+      48.0,
+      20.65
+     ],
+     [
+      "2015-07",
+      31,
+      31,
+      43785,
+      36196,
+      6508853,
+      null,
+      0.4526,
+      1.0,
+      1412,
+      220.1,
+      42.92,
+      24.03
+     ],
+     [
+      "2015-08",
+      31,
+      27,
+      31498,
+      31870,
+      4769902,
+      null,
+      0.5029,
+      0.8495,
+      1196,
+      222.48,
+      41.74,
+      23.77
+     ],
+     [
+      "2015-09",
+      30,
+      30,
+      31425,
+      37412,
+      4748110,
+      null,
+      0.5435,
+      0.9982,
+      1049,
+      221.36,
+      38.1,
+      26.6
+     ],
+     [
+      "2015-10",
+      31,
+      28,
+      29725,
+      38023,
+      4501570,
+      null,
+      0.5612,
+      0.8426,
+      1138,
+      213.68,
+      32.69,
+      38.7
+     ],
+     [
+      "2015-11",
+      30,
+      28,
+      36410,
+      57059,
+      5558573,
+      null,
+      0.6105,
+      0.9324,
+      1302,
+      223.63,
+      34.87,
+      87.35
+     ],
+     [
+      "2015-12",
+      31,
+      31,
+      35934,
+      62976,
+      5504665,
+      null,
+      0.6367,
+      0.9948,
+      1165,
+      222.37,
+      31.48,
+      92.98
+     ],
+     [
+      "2016-01",
+      31,
+      31,
+      31603,
+      67981,
+      4949941,
+      null,
+      0.6826,
+      0.9899,
+      1030,
+      227.84,
+      31.06,
+      95.31
+     ],
+     [
+      "2016-02",
+      29,
+      29,
+      25955,
+      66610,
+      4093287,
+      null,
+      0.7196,
+      0.9994,
+      895.52,
+      231.76,
+      30.05,
+      98.95
+     ],
+     [
+      "2016-03",
+      31,
+      31,
+      25024,
+      76637,
+      4032038,
+      null,
+      0.7539,
+      0.9987,
+      808.3,
+      238.77,
+      29.29,
+      100.0
+     ],
+     [
+      "2016-04",
+      30,
+      27,
+      13429,
+      57932,
+      2194427,
+      null,
+      0.8118,
+      0.8043,
+      556.56,
+      250.6,
+      28.75,
+      95.6
+     ],
+     [
+      "2016-05",
+      31,
+      31,
+      15529,
+      73445,
+      2450714,
+      null,
+      0.8255,
+      1.0,
+      500.93,
+      250.03,
+      28.34,
+      100.0
+     ],
+     [
+      "2016-06",
+      30,
+      30,
+      14591,
+      71699,
+      2349131,
+      null,
+      0.8309,
+      0.9978,
+      487.43,
+      250.74,
+      28.23,
+      99.28
+     ],
+     [
+      "2016-07",
+      31,
+      31,
+      14385,
+      77085,
+      2309447,
+      null,
+      0.8427,
+      0.9946,
+      466.54,
+      250.71,
+      26.43,
+      97.74
+     ],
+     [
+      "2016-08",
+      31,
+      31,
+      14584,
+      87762,
+      2341372,
+      null,
+      0.8575,
+      0.9996,
+      470.65,
+      252.04,
+      26.7,
+      99.09
+     ],
+     [
+      "2016-09",
+      17,
+      17,
+      8609,
+      46779,
+      1458816,
+      null,
+      0.8446,
+      0.9615,
+      526.72,
+      253.58,
+      26.82,
+      99.74
+     ]
+    ]
+   },
+   "code": "wellpilot.agent.tools.production_monthly@c841520578bb",
+   "created_at": "2026-10-28T23:24:19+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E4",
+   "tool": "run_sql",
+   "arguments": {
+    "sql": "SELECT date, oil_sm3, on_stream_hrs, wellbore FROM production_daily WHERE well='F-11' AND date BETWEEN '2013-06-25' AND '2013-07-30' ORDER BY date"
+   },
+   "result": {
+    "columns": [
+     "date",
+     "oil_sm3",
+     "on_stream_hrs",
+     "wellbore"
+    ],
+    "rows": [
+     [
+      "2013-07-08",
+      0.0,
+      0.0,
+      "15/9-F-11"
+     ],
+     [
+      "2013-07-09",
+      0.0,
+      0.0,
+      "15/9-F-11"
+     ],
+     [
+      "2013-07-10",
+      0.0,
+      0.0,
+      "15/9-F-11"
+     ],
+     [
+      "2013-07-11",
+      0.0,
+      0.0,
+      "15/9-F-11"
+     ],
+     [
+      "2013-07-12",
+      0.0,
+      0.0,
+      "15/9-F-11"
+     ],
+     [
+      "2013-07-13",
+      0.0,
+      0.0,
+      "15/9-F-11"
+     ],
+     [
+      "2013-07-14",
+      0.0,
+      0.0,
+      "15/9-F-11"
+     ],
+     [
+      "2013-07-15",
+      0.0,
+      0.0,
+      "15/9-F-11"
+     ],
+     [
+      "2013-07-16",
+      0.0,
+      0.0,
+      "15/9-F-11"
+     ],
+     [
+      "2013-07-17",
+      0.0,
+      0.0,
+      "15/9-F-11"
+     ],
+     [
+      "2013-07-18",
+      0.0,
+      0.0,
+      "15/9-F-11"
+     ],
+     [
+      "2013-07-19",
+      0.0,
+      0.0,
+      "15/9-F-11"
+     ],
+     [
+      "2013-07-20",
+      0.0,
+      0.0,
+      "15/9-F-11"
+     ],
+     [
+      "2013-07-21",
+      0.0,
+      0.0,
+      "15/9-F-11"
+     ],
+     [
+      "2013-07-22",
+      0.0,
+      0.0,
+      "15/9-F-11"
+     ],
+     [
+      "2013-07-23",
+      0.0,
+      0.0,
+      "15/9-F-11"
+     ],
+     [
+      "2013-07-24",
+      17.85,
+      7.0,
+      "15/9-F-11"
+     ],
+     [
+      "2013-07-25",
+      725.0,
+      24.0,
+      "15/9-F-11"
+     ],
+     [
+      "2013-07-26",
+      891.48,
+      24.0,
+      "15/9-F-11"
+     ],
+     [
+      "2013-07-27",
+      886.42,
+      24.0,
+      "15/9-F-11"
+     ],
+     [
+      "2013-07-28",
+      56.01,
+      0.84,
+      "15/9-F-11"
+     ],
+     [
+      "2013-07-29",
+      123.59,
+      4.0,
+      "15/9-F-11"
+     ],
+     [
+      "2013-07-30",
+      1032,
+      24.0,
+      "15/9-F-11"
+     ]
+    ],
+    "row_count": 23,
+    "truncated": false
+   },
+   "code": "wellpilot.agent.tools.run_sql@50068378f8ca",
+   "created_at": "2026-10-28T23:24:22+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E5",
+   "tool": "read_report_page",
+   "arguments": {
+    "doc_id": "f11b_completion",
+    "page": 5
+   },
+   "result": {
+    "document": {
+     "title": "Final Well Report, Completion, 15/9-F-11 B",
+     "issued": "2013-09-04"
+    },
+    "page": 5,
+    "pages": 64,
+    "text": "FINAL WELL REPORT Completion License: NO PL046BS Well: NO 15/9-F-11 B Doc. No. xxx Valid from Rev. no. 2013-09-04 1:00 Classification: Internal Status: Final Expiry date: Page 5 of 64 Perforation: The well has been perforated using oriented guns on wire-line tractor. Estimated perforated interval in 7” liner is 8 runs, approximately 12,5 meter pr. run. The perforation guns were 4 ½” OrientXact, PowerPlus Low debris Charges, phasing 10, with 4 shots per foot. Operational Sections: Section Start time End time Rig name NO 15/9-F-11 B Wellbore preparation 16.Jun.2013 13:30 21.Jun.2013 07:00 MÆRSK INSPIRER NO 15/9-F-11 B Other 21.Jun.2013 07:00 21.Jun.2013 21:00 MÆRSK INSPIRER NO 15/9-F-11 B Other 21.Jun.2013 21:00 28.Jun.2013 01:00 MÆRSK INSPIRER NO 15/9-F-11 B Tie-back 28.Jun.2013 01:00 30.Jun.2013 07:15 MÆRSK INSPIRER NO 15/9-F-11 B Other 30.Jun.2013 07:15 30.Jun.2013 14:15 MÆRSK INSPIRER NO 15/9-F-11 B Run Completion 30.Jun.2013 14:15 04.Jul.2013 20:00 MÆRSK INSPIRER NO 15/9-F-11 B Install Tubing Hanger 04.Jul.2013 20:00 06.Jul.2013 12:30 MÆRSK INSPIRER NO 15/9-F-11 B Install X-mas Tree 06.Jul.2013 12:30 09.Jul.2013 00:45 MÆRSK INSPIRER NO 15/9-F-11 B Perforation 09.Jul.2013 00:45 21.Jul.2013 23:00 MÆRSK INSPIRER",
+    "image": "reports/f11b_completion/p005.png",
+    "summary_en": "Completion report page for well F-11 B detailing perforation design and a 9-row operational timeline from wellbore preparation to perforation operations on the MÆRSK INSPIRER rig between 16 June and 21 July 2013.",
+    "facts": {
+     "columns": [
+      "topic",
+      "source",
+      "statement_en",
+      "quote",
+      "quote_check",
+      "wells"
+     ],
+     "rows": [
+      [
+       "wells",
+       "text",
+       "Well F-11 B was perforated using oriented guns on wire-line tractor with an estimated perforated interval in 7’’ liner of 8 runs, approximately 12,5 meter pr. run.",
+       "The well has been perforated using oriented guns on wire-line tractor. Estimated perforated interval in 7’’ liner is 8 runs, approximately 12,5 meter pr. run.",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "wells",
+       "text",
+       "The perforation guns for F-11 B were 4 ½’’ OrientXact, PowerPlus Low debris Charges, phasing 10, with 4 shots per foot.",
+       "The perforation guns were 4 ½’’ OrientXact, PowerPlus Low debris Charges, phasing 10, with 4 shots per foot.",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "schedule",
+       "table",
+       "F-11 B Wellbore preparation operation on MÆRSK INSPIRER started 16.Jun.2013 13:30 and ended 21.Jun.2013 07:00.",
+       "NO 15/9-F-11 B Wellbore preparation 16.Jun.2013 13:30 21.Jun.2013 07:00 MÆRSK INSPIRER",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "schedule",
+       "table",
+       "F-11 B Other operation on MÆRSK INSPIRER started 21.Jun.2013 07:00 and ended 21.Jun.2013 21:00.",
+       "NO 15/9-F-11 B Other 21.Jun.2013 07:00 21.Jun.2013 21:00 MÆRSK INSPIRER",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "schedule",
+       "table",
+       "F-11 B Other operation on MÆRSK INSPIRER started 21.Jun.2013 21:00 and ended 28.Jun.2013 01:00.",
+       "NO 15/9-F-11 B Other 21.Jun.2013 21:00 28.Jun.2013 01:00 MÆRSK INSPIRER",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "schedule",
+       "table",
+       "F-11 B Tie-back operation on MÆRSK INSPIRER started 28.Jun.2013 01:00 and ended 30.Jun.2013 07:15.",
+       "NO 15/9-F-11 B Tie-back 28.Jun.2013 01:00 30.Jun.2013 07:15 MÆRSK INSPIRER",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "schedule",
+       "table",
+       "F-11 B Other operation on MÆRSK INSPIRER started 30.Jun.2013 07:15 and ended 30.Jun.2013 14:15.",
+       "NO 15/9-F-11 B Other 30.Jun.2013 07:15 30.Jun.2013 14:15 MÆRSK INSPIRER",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "schedule",
+       "table",
+       "F-11 B Run Completion operation on MÆRSK INSPIRER started 30.Jun.2013 14:15 and ended 04.Jul.2013 20:00.",
+       "NO 15/9-F-11 B Run Completion 30.Jun.2013 14:15 04.Jul.2013 20:00 MÆRSK INSPIRER",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "schedule",
+       "table",
+       "F-11 B Install Tubing Hanger operation on MÆRSK INSPIRER started 04.Jul.2013 20:00 and ended 06.Jul.2013 12:30.",
+       "NO 15/9-F-11 B Install Tubing Hanger 04.Jul.2013 20:00 06.Jul.2013 12:30 MÆRSK INSPIRER",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "schedule",
+       "table",
+       "F-11 B Install X-mas Tree operation on MÆRSK INSPIRER started 06.Jul.2013 12:30 and ended 09.Jul.2013 00:45.",
+       "NO 15/9-F-11 B Install X-mas Tree 06.Jul.2013 12:30 09.Jul.2013 00:45 MÆRSK INSPIRER",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "schedule",
+       "table",
+       "F-11 B Perforation operation on MÆRSK INSPIRER started 09.Jul.2013 00:45 and ended 21.Jul.2013 23:00.",
+       "NO 15/9-F-11 B Perforation 09.Jul.2013 00:45 21.Jul.2013 23:00 MÆRSK INSPIRER",
+       "exact",
+       "F-11 B"
+      ]
+     ]
+    }
+   },
+   "code": "wellpilot.agent.tools.read_report_page@d467451f92da",
+   "created_at": "2026-10-28T23:24:22+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E6",
+   "tool": "read_report_page",
+   "arguments": {
+    "doc_id": "f11b_completion",
+    "page": 6
+   },
+   "result": {
+    "document": {
+     "title": "Final Well Report, Completion, 15/9-F-11 B",
+     "issued": "2013-09-04"
+    },
+    "page": 6,
+    "pages": 64,
+    "text": "FINAL WELL REPORT Completion License: NO PL046BS Well: NO 15/9-F-11 B Doc. No. xxx Valid from Rev. no. 2013-09-04 1:00 Classification: Internal Status: Final Expiry date: Page 6 of 64 2 Dispensations Well is completed without any dispensation. 3 Health, environment, safety and quality (HES&Q) 3.1 RUH Type (colour code) Synergi code Number of Yellow 3 1 Sum 1 3.1.1 RUH details WELLBORE: NO 15/9-F-11 B Synergi no Hazard Description 1364582 3 Synergi 1364582 (Closed) - 14.Jun.2013 - Non-conformities - Tong marks on 7\" 29# SM Cr13 110 Vam TOP HT pin ends During running of the 7\" liner on well 15/9-F-11 B a number of joints had to be laid out. After visual inspection damages similar to tong marks from a bucking unit were identified on some of the joints. It is suspected that these joints have been damaged onshore. 3.2 Experience listing Subject: Claxton tool not able to release Section: NO 15/9-F-11 B, Other Rep date: 27.Jun.2013 Keywords: WELLHEAD/ASA Downtime: Pot time improvements: Comp inv: GE Vetco References: Synergi no: Cost: Synergi desc:",
+    "image": "reports/f11b_completion/p006.png",
+    "summary_en": "Page 6 of Final Well Report for well 15/9-F-11 B (PL046BS, 2013-09-04) covers dispensations (none) and HES&Q - RUH summary with 1 Yellow incident and detailed incident 1364582 dated 14.Jun.2013 regarding tong marks on 7\" 29# SM Cr13 110 Vam TOP HT pin ends during 7\" liner running, and an experience listing dated 27.Jun.2013 about Claxton tool not able to release at wellhead.",
+    "facts": {
+     "columns": [
+      "topic",
+      "source",
+      "statement_en",
+      "quote",
+      "quote_check",
+      "wells"
+     ],
+     "rows": [
+      [
+       "wells",
+       "text",
+       "Page 6 is the Final Well Report Completion for License NO PL046BS Well NO 15/9-F-11 B valid from 2013-09-04 Rev 1:00.",
+       "FINAL WELL REPORT Completion License: NO PL046BS Well: NO 15/9-F-11 B Doc. No. xxx Valid from Rev. no. 2013-09-04 1:00",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "wells",
+       "text",
+       "Well NO 15/9-F-11 B was completed without any dispensation.",
+       "2 Dispensations Well is completed without any dispensation.",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "wells",
+       "table",
+       "The RUH table reports Type Yellow Synergi code 3 with Number of 1 for well NO 15/9-F-11 B.",
+       "Type (colour code) Synergi code Number of Yellow 3 1",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "wells",
+       "table",
+       "The RUH table reports Sum of 1 for well NO 15/9-F-11 B.",
+       "Yellow 3 1 Sum 1",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "wells",
+       "table",
+       "Synergi no 1364582 with Hazard 3 was recorded on 14.Jun.2013 as Non-conformities - Tong marks on 7\" 29# SM Cr13 110 Vam TOP HT pin ends, where during running of the 7\" liner on well 15/9-F-11 B a number of joints had to be laid out after damages similar to tong marks from a bucking unit were identified and suspected damaged onshore.",
+       "Synergi no Hazard Description 1364582 3 Synergi 1364582 (Closed) - 14.Jun.2013 - Non-conformities - Tong marks on 7\" 29# SM Cr13 110 Vam TOP HT pin ends During running of the 7\" liner on well 15/9-F-11 B a number of joints had to be laid out. After visual inspection damages similar to tong marks from a bucking unit were identified on some of the joints. It is suspected that these joints have been damaged onshore.",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "wells",
+       "text",
+       "An experience listing for Section NO 15/9-F-11 B, Other dated 27.Jun.2013 with Keywords WELLHEAD/ASA reported Subject: Claxton tool not able to release with Comp inv: GE Vetco.",
+       "Subject: Claxton tool not able to release Section: NO 15/9-F-11 B, Other Rep date: 27.Jun.2013 Keywords: WELLHEAD/ASA",
+       "exact",
+       "F-11 B"
+      ]
+     ]
+    }
+   },
+   "code": "wellpilot.agent.tools.read_report_page@d467451f92da",
+   "created_at": "2026-10-28T23:24:22+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E7",
+   "tool": "calculate",
+   "arguments": {
+    "expressions": [
+     "42",
+     "3"
+    ]
+   },
+   "result": {
+    "results": [
+     {
+      "expression": "42",
+      "value": 42.0
+     },
+     {
+      "expression": "3",
+      "value": 3.0
+     }
+    ]
+   },
+   "code": "wellpilot.agent.tools.calculate@5c1d806d8f4d",
+   "created_at": "2026-10-28T23:24:25+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E8",
+   "tool": "calculate",
+   "arguments": {
+    "expressions": [
+     "(31-24)+31+4"
+    ]
+   },
+   "result": {
+    "results": [
+     {
+      "expression": "(31-24)+31+4",
+      "value": 42.0
+     }
+    ]
+   },
+   "code": "wellpilot.agent.tools.calculate@5c1d806d8f4d",
+   "created_at": "2026-10-28T23:24:29+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E9",
+   "tool": "calculate",
+   "arguments": {
+    "expressions": [
+     "24",
+     "3"
+    ]
+   },
+   "result": {
+    "results": [
+     {
+      "expression": "24",
+      "value": 24.0
+     },
+     {
+      "expression": "3",
+      "value": 3.0
+     }
+    ]
+   },
+   "code": "wellpilot.agent.tools.calculate@5c1d806d8f4d",
+   "created_at": "2026-10-28T23:24:32+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E10",
+   "tool": "calculate",
+   "arguments": {
+    "expressions": [
+     "24-4",
+     "24-21"
+    ]
+   },
+   "result": {
+    "results": [
+     {
+      "expression": "24-4",
+      "value": 20.0
+     },
+     {
+      "expression": "24-21",
+      "value": 3.0
+     }
+    ]
+   },
+   "code": "wellpilot.agent.tools.calculate@5c1d806d8f4d",
+   "created_at": "2026-10-28T23:24:37+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E11",
+   "tool": "calculate",
+   "arguments": {
+    "expressions": [
+     "42"
+    ]
+   },
+   "result": {
+    "results": [
+     {
+      "expression": "42",
+      "value": 42.0
+     }
+    ]
+   },
+   "code": "wellpilot.agent.tools.calculate@5c1d806d8f4d",
+   "created_at": "2026-10-28T23:24:40+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E12",
+   "tool": "calculate",
+   "arguments": {
+    "expressions": [
+     "24",
+     "20",
+     "42",
+     "3"
+    ]
+   },
+   "result": {
+    "results": [
+     {
+      "expression": "24",
+      "value": 24.0
+     },
+     {
+      "expression": "20",
+      "value": 20.0
+     },
+     {
+      "expression": "42",
+      "value": 42.0
+     },
+     {
+      "expression": "3",
+      "value": 3.0
+     }
+    ]
+   },
+   "code": "wellpilot.agent.tools.calculate@5c1d806d8f4d",
+   "created_at": "2026-10-28T23:24:45+00:00",
+   "warnings": []
+  }
+ ]
+}

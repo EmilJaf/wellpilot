@@ -1,0 +1,5771 @@
+{
+ "source": {
+  "run": "3f5ad0f9ae94",
+  "submission": 4,
+  "model": "meta-models/muse-spark-open-1026",
+  "question": "Which wells needed attention at the end of 2010, and why?"
+ },
+ "to_review": false,
+ "note": "Reviewed Oct 29 (eval), fair: numbers in words, undeclared numbers, a fact on a poor fit, details from uncited results, a value from another well's result, a fall 'around' a date for a change between periods.",
+ "expected": {
+  "accepted": false,
+  "flagged": [
+   "Finding 1"
+  ]
+ },
+ "submission": {
+  "summary": "Both wells still needed attention for high water, but F-12's 55% lower rate was partly choked back and its dead gauge was a monitoring gap while flowing, and the field's 67% water cut under the 80% limit does not remove per-well water concerns.",
+  "findings": [
+   {
+    "claim": "F-12 averaged 55% lower oil at 1,888 Sm3/d after around 2010-05-02 while choke was cut from 83% to 58%.",
+    "detail": "detect_events oil_rate regime around 2010-05-02: weekly mean 4207 -> 1888 (-55%), across 3196 -> 2538 (-21%), choke 82.84 -> 57.57% choke_moved true, so part of change is operator's not reservoir's.",
+    "evidence_ids": [
+     "E17"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "55%",
+      "value": 0.5512,
+      "evidence_id": "E17"
+     },
+     {
+      "text": "1,888",
+      "value": 1888,
+      "evidence_id": "E17"
+     },
+     {
+      "text": "83%",
+      "value": 82.84,
+      "evidence_id": "E17"
+     }
+    ]
+   },
+   {
+    "claim": "F-12's downhole gauge read 0 for 81 days since 2010-10-12 while flowing, with 71% water cut in December 2010.",
+    "detail": "detect_events gauge_failure bhp_bar 0 on 81 days 2010-10-12 to 2010-12-31 flowing 80 days 123258 Sm3 oil, sensor failure not pressure collapse last good 253.85 bar 2010-10-11; production_monthly 2010-12 water_cut 0.7112; well_operations last job 2010-09-23 plug at 3210 m no operation at gauge date.",
+    "evidence_ids": [
+     "E17",
+     "E21",
+     "E18"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "81",
+      "value": 81,
+      "evidence_id": "E17"
+     },
+     {
+      "text": "71%",
+      "value": 0.7112,
+      "evidence_id": "E21"
+     }
+    ]
+   },
+   {
+    "claim": "A 12-day field-wide shut-in from 2010-08-16 affected both wells.",
+    "detail": "detect_events shut_in 12 days 2010-08-16 to 2010-08-27 field_wide true also_shut_in F-14 rate 1821 -> 2000 Sm3/d; F-14 shut_in 13 days 2010-08-16 to 2010-08-28 same time as F-12.",
+    "evidence_ids": [
+     "E17",
+     "E23"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "12",
+      "value": 12,
+      "evidence_id": "E17"
+     }
+    ]
+   },
+   {
+    "claim": "F-12 decline after May 2010 cannot be taken as pure reservoir decline; fit quality is 0.688.",
+    "detail": "fit_decline window 2010-05-02 to 2010-12-31 harmonic qi 2628 di 1.31 r2_log 0.6881 poor fit warning <0.7 may span plateau; waterflood monthly liquid 2010-05 4961 choke 57.92 water_cut 0.4912, 2010-06 liquid 5116 choke 51.48 water_cut 0.5446 shows water taking capacity while choke confounds.",
+    "evidence_ids": [
+     "E16",
+     "E15"
+    ],
+    "confidence": "inference",
+    "numbers": [
+     {
+      "text": "0.688",
+      "value": 0.6881,
+      "evidence_id": "E16"
+     }
+    ]
+   },
+   {
+    "claim": "F-14 was at 64% water in December 2010, first over 50% in April 2010, and oil averaged 34% lower since early 2010.",
+    "detail": "production_monthly F-14 2010-12 water_cut 0.636; detect_events threshold 0.5 on 2010-04-05; oil_rate regime 2010-01-10 mean 3616 -> 2397 (-34%) across 2892 -> 2657 (-8%) choke 45.29 -> 45.31% choke_moved false.",
+    "evidence_ids": [
+     "E22",
+     "E23"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "64%",
+      "value": 0.636,
+      "evidence_id": "E22"
+     },
+     {
+      "text": "50%",
+      "value": 0.5,
+      "evidence_id": "E23"
+     },
+     {
+      "text": "34%",
+      "value": 0.3369,
+      "evidence_id": "E23"
+     }
+    ]
+   },
+   {
+    "claim": "The field's 67% water cut sits under the 80% limit, a whole-field capacity check that does not settle per-well water decisions.",
+    "detail": "field_vs_design scope whole field all producers summed, limits liquid 13000 water_cut 0.80 Maksimum vannkutt 0,80 water handling 10400 Sm3/d, field max water_cut 0.6715 Dec 2010 0 months at or above, max liquid 10826 Jun 2010; per-well F-12 Dec 0.7112 F-14 Dec 0.636 shows per-well high while field under capacity.",
+    "evidence_ids": [
+     "E20",
+     "E21",
+     "E22"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "67%",
+      "value": 0.6715,
+      "evidence_id": "E20"
+     },
+     {
+      "text": "80%",
+      "value": 0.8,
+      "evidence_id": "E20"
+     }
+    ]
+   }
+  ],
+  "summary_numbers": [
+   {
+    "text": "55%",
+    "value": 0.5512,
+    "evidence_id": "E17"
+   },
+   {
+    "text": "67%",
+    "value": 0.6715,
+    "evidence_id": "E20"
+   },
+   {
+    "text": "80%",
+    "value": 0.8,
+    "evidence_id": "E20"
+   }
+  ]
+ },
+ "evidence": [
+  {
+   "id": "E1",
+   "tool": "list_wells",
+   "arguments": {},
+   "result": {
+    "columns": [
+     "well",
+     "well_types",
+     "first_oil",
+     "last_date",
+     "cum_oil_sm3",
+     "cum_water_sm3",
+     "cum_water_injected_sm3",
+     "producing_days"
+    ],
+    "rows": [
+     [
+      "F-12",
+      "OP",
+      "2008-02-12",
+      "2010-12-31",
+      3569815,
+      965404,
+      0.0,
+      1012
+     ],
+     [
+      "F-14",
+      "OP",
+      "2008-07-13",
+      "2010-12-31",
+      2568855,
+      1161779,
+      0.0,
+      853
+     ],
+     [
+      "F-4",
+      "WI",
+      null,
+      "2010-12-31",
+      null,
+      null,
+      6141190,
+      0
+     ],
+     [
+      "F-5",
+      "WI",
+      null,
+      "2010-12-31",
+      null,
+      null,
+      5238172,
+      0
+     ]
+    ]
+   },
+   "code": "wellpilot.agent.tools.list_wells@67bd47cfcdd1",
+   "created_at": "2026-10-28T23:23:23+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E2",
+   "tool": "field_screen",
+   "arguments": {},
+   "result": {
+    "as_of": "2010-12-31",
+    "window_days": 90,
+    "field_oil_sm3": 6138670,
+    "wells": [
+     {
+      "well": "F-12",
+      "role": "producer",
+      "first_oil": "2008-02-12",
+      "cum_oil_sm3": 3569815,
+      "share_of_field_oil": 0.5815,
+      "cum_water_injected_sm3": 0.0,
+      "oil_rate_sm3_per_day": 1551,
+      "water_cut": 0.6939,
+      "uptime": 0.9846,
+      "oil_rate_change_90d": -0.165,
+      "level": "caution",
+      "issues": [
+       {
+        "level": "caution",
+        "kind": "dead_gauge",
+        "since": "2010-10-12",
+        "text": "downhole pressure gauge reads 0 (81 days, 123,258 Sm3 oil produced without pressure data): a monitoring gap, the well flows on"
+       },
+       {
+        "level": "caution",
+        "kind": "shift_down",
+        "since": "2010-05-02",
+        "text": "oil rate 55% lower in the period after than before (weekly mean 4,207 -> 1,888 Sm3/d), a gradual change: 21% across it; the choke was cut at the same time (83 -> 58%)"
+       }
+      ]
+     },
+     {
+      "well": "F-14",
+      "role": "producer",
+      "first_oil": "2008-07-13",
+      "cum_oil_sm3": 2568855,
+      "share_of_field_oil": 0.4185,
+      "cum_water_injected_sm3": 0.0,
+      "oil_rate_sm3_per_day": 2175,
+      "water_cut": 0.6112,
+      "uptime": 0.9815,
+      "oil_rate_change_90d": -0.0778,
+      "level": "caution",
+      "issues": [
+       {
+        "level": "caution",
+        "kind": "shift_down",
+        "since": "2010-01-10",
+        "text": "oil rate 34% lower in the period after than before (weekly mean 3,616 -> 2,397 Sm3/d), a gradual change: 8% across it"
+       }
+      ]
+     },
+     {
+      "well": "F-4",
+      "role": "injector",
+      "first_oil": null,
+      "cum_oil_sm3": 0.0,
+      "share_of_field_oil": 0.0,
+      "cum_water_injected_sm3": 6141190,
+      "water_inj_sm3_per_day": 5969,
+      "level": null,
+      "issues": []
+     },
+     {
+      "well": "F-5",
+      "role": "injector",
+      "first_oil": null,
+      "cum_oil_sm3": 0.0,
+      "share_of_field_oil": 0.0,
+      "cum_water_injected_sm3": 5238172,
+      "water_inj_sm3_per_day": 6319,
+      "level": null,
+      "issues": []
+     }
+    ],
+    "levels": "alarm: act now; caution: watch; note: for the record"
+   },
+   "code": "wellpilot.agent.tools.field_screen@410061176252",
+   "created_at": "2026-10-28T23:23:23+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E3",
+   "tool": "detect_events",
+   "arguments": {
+    "well": "F-12"
+   },
+   "result": [
+    {
+     "kind": "threshold_crossing",
+     "signal": "water_cut",
+     "start": "2009-10-31",
+     "end": null,
+     "summary": "30-day median water_cut first goes above 0.05 on 2009-10-31, 21 months after first oil.",
+     "details": {
+      "threshold": 0.05,
+      "direction": "above",
+      "window_days": 30,
+      "median_at_crossing": 0.05795,
+      "first_oil": "2008-02-12",
+      "months_after_first_oil": 20.6
+     }
+    },
+    {
+     "kind": "regime_change",
+     "signal": "water_cut",
+     "start": "2010-02-28",
+     "end": null,
+     "summary": "water_cut shifts around 2010-02-28: weekly mean 0.0323 -> 0.57 (+0.54) from the period before to the period after.",
+     "details": {
+      "before_mean": 0.03227,
+      "after_mean": 0.5701,
+      "change": 0.5378,
+      "before_from": "2008-02-17",
+      "after_to": "2011-01-02"
+     }
+    },
+    {
+     "kind": "regime_change",
+     "signal": "oil_rate",
+     "start": "2010-05-02",
+     "end": null,
+     "summary": "oil_rate shifts around 2010-05-02: weekly mean 4,207 -> 1,888 (-55%) from the period before to the period after; across the change itself, 4 weeks each side, 3,196 -> 2,538 (-21%); the choke was cut at the same time (83 -> 58%), so part of the change is the operator's, not the reservoir's.",
+     "details": {
+      "before_mean": 4207,
+      "after_mean": 1888,
+      "relative_change": -0.5512,
+      "across_before": 3196,
+      "across_after": 2538,
+      "change_across": -0.2059,
+      "choke_before_pct": 82.84,
+      "choke_after_pct": 57.57,
+      "choke_moved": true,
+      "before_from": "2008-02-17",
+      "after_to": "2011-01-02"
+     }
+    },
+    {
+     "kind": "threshold_crossing",
+     "signal": "water_cut",
+     "start": "2010-06-04",
+     "end": null,
+     "summary": "30-day median water_cut first goes above 0.5 on 2010-06-04, 28 months after first oil.",
+     "details": {
+      "threshold": 0.5,
+      "direction": "above",
+      "window_days": 30,
+      "median_at_crossing": 0.5011,
+      "first_oil": "2008-02-12",
+      "months_after_first_oil": 27.69
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2010-08-16",
+     "end": "2010-08-27",
+     "summary": "Shut in for 12 days from 2010-08-16. Oil rate 1,821 -> 2,000 Sm3/d (+10%) after restart. Same time as F-14.",
+     "details": {
+      "days": 12,
+      "rate_before": 1821,
+      "rate_after": 2000,
+      "relative_change": 0.09864,
+      "field_wide": true,
+      "also_shut_in": [
+       "F-14"
+      ]
+     }
+    },
+    {
+     "kind": "gauge_failure",
+     "signal": "bhp_bar",
+     "start": "2010-10-12",
+     "end": "2010-12-31",
+     "summary": "bhp_bar reads 0 on 81 days from 2010-10-12 to 2010-12-31 while the well kept flowing on 80 days (123,258 Sm3 oil): a sensor failure, not a pressure collapse. Last good reading: 253.9 on 2010-10-11.",
+     "details": {
+      "zero_days": 81,
+      "flowing_days": 80,
+      "oil_sm3_during": 123258,
+      "last_good_date": "2010-10-11",
+      "last_good_value": 253.85
+     }
+    }
+   ],
+   "code": "wellpilot.agent.tools.detect_events@504159f9080e",
+   "created_at": "2026-10-28T23:23:25+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E4",
+   "tool": "detect_events",
+   "arguments": {
+    "well": "F-14"
+   },
+   "result": [
+    {
+     "kind": "gauge_failure",
+     "signal": "bhp_bar",
+     "start": "2008-02-12",
+     "end": "2008-05-19",
+     "summary": "bhp_bar reads 0 on 97 days from 2008-02-12 to 2008-05-19 while the well was shut in; the gauge may just be switched off.",
+     "details": {
+      "zero_days": 97,
+      "flowing_days": 0,
+      "oil_sm3_during": 0.0,
+      "last_good_date": null,
+      "last_good_value": null
+     }
+    },
+    {
+     "kind": "gauge_failure",
+     "signal": "bhp_bar",
+     "start": "2008-05-23",
+     "end": "2008-06-28",
+     "summary": "bhp_bar reads 0 on 37 days from 2008-05-23 to 2008-06-28 while the well was shut in; the gauge may just be switched off. Last good reading: 97.4 on 2008-05-22.",
+     "details": {
+      "zero_days": 37,
+      "flowing_days": 0,
+      "oil_sm3_during": 0.0,
+      "last_good_date": "2008-05-22",
+      "last_good_value": 97.36
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2008-08-22",
+     "end": "2008-08-30",
+     "summary": "Shut in for 9 days from 2008-08-22. Oil rate 3,553 -> 4,869 Sm3/d (+37%) after restart.",
+     "details": {
+      "days": 9,
+      "rate_before": 3553,
+      "rate_after": 4869,
+      "relative_change": 0.3703,
+      "field_wide": false,
+      "also_shut_in": []
+     }
+    },
+    {
+     "kind": "threshold_crossing",
+     "signal": "water_cut",
+     "start": "2009-06-21",
+     "end": null,
+     "summary": "30-day median water_cut first goes above 0.05 on 2009-06-21, 11 months after first oil.",
+     "details": {
+      "threshold": 0.05,
+      "direction": "above",
+      "window_days": 30,
+      "median_at_crossing": 0.05154,
+      "first_oil": "2008-07-13",
+      "months_after_first_oil": 11.27
+     }
+    },
+    {
+     "kind": "regime_change",
+     "signal": "water_cut",
+     "start": "2009-12-06",
+     "end": null,
+     "summary": "water_cut shifts around 2009-12-06: weekly mean 0.0594 -> 0.53 (+0.47) from the period before to the period after.",
+     "details": {
+      "before_mean": 0.05942,
+      "after_mean": 0.5304,
+      "change": 0.471,
+      "before_from": "2008-07-13",
+      "after_to": "2011-01-02"
+     }
+    },
+    {
+     "kind": "regime_change",
+     "signal": "oil_rate",
+     "start": "2010-01-10",
+     "end": null,
+     "summary": "oil_rate shifts around 2010-01-10: weekly mean 3,616 -> 2,397 (-34%) from the period before to the period after; across the change itself, 4 weeks each side, 2,892 -> 2,657 (-8%); the choke stayed about the same (45 -> 45%).",
+     "details": {
+      "before_mean": 3616,
+      "after_mean": 2397,
+      "relative_change": -0.3369,
+      "across_before": 2892,
+      "across_after": 2657,
+      "change_across": -0.08129,
+      "choke_before_pct": 45.29,
+      "choke_after_pct": 45.31,
+      "choke_moved": false,
+      "before_from": "2008-07-13",
+      "after_to": "2011-01-02"
+     }
+    },
+    {
+     "kind": "gauge_failure",
+     "signal": "bhp_bar",
+     "start": "2010-02-15",
+     "end": "2010-02-22",
+     "summary": "bhp_bar reads 0 on 8 days from 2010-02-15 to 2010-02-22 while the well kept flowing on 8 days (18,464 Sm3 oil): a sensor failure, not a pressure collapse. Last good reading: 222.3 on 2010-02-14.",
+     "details": {
+      "zero_days": 8,
+      "flowing_days": 8,
+      "oil_sm3_during": 18464,
+      "last_good_date": "2010-02-14",
+      "last_good_value": 222.27
+     }
+    },
+    {
+     "kind": "threshold_crossing",
+     "signal": "water_cut",
+     "start": "2010-04-05",
+     "end": null,
+     "summary": "30-day median water_cut first goes above 0.5 on 2010-04-05, 21 months after first oil.",
+     "details": {
+      "threshold": 0.5,
+      "direction": "above",
+      "window_days": 30,
+      "median_at_crossing": 0.5002,
+      "first_oil": "2008-07-13",
+      "months_after_first_oil": 20.73
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2010-08-16",
+     "end": "2010-08-28",
+     "summary": "Shut in for 13 days from 2010-08-16. Oil rate 2,361 -> 2,267 Sm3/d (-4%) after restart. Same time as F-12.",
+     "details": {
+      "days": 13,
+      "rate_before": 2361,
+      "rate_after": 2267,
+      "relative_change": -0.03978,
+      "field_wide": true,
+      "also_shut_in": [
+       "F-12"
+      ]
+     }
+    }
+   ],
+   "code": "wellpilot.agent.tools.detect_events@504159f9080e",
+   "created_at": "2026-10-28T23:23:26+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E5",
+   "tool": "waterflood",
+   "arguments": {
+    "well": "F-12"
+   },
+   "result": {
+    "well": "F-12",
+    "monthly": {
+     "columns": [
+      "month",
+      "cum_oil_sm3",
+      "wor",
+      "water_cut",
+      "liquid_rate_sm3_per_day",
+      "choke_pct"
+     ],
+     "rows": [
+      [
+       "2008-02",
+       49091,
+       0.008405,
+       0.008335,
+       2922,
+       30.31
+      ],
+      [
+       "2008-03",
+       132452,
+       0.0003289,
+       0.0003288,
+       3055,
+       31.37
+      ],
+      [
+       "2008-04",
+       206985,
+       0.006658,
+       0.006614,
+       2934,
+       31.62
+      ],
+      [
+       "2008-05",
+       332463,
+       0.001918,
+       0.001914,
+       4213,
+       39.7
+      ],
+      [
+       "2008-06",
+       476250,
+       0.003299,
+       0.003288,
+       5122,
+       43.41
+      ],
+      [
+       "2008-07",
+       591245,
+       0.002522,
+       0.002516,
+       3893,
+       42.46
+      ],
+      [
+       "2008-08",
+       689067,
+       0.003621,
+       0.003608,
+       3502,
+       40.23
+      ],
+      [
+       "2008-09",
+       766734,
+       0.002426,
+       0.00242,
+       3290,
+       45.03
+      ],
+      [
+       "2008-10",
+       861091,
+       0.006614,
+       0.00657,
+       3091,
+       41.85
+      ],
+      [
+       "2008-11",
+       1007007,
+       0.01638,
+       0.01612,
+       4994,
+       67.77
+      ],
+      [
+       "2008-12",
+       1173447,
+       0.006028,
+       0.005992,
+       5401,
+       63.25
+      ],
+      [
+       "2009-01",
+       1327124,
+       0.002536,
+       0.00253,
+       4991,
+       51.99
+      ],
+      [
+       "2009-02",
+       1449029,
+       0.0,
+       0.0,
+       4458,
+       50.27
+      ],
+      [
+       "2009-03",
+       1541988,
+       0.0,
+       0.0,
+       4406,
+       50.71
+      ],
+      [
+       "2009-04",
+       1692943,
+       0.008256,
+       0.008188,
+       5079,
+       66.1
+      ],
+      [
+       "2009-05",
+       1833982,
+       0.02203,
+       0.02155,
+       4976,
+       62.84
+      ],
+      [
+       "2009-06",
+       1966412,
+       0.02008,
+       0.01968,
+       4532,
+       69.08
+      ],
+      [
+       "2009-07",
+       2072517,
+       0.031,
+       0.03007,
+       3538,
+       50.82
+      ],
+      [
+       "2009-08",
+       2184931,
+       0.04469,
+       0.04278,
+       4785,
+       67.53
+      ],
+      [
+       "2009-09",
+       2275030,
+       0.02481,
+       0.02421,
+       4493,
+       58.67
+      ],
+      [
+       "2009-10",
+       2401970,
+       0.05367,
+       0.05094,
+       4695,
+       54.01
+      ],
+      [
+       "2009-11",
+       2537986,
+       0.08298,
+       0.07662,
+       5009,
+       61.08
+      ],
+      [
+       "2009-12",
+       2695987,
+       0.1096,
+       0.0988,
+       5776,
+       72.08
+      ],
+      [
+       "2010-01",
+       2845646,
+       0.202,
+       0.168,
+       5817,
+       75.14
+      ],
+      [
+       "2010-02",
+       2948672,
+       0.4195,
+       0.2955,
+       5766,
+       72.3
+      ],
+      [
+       "2010-03",
+       3050244,
+       0.5316,
+       0.3471,
+       5765,
+       77.99
+      ],
+      [
+       "2010-04",
+       3136497,
+       0.7883,
+       0.4408,
+       5244,
+       79.24
+      ],
+      [
+       "2010-05",
+       3213611,
+       0.9653,
+       0.4912,
+       4961,
+       57.92
+      ],
+      [
+       "2010-06",
+       3283228,
+       1.2,
+       0.5446,
+       5116,
+       51.48
+      ],
+      [
+       "2010-07",
+       3347268,
+       1.48,
+       0.5975,
+       5144,
+       51.27
+      ],
+      [
+       "2010-08",
+       3377385,
+       1.82,
+       0.6453,
+       4767,
+       51.01
+      ],
+      [
+       "2010-09",
+       3428698,
+       1.74,
+       0.6354,
+       5239,
+       51.51
+      ],
+      [
+       "2010-10",
+       3480129,
+       1.94,
+       0.6593,
+       4877,
+       53.12
+      ],
+      [
+       "2010-11",
+       3524597,
+       2.3,
+       0.6969,
+       5100,
+       53.23
+      ],
+      [
+       "2010-12",
+       3569815,
+       2.46,
+       0.7112,
+       5068,
+       50.92
+      ]
+     ]
+    },
+    "wor_fit": null,
+    "no_trend": "too few months with WOR >= 1 (water cut 0.5) to fit a trend: 7, need 12",
+    "by_year": {
+     "columns": [
+      "year",
+      "liquid_rate_sm3_per_day",
+      "choke_pct",
+      "water_cut",
+      "oil_sm3"
+     ],
+     "rows": [
+      [
+       2008,
+       3502,
+       41.85,
+       0.003608,
+       1173447
+      ],
+      [
+       2009,
+       4740,
+       59.88,
+       0.02288,
+       1522541
+      ],
+      [
+       2010,
+       5130,
+       53.17,
+       0.5711,
+       873828
+      ]
+     ]
+    },
+    "field_voidage": {
+     "columns": [
+      "year",
+      "injected_sm3",
+      "oil_sm3",
+      "water_sm3",
+      "replacement_ratio",
+      "replacement_ratio_low",
+      "replacement_ratio_high",
+      "surface_ratio"
+     ],
+     "rows": [
+      [
+       2008,
+       2417770,
+       1764375,
+       7484,
+       0.9864,
+       0.911,
+       1.08,
+       1.36
+      ],
+      [
+       2009,
+       4392198,
+       2684392,
+       232105,
+       1.11,
+       1.03,
+       1.21,
+       1.51
+      ],
+      [
+       2010,
+       4569394,
+       1689903,
+       1887595,
+       1.08,
+       1.03,
+       1.13,
+       1.28
+      ]
+     ]
+    },
+    "notes": "WOR = water/oil by month; the trend is log10(WOR) against cumulative oil, fitted on up to 36 recent months with WOR >= 1. field_voidage: replacement_ratio is injection over voidage at reservoir conditions (Bo 1.385 m3/Sm3 from PUD p.20, low/high with Bo 1.5/1.27; Bw 1; above the bubble point, so no free gas); surface_ratio is the same in surface volumes, which overstates replacement."
+   },
+   "code": "wellpilot.agent.tools.waterflood_tool@6e7e7428c338",
+   "created_at": "2026-10-28T23:23:26+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E6",
+   "tool": "waterflood",
+   "arguments": {
+    "well": "F-14"
+   },
+   "result": {
+    "well": "F-14",
+    "monthly": {
+     "columns": [
+      "month",
+      "cum_oil_sm3",
+      "wor",
+      "water_cut",
+      "liquid_rate_sm3_per_day",
+      "choke_pct"
+     ],
+     "rows": [
+      [
+       "2008-07",
+       51285,
+       0.00246,
+       0.002454,
+       2820,
+       29.8
+      ],
+      [
+       "2008-08",
+       118906,
+       0.003291,
+       0.00328,
+       3552,
+       35.47
+      ],
+      [
+       "2008-09",
+       233503,
+       0.002406,
+       0.0024,
+       4290,
+       44.53
+      ],
+      [
+       "2008-10",
+       376320,
+       0.0007089,
+       0.0007084,
+       4620,
+       45.25
+      ],
+      [
+       "2008-11",
+       480729,
+       0.001819,
+       0.001815,
+       3497,
+       35.81
+      ],
+      [
+       "2008-12",
+       590928,
+       0.0006038,
+       0.0006035,
+       3557,
+       34.89
+      ],
+      [
+       "2009-01",
+       706501,
+       0.00846,
+       0.008389,
+       3967,
+       34.64
+      ],
+      [
+       "2009-02",
+       820382,
+       0.02221,
+       0.02173,
+       4376,
+       34.7
+      ],
+      [
+       "2009-03",
+       911027,
+       0.01852,
+       0.01819,
+       4174,
+       34.33
+      ],
+      [
+       "2009-04",
+       997971,
+       0.002835,
+       0.002827,
+       3892,
+       37.22
+      ],
+      [
+       "2009-05",
+       1114146,
+       0.02961,
+       0.02876,
+       4133,
+       41.27
+      ],
+      [
+       "2009-06",
+       1200800,
+       0.06614,
+       0.06204,
+       3205,
+       36.85
+      ],
+      [
+       "2009-07",
+       1265672,
+       0.1044,
+       0.09453,
+       2317,
+       29.16
+      ],
+      [
+       "2009-08",
+       1378165,
+       0.1848,
+       0.156,
+       4870,
+       42.28
+      ],
+      [
+       "2009-09",
+       1468515,
+       0.1691,
+       0.1446,
+       4980,
+       43.28
+      ],
+      [
+       "2009-10",
+       1565222,
+       0.2699,
+       0.2125,
+       4497,
+       41.57
+      ],
+      [
+       "2009-11",
+       1663266,
+       0.398,
+       0.2847,
+       4638,
+       38.96
+      ],
+      [
+       "2009-12",
+       1752780,
+       0.6275,
+       0.3856,
+       4812,
+       42.33
+      ],
+      [
+       "2010-01",
+       1835001,
+       0.8514,
+       0.4599,
+       4923,
+       46.01
+      ],
+      [
+       "2010-02",
+       1897094,
+       0.9985,
+       0.4996,
+       4881,
+       40.98
+      ],
+      [
+       "2010-03",
+       1964083,
+       0.9637,
+       0.4908,
+       4827,
+       42.92
+      ],
+      [
+       "2010-04",
+       2037119,
+       0.9566,
+       0.4889,
+       5045,
+       45.15
+      ],
+      [
+       "2010-05",
+       2124929,
+       0.9716,
+       0.4928,
+       5614,
+       65.33
+      ],
+      [
+       "2010-06",
+       2200238,
+       1.28,
+       0.5619,
+       5748,
+       60.43
+      ],
+      [
+       "2010-07",
+       2269839,
+       1.45,
+       0.5925,
+       5522,
+       59.13
+      ],
+      [
+       "2010-08",
+       2308252,
+       1.47,
+       0.5951,
+       5356,
+       59.09
+      ],
+      [
+       "2010-09",
+       2363658,
+       1.2,
+       0.5455,
+       5168,
+       47.07
+      ],
+      [
+       "2010-10",
+       2442413,
+       1.28,
+       0.5618,
+       5803,
+       62.36
+      ],
+      [
+       "2010-11",
+       2504968,
+       1.55,
+       0.6079,
+       5602,
+       79.28
+      ],
+      [
+       "2010-12",
+       2568855,
+       1.75,
+       0.636,
+       5681,
+       100.0
+      ]
+     ]
+    },
+    "wor_fit": null,
+    "no_trend": "too few months with WOR >= 1 (water cut 0.5) to fit a trend: 7, need 12",
+    "by_year": {
+     "columns": [
+      "year",
+      "liquid_rate_sm3_per_day",
+      "choke_pct",
+      "water_cut",
+      "oil_sm3"
+     ],
+     "rows": [
+      [
+       2008,
+       3554,
+       35.64,
+       0.002108,
+       590928
+      ],
+      [
+       2009,
+       4275,
+       38.09,
+       0.07828,
+       1161852
+      ],
+      [
+       2010,
+       5439,
+       59.11,
+       0.5536,
+       816075
+      ]
+     ]
+    },
+    "field_voidage": {
+     "columns": [
+      "year",
+      "injected_sm3",
+      "oil_sm3",
+      "water_sm3",
+      "replacement_ratio",
+      "replacement_ratio_low",
+      "replacement_ratio_high",
+      "surface_ratio"
+     ],
+     "rows": [
+      [
+       2008,
+       2417770,
+       1764375,
+       7484,
+       0.9864,
+       0.911,
+       1.08,
+       1.36
+      ],
+      [
+       2009,
+       4392198,
+       2684392,
+       232105,
+       1.11,
+       1.03,
+       1.21,
+       1.51
+      ],
+      [
+       2010,
+       4569394,
+       1689903,
+       1887595,
+       1.08,
+       1.03,
+       1.13,
+       1.28
+      ]
+     ]
+    },
+    "notes": "WOR = water/oil by month; the trend is log10(WOR) against cumulative oil, fitted on up to 36 recent months with WOR >= 1. field_voidage: replacement_ratio is injection over voidage at reservoir conditions (Bo 1.385 m3/Sm3 from PUD p.20, low/high with Bo 1.5/1.27; Bw 1; above the bubble point, so no free gas); surface_ratio is the same in surface volumes, which overstates replacement."
+   },
+   "code": "wellpilot.agent.tools.waterflood_tool@6e7e7428c338",
+   "created_at": "2026-10-28T23:23:26+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E7",
+   "tool": "production_monthly",
+   "arguments": {
+    "well": "F-12",
+    "start": "2010-01-01",
+    "end": "2010-12-31"
+   },
+   "result": {
+    "columns": [
+     "month",
+     "days",
+     "producing_days",
+     "oil_sm3",
+     "water_sm3",
+     "gas_sm3",
+     "water_injected_sm3",
+     "water_cut",
+     "uptime",
+     "oil_rate_per_producing_day",
+     "bhp_bar",
+     "whp_bar",
+     "choke_pct"
+    ],
+    "rows": [
+     [
+      "2010-01",
+      31,
+      31,
+      149659,
+      30230,
+      21044604,
+      null,
+      0.168,
+      0.9975,
+      4840,
+      248.07,
+      56.16,
+      74.86
+     ],
+     [
+      "2010-02",
+      28,
+      27,
+      103026,
+      43216,
+      14520590,
+      0.0,
+      0.2955,
+      0.9058,
+      4062,
+      255.06,
+      56.27,
+      71.78
+     ],
+     [
+      "2010-03",
+      31,
+      28,
+      101572,
+      53999,
+      14278519,
+      0.0,
+      0.3471,
+      0.8705,
+      3764,
+      250.17,
+      53.46,
+      75.96
+     ],
+     [
+      "2010-04",
+      30,
+      30,
+      86254,
+      67996,
+      12161146,
+      null,
+      0.4408,
+      0.9806,
+      2932,
+      254.05,
+      50.78,
+      76.71
+     ],
+     [
+      "2010-05",
+      31,
+      31,
+      77114,
+      74438,
+      10970381,
+      null,
+      0.4912,
+      0.9854,
+      2524,
+      267.31,
+      57.18,
+      56.44
+     ],
+     [
+      "2010-06",
+      30,
+      30,
+      69617,
+      83268,
+      9944534,
+      null,
+      0.5446,
+      0.9961,
+      2330,
+      280.74,
+      63.02,
+      50.97
+     ],
+     [
+      "2010-07",
+      31,
+      31,
+      64040,
+      95054,
+      9283377,
+      null,
+      0.5975,
+      0.9978,
+      2070,
+      279.52,
+      56.08,
+      58.56
+     ],
+     [
+      "2010-08",
+      31,
+      19,
+      30117,
+      54788,
+      4346504,
+      0.0,
+      0.6453,
+      0.5745,
+      1691,
+      286.34,
+      63.61,
+      47.05
+     ],
+     [
+      "2010-09",
+      30,
+      29,
+      51313,
+      89429,
+      7750211,
+      null,
+      0.6354,
+      0.8955,
+      1910,
+      278.76,
+      57.17,
+      55.35
+     ],
+     [
+      "2010-10",
+      31,
+      31,
+      51431,
+      99543,
+      7741377,
+      null,
+      0.6593,
+      0.9987,
+      1661,
+      273.38,
+      54.57,
+      51.94
+     ],
+     [
+      "2010-11",
+      30,
+      30,
+      44468,
+      102236,
+      6747078,
+      null,
+      0.6969,
+      0.9588,
+      1546,
+      null,
+      50.67,
+      52.94
+     ],
+     [
+      "2010-12",
+      31,
+      31,
+      45218,
+      111336,
+      6910660,
+      null,
+      0.7112,
+      0.9964,
+      1464,
+      null,
+      52.46,
+      50.75
+     ]
+    ]
+   },
+   "code": "wellpilot.agent.tools.production_monthly@c841520578bb",
+   "created_at": "2026-10-28T23:23:26+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E8",
+   "tool": "production_monthly",
+   "arguments": {
+    "well": "F-14",
+    "start": "2010-01-01",
+    "end": "2010-12-31"
+   },
+   "result": {
+    "columns": [
+     "month",
+     "days",
+     "producing_days",
+     "oil_sm3",
+     "water_sm3",
+     "gas_sm3",
+     "water_injected_sm3",
+     "water_cut",
+     "uptime",
+     "oil_rate_per_producing_day",
+     "bhp_bar",
+     "whp_bar",
+     "choke_pct"
+    ],
+    "rows": [
+     [
+      "2010-01",
+      31,
+      31,
+      82221,
+      70004,
+      11561302,
+      null,
+      0.4599,
+      0.9975,
+      2659,
+      237.4,
+      54.88,
+      45.64
+     ],
+     [
+      "2010-02",
+      28,
+      27,
+      62093,
+      62000,
+      8751248,
+      0.0,
+      0.4996,
+      0.908,
+      2442,
+      224.68,
+      61.02,
+      40.09
+     ],
+     [
+      "2010-03",
+      31,
+      29,
+      66989,
+      64561,
+      9421805,
+      0.0,
+      0.4908,
+      0.8792,
+      2458,
+      242.42,
+      57.4,
+      43.18
+     ],
+     [
+      "2010-04",
+      30,
+      29,
+      73036,
+      69865,
+      10288470,
+      null,
+      0.4889,
+      0.9442,
+      2578,
+      240.31,
+      54.49,
+      47.31
+     ],
+     [
+      "2010-05",
+      31,
+      31,
+      87809,
+      85315,
+      12490296,
+      null,
+      0.4928,
+      0.9948,
+      2847,
+      241.5,
+      47.82,
+      64.8
+     ],
+     [
+      "2010-06",
+      30,
+      30,
+      75310,
+      96581,
+      10756577,
+      null,
+      0.5619,
+      0.9969,
+      2518,
+      250.52,
+      49.34,
+      62.65
+     ],
+     [
+      "2010-07",
+      31,
+      31,
+      69600,
+      101216,
+      10073534,
+      null,
+      0.5925,
+      0.9979,
+      2250,
+      255.46,
+      53.27,
+      53.99
+     ],
+     [
+      "2010-08",
+      31,
+      18,
+      38414,
+      56453,
+      5543252,
+      0.0,
+      0.5951,
+      0.5714,
+      2169,
+      254.89,
+      52.03,
+      54.17
+     ],
+     [
+      "2010-09",
+      30,
+      27,
+      55405,
+      66507,
+      8260552,
+      null,
+      0.5455,
+      0.7863,
+      2349,
+      252.53,
+      56.4,
+      46.44
+     ],
+     [
+      "2010-10",
+      31,
+      31,
+      78755,
+      100949,
+      11853847,
+      null,
+      0.5618,
+      0.9989,
+      2543,
+      243.18,
+      46.78,
+      61.01
+     ],
+     [
+      "2010-11",
+      30,
+      30,
+      62555,
+      96970,
+      9485349,
+      null,
+      0.6079,
+      0.9492,
+      2197,
+      240.95,
+      42.89,
+      82.76
+     ],
+     [
+      "2010-12",
+      31,
+      31,
+      63886,
+      111640,
+      9763160,
+      null,
+      0.636,
+      0.9966,
+      2068,
+      242.26,
+      40.98,
+      98.46
+     ]
+    ]
+   },
+   "code": "wellpilot.agent.tools.production_monthly@c841520578bb",
+   "created_at": "2026-10-28T23:23:26+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E9",
+   "tool": "field_vs_design",
+   "arguments": {},
+   "result": {
+    "scope": "whole field, all producers and injectors summed per day, then per month",
+    "plan_source": "Plan for utbygging og drift av Volve (PUD, plan for development and operation), page 23, Table 4.3",
+    "design_limits": {
+     "liquid_sm3_per_day": {
+      "limit": "field liquid capacity",
+      "value": 13000,
+      "quote": "Væskekapasitet 13000 Sm3 /d"
+     },
+     "oil_sm3_per_day": {
+      "limit": "field oil capacity",
+      "value": 9000,
+      "quote": "Oljekapasitet 9000 Sm3 /d"
+     },
+     "water_cut": {
+      "limit": "maximum water cut",
+      "value": 0.8,
+      "quote": "Maksimum vannkutt 0,80"
+     },
+     "water_inj_sm3_per_day": {
+      "limit": "field water injection capacity",
+      "value": 16000,
+      "quote": "Vanninjeksjons kapasitet 16000 Sm3 /d"
+     },
+     "water_sm3_per_day": {
+      "limit": "field water handling (derived: liquid capacity x maximum water cut)",
+      "value": 10400,
+      "quote": null
+     }
+    },
+    "field_against_limits": {
+     "liquid_sm3_per_day": {
+      "first_month_at_or_above": null,
+      "months_at_or_above": 0,
+      "max": 10826,
+      "max_month": "2010-06"
+     },
+     "oil_sm3_per_day": {
+      "first_month_at_or_above": null,
+      "months_at_or_above": 0,
+      "max": 8924,
+      "max_month": "2008-12"
+     },
+     "water_cut": {
+      "first_month_at_or_above": null,
+      "months_at_or_above": 0,
+      "max": 0.6715,
+      "max_month": "2010-12"
+     },
+     "water_inj_sm3_per_day": {
+      "first_month_at_or_above": "2008-12",
+      "months_at_or_above": 3,
+      "max": 17206,
+      "max_month": "2008-12"
+     },
+     "water_sm3_per_day": {
+      "first_month_at_or_above": null,
+      "months_at_or_above": 0,
+      "max": 7193,
+      "max_month": "2010-12",
+      "max_day": 7500,
+      "max_day_month": "2010-11"
+     }
+    },
+    "months": {
+     "columns": [
+      "month",
+      "days",
+      "oil_sm3_per_day",
+      "liquid_sm3_per_day",
+      "water_cut",
+      "water_sm3_per_day",
+      "water_inj_sm3_per_day",
+      "max_day_liquid_sm3",
+      "max_day_water_sm3"
+     ],
+     "rows": [
+      [
+       "2008-02",
+       29,
+       1693,
+       1707,
+       0.008335,
+       14.23,
+       0.0,
+       3127,
+       385.01
+      ],
+      [
+       "2008-03",
+       31,
+       2689,
+       2690,
+       0.0003288,
+       0.8845,
+       0.0,
+       3193,
+       3.39
+      ],
+      [
+       "2008-04",
+       30,
+       2484,
+       2501,
+       0.006614,
+       16.54,
+       991.76,
+       3306,
+       153.36
+      ],
+      [
+       "2008-05",
+       31,
+       4048,
+       4055,
+       0.001914,
+       7.76,
+       7140,
+       5096,
+       29.8
+      ],
+      [
+       "2008-06",
+       30,
+       4793,
+       4809,
+       0.003288,
+       15.81,
+       7060,
+       5242,
+       184.78
+      ],
+      [
+       "2008-07",
+       31,
+       5364,
+       5377,
+       0.002497,
+       13.43,
+       7485,
+       6853,
+       36.05
+      ],
+      [
+       "2008-08",
+       31,
+       5337,
+       5355,
+       0.003474,
+       18.6,
+       7368,
+       9258,
+       90.81
+      ],
+      [
+       "2008-09",
+       30,
+       6409,
+       6424,
+       0.002408,
+       15.47,
+       5447,
+       9078,
+       74.97
+      ],
+      [
+       "2008-10",
+       31,
+       7651,
+       7674,
+       0.003049,
+       23.4,
+       11476,
+       9017,
+       40.42
+      ],
+      [
+       "2008-11",
+       30,
+       8344,
+       8430,
+       0.0102,
+       86.01,
+       14730,
+       9346,
+       804.33
+      ],
+      [
+       "2008-12",
+       31,
+       8924,
+       8958,
+       0.003852,
+       34.51,
+       17206,
+       9076,
+       71.83
+      ],
+      [
+       "2009-01",
+       31,
+       8685,
+       8730,
+       0.005053,
+       44.11,
+       16139,
+       9232,
+       298.19
+      ],
+      [
+       "2009-02",
+       28,
+       8421,
+       8511,
+       0.01061,
+       90.33,
+       15973,
+       9102,
+       152.76
+      ],
+      [
+       "2009-03",
+       31,
+       5923,
+       5977,
+       0.009062,
+       54.17,
+       4608,
+       9137,
+       207.66
+      ],
+      [
+       "2009-04",
+       30,
+       7930,
+       7980,
+       0.006236,
+       49.76,
+       7046,
+       9031,
+       124.94
+      ],
+      [
+       "2009-05",
+       31,
+       8297,
+       8508,
+       0.02482,
+       211.18,
+       14963,
+       9429,
+       456.62
+      ],
+      [
+       "2009-06",
+       30,
+       7303,
+       7582,
+       0.03688,
+       279.66,
+       8773,
+       9372,
+       620.77
+      ],
+      [
+       "2009-07",
+       31,
+       5515,
+       5840,
+       0.05558,
+       324.59,
+       12796,
+       6571,
+       507.3
+      ],
+      [
+       "2009-08",
+       31,
+       7255,
+       8088,
+       0.103,
+       832.83,
+       12593,
+       10519,
+       1623
+      ],
+      [
+       "2009-09",
+       30,
+       6015,
+       6599,
+       0.08845,
+       583.66,
+       11185,
+       10363,
+       1361
+      ],
+      [
+       "2009-10",
+       31,
+       7214,
+       8276,
+       0.1283,
+       1062,
+       12353,
+       10182,
+       2994
+      ],
+      [
+       "2009-11",
+       30,
+       7802,
+       9479,
+       0.1769,
+       1677,
+       13760,
+       10430,
+       2121
+      ],
+      [
+       "2009-12",
+       31,
+       7984,
+       10355,
+       0.2289,
+       2371,
+       14354,
+       11620,
+       3250
+      ],
+      [
+       "2010-01",
+       31,
+       7480,
+       10713,
+       0.3018,
+       3233,
+       15298,
+       11704,
+       3920
+      ],
+      [
+       "2010-02",
+       28,
+       5897,
+       9655,
+       0.3892,
+       3758,
+       13751,
+       11350,
+       4915
+      ],
+      [
+       "2010-03",
+       31,
+       5437,
+       9262,
+       0.4129,
+       3824,
+       10609,
+       11732,
+       5518
+      ],
+      [
+       "2010-04",
+       30,
+       5310,
+       9905,
+       0.4639,
+       4595,
+       12194,
+       11636,
+       5515
+      ],
+      [
+       "2010-05",
+       31,
+       5320,
+       10473,
+       0.492,
+       5153,
+       16282,
+       11430,
+       6002
+      ],
+      [
+       "2010-06",
+       30,
+       4831,
+       10826,
+       0.5538,
+       5995,
+       14279,
+       11645,
+       6560
+      ],
+      [
+       "2010-07",
+       31,
+       4311,
+       10642,
+       0.5949,
+       6331,
+       13286,
+       11074,
+       6664
+      ],
+      [
+       "2010-08",
+       31,
+       2211,
+       5799,
+       0.6188,
+       3588,
+       7385,
+       11173,
+       7038
+      ],
+      [
+       "2010-09",
+       30,
+       3557,
+       8755,
+       0.5937,
+       5198,
+       10281,
+       11026,
+       6793
+      ],
+      [
+       "2010-10",
+       31,
+       4200,
+       10667,
+       0.6063,
+       6467,
+       12755,
+       11406,
+       7232
+      ],
+      [
+       "2010-11",
+       30,
+       3567,
+       10208,
+       0.6505,
+       6640,
+       11863,
+       11198,
+       7500
+      ],
+      [
+       "2010-12",
+       31,
+       3519,
+       10712,
+       0.6715,
+       7193,
+       12316,
+       10927,
+       7349
+      ]
+     ]
+    },
+    "plan_end_quote": "Kumulativ oljeproduksjon inntil minimum økonomisk rate på 2.100 Sm3 /d (gitt Volve oljepris på 18,7 USD/fat) nås er 11,4 MSm3",
+    "note": "These are field and platform limits (PUD p.35 lists the same platform capacities); compare them with field totals, never one well. The maximum water cut is a share at full liquid rate: the water the platform can handle is liquid capacity x maximum water cut (water_sm3_per_day). The field reaching that share at a lower liquid rate means it ran at the design water cut, not over its water capacity. Rates are per calendar day of each month."
+   },
+   "code": "wellpilot.agent.tools.field_vs_design@e3763197bb3a",
+   "created_at": "2026-10-28T23:23:29+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E10",
+   "tool": "well_operations",
+   "arguments": {
+    "well": "F-12"
+   },
+   "result": {
+    "well": "F-12",
+    "jobs": [
+     {
+      "start": "2007-06-13",
+      "end": "2007-09-14",
+      "kind": "drilling",
+      "report_days": 94,
+      "contractor": "Mærsk Contractors",
+      "perforations": [],
+      "summaries": [
+       {
+        "date": "2007-06-13",
+        "summary": "Skidded rig to F-12. Made up 36\" hole opener BHA and RIH with same to 85 m MD."
+       },
+       {
+        "date": "2007-06-14",
+        "summary": "Made FG check of TDS. Serviced TDS. RIH with 36\" hole opener. Drilled 36\" hole section from 145 m to 250 m MD."
+       },
+       {
+        "date": "2007-06-15",
+        "summary": "Drilled 36\" hole section to TD at 258 m MD. Displaced well to 1,40 sg mud. POOH with 36\" hole opener BHA. Rigged up for running 30\" conductor. Ran 30\" conductor. Started running 4 3/4\" cement stinger inside conductor."
+       },
+       {
+        "date": "2007-09-12",
+        "summary": "Dismounted and mounted tension cylinders. RIH with production riser to 100 m MD."
+       },
+       {
+        "date": "2007-09-13",
+        "summary": "RIH with PR tensioner joint. MU PR landing stand, RIH and landed riser. Locked TBC connector. Waited on Simens rig ESD test. Pressure tested PR to 200 bar. Install centralizer and boat collision stool on centralizer deck."
+       },
+       {
+        "date": "2007-09-14",
+        "summary": "MU tensioner ring assembly. POOH and LD PR RT. Installed hatch on F-12 and suspended operation to F-7."
+       }
+      ]
+     },
+     {
+      "start": "2007-10-11",
+      "end": "2007-10-11",
+      "kind": "completion",
+      "report_days": 1,
+      "contractor": "Mærsk Contractors",
+      "perforations": [],
+      "summaries": [
+       {
+        "date": "2007-10-11",
+        "summary": "Skidded rig from F-12 to F-15. Changed wire on port aft crane big hook."
+       }
+      ]
+     },
+     {
+      "start": "2007-12-30",
+      "end": "2008-02-04",
+      "kind": "drilling",
+      "report_days": 37,
+      "contractor": "Mærsk Contractors",
+      "perforations": [],
+      "summaries": [
+       {
+        "date": "2007-12-30",
+        "summary": "Built scaffolding at the well head deck and in the moon pool. Installed surface riser, BOP and tension cylinders."
+       },
+       {
+        "date": "2007-12-31",
+        "summary": "Nippled up slick jnt, diverter and torqued up the BOP. RIH and installed the Bowl Protector at 20.9 m. Retrieved the Annulus Insert at 139.9 m. Retrieved the Bowl Protector."
+       },
+       {
+        "date": "2008-01-01",
+        "summary": "RIH with 10 3/4\" Tie Back and made up into sub sea well. Pressure tested Tie Back connector to 345 bars. Attempted to lock the Surface hanger, with the Adjustment sub."
+       },
+       {
+        "date": "2008-02-02",
+        "summary": "Retrieved landing string. Installed BPV. Nippled down BOP and Riser. Installed dart in BPV. Terminated control lines. Installed extension spool."
+       },
+       {
+        "date": "2008-02-03",
+        "summary": "Installed the WH extension spool, Xmas tree and the production Co-flex hose."
+       },
+       {
+        "date": "2008-02-04",
+        "summary": "Leak tested X-mas tree connections to 30/345 bars 5/10 min. Lined up and leak tested production line 50/180 bars 5/10 min. Inflow tested LMV and HMV against BPV."
+       }
+      ]
+     },
+     {
+      "start": "2008-02-11",
+      "end": "2008-02-11",
+      "kind": "completion",
+      "report_days": 1,
+      "contractor": "Mærsk Contractors",
+      "perforations": [
+       "3130-3281 mMD"
+      ],
+      "summaries": [
+       {
+        "date": "2008-02-11",
+        "summary": "Sent firing command to E-Fire firing head in TCP guns and perforated well from 3130 to 3281 mMDRT."
+       }
+      ]
+     },
+     {
+      "start": "2009-03-13",
+      "end": "2009-03-17",
+      "kind": "workover",
+      "report_days": 5,
+      "contractor": "Mærsk Contractors",
+      "perforations": [],
+      "summaries": [
+       {
+        "date": "2009-03-13",
+        "summary": "Handed well over from Production. RU HMV and DHSV to local control panel. Installed test and bleed manifold on to XMT KWV. Performed line test from KWV to cmt unit. Attempted to leak tested XMT cross to 30/200 bar for 5/10 min."
+       },
+       {
+        "date": "2009-03-14",
+        "summary": "Operated and greased up leaking PWV. Leak tested XMT cross to 30/200 bar for 5/10 min. Installed WL BOP and riser on XMT. Tested shear seals on WL BOP. Installed combination toolstring in riser. MU lubricator. Leak test WL riser, BOP and lubricator. Equalize and open HMV and DHSV. RIH with combination toolstring and tagged TCP guns at 3260.5 m. Performed correlation log in 7\" liner. POOH and prepared for inflow test of HMV."
+       },
+       {
+        "date": "2009-03-15",
+        "summary": "Inflow tested HMV to 81-5 bar/10 min. Broke lubricator and LD toolstring. Installed PLT toolstring in riser. MU lubricator and leak tested at in-situ sub. Equalized and opened HMV. RIH with PLT toolstring on 7/16\" EWL from surface to 2929 m. Performed stationary logging at DHPG depth. Continued RIH from 2929 m to 3030 m to perform shut-in station logs and 4 PLT tool calibration passes in the interval 3030 m to 3255 m MD. Bean up well to 4500 Sm3/day. Performed station logs and 4 high rate flowing PLT passes in the interval 3030 m to 3255 m MD. Choked back flow to 3000 Sm3/day. Performed station logs and 4 medium rate flowing PLT passes in the interval 3030 m to 3255 m MD."
+       },
+       {
+        "date": "2009-03-16",
+        "summary": "Choked back flow to 1500 Sm3/day. Performed station logs and 4 low rate flowing PLT passes in the interval 3030 m to 3255 m MD. Shut-in well. POOH with PLT toolstring. Inflow tested DHSV, HMV and MMV for handover. BO lubricator and LD toolstring. LD lubricator. RD and LD WL riser."
+       },
+       {
+        "date": "2009-03-17",
+        "summary": "RD BOP from XMT. Leak test XMT cross, KWV and tree cap. Hand well over to Mærsk Production. Cleared and cleaned rig floor of remaining WL equipment. Transferred operation to F-99 for PRS-and 5-yearly BOP classification."
+       }
+      ]
+     },
+     {
+      "start": "2010-09-20",
+      "end": "2010-09-23",
+      "kind": "workover",
+      "report_days": 4,
+      "contractor": "Aker Well Service",
+      "perforations": [],
+      "summaries": [
+       {
+        "date": "2010-09-20",
+        "summary": "Waited on access to well. Took over well. Rigged up WL riser and BOP."
+       },
+       {
+        "date": "2010-09-21",
+        "summary": "RU WL equipment. Installed BHA into lubricator. RIH with PLT. Performed spinner calibration. Performed depth correlation with GR/CCL. Took stationary reading at 2929 m. Ran PLT shut in pass. Took stationary readings. Beaned up well. Waited for stable flow."
+       },
+       {
+        "date": "2010-09-22",
+        "summary": "Waited for stable flow aprox. 5050 Sm3/d with PLT at 3080 m. Attempted to RIH at various speed. No-go. Reduced flow rate to 3000 Sm3/d. Took stationary readings at 3080, 3155, 3200 and 3250 m. Logged flowing passes between 3030 and 3250 m, down at 40 m/min and up at 10/20/30/40 m/min. Reduced flow rate to 1500 Sm3/d. Logged flowing passes between 3000 and 3250 m, down at 40 m/min and up at 10/20/30/40 m/min. Unable to log down on both flowing rates at 10/20/30 m/min. POOH with PLT. Changed tool string. RIH with 5,72\" EVO bridge plug at 800 m."
+       },
+       {
+        "date": "2010-09-23",
+        "summary": "Installed 5,72\" EVO bridge plug at 3210 m mid element. RD wireline pressure control equipment and handed well over to production department."
+       }
+      ]
+     }
+    ],
+    "note": "Daily reports exist for drilling and for work on the well (wireline, plugs, perforations, production logs), not for days of normal production. A job's date is the day the work was done; kind is drilling, completion, workover (work on a producing or injecting well) or abandonment. Ask for one day to see every operation line."
+   },
+   "code": "wellpilot.agent.tools.well_operations@691598c6cb8c",
+   "created_at": "2026-10-28T23:23:29+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E11",
+   "tool": "well_operations",
+   "arguments": {
+    "well": "F-14"
+   },
+   "result": {
+    "well": "F-14",
+    "jobs": [
+     {
+      "start": "2007-11-05",
+      "end": "2007-11-15",
+      "kind": "drilling",
+      "report_days": 11,
+      "contractor": "Mærsk Contractors",
+      "perforations": [],
+      "summaries": [
+       {
+        "date": "2007-11-05",
+        "summary": "Skidded rig to F-14. Continued changing wires on aft PRS and attempted to change DCI hose, but operation postponed due to weather. Removed hatches and built scaffolding around hatches on all levels. Waited on weather for cranes to pick up CART and BHA."
+       },
+       {
+        "date": "2007-11-06",
+        "summary": "WOW. Changed wash pipe. Racked CART std. MU and RIH with 36\" HO BHA to 143 m. Stung into funnel assisted by ROV. Tagged sea btm and drilled 36\" hole from 145.7 m to 193 m MD using SW and hi-vis pills."
+       },
+       {
+        "date": "2007-11-07",
+        "summary": "Drilled 36\" hole from 193 m to 204 m MD. Circulated well clean and displaced to 1.40 sg bentonite mud. POOH and LD 36\" HO BHA. WOW due to no crane operation. MU and RIH with 30\" conductor until x-over joint. Started to install UWG top-up system on upper 35 m."
+       },
+       {
+        "date": "2007-11-13",
+        "summary": "Positioned 30\" conductor at cementing depth at 196.8 m. Mixed and pumped 106 m³ 1.52 SG Tuned Light XL cement slurry. Got returns up F-7, but after 70 m3 pumped, had full returns up F-14. Displaced cement slurry with 6.5 m³ of SW. Waited on cement to set. Meanwhile performed general maintenance. LIned up for flushing of top-up line."
+       },
+       {
+        "date": "2007-11-14",
+        "summary": "Pressure tested UWG top-up system using the cement unit, rupture disk burst at 53 bars (769 psi). Performed cement top-up job, pumped 10.4 m³, 1.56 SG G-cement 82 bars at 500 lpm. Released with CART tool and POOH with the landing string. Prepared for measuring the double on top of the CART tool. Laser measuring device was dropped onto the rig floor. Racked back the CART tool in derrick. Laid out the aluminium inner string. Prepared for skidding of the cantilever from F-14 to F-5."
+       },
+       {
+        "date": "2007-11-15",
+        "summary": "None"
+       }
+      ]
+     },
+     {
+      "start": "2007-12-03",
+      "end": "2007-12-11",
+      "kind": "drilling",
+      "report_days": 9,
+      "contractor": "Mærsk Contractors",
+      "perforations": [],
+      "summaries": [
+       {
+        "date": "2007-12-03",
+        "summary": "Skidded rig from F-1 to F-14. Removed hatches. Broke down HWDP stand for inspection."
+       },
+       {
+        "date": "2007-12-04",
+        "summary": "Started running 26\" drilling BHA. ROV lost 3-finger claw in hole. Assessed situation. POOH with 26\" drilling BHA. RIH with 26\" junk removal BHA with rock bit. Drilled cement and rathole down to 206 m MD. POOH with 26\" junk removal BHA and laid down same. Found pieces of junk in bit. Broke bit and bitsub. RIH with 26\" drilling BHA from surface to 133 m MD."
+       },
+       {
+        "date": "2007-12-05",
+        "summary": "Drilled 26\" hole from 206 m to 211 m MD. Pulled BHA to thighten UBHO sleeve. RIH with BHA. Waited for work on Siemens system. Drilled 26\" hole from 211 to 269 m MD, steered as required. Performed gyro single shot survey on each single drilled."
+       },
+       {
+        "date": "2007-12-09",
+        "summary": "Continued RU csg running equipment. MU and ran 20\" casing to 414 m MD."
+       },
+       {
+        "date": "2007-12-10",
+        "summary": "Continued MU and ran 20\" casing from 414 to 923 m MD. Changed to 5 1/2\" handling equipment. MU 18 3/4\" WH housing/CART assembly to 20\" casing. Lowered 18 3/4\" WH housing/CART through well head module. Installed DCI assembly on 18 3/4\" WH housing, working on scaffolding platform below WH module."
+       },
+       {
+        "date": "2007-12-11",
+        "summary": "Continued installing DCI assembly on WH housing. RIH and land 20\" casing. Circulate, pump and displace cement. Release CART and POOH. LD CART. Clear drill floor. Skidded rig to F-9."
+       }
+      ]
+     },
+     {
+      "start": "2008-04-26",
+      "end": "2008-04-30",
+      "kind": "drilling",
+      "report_days": 5,
+      "contractor": "Mærsk Contractors",
+      "perforations": [],
+      "summaries": [
+       {
+        "date": "2008-04-26",
+        "summary": "Skidded cantilever to F-14. Prepared & rigged up HPDR spider and handling equipment. M/U HPDR TBC and double \"A\". Function tested HPDR TBC. Running of HPDR suspended. Resumed maintenance of the aft PRS."
+       },
+       {
+        "date": "2008-04-27",
+        "summary": "Skidded the cantilever to F-12 and F-14 for re-arranging hatch covers. Shut down production. Re-arranged hatch covers. Ran in with TBC and HPDR double \"A\" and picked up HPDR double \"B\""
+       },
+       {
+        "date": "2008-04-28",
+        "summary": "Ran in with HPDR, landed and locked the HPDR. Made up the tension system."
+       },
+       {
+        "date": "2008-04-29",
+        "summary": "Landed BOP riser jnt and made up same. Performed integrity test of HPDR to 30 bars / 10 min. Commenced nippling up the BOP."
+       },
+       {
+        "date": "2008-04-30",
+        "summary": "Nippled up the BOP, bell nipple and diverter. Pressure tested the well/BOP/riser to 155 bars 10 min. * Operation suspended due to programmed manitenance in derrick and PRS's."
+       }
+      ]
+     },
+     {
+      "start": "2008-05-10",
+      "end": "2008-07-10",
+      "kind": "drilling",
+      "report_days": 62,
+      "contractor": "Mærsk Contractors",
+      "perforations": [
+       "3345-33542 mMD",
+       "3312-3321.2 mMD",
+       "3287-3296.2 mMD",
+       "3044-3059.2 mMD; 3021-3036.2 mMD",
+       "3005-3020.2 mMD"
+      ],
+      "summaries": [
+       {
+        "date": "2008-05-10",
+        "summary": "Set nominal seat protector. Made up 17 1/2\" BHA. RIH with 17 1/2\" BHA and drilled 20\" shoetrack."
+       },
+       {
+        "date": "2008-05-11",
+        "summary": "Cleaned rathole and drilled 3 m new formation down to 1086 m MD. Pumped hi-vis sweep, displaced to 1,20 sg WBM and spotted LCM pill in rathole. Conditioned mud and performed FIT to 1,38 EMW. Drilled 17 1/2\" section down to 1302 m MD. Had problems with overflow on shakers and screen plugging."
+       },
+       {
+        "date": "2008-05-12",
+        "summary": "Drilled 17 1/2\" hole section from 1302 m to 1725 m MD."
+       },
+       {
+        "date": "2008-07-08",
+        "summary": "Perforate well with BHA #6, interval #4 on WL. Perforate well with BHA #7, interval #5 on WL."
+       },
+       {
+        "date": "2008-07-09",
+        "summary": "Perforate well with BHA #8, interval #6 on WL. Inflow tested HMV and DHSV to SIWHP-5 bar. Started RD lubricator."
+       },
+       {
+        "date": "2008-07-10",
+        "summary": "RD lubricator, risers and WL BOPs. Clean and clear rig floor. Leak tested tree cap, XMT cross and KWV cap. Handed over well to Mærsk production."
+       }
+      ]
+     },
+     {
+      "start": "2009-03-06",
+      "end": "2009-03-13",
+      "kind": "workover",
+      "report_days": 8,
+      "contractor": "Mærsk Contractors",
+      "perforations": [],
+      "summaries": [
+       {
+        "date": "2009-03-06",
+        "summary": "Re-arranged hatches on Weather deck. Skidded rig from F-15 to F-14. Waited on production to hand over well F-14."
+       },
+       {
+        "date": "2009-03-07",
+        "summary": "Waited on production to hand over well F-14 (due to initial start up of F-15). Meanwhile performed general PMs and houskeeping in drilling areas. Dismantled BOP components."
+       },
+       {
+        "date": "2009-03-08",
+        "summary": "Waited on handover of well f-14. Recieved well from production at 19:00. Hooked up local control panel and connected riser. Hooked up BOP control hose and calibrated BOP. Hooked up bleed off manifold and tested same. Tested XMT cross. Rigged up WL and made up toolstring. Tested WL rig up 30/200 bar 5/10 min - ok. Tested check valve for flowback - ok. Pumped MEG to equalize DHSV."
+       },
+       {
+        "date": "2009-03-09",
+        "summary": "Equalised across DHSV and SV. RIH on WL to 2543 m MD. Correlated depth. Performed PLT calibration. Took stationary PLT readings as per program from 3333 m to 2950 m MD. Beaned up well to 1500 Sm3/d. Production shut down. Waited on production. Beaned up well to 1600 Sm3/d. Took stationary PLT readings as per program from 3333 m to 2950 m MD."
+       },
+       {
+        "date": "2009-03-10",
+        "summary": "Made PLT logging passes from 3395 m to 2950 m MD at 10/20/30/40 m/min. Beaned up well to 3000 Sm3/d. Took PLT stationary readings. Made PLT logging passes from 3395 m to 2950 m MD at 10/20/30/40 m/min. Beaned up well to 4250 Sm3/d. Made PLT logging passes from 3395 m to 2950 m MD at 40 and 30 m/min."
+       },
+       {
+        "date": "2009-03-11",
+        "summary": "Made PLT logging passes from 3395 m to 2950 m MD at 20 and 10 m/min. Took PLT stationary readings. POOH with PLT. Inflow tested HMV and SV. Purged and flushed riser. Hooked up permanent controls to XMT. Stand-by for rigging down WL until scheduled shut-in."
+       },
+       {
+        "date": "2009-03-12",
+        "summary": "Stod by for rigging down WL until scheduled shut-in. Canceled cheduled production shut-in and had to wait on Mærsk to finish off 5-yearly work on tension cylinders in moonpool. Waited on Mærsk Production to shut in well and inflow test HMVand DHSV. Drained lubricator and WL riser. Broke out lubricator and LD toolstring. Tested WL BOP to 20/345 bar for 5/10 min. LD lubricator. Installed double lift arrangement from TDS to WL BOP and riser."
+       },
+       {
+        "date": "2009-03-13",
+        "summary": "Disconneced WL riser and BOP from XMT and suspended from rig floor. RD surface lines. Re-arranged and installed hatches on weather deck. RD surface lines and RU HP hose to XMT KWV. Leak tested XMT cross, SV, KWV and tree cap. Handed well over to Mærsk production. Skidded rig to F-12. Transferred operation to F-12."
+       }
+      ]
+     },
+     {
+      "start": "2010-09-10",
+      "end": "2010-09-20",
+      "kind": "workover",
+      "report_days": 11,
+      "contractor": "Aker Well Service",
+      "perforations": [],
+      "summaries": [
+       {
+        "date": "2010-09-10",
+        "summary": "Spotted and and hooked up WL equip. Assembled lubricator and riser. Built cable head."
+       },
+       {
+        "date": "2010-09-11",
+        "summary": "Prepared WL equipment for rig-up and tested PLT and Tractor. Handed well over to well service. Rigged up lower riser and BOP."
+       },
+       {
+        "date": "2010-09-12",
+        "summary": "Rigged up WL equipment. RIH with PLT/RST. Performed spinner calibration and started to bean up well to test separator with full bore spinner at 2900 m MDRKB."
+       },
+       {
+        "date": "2010-09-13",
+        "summary": "Performed PLT logging as per program."
+       },
+       {
+        "date": "2010-09-14",
+        "summary": "Performed RST logging in IC mode, across interval from 3642 to 2970 m."
+       },
+       {
+        "date": "2010-09-15",
+        "summary": "Continued logging RST in IC mode at 0,5 m/min up to 2975 m. Started tractor and RIH to 3642 m. Logged RST in IC mode at 0,5 m/min from 3642 to 3150 m."
+       },
+       {
+        "date": "2010-09-16",
+        "summary": "Logged RST from 3150 to 3101 m. RST far detector stopped working. Ran PLT logging pass from 3390 m up to 2970 m at speed 10, 20, 30 and 40 m/min. Took stationary readings at 3200, 3040 and 2970 m. Evaluated data. POOH. LD BHA. Waited on plug equipment from shore. Meanwhile produced well and prepared 5/16\" cable equipment."
+       },
+       {
+        "date": "2010-09-17",
+        "summary": "Waited on plug equipment from shore. Meanwhile produced well and prepared 5/16\" cable equipment. Held SJA meeting regarding RD wireline equipment."
+       },
+       {
+        "date": "2010-09-18",
+        "summary": "Waited on plug equipment from shore. Meanwhile produced well. Received plug equipment. Closed in well. Ran EVO plug on 3 1/8\" tractor. Stopped into DHSV. Started to equalize DHSV by pumping MEG into well."
+       },
+       {
+        "date": "2010-09-19",
+        "summary": "Equalized and opened DHSV. RIH with 7\" EVO plug. Lost communikation to BHA. POOH. RIH with back-up 7\" EVO plug and tractor. Installed EVO plug with top plug at 3274,25 m. POOH. Inflow tested HMV. LD BHA. Started to bleed down pressure above DHSV."
+       },
+       {
+        "date": "2010-09-20",
+        "summary": "Bled off pressure above DHSV and closed well. RD WL equipment. Installed x-mas tree top cap. Handed well back to Production Department."
+       }
+      ]
+     }
+    ],
+    "note": "Daily reports exist for drilling and for work on the well (wireline, plugs, perforations, production logs), not for days of normal production. A job's date is the day the work was done; kind is drilling, completion, workover (work on a producing or injecting well) or abandonment. Ask for one day to see every operation line."
+   },
+   "code": "wellpilot.agent.tools.well_operations@691598c6cb8c",
+   "created_at": "2026-10-28T23:23:29+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E12",
+   "tool": "fit_decline",
+   "arguments": {
+    "well": "F-12",
+    "start": "2010-05-02",
+    "end": "2010-12-31"
+   },
+   "result": {
+    "best": {
+     "model": "harmonic",
+     "qi_sm3_per_producing_day": 2628,
+     "di_per_year": 1.31,
+     "b": 1.0,
+     "window_start": "2010-05-02",
+     "window_end": "2010-12-31",
+     "n_points": 227,
+     "r2_log": 0.6881,
+     "rmse_log": 0.1244,
+     "aic": -942.08,
+     "residual_trend": 0.01348,
+     "uptime": 0.9246
+    },
+    "warnings": [
+     "poor fit: r2_log 0.688 < 0.7. The window may span a plateau or a regime change; refit after the last regime change, or treat any decline rate from this fit as an inference."
+    ],
+    "other_models": [
+     {
+      "model": "exponential",
+      "aic": -933.73,
+      "r2_log": 0.6764,
+      "b": 0.0
+     },
+     {
+      "model": "hyperbolic",
+      "aic": -940.08,
+      "r2_log": 0.6881,
+      "b": 1.0
+     }
+    ]
+   },
+   "code": "wellpilot.agent.tools.fit_decline_tool@b14df370970b",
+   "created_at": "2026-10-28T23:23:29+00:00",
+   "warnings": [
+    "poor fit: r2_log 0.688 < 0.7. The window may span a plateau or a regime change; refit after the last regime change, or treat any decline rate from this fit as an inference."
+   ]
+  },
+  {
+   "id": "E13",
+   "tool": "fit_decline",
+   "arguments": {
+    "well": "F-14",
+    "start": "2010-01-10",
+    "end": "2010-12-31"
+   },
+   "result": {
+    "best": {
+     "model": "exponential",
+     "qi_sm3_per_producing_day": 2643,
+     "di_per_year": 0.1999,
+     "b": 0.0,
+     "window_start": "2010-01-10",
+     "window_end": "2010-12-31",
+     "n_points": 329,
+     "r2_log": 0.1682,
+     "rmse_log": 0.1272,
+     "aic": -1353,
+     "residual_trend": 0.01276,
+     "uptime": 0.9164
+    },
+    "warnings": [
+     "poor fit: r2_log 0.168 < 0.7. The window may span a plateau or a regime change; refit after the last regime change, or treat any decline rate from this fit as an inference."
+    ],
+    "other_models": [
+     {
+      "model": "hyperbolic",
+      "aic": -1351,
+      "r2_log": 0.1682,
+      "b": 0.001
+     },
+     {
+      "model": "harmonic",
+      "aic": -1352,
+      "r2_log": 0.1651,
+      "b": 1.0
+     }
+    ]
+   },
+   "code": "wellpilot.agent.tools.fit_decline_tool@b14df370970b",
+   "created_at": "2026-10-28T23:23:29+00:00",
+   "warnings": [
+    "poor fit: r2_log 0.168 < 0.7. The window may span a plateau or a regime change; refit after the last regime change, or treat any decline rate from this fit as an inference."
+   ]
+  },
+  {
+   "id": "E14",
+   "tool": "calculate",
+   "arguments": {
+    "expressions": [
+     "4207 - 1888",
+     "3616 - 2397"
+    ]
+   },
+   "result": {
+    "results": [
+     {
+      "expression": "4207 - 1888",
+      "value": 2319
+     },
+     {
+      "expression": "3616 - 2397",
+      "value": 1219
+     }
+    ]
+   },
+   "code": "wellpilot.agent.tools.calculate@5c1d806d8f4d",
+   "created_at": "2026-10-28T23:23:39+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E15",
+   "tool": "waterflood",
+   "arguments": {
+    "well": "F-12"
+   },
+   "result": {
+    "well": "F-12",
+    "monthly": {
+     "columns": [
+      "month",
+      "cum_oil_sm3",
+      "wor",
+      "water_cut",
+      "liquid_rate_sm3_per_day",
+      "choke_pct"
+     ],
+     "rows": [
+      [
+       "2008-02",
+       49091,
+       0.008405,
+       0.008335,
+       2922,
+       30.31
+      ],
+      [
+       "2008-03",
+       132452,
+       0.0003289,
+       0.0003288,
+       3055,
+       31.37
+      ],
+      [
+       "2008-04",
+       206985,
+       0.006658,
+       0.006614,
+       2934,
+       31.62
+      ],
+      [
+       "2008-05",
+       332463,
+       0.001918,
+       0.001914,
+       4213,
+       39.7
+      ],
+      [
+       "2008-06",
+       476250,
+       0.003299,
+       0.003288,
+       5122,
+       43.41
+      ],
+      [
+       "2008-07",
+       591245,
+       0.002522,
+       0.002516,
+       3893,
+       42.46
+      ],
+      [
+       "2008-08",
+       689067,
+       0.003621,
+       0.003608,
+       3502,
+       40.23
+      ],
+      [
+       "2008-09",
+       766734,
+       0.002426,
+       0.00242,
+       3290,
+       45.03
+      ],
+      [
+       "2008-10",
+       861091,
+       0.006614,
+       0.00657,
+       3091,
+       41.85
+      ],
+      [
+       "2008-11",
+       1007007,
+       0.01638,
+       0.01612,
+       4994,
+       67.77
+      ],
+      [
+       "2008-12",
+       1173447,
+       0.006028,
+       0.005992,
+       5401,
+       63.25
+      ],
+      [
+       "2009-01",
+       1327124,
+       0.002536,
+       0.00253,
+       4991,
+       51.99
+      ],
+      [
+       "2009-02",
+       1449029,
+       0.0,
+       0.0,
+       4458,
+       50.27
+      ],
+      [
+       "2009-03",
+       1541988,
+       0.0,
+       0.0,
+       4406,
+       50.71
+      ],
+      [
+       "2009-04",
+       1692943,
+       0.008256,
+       0.008188,
+       5079,
+       66.1
+      ],
+      [
+       "2009-05",
+       1833982,
+       0.02203,
+       0.02155,
+       4976,
+       62.84
+      ],
+      [
+       "2009-06",
+       1966412,
+       0.02008,
+       0.01968,
+       4532,
+       69.08
+      ],
+      [
+       "2009-07",
+       2072517,
+       0.031,
+       0.03007,
+       3538,
+       50.82
+      ],
+      [
+       "2009-08",
+       2184931,
+       0.04469,
+       0.04278,
+       4785,
+       67.53
+      ],
+      [
+       "2009-09",
+       2275030,
+       0.02481,
+       0.02421,
+       4493,
+       58.67
+      ],
+      [
+       "2009-10",
+       2401970,
+       0.05367,
+       0.05094,
+       4695,
+       54.01
+      ],
+      [
+       "2009-11",
+       2537986,
+       0.08298,
+       0.07662,
+       5009,
+       61.08
+      ],
+      [
+       "2009-12",
+       2695987,
+       0.1096,
+       0.0988,
+       5776,
+       72.08
+      ],
+      [
+       "2010-01",
+       2845646,
+       0.202,
+       0.168,
+       5817,
+       75.14
+      ],
+      [
+       "2010-02",
+       2948672,
+       0.4195,
+       0.2955,
+       5766,
+       72.3
+      ],
+      [
+       "2010-03",
+       3050244,
+       0.5316,
+       0.3471,
+       5765,
+       77.99
+      ],
+      [
+       "2010-04",
+       3136497,
+       0.7883,
+       0.4408,
+       5244,
+       79.24
+      ],
+      [
+       "2010-05",
+       3213611,
+       0.9653,
+       0.4912,
+       4961,
+       57.92
+      ],
+      [
+       "2010-06",
+       3283228,
+       1.2,
+       0.5446,
+       5116,
+       51.48
+      ],
+      [
+       "2010-07",
+       3347268,
+       1.48,
+       0.5975,
+       5144,
+       51.27
+      ],
+      [
+       "2010-08",
+       3377385,
+       1.82,
+       0.6453,
+       4767,
+       51.01
+      ],
+      [
+       "2010-09",
+       3428698,
+       1.74,
+       0.6354,
+       5239,
+       51.51
+      ],
+      [
+       "2010-10",
+       3480129,
+       1.94,
+       0.6593,
+       4877,
+       53.12
+      ],
+      [
+       "2010-11",
+       3524597,
+       2.3,
+       0.6969,
+       5100,
+       53.23
+      ],
+      [
+       "2010-12",
+       3569815,
+       2.46,
+       0.7112,
+       5068,
+       50.92
+      ]
+     ]
+    },
+    "wor_fit": null,
+    "no_trend": "too few months with WOR >= 1 (water cut 0.5) to fit a trend: 7, need 12",
+    "by_year": {
+     "columns": [
+      "year",
+      "liquid_rate_sm3_per_day",
+      "choke_pct",
+      "water_cut",
+      "oil_sm3"
+     ],
+     "rows": [
+      [
+       2008,
+       3502,
+       41.85,
+       0.003608,
+       1173447
+      ],
+      [
+       2009,
+       4740,
+       59.88,
+       0.02288,
+       1522541
+      ],
+      [
+       2010,
+       5130,
+       53.17,
+       0.5711,
+       873828
+      ]
+     ]
+    },
+    "field_voidage": {
+     "columns": [
+      "year",
+      "injected_sm3",
+      "oil_sm3",
+      "water_sm3",
+      "replacement_ratio",
+      "replacement_ratio_low",
+      "replacement_ratio_high",
+      "surface_ratio"
+     ],
+     "rows": [
+      [
+       2008,
+       2417770,
+       1764375,
+       7484,
+       0.9864,
+       0.911,
+       1.08,
+       1.36
+      ],
+      [
+       2009,
+       4392198,
+       2684392,
+       232105,
+       1.11,
+       1.03,
+       1.21,
+       1.51
+      ],
+      [
+       2010,
+       4569394,
+       1689903,
+       1887595,
+       1.08,
+       1.03,
+       1.13,
+       1.28
+      ]
+     ]
+    },
+    "notes": "WOR = water/oil by month; the trend is log10(WOR) against cumulative oil, fitted on up to 36 recent months with WOR >= 1. field_voidage: replacement_ratio is injection over voidage at reservoir conditions (Bo 1.385 m3/Sm3 from PUD p.20, low/high with Bo 1.5/1.27; Bw 1; above the bubble point, so no free gas); surface_ratio is the same in surface volumes, which overstates replacement."
+   },
+   "code": "wellpilot.agent.tools.waterflood_tool@6e7e7428c338",
+   "created_at": "2026-10-28T23:24:02+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E16",
+   "tool": "fit_decline",
+   "arguments": {
+    "well": "F-12",
+    "start": "2010-05-02",
+    "end": "2010-12-31"
+   },
+   "result": {
+    "best": {
+     "model": "harmonic",
+     "qi_sm3_per_producing_day": 2628,
+     "di_per_year": 1.31,
+     "b": 1.0,
+     "window_start": "2010-05-02",
+     "window_end": "2010-12-31",
+     "n_points": 227,
+     "r2_log": 0.6881,
+     "rmse_log": 0.1244,
+     "aic": -942.08,
+     "residual_trend": 0.01348,
+     "uptime": 0.9246
+    },
+    "warnings": [
+     "poor fit: r2_log 0.688 < 0.7. The window may span a plateau or a regime change; refit after the last regime change, or treat any decline rate from this fit as an inference."
+    ],
+    "other_models": [
+     {
+      "model": "exponential",
+      "aic": -933.73,
+      "r2_log": 0.6764,
+      "b": 0.0
+     },
+     {
+      "model": "hyperbolic",
+      "aic": -940.08,
+      "r2_log": 0.6881,
+      "b": 1.0
+     }
+    ]
+   },
+   "code": "wellpilot.agent.tools.fit_decline_tool@b14df370970b",
+   "created_at": "2026-10-28T23:24:02+00:00",
+   "warnings": [
+    "poor fit: r2_log 0.688 < 0.7. The window may span a plateau or a regime change; refit after the last regime change, or treat any decline rate from this fit as an inference."
+   ]
+  },
+  {
+   "id": "E17",
+   "tool": "detect_events",
+   "arguments": {
+    "well": "F-12"
+   },
+   "result": [
+    {
+     "kind": "threshold_crossing",
+     "signal": "water_cut",
+     "start": "2009-10-31",
+     "end": null,
+     "summary": "30-day median water_cut first goes above 0.05 on 2009-10-31, 21 months after first oil.",
+     "details": {
+      "threshold": 0.05,
+      "direction": "above",
+      "window_days": 30,
+      "median_at_crossing": 0.05795,
+      "first_oil": "2008-02-12",
+      "months_after_first_oil": 20.6
+     }
+    },
+    {
+     "kind": "regime_change",
+     "signal": "water_cut",
+     "start": "2010-02-28",
+     "end": null,
+     "summary": "water_cut shifts around 2010-02-28: weekly mean 0.0323 -> 0.57 (+0.54) from the period before to the period after.",
+     "details": {
+      "before_mean": 0.03227,
+      "after_mean": 0.5701,
+      "change": 0.5378,
+      "before_from": "2008-02-17",
+      "after_to": "2011-01-02"
+     }
+    },
+    {
+     "kind": "regime_change",
+     "signal": "oil_rate",
+     "start": "2010-05-02",
+     "end": null,
+     "summary": "oil_rate shifts around 2010-05-02: weekly mean 4,207 -> 1,888 (-55%) from the period before to the period after; across the change itself, 4 weeks each side, 3,196 -> 2,538 (-21%); the choke was cut at the same time (83 -> 58%), so part of the change is the operator's, not the reservoir's.",
+     "details": {
+      "before_mean": 4207,
+      "after_mean": 1888,
+      "relative_change": -0.5512,
+      "across_before": 3196,
+      "across_after": 2538,
+      "change_across": -0.2059,
+      "choke_before_pct": 82.84,
+      "choke_after_pct": 57.57,
+      "choke_moved": true,
+      "before_from": "2008-02-17",
+      "after_to": "2011-01-02"
+     }
+    },
+    {
+     "kind": "threshold_crossing",
+     "signal": "water_cut",
+     "start": "2010-06-04",
+     "end": null,
+     "summary": "30-day median water_cut first goes above 0.5 on 2010-06-04, 28 months after first oil.",
+     "details": {
+      "threshold": 0.5,
+      "direction": "above",
+      "window_days": 30,
+      "median_at_crossing": 0.5011,
+      "first_oil": "2008-02-12",
+      "months_after_first_oil": 27.69
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2010-08-16",
+     "end": "2010-08-27",
+     "summary": "Shut in for 12 days from 2010-08-16. Oil rate 1,821 -> 2,000 Sm3/d (+10%) after restart. Same time as F-14.",
+     "details": {
+      "days": 12,
+      "rate_before": 1821,
+      "rate_after": 2000,
+      "relative_change": 0.09864,
+      "field_wide": true,
+      "also_shut_in": [
+       "F-14"
+      ]
+     }
+    },
+    {
+     "kind": "gauge_failure",
+     "signal": "bhp_bar",
+     "start": "2010-10-12",
+     "end": "2010-12-31",
+     "summary": "bhp_bar reads 0 on 81 days from 2010-10-12 to 2010-12-31 while the well kept flowing on 80 days (123,258 Sm3 oil): a sensor failure, not a pressure collapse. Last good reading: 253.9 on 2010-10-11.",
+     "details": {
+      "zero_days": 81,
+      "flowing_days": 80,
+      "oil_sm3_during": 123258,
+      "last_good_date": "2010-10-11",
+      "last_good_value": 253.85
+     }
+    }
+   ],
+   "code": "wellpilot.agent.tools.detect_events@504159f9080e",
+   "created_at": "2026-10-28T23:24:02+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E18",
+   "tool": "well_operations",
+   "arguments": {
+    "well": "F-12"
+   },
+   "result": {
+    "well": "F-12",
+    "jobs": [
+     {
+      "start": "2007-06-13",
+      "end": "2007-09-14",
+      "kind": "drilling",
+      "report_days": 94,
+      "contractor": "Mærsk Contractors",
+      "perforations": [],
+      "summaries": [
+       {
+        "date": "2007-06-13",
+        "summary": "Skidded rig to F-12. Made up 36\" hole opener BHA and RIH with same to 85 m MD."
+       },
+       {
+        "date": "2007-06-14",
+        "summary": "Made FG check of TDS. Serviced TDS. RIH with 36\" hole opener. Drilled 36\" hole section from 145 m to 250 m MD."
+       },
+       {
+        "date": "2007-06-15",
+        "summary": "Drilled 36\" hole section to TD at 258 m MD. Displaced well to 1,40 sg mud. POOH with 36\" hole opener BHA. Rigged up for running 30\" conductor. Ran 30\" conductor. Started running 4 3/4\" cement stinger inside conductor."
+       },
+       {
+        "date": "2007-09-12",
+        "summary": "Dismounted and mounted tension cylinders. RIH with production riser to 100 m MD."
+       },
+       {
+        "date": "2007-09-13",
+        "summary": "RIH with PR tensioner joint. MU PR landing stand, RIH and landed riser. Locked TBC connector. Waited on Simens rig ESD test. Pressure tested PR to 200 bar. Install centralizer and boat collision stool on centralizer deck."
+       },
+       {
+        "date": "2007-09-14",
+        "summary": "MU tensioner ring assembly. POOH and LD PR RT. Installed hatch on F-12 and suspended operation to F-7."
+       }
+      ]
+     },
+     {
+      "start": "2007-10-11",
+      "end": "2007-10-11",
+      "kind": "completion",
+      "report_days": 1,
+      "contractor": "Mærsk Contractors",
+      "perforations": [],
+      "summaries": [
+       {
+        "date": "2007-10-11",
+        "summary": "Skidded rig from F-12 to F-15. Changed wire on port aft crane big hook."
+       }
+      ]
+     },
+     {
+      "start": "2007-12-30",
+      "end": "2008-02-04",
+      "kind": "drilling",
+      "report_days": 37,
+      "contractor": "Mærsk Contractors",
+      "perforations": [],
+      "summaries": [
+       {
+        "date": "2007-12-30",
+        "summary": "Built scaffolding at the well head deck and in the moon pool. Installed surface riser, BOP and tension cylinders."
+       },
+       {
+        "date": "2007-12-31",
+        "summary": "Nippled up slick jnt, diverter and torqued up the BOP. RIH and installed the Bowl Protector at 20.9 m. Retrieved the Annulus Insert at 139.9 m. Retrieved the Bowl Protector."
+       },
+       {
+        "date": "2008-01-01",
+        "summary": "RIH with 10 3/4\" Tie Back and made up into sub sea well. Pressure tested Tie Back connector to 345 bars. Attempted to lock the Surface hanger, with the Adjustment sub."
+       },
+       {
+        "date": "2008-02-02",
+        "summary": "Retrieved landing string. Installed BPV. Nippled down BOP and Riser. Installed dart in BPV. Terminated control lines. Installed extension spool."
+       },
+       {
+        "date": "2008-02-03",
+        "summary": "Installed the WH extension spool, Xmas tree and the production Co-flex hose."
+       },
+       {
+        "date": "2008-02-04",
+        "summary": "Leak tested X-mas tree connections to 30/345 bars 5/10 min. Lined up and leak tested production line 50/180 bars 5/10 min. Inflow tested LMV and HMV against BPV."
+       }
+      ]
+     },
+     {
+      "start": "2008-02-11",
+      "end": "2008-02-11",
+      "kind": "completion",
+      "report_days": 1,
+      "contractor": "Mærsk Contractors",
+      "perforations": [
+       "3130-3281 mMD"
+      ],
+      "summaries": [
+       {
+        "date": "2008-02-11",
+        "summary": "Sent firing command to E-Fire firing head in TCP guns and perforated well from 3130 to 3281 mMDRT."
+       }
+      ]
+     },
+     {
+      "start": "2009-03-13",
+      "end": "2009-03-17",
+      "kind": "workover",
+      "report_days": 5,
+      "contractor": "Mærsk Contractors",
+      "perforations": [],
+      "summaries": [
+       {
+        "date": "2009-03-13",
+        "summary": "Handed well over from Production. RU HMV and DHSV to local control panel. Installed test and bleed manifold on to XMT KWV. Performed line test from KWV to cmt unit. Attempted to leak tested XMT cross to 30/200 bar for 5/10 min."
+       },
+       {
+        "date": "2009-03-14",
+        "summary": "Operated and greased up leaking PWV. Leak tested XMT cross to 30/200 bar for 5/10 min. Installed WL BOP and riser on XMT. Tested shear seals on WL BOP. Installed combination toolstring in riser. MU lubricator. Leak test WL riser, BOP and lubricator. Equalize and open HMV and DHSV. RIH with combination toolstring and tagged TCP guns at 3260.5 m. Performed correlation log in 7\" liner. POOH and prepared for inflow test of HMV."
+       },
+       {
+        "date": "2009-03-15",
+        "summary": "Inflow tested HMV to 81-5 bar/10 min. Broke lubricator and LD toolstring. Installed PLT toolstring in riser. MU lubricator and leak tested at in-situ sub. Equalized and opened HMV. RIH with PLT toolstring on 7/16\" EWL from surface to 2929 m. Performed stationary logging at DHPG depth. Continued RIH from 2929 m to 3030 m to perform shut-in station logs and 4 PLT tool calibration passes in the interval 3030 m to 3255 m MD. Bean up well to 4500 Sm3/day. Performed station logs and 4 high rate flowing PLT passes in the interval 3030 m to 3255 m MD. Choked back flow to 3000 Sm3/day. Performed station logs and 4 medium rate flowing PLT passes in the interval 3030 m to 3255 m MD."
+       },
+       {
+        "date": "2009-03-16",
+        "summary": "Choked back flow to 1500 Sm3/day. Performed station logs and 4 low rate flowing PLT passes in the interval 3030 m to 3255 m MD. Shut-in well. POOH with PLT toolstring. Inflow tested DHSV, HMV and MMV for handover. BO lubricator and LD toolstring. LD lubricator. RD and LD WL riser."
+       },
+       {
+        "date": "2009-03-17",
+        "summary": "RD BOP from XMT. Leak test XMT cross, KWV and tree cap. Hand well over to Mærsk Production. Cleared and cleaned rig floor of remaining WL equipment. Transferred operation to F-99 for PRS-and 5-yearly BOP classification."
+       }
+      ]
+     },
+     {
+      "start": "2010-09-20",
+      "end": "2010-09-23",
+      "kind": "workover",
+      "report_days": 4,
+      "contractor": "Aker Well Service",
+      "perforations": [],
+      "summaries": [
+       {
+        "date": "2010-09-20",
+        "summary": "Waited on access to well. Took over well. Rigged up WL riser and BOP."
+       },
+       {
+        "date": "2010-09-21",
+        "summary": "RU WL equipment. Installed BHA into lubricator. RIH with PLT. Performed spinner calibration. Performed depth correlation with GR/CCL. Took stationary reading at 2929 m. Ran PLT shut in pass. Took stationary readings. Beaned up well. Waited for stable flow."
+       },
+       {
+        "date": "2010-09-22",
+        "summary": "Waited for stable flow aprox. 5050 Sm3/d with PLT at 3080 m. Attempted to RIH at various speed. No-go. Reduced flow rate to 3000 Sm3/d. Took stationary readings at 3080, 3155, 3200 and 3250 m. Logged flowing passes between 3030 and 3250 m, down at 40 m/min and up at 10/20/30/40 m/min. Reduced flow rate to 1500 Sm3/d. Logged flowing passes between 3000 and 3250 m, down at 40 m/min and up at 10/20/30/40 m/min. Unable to log down on both flowing rates at 10/20/30 m/min. POOH with PLT. Changed tool string. RIH with 5,72\" EVO bridge plug at 800 m."
+       },
+       {
+        "date": "2010-09-23",
+        "summary": "Installed 5,72\" EVO bridge plug at 3210 m mid element. RD wireline pressure control equipment and handed well over to production department."
+       }
+      ]
+     }
+    ],
+    "note": "Daily reports exist for drilling and for work on the well (wireline, plugs, perforations, production logs), not for days of normal production. A job's date is the day the work was done; kind is drilling, completion, workover (work on a producing or injecting well) or abandonment. Ask for one day to see every operation line."
+   },
+   "code": "wellpilot.agent.tools.well_operations@691598c6cb8c",
+   "created_at": "2026-10-28T23:24:02+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E19",
+   "tool": "well_operations",
+   "arguments": {
+    "well": "F-14"
+   },
+   "result": {
+    "well": "F-14",
+    "jobs": [
+     {
+      "start": "2007-11-05",
+      "end": "2007-11-15",
+      "kind": "drilling",
+      "report_days": 11,
+      "contractor": "Mærsk Contractors",
+      "perforations": [],
+      "summaries": [
+       {
+        "date": "2007-11-05",
+        "summary": "Skidded rig to F-14. Continued changing wires on aft PRS and attempted to change DCI hose, but operation postponed due to weather. Removed hatches and built scaffolding around hatches on all levels. Waited on weather for cranes to pick up CART and BHA."
+       },
+       {
+        "date": "2007-11-06",
+        "summary": "WOW. Changed wash pipe. Racked CART std. MU and RIH with 36\" HO BHA to 143 m. Stung into funnel assisted by ROV. Tagged sea btm and drilled 36\" hole from 145.7 m to 193 m MD using SW and hi-vis pills."
+       },
+       {
+        "date": "2007-11-07",
+        "summary": "Drilled 36\" hole from 193 m to 204 m MD. Circulated well clean and displaced to 1.40 sg bentonite mud. POOH and LD 36\" HO BHA. WOW due to no crane operation. MU and RIH with 30\" conductor until x-over joint. Started to install UWG top-up system on upper 35 m."
+       },
+       {
+        "date": "2007-11-13",
+        "summary": "Positioned 30\" conductor at cementing depth at 196.8 m. Mixed and pumped 106 m³ 1.52 SG Tuned Light XL cement slurry. Got returns up F-7, but after 70 m3 pumped, had full returns up F-14. Displaced cement slurry with 6.5 m³ of SW. Waited on cement to set. Meanwhile performed general maintenance. LIned up for flushing of top-up line."
+       },
+       {
+        "date": "2007-11-14",
+        "summary": "Pressure tested UWG top-up system using the cement unit, rupture disk burst at 53 bars (769 psi). Performed cement top-up job, pumped 10.4 m³, 1.56 SG G-cement 82 bars at 500 lpm. Released with CART tool and POOH with the landing string. Prepared for measuring the double on top of the CART tool. Laser measuring device was dropped onto the rig floor. Racked back the CART tool in derrick. Laid out the aluminium inner string. Prepared for skidding of the cantilever from F-14 to F-5."
+       },
+       {
+        "date": "2007-11-15",
+        "summary": "None"
+       }
+      ]
+     },
+     {
+      "start": "2007-12-03",
+      "end": "2007-12-11",
+      "kind": "drilling",
+      "report_days": 9,
+      "contractor": "Mærsk Contractors",
+      "perforations": [],
+      "summaries": [
+       {
+        "date": "2007-12-03",
+        "summary": "Skidded rig from F-1 to F-14. Removed hatches. Broke down HWDP stand for inspection."
+       },
+       {
+        "date": "2007-12-04",
+        "summary": "Started running 26\" drilling BHA. ROV lost 3-finger claw in hole. Assessed situation. POOH with 26\" drilling BHA. RIH with 26\" junk removal BHA with rock bit. Drilled cement and rathole down to 206 m MD. POOH with 26\" junk removal BHA and laid down same. Found pieces of junk in bit. Broke bit and bitsub. RIH with 26\" drilling BHA from surface to 133 m MD."
+       },
+       {
+        "date": "2007-12-05",
+        "summary": "Drilled 26\" hole from 206 m to 211 m MD. Pulled BHA to thighten UBHO sleeve. RIH with BHA. Waited for work on Siemens system. Drilled 26\" hole from 211 to 269 m MD, steered as required. Performed gyro single shot survey on each single drilled."
+       },
+       {
+        "date": "2007-12-09",
+        "summary": "Continued RU csg running equipment. MU and ran 20\" casing to 414 m MD."
+       },
+       {
+        "date": "2007-12-10",
+        "summary": "Continued MU and ran 20\" casing from 414 to 923 m MD. Changed to 5 1/2\" handling equipment. MU 18 3/4\" WH housing/CART assembly to 20\" casing. Lowered 18 3/4\" WH housing/CART through well head module. Installed DCI assembly on 18 3/4\" WH housing, working on scaffolding platform below WH module."
+       },
+       {
+        "date": "2007-12-11",
+        "summary": "Continued installing DCI assembly on WH housing. RIH and land 20\" casing. Circulate, pump and displace cement. Release CART and POOH. LD CART. Clear drill floor. Skidded rig to F-9."
+       }
+      ]
+     },
+     {
+      "start": "2008-04-26",
+      "end": "2008-04-30",
+      "kind": "drilling",
+      "report_days": 5,
+      "contractor": "Mærsk Contractors",
+      "perforations": [],
+      "summaries": [
+       {
+        "date": "2008-04-26",
+        "summary": "Skidded cantilever to F-14. Prepared & rigged up HPDR spider and handling equipment. M/U HPDR TBC and double \"A\". Function tested HPDR TBC. Running of HPDR suspended. Resumed maintenance of the aft PRS."
+       },
+       {
+        "date": "2008-04-27",
+        "summary": "Skidded the cantilever to F-12 and F-14 for re-arranging hatch covers. Shut down production. Re-arranged hatch covers. Ran in with TBC and HPDR double \"A\" and picked up HPDR double \"B\""
+       },
+       {
+        "date": "2008-04-28",
+        "summary": "Ran in with HPDR, landed and locked the HPDR. Made up the tension system."
+       },
+       {
+        "date": "2008-04-29",
+        "summary": "Landed BOP riser jnt and made up same. Performed integrity test of HPDR to 30 bars / 10 min. Commenced nippling up the BOP."
+       },
+       {
+        "date": "2008-04-30",
+        "summary": "Nippled up the BOP, bell nipple and diverter. Pressure tested the well/BOP/riser to 155 bars 10 min. * Operation suspended due to programmed manitenance in derrick and PRS's."
+       }
+      ]
+     },
+     {
+      "start": "2008-05-10",
+      "end": "2008-07-10",
+      "kind": "drilling",
+      "report_days": 62,
+      "contractor": "Mærsk Contractors",
+      "perforations": [
+       "3345-33542 mMD",
+       "3312-3321.2 mMD",
+       "3287-3296.2 mMD",
+       "3044-3059.2 mMD; 3021-3036.2 mMD",
+       "3005-3020.2 mMD"
+      ],
+      "summaries": [
+       {
+        "date": "2008-05-10",
+        "summary": "Set nominal seat protector. Made up 17 1/2\" BHA. RIH with 17 1/2\" BHA and drilled 20\" shoetrack."
+       },
+       {
+        "date": "2008-05-11",
+        "summary": "Cleaned rathole and drilled 3 m new formation down to 1086 m MD. Pumped hi-vis sweep, displaced to 1,20 sg WBM and spotted LCM pill in rathole. Conditioned mud and performed FIT to 1,38 EMW. Drilled 17 1/2\" section down to 1302 m MD. Had problems with overflow on shakers and screen plugging."
+       },
+       {
+        "date": "2008-05-12",
+        "summary": "Drilled 17 1/2\" hole section from 1302 m to 1725 m MD."
+       },
+       {
+        "date": "2008-07-08",
+        "summary": "Perforate well with BHA #6, interval #4 on WL. Perforate well with BHA #7, interval #5 on WL."
+       },
+       {
+        "date": "2008-07-09",
+        "summary": "Perforate well with BHA #8, interval #6 on WL. Inflow tested HMV and DHSV to SIWHP-5 bar. Started RD lubricator."
+       },
+       {
+        "date": "2008-07-10",
+        "summary": "RD lubricator, risers and WL BOPs. Clean and clear rig floor. Leak tested tree cap, XMT cross and KWV cap. Handed over well to Mærsk production."
+       }
+      ]
+     },
+     {
+      "start": "2009-03-06",
+      "end": "2009-03-13",
+      "kind": "workover",
+      "report_days": 8,
+      "contractor": "Mærsk Contractors",
+      "perforations": [],
+      "summaries": [
+       {
+        "date": "2009-03-06",
+        "summary": "Re-arranged hatches on Weather deck. Skidded rig from F-15 to F-14. Waited on production to hand over well F-14."
+       },
+       {
+        "date": "2009-03-07",
+        "summary": "Waited on production to hand over well F-14 (due to initial start up of F-15). Meanwhile performed general PMs and houskeeping in drilling areas. Dismantled BOP components."
+       },
+       {
+        "date": "2009-03-08",
+        "summary": "Waited on handover of well f-14. Recieved well from production at 19:00. Hooked up local control panel and connected riser. Hooked up BOP control hose and calibrated BOP. Hooked up bleed off manifold and tested same. Tested XMT cross. Rigged up WL and made up toolstring. Tested WL rig up 30/200 bar 5/10 min - ok. Tested check valve for flowback - ok. Pumped MEG to equalize DHSV."
+       },
+       {
+        "date": "2009-03-09",
+        "summary": "Equalised across DHSV and SV. RIH on WL to 2543 m MD. Correlated depth. Performed PLT calibration. Took stationary PLT readings as per program from 3333 m to 2950 m MD. Beaned up well to 1500 Sm3/d. Production shut down. Waited on production. Beaned up well to 1600 Sm3/d. Took stationary PLT readings as per program from 3333 m to 2950 m MD."
+       },
+       {
+        "date": "2009-03-10",
+        "summary": "Made PLT logging passes from 3395 m to 2950 m MD at 10/20/30/40 m/min. Beaned up well to 3000 Sm3/d. Took PLT stationary readings. Made PLT logging passes from 3395 m to 2950 m MD at 10/20/30/40 m/min. Beaned up well to 4250 Sm3/d. Made PLT logging passes from 3395 m to 2950 m MD at 40 and 30 m/min."
+       },
+       {
+        "date": "2009-03-11",
+        "summary": "Made PLT logging passes from 3395 m to 2950 m MD at 20 and 10 m/min. Took PLT stationary readings. POOH with PLT. Inflow tested HMV and SV. Purged and flushed riser. Hooked up permanent controls to XMT. Stand-by for rigging down WL until scheduled shut-in."
+       },
+       {
+        "date": "2009-03-12",
+        "summary": "Stod by for rigging down WL until scheduled shut-in. Canceled cheduled production shut-in and had to wait on Mærsk to finish off 5-yearly work on tension cylinders in moonpool. Waited on Mærsk Production to shut in well and inflow test HMVand DHSV. Drained lubricator and WL riser. Broke out lubricator and LD toolstring. Tested WL BOP to 20/345 bar for 5/10 min. LD lubricator. Installed double lift arrangement from TDS to WL BOP and riser."
+       },
+       {
+        "date": "2009-03-13",
+        "summary": "Disconneced WL riser and BOP from XMT and suspended from rig floor. RD surface lines. Re-arranged and installed hatches on weather deck. RD surface lines and RU HP hose to XMT KWV. Leak tested XMT cross, SV, KWV and tree cap. Handed well over to Mærsk production. Skidded rig to F-12. Transferred operation to F-12."
+       }
+      ]
+     },
+     {
+      "start": "2010-09-10",
+      "end": "2010-09-20",
+      "kind": "workover",
+      "report_days": 11,
+      "contractor": "Aker Well Service",
+      "perforations": [],
+      "summaries": [
+       {
+        "date": "2010-09-10",
+        "summary": "Spotted and and hooked up WL equip. Assembled lubricator and riser. Built cable head."
+       },
+       {
+        "date": "2010-09-11",
+        "summary": "Prepared WL equipment for rig-up and tested PLT and Tractor. Handed well over to well service. Rigged up lower riser and BOP."
+       },
+       {
+        "date": "2010-09-12",
+        "summary": "Rigged up WL equipment. RIH with PLT/RST. Performed spinner calibration and started to bean up well to test separator with full bore spinner at 2900 m MDRKB."
+       },
+       {
+        "date": "2010-09-13",
+        "summary": "Performed PLT logging as per program."
+       },
+       {
+        "date": "2010-09-14",
+        "summary": "Performed RST logging in IC mode, across interval from 3642 to 2970 m."
+       },
+       {
+        "date": "2010-09-15",
+        "summary": "Continued logging RST in IC mode at 0,5 m/min up to 2975 m. Started tractor and RIH to 3642 m. Logged RST in IC mode at 0,5 m/min from 3642 to 3150 m."
+       },
+       {
+        "date": "2010-09-16",
+        "summary": "Logged RST from 3150 to 3101 m. RST far detector stopped working. Ran PLT logging pass from 3390 m up to 2970 m at speed 10, 20, 30 and 40 m/min. Took stationary readings at 3200, 3040 and 2970 m. Evaluated data. POOH. LD BHA. Waited on plug equipment from shore. Meanwhile produced well and prepared 5/16\" cable equipment."
+       },
+       {
+        "date": "2010-09-17",
+        "summary": "Waited on plug equipment from shore. Meanwhile produced well and prepared 5/16\" cable equipment. Held SJA meeting regarding RD wireline equipment."
+       },
+       {
+        "date": "2010-09-18",
+        "summary": "Waited on plug equipment from shore. Meanwhile produced well. Received plug equipment. Closed in well. Ran EVO plug on 3 1/8\" tractor. Stopped into DHSV. Started to equalize DHSV by pumping MEG into well."
+       },
+       {
+        "date": "2010-09-19",
+        "summary": "Equalized and opened DHSV. RIH with 7\" EVO plug. Lost communikation to BHA. POOH. RIH with back-up 7\" EVO plug and tractor. Installed EVO plug with top plug at 3274,25 m. POOH. Inflow tested HMV. LD BHA. Started to bleed down pressure above DHSV."
+       },
+       {
+        "date": "2010-09-20",
+        "summary": "Bled off pressure above DHSV and closed well. RD WL equipment. Installed x-mas tree top cap. Handed well back to Production Department."
+       }
+      ]
+     }
+    ],
+    "note": "Daily reports exist for drilling and for work on the well (wireline, plugs, perforations, production logs), not for days of normal production. A job's date is the day the work was done; kind is drilling, completion, workover (work on a producing or injecting well) or abandonment. Ask for one day to see every operation line."
+   },
+   "code": "wellpilot.agent.tools.well_operations@691598c6cb8c",
+   "created_at": "2026-10-28T23:24:02+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E20",
+   "tool": "field_vs_design",
+   "arguments": {},
+   "result": {
+    "scope": "whole field, all producers and injectors summed per day, then per month",
+    "plan_source": "Plan for utbygging og drift av Volve (PUD, plan for development and operation), page 23, Table 4.3",
+    "design_limits": {
+     "liquid_sm3_per_day": {
+      "limit": "field liquid capacity",
+      "value": 13000,
+      "quote": "Væskekapasitet 13000 Sm3 /d"
+     },
+     "oil_sm3_per_day": {
+      "limit": "field oil capacity",
+      "value": 9000,
+      "quote": "Oljekapasitet 9000 Sm3 /d"
+     },
+     "water_cut": {
+      "limit": "maximum water cut",
+      "value": 0.8,
+      "quote": "Maksimum vannkutt 0,80"
+     },
+     "water_inj_sm3_per_day": {
+      "limit": "field water injection capacity",
+      "value": 16000,
+      "quote": "Vanninjeksjons kapasitet 16000 Sm3 /d"
+     },
+     "water_sm3_per_day": {
+      "limit": "field water handling (derived: liquid capacity x maximum water cut)",
+      "value": 10400,
+      "quote": null
+     }
+    },
+    "field_against_limits": {
+     "liquid_sm3_per_day": {
+      "first_month_at_or_above": null,
+      "months_at_or_above": 0,
+      "max": 10826,
+      "max_month": "2010-06"
+     },
+     "oil_sm3_per_day": {
+      "first_month_at_or_above": null,
+      "months_at_or_above": 0,
+      "max": 8924,
+      "max_month": "2008-12"
+     },
+     "water_cut": {
+      "first_month_at_or_above": null,
+      "months_at_or_above": 0,
+      "max": 0.6715,
+      "max_month": "2010-12"
+     },
+     "water_inj_sm3_per_day": {
+      "first_month_at_or_above": "2008-12",
+      "months_at_or_above": 3,
+      "max": 17206,
+      "max_month": "2008-12"
+     },
+     "water_sm3_per_day": {
+      "first_month_at_or_above": null,
+      "months_at_or_above": 0,
+      "max": 7193,
+      "max_month": "2010-12",
+      "max_day": 7500,
+      "max_day_month": "2010-11"
+     }
+    },
+    "months": {
+     "columns": [
+      "month",
+      "days",
+      "oil_sm3_per_day",
+      "liquid_sm3_per_day",
+      "water_cut",
+      "water_sm3_per_day",
+      "water_inj_sm3_per_day",
+      "max_day_liquid_sm3",
+      "max_day_water_sm3"
+     ],
+     "rows": [
+      [
+       "2008-02",
+       29,
+       1693,
+       1707,
+       0.008335,
+       14.23,
+       0.0,
+       3127,
+       385.01
+      ],
+      [
+       "2008-03",
+       31,
+       2689,
+       2690,
+       0.0003288,
+       0.8845,
+       0.0,
+       3193,
+       3.39
+      ],
+      [
+       "2008-04",
+       30,
+       2484,
+       2501,
+       0.006614,
+       16.54,
+       991.76,
+       3306,
+       153.36
+      ],
+      [
+       "2008-05",
+       31,
+       4048,
+       4055,
+       0.001914,
+       7.76,
+       7140,
+       5096,
+       29.8
+      ],
+      [
+       "2008-06",
+       30,
+       4793,
+       4809,
+       0.003288,
+       15.81,
+       7060,
+       5242,
+       184.78
+      ],
+      [
+       "2008-07",
+       31,
+       5364,
+       5377,
+       0.002497,
+       13.43,
+       7485,
+       6853,
+       36.05
+      ],
+      [
+       "2008-08",
+       31,
+       5337,
+       5355,
+       0.003474,
+       18.6,
+       7368,
+       9258,
+       90.81
+      ],
+      [
+       "2008-09",
+       30,
+       6409,
+       6424,
+       0.002408,
+       15.47,
+       5447,
+       9078,
+       74.97
+      ],
+      [
+       "2008-10",
+       31,
+       7651,
+       7674,
+       0.003049,
+       23.4,
+       11476,
+       9017,
+       40.42
+      ],
+      [
+       "2008-11",
+       30,
+       8344,
+       8430,
+       0.0102,
+       86.01,
+       14730,
+       9346,
+       804.33
+      ],
+      [
+       "2008-12",
+       31,
+       8924,
+       8958,
+       0.003852,
+       34.51,
+       17206,
+       9076,
+       71.83
+      ],
+      [
+       "2009-01",
+       31,
+       8685,
+       8730,
+       0.005053,
+       44.11,
+       16139,
+       9232,
+       298.19
+      ],
+      [
+       "2009-02",
+       28,
+       8421,
+       8511,
+       0.01061,
+       90.33,
+       15973,
+       9102,
+       152.76
+      ],
+      [
+       "2009-03",
+       31,
+       5923,
+       5977,
+       0.009062,
+       54.17,
+       4608,
+       9137,
+       207.66
+      ],
+      [
+       "2009-04",
+       30,
+       7930,
+       7980,
+       0.006236,
+       49.76,
+       7046,
+       9031,
+       124.94
+      ],
+      [
+       "2009-05",
+       31,
+       8297,
+       8508,
+       0.02482,
+       211.18,
+       14963,
+       9429,
+       456.62
+      ],
+      [
+       "2009-06",
+       30,
+       7303,
+       7582,
+       0.03688,
+       279.66,
+       8773,
+       9372,
+       620.77
+      ],
+      [
+       "2009-07",
+       31,
+       5515,
+       5840,
+       0.05558,
+       324.59,
+       12796,
+       6571,
+       507.3
+      ],
+      [
+       "2009-08",
+       31,
+       7255,
+       8088,
+       0.103,
+       832.83,
+       12593,
+       10519,
+       1623
+      ],
+      [
+       "2009-09",
+       30,
+       6015,
+       6599,
+       0.08845,
+       583.66,
+       11185,
+       10363,
+       1361
+      ],
+      [
+       "2009-10",
+       31,
+       7214,
+       8276,
+       0.1283,
+       1062,
+       12353,
+       10182,
+       2994
+      ],
+      [
+       "2009-11",
+       30,
+       7802,
+       9479,
+       0.1769,
+       1677,
+       13760,
+       10430,
+       2121
+      ],
+      [
+       "2009-12",
+       31,
+       7984,
+       10355,
+       0.2289,
+       2371,
+       14354,
+       11620,
+       3250
+      ],
+      [
+       "2010-01",
+       31,
+       7480,
+       10713,
+       0.3018,
+       3233,
+       15298,
+       11704,
+       3920
+      ],
+      [
+       "2010-02",
+       28,
+       5897,
+       9655,
+       0.3892,
+       3758,
+       13751,
+       11350,
+       4915
+      ],
+      [
+       "2010-03",
+       31,
+       5437,
+       9262,
+       0.4129,
+       3824,
+       10609,
+       11732,
+       5518
+      ],
+      [
+       "2010-04",
+       30,
+       5310,
+       9905,
+       0.4639,
+       4595,
+       12194,
+       11636,
+       5515
+      ],
+      [
+       "2010-05",
+       31,
+       5320,
+       10473,
+       0.492,
+       5153,
+       16282,
+       11430,
+       6002
+      ],
+      [
+       "2010-06",
+       30,
+       4831,
+       10826,
+       0.5538,
+       5995,
+       14279,
+       11645,
+       6560
+      ],
+      [
+       "2010-07",
+       31,
+       4311,
+       10642,
+       0.5949,
+       6331,
+       13286,
+       11074,
+       6664
+      ],
+      [
+       "2010-08",
+       31,
+       2211,
+       5799,
+       0.6188,
+       3588,
+       7385,
+       11173,
+       7038
+      ],
+      [
+       "2010-09",
+       30,
+       3557,
+       8755,
+       0.5937,
+       5198,
+       10281,
+       11026,
+       6793
+      ],
+      [
+       "2010-10",
+       31,
+       4200,
+       10667,
+       0.6063,
+       6467,
+       12755,
+       11406,
+       7232
+      ],
+      [
+       "2010-11",
+       30,
+       3567,
+       10208,
+       0.6505,
+       6640,
+       11863,
+       11198,
+       7500
+      ],
+      [
+       "2010-12",
+       31,
+       3519,
+       10712,
+       0.6715,
+       7193,
+       12316,
+       10927,
+       7349
+      ]
+     ]
+    },
+    "plan_end_quote": "Kumulativ oljeproduksjon inntil minimum økonomisk rate på 2.100 Sm3 /d (gitt Volve oljepris på 18,7 USD/fat) nås er 11,4 MSm3",
+    "note": "These are field and platform limits (PUD p.35 lists the same platform capacities); compare them with field totals, never one well. The maximum water cut is a share at full liquid rate: the water the platform can handle is liquid capacity x maximum water cut (water_sm3_per_day). The field reaching that share at a lower liquid rate means it ran at the design water cut, not over its water capacity. Rates are per calendar day of each month."
+   },
+   "code": "wellpilot.agent.tools.field_vs_design@e3763197bb3a",
+   "created_at": "2026-10-28T23:24:02+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E21",
+   "tool": "production_monthly",
+   "arguments": {
+    "well": "F-12"
+   },
+   "result": {
+    "columns": [
+     "month",
+     "days",
+     "producing_days",
+     "oil_sm3",
+     "water_sm3",
+     "gas_sm3",
+     "water_injected_sm3",
+     "water_cut",
+     "uptime",
+     "oil_rate_per_producing_day",
+     "bhp_bar",
+     "whp_bar",
+     "choke_pct"
+    ],
+    "rows": [
+     [
+      "2008-02",
+      18,
+      18,
+      49091,
+      412.61,
+      7068009,
+      null,
+      0.008335,
+      0.9413,
+      2897,
+      293.03,
+      113.25,
+      29.81
+     ],
+     [
+      "2008-03",
+      31,
+      30,
+      83361,
+      27.42,
+      12191171,
+      null,
+      0.0003288,
+      0.8805,
+      3054,
+      278.96,
+      103.26,
+      31.25
+     ],
+     [
+      "2008-04",
+      30,
+      29,
+      74532,
+      496.24,
+      11506441,
+      0.0,
+      0.006614,
+      0.8523,
+      2915,
+      264.23,
+      93.15,
+      31.48
+     ],
+     [
+      "2008-05",
+      31,
+      30,
+      125479,
+      240.66,
+      19091872,
+      null,
+      0.001914,
+      0.9626,
+      4205,
+      262.86,
+      85.58,
+      38.48
+     ],
+     [
+      "2008-06",
+      30,
+      30,
+      143787,
+      474.37,
+      21512334,
+      null,
+      0.003288,
+      0.9388,
+      5105,
+      258.08,
+      77.03,
+      42.91
+     ],
+     [
+      "2008-07",
+      31,
+      31,
+      114995,
+      290.02,
+      17116442,
+      null,
+      0.002516,
+      0.9553,
+      3883,
+      264.12,
+      88.68,
+      41.98
+     ],
+     [
+      "2008-08",
+      31,
+      30,
+      97822,
+      354.18,
+      14143008,
+      0.0,
+      0.003608,
+      0.9043,
+      3489,
+      260.12,
+      87.05,
+      44.36
+     ],
+     [
+      "2008-09",
+      30,
+      26,
+      77667,
+      188.39,
+      11185944,
+      null,
+      0.00242,
+      0.7889,
+      3282,
+      249.76,
+      81.71,
+      42.6
+     ],
+     [
+      "2008-10",
+      31,
+      31,
+      94357,
+      624.05,
+      13430834,
+      null,
+      0.00657,
+      0.9913,
+      3071,
+      237.28,
+      74.35,
+      43.34
+     ],
+     [
+      "2008-11",
+      30,
+      30,
+      145916,
+      2390,
+      20837122,
+      null,
+      0.01612,
+      0.9898,
+      4914,
+      225.07,
+      57.84,
+      65.55
+     ],
+     [
+      "2008-12",
+      31,
+      31,
+      166440,
+      1003,
+      24106362,
+      null,
+      0.005992,
+      1.0,
+      5369,
+      237.61,
+      64.33,
+      63.82
+     ],
+     [
+      "2009-01",
+      31,
+      31,
+      153677,
+      389.76,
+      22255224,
+      null,
+      0.00253,
+      0.9957,
+      4979,
+      261.52,
+      79.97,
+      54.99
+     ],
+     [
+      "2009-02",
+      28,
+      28,
+      121905,
+      0.0,
+      17427052,
+      null,
+      0.0,
+      0.9766,
+      4458,
+      274.49,
+      90.54,
+      49.7
+     ],
+     [
+      "2009-03",
+      31,
+      25,
+      92959,
+      0.0,
+      13123547,
+      null,
+      0.0,
+      0.6806,
+      4406,
+      273.9,
+      88.88,
+      49.56
+     ],
+     [
+      "2009-04",
+      30,
+      30,
+      150956,
+      1246,
+      20931108,
+      null,
+      0.008188,
+      0.9988,
+      5038,
+      235.31,
+      61.39,
+      65.42
+     ],
+     [
+      "2009-05",
+      31,
+      30,
+      141039,
+      3106,
+      19366853,
+      0.0,
+      0.02155,
+      0.9344,
+      4869,
+      232.1,
+      60.49,
+      63.31
+     ],
+     [
+      "2009-06",
+      30,
+      30,
+      132430,
+      2659,
+      17787476,
+      null,
+      0.01968,
+      0.9935,
+      4443,
+      230.55,
+      59.56,
+      64.93
+     ],
+     [
+      "2009-07",
+      31,
+      31,
+      106105,
+      3289,
+      14721967,
+      null,
+      0.03007,
+      0.9975,
+      3431,
+      236.14,
+      68.26,
+      50.46
+     ],
+     [
+      "2009-08",
+      31,
+      28,
+      112414,
+      5024,
+      15676350,
+      0.0,
+      0.04278,
+      0.7918,
+      4580,
+      241.35,
+      62.71,
+      64.69
+     ],
+     [
+      "2009-09",
+      30,
+      23,
+      90099,
+      2235,
+      12553422,
+      0.0,
+      0.02421,
+      0.6851,
+      4384,
+      253.26,
+      71.3,
+      57.59
+     ],
+     [
+      "2009-10",
+      31,
+      31,
+      126940,
+      6813,
+      17819694,
+      null,
+      0.05094,
+      0.919,
+      4456,
+      257.37,
+      73.74,
+      55.54
+     ],
+     [
+      "2009-11",
+      30,
+      30,
+      136016,
+      11287,
+      19181584,
+      null,
+      0.07662,
+      0.9802,
+      4625,
+      255.77,
+      68.59,
+      61.73
+     ],
+     [
+      "2009-12",
+      31,
+      31,
+      158002,
+      17321,
+      22160862,
+      null,
+      0.0988,
+      0.9792,
+      5205,
+      251.3,
+      61.02,
+      70.93
+     ],
+     [
+      "2010-01",
+      31,
+      31,
+      149659,
+      30230,
+      21044604,
+      null,
+      0.168,
+      0.9975,
+      4840,
+      248.07,
+      56.16,
+      74.86
+     ],
+     [
+      "2010-02",
+      28,
+      27,
+      103026,
+      43216,
+      14520590,
+      0.0,
+      0.2955,
+      0.9058,
+      4062,
+      255.06,
+      56.27,
+      71.78
+     ],
+     [
+      "2010-03",
+      31,
+      28,
+      101572,
+      53999,
+      14278519,
+      0.0,
+      0.3471,
+      0.8705,
+      3764,
+      250.17,
+      53.46,
+      75.96
+     ],
+     [
+      "2010-04",
+      30,
+      30,
+      86254,
+      67996,
+      12161146,
+      null,
+      0.4408,
+      0.9806,
+      2932,
+      254.05,
+      50.78,
+      76.71
+     ],
+     [
+      "2010-05",
+      31,
+      31,
+      77114,
+      74438,
+      10970381,
+      null,
+      0.4912,
+      0.9854,
+      2524,
+      267.31,
+      57.18,
+      56.44
+     ],
+     [
+      "2010-06",
+      30,
+      30,
+      69617,
+      83268,
+      9944534,
+      null,
+      0.5446,
+      0.9961,
+      2330,
+      280.74,
+      63.02,
+      50.97
+     ],
+     [
+      "2010-07",
+      31,
+      31,
+      64040,
+      95054,
+      9283377,
+      null,
+      0.5975,
+      0.9978,
+      2070,
+      279.52,
+      56.08,
+      58.56
+     ],
+     [
+      "2010-08",
+      31,
+      19,
+      30117,
+      54788,
+      4346504,
+      0.0,
+      0.6453,
+      0.5745,
+      1691,
+      286.34,
+      63.61,
+      47.05
+     ],
+     [
+      "2010-09",
+      30,
+      29,
+      51313,
+      89429,
+      7750211,
+      null,
+      0.6354,
+      0.8955,
+      1910,
+      278.76,
+      57.17,
+      55.35
+     ],
+     [
+      "2010-10",
+      31,
+      31,
+      51431,
+      99543,
+      7741377,
+      null,
+      0.6593,
+      0.9987,
+      1661,
+      273.38,
+      54.57,
+      51.94
+     ],
+     [
+      "2010-11",
+      30,
+      30,
+      44468,
+      102236,
+      6747078,
+      null,
+      0.6969,
+      0.9588,
+      1546,
+      null,
+      50.67,
+      52.94
+     ],
+     [
+      "2010-12",
+      31,
+      31,
+      45218,
+      111336,
+      6910660,
+      null,
+      0.7112,
+      0.9964,
+      1464,
+      null,
+      52.46,
+      50.75
+     ]
+    ]
+   },
+   "code": "wellpilot.agent.tools.production_monthly@c841520578bb",
+   "created_at": "2026-10-28T23:24:07+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E22",
+   "tool": "production_monthly",
+   "arguments": {
+    "well": "F-14"
+   },
+   "result": {
+    "columns": [
+     "month",
+     "days",
+     "producing_days",
+     "oil_sm3",
+     "water_sm3",
+     "gas_sm3",
+     "water_injected_sm3",
+     "water_cut",
+     "uptime",
+     "oil_rate_per_producing_day",
+     "bhp_bar",
+     "whp_bar",
+     "choke_pct"
+    ],
+    "rows": [
+     [
+      "2008-02",
+      18,
+      0,
+      0.0,
+      0.0,
+      0.0,
+      null,
+      null,
+      0.0,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2008-03",
+      31,
+      0,
+      0.0,
+      0.0,
+      0.0,
+      null,
+      null,
+      0.0,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2008-04",
+      30,
+      0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.0,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2008-05",
+      31,
+      0,
+      0.0,
+      0.0,
+      0.0,
+      null,
+      null,
+      0.0,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2008-06",
+      30,
+      0,
+      0.0,
+      0.0,
+      0.0,
+      null,
+      null,
+      0.0,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2008-07",
+      31,
+      19,
+      51285,
+      126.17,
+      7538861,
+      null,
+      0.002454,
+      0.5881,
+      2813,
+      251.82,
+      95.89,
+      29.97
+     ],
+     [
+      "2008-08",
+      31,
+      21,
+      67621,
+      222.53,
+      9780532,
+      0.0,
+      0.00328,
+      0.6161,
+      3540,
+      245.15,
+      88.9,
+      34.13
+     ],
+     [
+      "2008-09",
+      30,
+      28,
+      114596,
+      275.73,
+      16340515,
+      null,
+      0.0024,
+      0.8927,
+      4279,
+      229.66,
+      74.16,
+      42.03
+     ],
+     [
+      "2008-10",
+      31,
+      31,
+      142817,
+      101.25,
+      20326866,
+      null,
+      0.0007084,
+      0.998,
+      4616,
+      210.81,
+      61.21,
+      46.77
+     ],
+     [
+      "2008-11",
+      30,
+      30,
+      104410,
+      189.89,
+      14906020,
+      null,
+      0.001815,
+      0.997,
+      3491,
+      224.08,
+      74.69,
+      36.15
+     ],
+     [
+      "2008-12",
+      31,
+      31,
+      110199,
+      66.54,
+      15956253,
+      null,
+      0.0006035,
+      1.0,
+      3555,
+      238.52,
+      84.51,
+      34.74
+     ],
+     [
+      "2009-01",
+      31,
+      31,
+      115573,
+      977.79,
+      16718455,
+      null,
+      0.008389,
+      0.9478,
+      3933,
+      253.86,
+      93.25,
+      33.91
+     ],
+     [
+      "2009-02",
+      28,
+      28,
+      113881,
+      2529,
+      16254377,
+      null,
+      0.02173,
+      0.95,
+      4281,
+      263.51,
+      98.23,
+      34.08
+     ],
+     [
+      "2009-03",
+      31,
+      27,
+      90644,
+      1679,
+      12702463,
+      null,
+      0.01819,
+      0.7134,
+      4098,
+      259.04,
+      93.65,
+      35.5
+     ],
+     [
+      "2009-04",
+      30,
+      27,
+      86944,
+      246.47,
+      11926656,
+      null,
+      0.002827,
+      0.7467,
+      3881,
+      210.26,
+      75.27,
+      37.15
+     ],
+     [
+      "2009-05",
+      31,
+      30,
+      116175,
+      3440,
+      15944549,
+      0.0,
+      0.02876,
+      0.9337,
+      4014,
+      220.51,
+      69.02,
+      40.44
+     ],
+     [
+      "2009-06",
+      30,
+      30,
+      86654,
+      5731,
+      12141881,
+      null,
+      0.06204,
+      0.961,
+      3006,
+      222.68,
+      69.6,
+      35.8
+     ],
+     [
+      "2009-07",
+      31,
+      31,
+      64872,
+      6773,
+      9127860,
+      null,
+      0.09453,
+      0.9975,
+      2098,
+      231.09,
+      76.92,
+      29.4
+     ],
+     [
+      "2009-08",
+      31,
+      29,
+      112493,
+      20794,
+      15664622,
+      0.0,
+      0.156,
+      0.8828,
+      4110,
+      226.94,
+      64.23,
+      42.92
+     ],
+     [
+      "2009-09",
+      30,
+      23,
+      90350,
+      15275,
+      12564633,
+      0.0,
+      0.1446,
+      0.707,
+      4259,
+      234.04,
+      60.37,
+      46.9
+     ],
+     [
+      "2009-10",
+      31,
+      31,
+      96707,
+      26099,
+      13556585,
+      null,
+      0.2125,
+      0.8809,
+      3541,
+      238.73,
+      66.63,
+      41.56
+     ],
+     [
+      "2009-11",
+      30,
+      30,
+      98044,
+      39016,
+      13821884,
+      null,
+      0.2847,
+      0.9851,
+      3318,
+      242.73,
+      66.69,
+      39.81
+     ],
+     [
+      "2009-12",
+      31,
+      31,
+      89514,
+      56173,
+      12552908,
+      null,
+      0.3856,
+      0.9767,
+      2956,
+      238.62,
+      58.79,
+      43.9
+     ],
+     [
+      "2010-01",
+      31,
+      31,
+      82221,
+      70004,
+      11561302,
+      null,
+      0.4599,
+      0.9975,
+      2659,
+      237.4,
+      54.88,
+      45.64
+     ],
+     [
+      "2010-02",
+      28,
+      27,
+      62093,
+      62000,
+      8751248,
+      0.0,
+      0.4996,
+      0.908,
+      2442,
+      224.68,
+      61.02,
+      40.09
+     ],
+     [
+      "2010-03",
+      31,
+      29,
+      66989,
+      64561,
+      9421805,
+      0.0,
+      0.4908,
+      0.8792,
+      2458,
+      242.42,
+      57.4,
+      43.18
+     ],
+     [
+      "2010-04",
+      30,
+      29,
+      73036,
+      69865,
+      10288470,
+      null,
+      0.4889,
+      0.9442,
+      2578,
+      240.31,
+      54.49,
+      47.31
+     ],
+     [
+      "2010-05",
+      31,
+      31,
+      87809,
+      85315,
+      12490296,
+      null,
+      0.4928,
+      0.9948,
+      2847,
+      241.5,
+      47.82,
+      64.8
+     ],
+     [
+      "2010-06",
+      30,
+      30,
+      75310,
+      96581,
+      10756577,
+      null,
+      0.5619,
+      0.9969,
+      2518,
+      250.52,
+      49.34,
+      62.65
+     ],
+     [
+      "2010-07",
+      31,
+      31,
+      69600,
+      101216,
+      10073534,
+      null,
+      0.5925,
+      0.9979,
+      2250,
+      255.46,
+      53.27,
+      53.99
+     ],
+     [
+      "2010-08",
+      31,
+      18,
+      38414,
+      56453,
+      5543252,
+      0.0,
+      0.5951,
+      0.5714,
+      2169,
+      254.89,
+      52.03,
+      54.17
+     ],
+     [
+      "2010-09",
+      30,
+      27,
+      55405,
+      66507,
+      8260552,
+      null,
+      0.5455,
+      0.7863,
+      2349,
+      252.53,
+      56.4,
+      46.44
+     ],
+     [
+      "2010-10",
+      31,
+      31,
+      78755,
+      100949,
+      11853847,
+      null,
+      0.5618,
+      0.9989,
+      2543,
+      243.18,
+      46.78,
+      61.01
+     ],
+     [
+      "2010-11",
+      30,
+      30,
+      62555,
+      96970,
+      9485349,
+      null,
+      0.6079,
+      0.9492,
+      2197,
+      240.95,
+      42.89,
+      82.76
+     ],
+     [
+      "2010-12",
+      31,
+      31,
+      63886,
+      111640,
+      9763160,
+      null,
+      0.636,
+      0.9966,
+      2068,
+      242.26,
+      40.98,
+      98.46
+     ]
+    ]
+   },
+   "code": "wellpilot.agent.tools.production_monthly@c841520578bb",
+   "created_at": "2026-10-28T23:24:07+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E23",
+   "tool": "detect_events",
+   "arguments": {
+    "well": "F-14"
+   },
+   "result": [
+    {
+     "kind": "gauge_failure",
+     "signal": "bhp_bar",
+     "start": "2008-02-12",
+     "end": "2008-05-19",
+     "summary": "bhp_bar reads 0 on 97 days from 2008-02-12 to 2008-05-19 while the well was shut in; the gauge may just be switched off.",
+     "details": {
+      "zero_days": 97,
+      "flowing_days": 0,
+      "oil_sm3_during": 0.0,
+      "last_good_date": null,
+      "last_good_value": null
+     }
+    },
+    {
+     "kind": "gauge_failure",
+     "signal": "bhp_bar",
+     "start": "2008-05-23",
+     "end": "2008-06-28",
+     "summary": "bhp_bar reads 0 on 37 days from 2008-05-23 to 2008-06-28 while the well was shut in; the gauge may just be switched off. Last good reading: 97.4 on 2008-05-22.",
+     "details": {
+      "zero_days": 37,
+      "flowing_days": 0,
+      "oil_sm3_during": 0.0,
+      "last_good_date": "2008-05-22",
+      "last_good_value": 97.36
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2008-08-22",
+     "end": "2008-08-30",
+     "summary": "Shut in for 9 days from 2008-08-22. Oil rate 3,553 -> 4,869 Sm3/d (+37%) after restart.",
+     "details": {
+      "days": 9,
+      "rate_before": 3553,
+      "rate_after": 4869,
+      "relative_change": 0.3703,
+      "field_wide": false,
+      "also_shut_in": []
+     }
+    },
+    {
+     "kind": "threshold_crossing",
+     "signal": "water_cut",
+     "start": "2009-06-21",
+     "end": null,
+     "summary": "30-day median water_cut first goes above 0.05 on 2009-06-21, 11 months after first oil.",
+     "details": {
+      "threshold": 0.05,
+      "direction": "above",
+      "window_days": 30,
+      "median_at_crossing": 0.05154,
+      "first_oil": "2008-07-13",
+      "months_after_first_oil": 11.27
+     }
+    },
+    {
+     "kind": "regime_change",
+     "signal": "water_cut",
+     "start": "2009-12-06",
+     "end": null,
+     "summary": "water_cut shifts around 2009-12-06: weekly mean 0.0594 -> 0.53 (+0.47) from the period before to the period after.",
+     "details": {
+      "before_mean": 0.05942,
+      "after_mean": 0.5304,
+      "change": 0.471,
+      "before_from": "2008-07-13",
+      "after_to": "2011-01-02"
+     }
+    },
+    {
+     "kind": "regime_change",
+     "signal": "oil_rate",
+     "start": "2010-01-10",
+     "end": null,
+     "summary": "oil_rate shifts around 2010-01-10: weekly mean 3,616 -> 2,397 (-34%) from the period before to the period after; across the change itself, 4 weeks each side, 2,892 -> 2,657 (-8%); the choke stayed about the same (45 -> 45%).",
+     "details": {
+      "before_mean": 3616,
+      "after_mean": 2397,
+      "relative_change": -0.3369,
+      "across_before": 2892,
+      "across_after": 2657,
+      "change_across": -0.08129,
+      "choke_before_pct": 45.29,
+      "choke_after_pct": 45.31,
+      "choke_moved": false,
+      "before_from": "2008-07-13",
+      "after_to": "2011-01-02"
+     }
+    },
+    {
+     "kind": "gauge_failure",
+     "signal": "bhp_bar",
+     "start": "2010-02-15",
+     "end": "2010-02-22",
+     "summary": "bhp_bar reads 0 on 8 days from 2010-02-15 to 2010-02-22 while the well kept flowing on 8 days (18,464 Sm3 oil): a sensor failure, not a pressure collapse. Last good reading: 222.3 on 2010-02-14.",
+     "details": {
+      "zero_days": 8,
+      "flowing_days": 8,
+      "oil_sm3_during": 18464,
+      "last_good_date": "2010-02-14",
+      "last_good_value": 222.27
+     }
+    },
+    {
+     "kind": "threshold_crossing",
+     "signal": "water_cut",
+     "start": "2010-04-05",
+     "end": null,
+     "summary": "30-day median water_cut first goes above 0.5 on 2010-04-05, 21 months after first oil.",
+     "details": {
+      "threshold": 0.5,
+      "direction": "above",
+      "window_days": 30,
+      "median_at_crossing": 0.5002,
+      "first_oil": "2008-07-13",
+      "months_after_first_oil": 20.73
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2010-08-16",
+     "end": "2010-08-28",
+     "summary": "Shut in for 13 days from 2010-08-16. Oil rate 2,361 -> 2,267 Sm3/d (-4%) after restart. Same time as F-12.",
+     "details": {
+      "days": 13,
+      "rate_before": 2361,
+      "rate_after": 2267,
+      "relative_change": -0.03978,
+      "field_wide": true,
+      "also_shut_in": [
+       "F-12"
+      ]
+     }
+    }
+   ],
+   "code": "wellpilot.agent.tools.detect_events@504159f9080e",
+   "created_at": "2026-10-28T23:24:21+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E24",
+   "tool": "waterflood",
+   "arguments": {
+    "well": "F-14"
+   },
+   "result": {
+    "well": "F-14",
+    "monthly": {
+     "columns": [
+      "month",
+      "cum_oil_sm3",
+      "wor",
+      "water_cut",
+      "liquid_rate_sm3_per_day",
+      "choke_pct"
+     ],
+     "rows": [
+      [
+       "2008-07",
+       51285,
+       0.00246,
+       0.002454,
+       2820,
+       29.8
+      ],
+      [
+       "2008-08",
+       118906,
+       0.003291,
+       0.00328,
+       3552,
+       35.47
+      ],
+      [
+       "2008-09",
+       233503,
+       0.002406,
+       0.0024,
+       4290,
+       44.53
+      ],
+      [
+       "2008-10",
+       376320,
+       0.0007089,
+       0.0007084,
+       4620,
+       45.25
+      ],
+      [
+       "2008-11",
+       480729,
+       0.001819,
+       0.001815,
+       3497,
+       35.81
+      ],
+      [
+       "2008-12",
+       590928,
+       0.0006038,
+       0.0006035,
+       3557,
+       34.89
+      ],
+      [
+       "2009-01",
+       706501,
+       0.00846,
+       0.008389,
+       3967,
+       34.64
+      ],
+      [
+       "2009-02",
+       820382,
+       0.02221,
+       0.02173,
+       4376,
+       34.7
+      ],
+      [
+       "2009-03",
+       911027,
+       0.01852,
+       0.01819,
+       4174,
+       34.33
+      ],
+      [
+       "2009-04",
+       997971,
+       0.002835,
+       0.002827,
+       3892,
+       37.22
+      ],
+      [
+       "2009-05",
+       1114146,
+       0.02961,
+       0.02876,
+       4133,
+       41.27
+      ],
+      [
+       "2009-06",
+       1200800,
+       0.06614,
+       0.06204,
+       3205,
+       36.85
+      ],
+      [
+       "2009-07",
+       1265672,
+       0.1044,
+       0.09453,
+       2317,
+       29.16
+      ],
+      [
+       "2009-08",
+       1378165,
+       0.1848,
+       0.156,
+       4870,
+       42.28
+      ],
+      [
+       "2009-09",
+       1468515,
+       0.1691,
+       0.1446,
+       4980,
+       43.28
+      ],
+      [
+       "2009-10",
+       1565222,
+       0.2699,
+       0.2125,
+       4497,
+       41.57
+      ],
+      [
+       "2009-11",
+       1663266,
+       0.398,
+       0.2847,
+       4638,
+       38.96
+      ],
+      [
+       "2009-12",
+       1752780,
+       0.6275,
+       0.3856,
+       4812,
+       42.33
+      ],
+      [
+       "2010-01",
+       1835001,
+       0.8514,
+       0.4599,
+       4923,
+       46.01
+      ],
+      [
+       "2010-02",
+       1897094,
+       0.9985,
+       0.4996,
+       4881,
+       40.98
+      ],
+      [
+       "2010-03",
+       1964083,
+       0.9637,
+       0.4908,
+       4827,
+       42.92
+      ],
+      [
+       "2010-04",
+       2037119,
+       0.9566,
+       0.4889,
+       5045,
+       45.15
+      ],
+      [
+       "2010-05",
+       2124929,
+       0.9716,
+       0.4928,
+       5614,
+       65.33
+      ],
+      [
+       "2010-06",
+       2200238,
+       1.28,
+       0.5619,
+       5748,
+       60.43
+      ],
+      [
+       "2010-07",
+       2269839,
+       1.45,
+       0.5925,
+       5522,
+       59.13
+      ],
+      [
+       "2010-08",
+       2308252,
+       1.47,
+       0.5951,
+       5356,
+       59.09
+      ],
+      [
+       "2010-09",
+       2363658,
+       1.2,
+       0.5455,
+       5168,
+       47.07
+      ],
+      [
+       "2010-10",
+       2442413,
+       1.28,
+       0.5618,
+       5803,
+       62.36
+      ],
+      [
+       "2010-11",
+       2504968,
+       1.55,
+       0.6079,
+       5602,
+       79.28
+      ],
+      [
+       "2010-12",
+       2568855,
+       1.75,
+       0.636,
+       5681,
+       100.0
+      ]
+     ]
+    },
+    "wor_fit": null,
+    "no_trend": "too few months with WOR >= 1 (water cut 0.5) to fit a trend: 7, need 12",
+    "by_year": {
+     "columns": [
+      "year",
+      "liquid_rate_sm3_per_day",
+      "choke_pct",
+      "water_cut",
+      "oil_sm3"
+     ],
+     "rows": [
+      [
+       2008,
+       3554,
+       35.64,
+       0.002108,
+       590928
+      ],
+      [
+       2009,
+       4275,
+       38.09,
+       0.07828,
+       1161852
+      ],
+      [
+       2010,
+       5439,
+       59.11,
+       0.5536,
+       816075
+      ]
+     ]
+    },
+    "field_voidage": {
+     "columns": [
+      "year",
+      "injected_sm3",
+      "oil_sm3",
+      "water_sm3",
+      "replacement_ratio",
+      "replacement_ratio_low",
+      "replacement_ratio_high",
+      "surface_ratio"
+     ],
+     "rows": [
+      [
+       2008,
+       2417770,
+       1764375,
+       7484,
+       0.9864,
+       0.911,
+       1.08,
+       1.36
+      ],
+      [
+       2009,
+       4392198,
+       2684392,
+       232105,
+       1.11,
+       1.03,
+       1.21,
+       1.51
+      ],
+      [
+       2010,
+       4569394,
+       1689903,
+       1887595,
+       1.08,
+       1.03,
+       1.13,
+       1.28
+      ]
+     ]
+    },
+    "notes": "WOR = water/oil by month; the trend is log10(WOR) against cumulative oil, fitted on up to 36 recent months with WOR >= 1. field_voidage: replacement_ratio is injection over voidage at reservoir conditions (Bo 1.385 m3/Sm3 from PUD p.20, low/high with Bo 1.5/1.27; Bw 1; above the bubble point, so no free gas); surface_ratio is the same in surface volumes, which overstates replacement."
+   },
+   "code": "wellpilot.agent.tools.waterflood_tool@6e7e7428c338",
+   "created_at": "2026-10-28T23:24:25+00:00",
+   "warnings": []
+  }
+ ]
+}

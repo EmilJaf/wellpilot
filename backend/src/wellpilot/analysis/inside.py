@@ -131,14 +131,11 @@ def inside_well(store: ProductionStore, well: str) -> dict:
                 "plugs_m": plugs,
                 "perforations_m": perforations,
                 "summaries": job["summaries"],
-                "before": _production(
-                    store,
-                    well,
-                    start - pd.Timedelta(days=WINDOW_DAYS),
-                    start - pd.Timedelta(days=1),
-                ),
+                # The same windows as the agent's production_log (plugs_set) and the reveal,
+                # so the tab, the answer and the README give one number per job.
+                "before": _production(store, well, start - pd.Timedelta(days=WINDOW_DAYS), start),
                 "after": back
-                and _production(store, well, back, back + pd.Timedelta(days=WINDOW_DAYS - 1)),
+                and _production(store, well, back, back + pd.Timedelta(days=WINDOW_DAYS)),
             }
         )
     zones = next(

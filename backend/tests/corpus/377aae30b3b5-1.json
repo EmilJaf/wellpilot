@@ -6,11 +6,10 @@
   "question": "When was well F-11 B completed, and how does its completion report's timing compare with when it started producing?"
  },
  "to_review": false,
- "note": "Fair: chart dates cited without the look_at_page evidence that read them; calculations on Unix timestamps the model typed.",
+ "note": "Fair: chart dates cited without the look_at_page evidence that read them; calculations on Unix timestamps the model typed. Oct 29: the report table's '30.Jun.2013' style dates and times of day are now read as written, so the completion dates cited from the report page count; verdict changed on purpose.",
  "expected": {
   "accepted": false,
   "flagged": [
-   "Finding 1",
    "Finding 2",
    "Finding 3",
    "Summary"

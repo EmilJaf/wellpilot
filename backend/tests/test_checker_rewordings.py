@@ -13,6 +13,9 @@ import pytest
 from wellpilot.agent.evidence import EvidenceLog
 from wellpilot.agent.paraphrase import check_rewording
 
+# Real-data regression suite: CI runs it; locally `uv run pytest -m "slow or not slow"`.
+pytestmark = pytest.mark.slow
+
 FIXTURES = Path(__file__).parent / "fixtures"
 REWORDINGS = json.loads((FIXTURES / "rewordings.json").read_text())["rewordings"]
 RUNS = {

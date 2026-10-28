@@ -6,12 +6,10 @@
   "question": "When was well F-11 B completed, and how does its completion report's timing compare with when it started producing?"
  },
  "to_review": false,
- "note": "Fair: the chart's dates still cited without their evidence.",
+ "note": "Fair: the chart's dates still cited without their evidence. Oct 29: the report table's '30.Jun.2013' style dates and times of day are now read as written, so the completion dates cited from the report page count; verdict changed on purpose.",
  "expected": {
-  "accepted": false,
-  "flagged": [
-   "Finding 1"
-  ]
+  "accepted": true,
+  "flagged": []
  },
  "submission": {
   "summary": "Well F-11 B completion finished on 2013-07-21 and first oil followed 3 days later on 2013-07-24, with the Final Well Report issued on 2013-09-04, 42 days after production started.",

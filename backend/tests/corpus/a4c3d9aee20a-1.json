@@ -6,11 +6,10 @@
   "question": "When was well F-11 B completed, and how does its completion report's timing compare with when it started producing?"
  },
  "to_review": false,
- "note": "Reviewed: right. Day counts and depths read off the report written undeclared; a date in no evidence.",
+ "note": "Reviewed: right. Day counts and depths read off the report written undeclared; a date in no evidence. Oct 29: times of day ('14:15') are no numbers to declare; finding 1 now passes on purpose.",
  "expected": {
   "accepted": false,
   "flagged": [
-   "Finding 1",
    "Finding 2",
    "Finding 4",
    "Summary"

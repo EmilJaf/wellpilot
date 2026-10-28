@@ -10,6 +10,9 @@ import pytest
 from wellpilot.agent.edits import check_edits
 from wellpilot.agent.evidence import EvidenceLog
 
+# Real-data regression suite: CI runs it; locally `uv run pytest -m "slow or not slow"`.
+pytestmark = pytest.mark.slow
+
 FIXTURES = Path(__file__).parent / "fixtures"
 PROBES = json.loads((FIXTURES / "panel6_probes.json").read_text())
 

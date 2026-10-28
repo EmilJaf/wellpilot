@@ -17,6 +17,9 @@ from metamorphic import BREAKING, PRESERVING
 from wellpilot.agent.checker import canonical
 from wellpilot.agent.corpus import CORPUS_DIR, replay
 
+# Real-data regression suite: CI runs it; locally `uv run pytest -m "slow or not slow"`.
+pytestmark = pytest.mark.slow
+
 CASES = {
     p.stem: case
     for p in sorted(CORPUS_DIR.glob("*.json"))

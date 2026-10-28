@@ -11,6 +11,9 @@ import pytest
 
 from wellpilot.agent.corpus import CORPUS_DIR, add, add_new, replay, verdict
 
+# Real-data regression suite: CI runs it; locally `uv run pytest -m "slow or not slow"`.
+pytestmark = pytest.mark.slow
+
 CASES = sorted(CORPUS_DIR.glob("*.json"))
 
 

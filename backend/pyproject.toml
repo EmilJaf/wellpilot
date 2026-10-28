@@ -40,6 +40,10 @@ select = ["E", "F", "I", "B", "UP", "SIM", "ASYNC"]
 asyncio_mode = "auto"
 testpaths = ["tests"]
 timeout = 60  # an SSE test that hangs fails instead of blocking CI
+# The real-data checker suites (corpus, probes, rewordings, metamorphic) take about six
+# minutes: a plain `uv run pytest` skips them; CI and `-m "slow or not slow"` run them all.
+markers = ["slow: real-data checker regression suites, run in CI"]
+addopts = '-m "not slow"'
 
 [dependency-groups]
 dev = [

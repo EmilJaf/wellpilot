@@ -47,6 +47,7 @@ import duckdb
 from pydantic import BaseModel, Field
 
 from wellpilot.agent.evidence import Evidence, EvidenceLog
+from wellpilot.ingest.operations import WELLS as WELLBORES
 from wellpilot.ingest.report_facts import squash
 from wellpilot.ingest.reports import REPORTS
 
@@ -62,7 +63,10 @@ _MONTH = (
 _YEAR = r"((?:19|20)\d{2})"
 # A well name's digits are no day: "for P-2 October 2018" is P-2's October, not 2 October
 # ("post-24 January 2010" keeps its day).
-DAY_MONTH_YEAR = re.compile(rf"(?<![A-Z]-)\b(\d{{1,2}})(?:st|nd|rd|th)?\s+{_MONTH}\s+{_YEAR}\b")
+# ("30.Jun.2013", as the completion reports' tables write it, too.)
+DAY_MONTH_YEAR = re.compile(
+    rf"(?<![A-Z]-)\b(\d{{1,2}})(?:st|nd|rd|th)?(?:\s+|\.){_MONTH}\s*{_YEAR}\b"
+)
 MONTH_DAY_YEAR = re.compile(rf"\b{_MONTH}\s+(\d{{1,2}})(?:st|nd|rd|th)?,?\s+{_YEAR}\b")
 MONTH_YEAR = re.compile(rf"\b{_MONTH}\s+{_YEAR}\b")
 DOTTED_DATE = re.compile(rf"\b(\d{{1,2}})\.(\d{{1,2}})\.{_YEAR}\b")
@@ -457,7 +461,7 @@ def _typed_by_model(item: Evidence) -> tuple[frozenset[float], frozenset[str]]:
 def _unmeasured(item: Evidence) -> tuple[frozenset[float], frozenset[str]]:
     """A page reading SAM 3.1 confirmed carries no warning, but only its compared values are
     measured: the model's free answer, its labels and its other readings stay its own words
-    ("a 9,500 Sm3/d plateau" in the answer is no evidence for a fact)."""
+    ("a 9,500 Sm3/d plateau" in the answer is no evidence for a fact, numbers or quoted)."""
     result = item.result if isinstance(item.result, dict) else {}
     if item.warnings or not result.get("cross_check"):
         return frozenset(), frozenset()
@@ -482,7 +486,10 @@ def _unmeasured(item: Evidence) -> tuple[frozenset[float], frozenset[str]]:
         if isinstance(c.get(k), int | float)
     }
     said = numbers([result.get("answer"), result.get("readings")])
-    return frozenset(said - measured), frozenset()
+    # The free answer is the model's prose: not quotable as evidence either ('the reading
+    # says "a plateau of about 9,500 Sm3/d"' is no fact).
+    answer = result.get("answer")
+    return frozenset(said - measured), frozenset([answer] if isinstance(answer, str) else [])
 
 
 def _literals(code: str) -> tuple[frozenset[float], frozenset[str]]:
@@ -852,10 +859,15 @@ def _standalone(text: str, written: str) -> list[tuple[int, int]]:
     return [m.span() for m in pattern.finditer(text) if not GROUP_BEFORE.search(text, 0, m.start())]
 
 
+# A time of day ("from 2013-06-30 14:15 to ... 20:00") is part of its date.
+TIME_OF_DAY = re.compile(r"(?<![\d.,:])(?:[01]?\d|2[0-3]):[0-5]\d(?::[0-5]\d)?(?!\d|[.,:]\d)")
+
+
 def _mask(text: str) -> str:
-    """Dates, well names and calendar windows blanked out: their digits are not numbers to
-    declare."""
-    return REFERENCE.sub(" ", CALENDAR_WINDOW.sub(" ", DATE.sub(" ", WELL.sub(" ", text))))
+    """Dates, times of day, well names and calendar windows blanked out: their digits are
+    not numbers to declare."""
+    text = TIME_OF_DAY.sub(" ", DATE.sub(" ", WELL.sub(" ", text)))
+    return REFERENCE.sub(" ", CALENDAR_WINDOW.sub(" ", text))
 
 
 # A number the text ties to a month or day: "0.85 in 2009-06", "1 146 Sm3/d on 2010-07-18".
@@ -1635,10 +1647,40 @@ def _attribution(
             unit = None
         dims = {lf.dim for lf in held}
         known = dims - {None}
-        if unit and known and unit not in known:
+        # A day's volume ("max_day_water_sm3": "10240 Sm3 on its worst day") is a volume too.
+        daily_volume = unit == "volume" and any(
+            re.search(r"(?:^|\|)[a-z_]*_sm3(?:\||$)", lf.labels) for lf in held
+        )
+        if unit and known and unit not in known and not daily_volume:
             known = " or ".join(UNIT_NAMES[d] for d in sorted(known))
             tail = " (1 Sm3 is 6.29 barrels)" if unit == "barrels" else ""
             return f"is written in {UNIT_NAMES[unit]}, but in {item.id} it is {known}{tail}"
+        # "water cut reached 81%" for "zero_days: 81": a percentage is no count of days. (Not
+        # judged for rates and volumes: a change in a rate is a percentage that carries the
+        # rate's unit.)
+        # A value under "before_60_days" may still be a share ("before_60_days|water_cut"):
+        # only values measured in time and named as no share are judged.
+        if (
+            held
+            and written.rstrip().endswith(("%", "percent"))
+            and all(
+                lf.dim in ("days", "weeks", "months", "years")
+                and not re.search(
+                    r"water_?cut|uptime|on_stream|choke|pct|percent|share|ratio|change",
+                    lf.labels,
+                    re.I,
+                )
+                for lf in held
+            )
+        ):
+            known = " or ".join(UNIT_NAMES[d] for d in sorted(known))
+            return f"is written as a percentage, but in {item.id} it is {known}"
+        # "+55%" for a fall of 55%: the plus sign written into the number is a rise.
+        if written.lstrip().startswith("+") and all(
+            (lf.sign is not None and lf.sign < 0) or (lf.sign is None and lf.value < 0)
+            for lf in held
+        ):
+            return f"is written as a rise (+), but {item.id} has it as a fall ({held[0].value:g})"
         # "-0.68" for a correlation of +0.68: a sign written out on a value the evidence
         # holds only the other way (changes and percentages are judged by their words).
         if (
@@ -1722,7 +1764,12 @@ def _attribution(
                 r"between|period|shift|gradual", _part(blanked, start, commas=False), re.I
             )
         )
-        if (_steps(_part(blanked, start, commas=False)) or at_date) and _gradual(held, leaves):
+        # A number written as a duration ("flowing for about 1,830 days") is no change.
+        if (
+            (_steps(_part(blanked, start, commas=False)) or at_date)
+            and not DURATION_AFTER.match(blanked[end:])
+            and _gradual(held, leaves)
+        ):
             across = _across_text(leaves, {lf.record for lf in held})
             measured = f" {item.id} measures {across} across the change itself;" if across else ""
             return (
@@ -2724,8 +2771,17 @@ def _suggest(written: list[str], citable: set[str] | None, log: EvidenceLog) -> 
     return f" These are in the evidence; declare them as {', '.join(found)}." if found else ""
 
 
-def _well_key(name: str) -> str:
+def _plain_well(name: str) -> str:
     return re.sub(r"\s+", "", name.removeprefix("15/9-")).upper()
+
+
+# The reports name a wellbore ("F-11 B"), the production data its well ("F-11"): one well.
+WELLBORE_OF = {_plain_well(k): _plain_well(v) for k, v in WELLBORES.items()}
+
+
+def _well_key(name: str) -> str:
+    key = _plain_well(name)
+    return WELLBORE_OF.get(key, key)
 
 
 def _wells_without_evidence(claim: str, detail: str, cited: list[Evidence]) -> list[str]:
@@ -2999,7 +3055,8 @@ PRESSURE_DROP = re.compile(
 )
 SUDDEN = re.compile(r"collaps|crash|plung|vanish|zero|\b0\b|lost|los[ei]|gone|noun", re.IGNORECASE)
 DENIED = re.compile(
-    r"\b(?:not|no|never|without|rather than|instead of|ruled? out|rules out|neither|nor|"
+    r"\b(?:not|no|never|without|rather than|instead of|ruled? out|rules out|ruling out|"
+    r"exclud\w*|neither|nor|"
     r"misread\w*|mistak\w*|false|naive\w*|looks like|apparent(?:ly)?|seeming(?:ly)?|but)\b|n't\b",
     re.IGNORECASE,
 )
@@ -3245,6 +3302,14 @@ def _durations(
 
     every = durations(cited)
     reports = durations([e for e in cited if e.tool in REPORT_TOOLS])
+    # A gap the model calculated ("24 - 21" for "3 days before first oil") has no unit.
+    calculated = [
+        abs(lf.value)
+        for item in cited
+        if item.tool == "calculate"
+        for lf in leaves_of(item)
+        if lf.value is not None
+    ]
     # Declared or not, a small whole number is free of the number check ("6" declared for
     # "6 years" is exempt there), so its duration is judged here.
     for m in SMALL_DURATION.finditer(text):
@@ -3256,6 +3321,8 @@ def _durations(
             continue
         unit = DURATIONS.get(m["u"].lower().rstrip("s"))
         if unit not in IN_MONTHS:
+            continue
+        if any(abs(c - n) <= 0.5 for c in calculated):
             continue
         approx = APPROX.search(text[: m.start()])
         values = [h / IN_MONTHS[unit] for h in held]

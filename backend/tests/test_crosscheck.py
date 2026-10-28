@@ -131,6 +131,14 @@ async def test_only_the_measured_values_of_an_agreed_reading_back_a_fact(process
 
     assert check("8,400", 8400) == []
     assert any("not in" in p for p in check("9,500", 9500))
+    # Nor quoted: the answer is the model's prose, not a source.
+    quoted = Finding(
+        claim='The reading says "the text gives 9,500 Sm3/d" for the plateau.',
+        evidence_ids=[eid],
+        confidence="fact",
+        numbers=[],
+    )
+    assert check_submission(Submission(summary="Done.", findings=[quoted]), log)
 
 
 def test_the_model_is_shown_the_verdict_not_sams_values() -> None:
