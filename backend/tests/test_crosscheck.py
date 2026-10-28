@@ -94,3 +94,40 @@ async def test_a_reading_both_models_agree_on_loses_its_warning(processed) -> No
     assert agreed["warnings"] == [] and agreed["cross_check"][0]["agree"]
     assert agreed["measured_by_sam"]["plateau"]["months"] == 19
     assert split["warnings"][0] == WARNING and "plateau length" in split["warnings"][1]
+
+
+async def test_only_the_measured_values_of_an_agreed_reading_back_a_fact(processed) -> None:  # noqa: F811
+    """The outside review: with the readings agreeing with SAM, the warning went from the
+    whole result, so a number the model only wrote in its answer ("a 9,500 Sm3/d
+    plateau") passed as a fact. Only the values both models gave count as measured."""
+    from wellpilot.agent.checker import DeclaredNumber, Finding, Submission, check_submission
+    from wellpilot.agent.evidence import EvidenceLog
+    from wellpilot.agent.vision import VISION_TOOL
+
+    shutil.copy(SAM, processed / CURVE_FILE)
+    client = Client(
+        [],
+        reading={
+            "answer": "A plateau of about 8 400, though the text gives 9,500 Sm3/d.",
+            "readings": [reading("plateau oil rate", 8400)],
+        },
+    )
+    store = ProductionStore(processed)
+    result = (
+        await look(store, LLM(client=client, model="muse", provider="fake"), json.dumps(ASK))
+    )["result"]
+    assert result["warnings"] == []
+    log = EvidenceLog()
+    eid = log.add("look_at_page", ASK, result, VISION_TOOL.run).id
+
+    def check(written: str, value: float) -> list[str]:
+        finding = Finding(
+            claim=f"The plan's figure shows a {written} Sm3/d plateau.",
+            evidence_ids=[eid],
+            confidence="fact",
+            numbers=[DeclaredNumber(text=written, value=value, evidence_id=eid)],
+        )
+        return check_submission(Submission(summary="Done.", findings=[finding]), log)
+
+    assert check("8,400", 8400) == []
+    assert any("not in" in p for p in check("9,500", 9500))

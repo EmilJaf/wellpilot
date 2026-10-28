@@ -366,9 +366,42 @@ def _typed_by_model(item: Evidence) -> tuple[frozenset[float], frozenset[str]]:
     Python: echoes, not data."""
     if item.tool == "run_python":
         return _literals(str(item.arguments.get("code", "")))
+    if item.tool == "look_at_page":
+        return _unmeasured(item)
     if item.tool != "run_sql":
         return frozenset(), frozenset()
     return _echoes(str(item.arguments.get("sql", "")))
+
+
+def _unmeasured(item: Evidence) -> tuple[frozenset[float], frozenset[str]]:
+    """A page reading SAM 3.1 confirmed carries no warning, but only its compared values are
+    measured: the model's free answer, its labels and its other readings stay its own words
+    ("a 9,500 Sm3/d plateau" in the answer is no evidence for a fact)."""
+    result = item.result if isinstance(item.result, dict) else {}
+    if item.warnings or not result.get("cross_check"):
+        return frozenset(), frozenset()
+
+    def numbers(value: Any) -> set[float]:
+        found = set()
+        for leaf in _flatten(value):
+            if isinstance(leaf, bool) or leaf is None:
+                continue
+            if isinstance(leaf, int | float):
+                found.add(abs(float(leaf)))
+            elif isinstance(leaf, str):
+                for european in (False, True):
+                    found |= {abs(n) for n, _, _ in _numbers_in_text(leaf, european)}
+        return found
+
+    measured = numbers(result.get("measured_by_sam")) | {
+        abs(float(c[k]))
+        for c in result["cross_check"]
+        if c.get("agree")
+        for k in ("muse", "sam")
+        if isinstance(c.get(k), int | float)
+    }
+    said = numbers([result.get("answer"), result.get("readings")])
+    return frozenset(said - measured), frozenset()
 
 
 def _literals(code: str) -> tuple[frozenset[float], frozenset[str]]:

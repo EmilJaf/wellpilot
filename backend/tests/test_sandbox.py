@@ -152,7 +152,12 @@ def test_the_loop_offers_run_python_only_with_a_sandbox_and_limits_it(box) -> No
         "summary": "Done.",
         "summary_numbers": [],
         "findings": [
-            {"claim": "F-12 had data.", "evidence_ids": ["E1"], "confidence": "inference", "numbers": []}
+            {
+                "claim": "F-12 had data.",
+                "evidence_ids": ["E1"],
+                "confidence": "inference",
+                "numbers": [],
+            }
         ],
     }
     replies = iter([*script([code] * 5), completion(tool_calls=[(SUBMIT, submission)])])
@@ -217,7 +222,12 @@ async def test_a_run_through_the_api_gets_a_sandbox_and_closes_it(tmp_path, monk
         "summary": "Done.",
         "summary_numbers": [],
         "findings": [
-            {"claim": "F-12 had data.", "evidence_ids": ["E1"], "confidence": "inference", "numbers": []}
+            {
+                "claim": "F-12 had data.",
+                "evidence_ids": ["E1"],
+                "confidence": "inference",
+                "numbers": [],
+            }
         ],
     }
     replies = [*script([code]), completion(tool_calls=[(SUBMIT, submission)])]
