@@ -42,8 +42,14 @@ export function Diff({ pieces }: { pieces: Piece[] }) {
  * What the checker caught before the reader saw the answer, one plain line each, in sight:
  * the proof that the checker is not a formality. How each was fixed sits behind a disclosure.
  */
+// Errors of meaning first (a limit said to hold, a number given another name, unit,
+// direction, date or well, a cause stated as fact), then the bookkeeping (a number not
+// declared, not in the cited result).
+const MEANING = /stayed within|is named|is written in|is written as|belongs to|wrong way|only for|dead gauge|states a cause|ties it|date|called the change|model's P50|none of its evidence/
+
 export function CaughtList({ items, max = 4 }: { items: Correction[]; max?: number }) {
-  const shown = items.slice(0, max)
+  const ranked = [...items].sort((a, b) => Number(!MEANING.test(a.problem)) - Number(!MEANING.test(b.problem)))
+  const shown = ranked.slice(0, max)
   return (
     <div className="caught">
       <p className="caught-title">The checker caught {items.length === 1 ? 'this' : `these ${items.length}`} before you saw the answer:</p>
