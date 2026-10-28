@@ -62,9 +62,17 @@ export function EvidenceView({ runId, evidenceId, attempt, focus }: Props) {
   const hit = matcher(focus)
   const host = useRef<HTMLDivElement>(null)
 
-  // Opened from a number: bring its first match into view.
+  // Opened from a number: show the banner that says where it came from, then its first
+  // match, if the match is not already in view below it.
   useEffect(() => {
-    if (evidence && focus) host.current?.querySelector('.hit')?.scrollIntoView({ block: 'center' })
+    if (!evidence || !focus) return
+    const banner = host.current?.querySelector('.focus-banner')
+    const hitEl = host.current?.querySelector('.hit')
+    banner?.scrollIntoView({ block: 'start' })
+    const box = hitEl?.getBoundingClientRect()
+    if (hitEl && box && (box.bottom > window.innerHeight - 24 || box.top < 0)) {
+      hitEl.scrollIntoView({ block: 'center', inline: 'nearest' })
+    } else hitEl?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
   }, [evidence, focus])
 
   if (!evidenceId) {

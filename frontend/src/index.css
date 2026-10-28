@@ -574,7 +574,7 @@ button {
 }
 
 .as-of input {
-  width: 12.5ch;
+  width: 14ch;
   font-variant-numeric: tabular-nums;
 }
 
@@ -590,6 +590,14 @@ button {
   background: var(--brand);
   color: #fff;
   font-weight: 650;
+}
+
+/* Before a run is open, the recorded answer is the way in; asking live is the second
+   choice, so it does not compete with "Watch it answer" in the same colour. */
+.run-button.is-quiet {
+  background: var(--sheet);
+  color: var(--brand);
+  box-shadow: inset 0 0 0 1.5px var(--brand);
 }
 
 .run-button:disabled {
@@ -3674,4 +3682,10 @@ code,
 
 .depth-strip-axis {
   fill: var(--ink-3) !important;
+}
+
+.caught-paperwork {
+  margin: 4px 0 6px;
+  font-size: 13.5px;
+  color: var(--ink-2, var(--ink));
 }

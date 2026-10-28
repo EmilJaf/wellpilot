@@ -350,9 +350,9 @@ function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSe
               <strong>
                 {final.verified
                   ? rounds.length > 1
-                    ? `Sources verified on attempt ${rounds.length}.`
-                    : 'Sources verified on the first attempt.'
-                  : 'Not verified.'}
+                    ? `Sources checked on attempt ${rounds.length}.`
+                    : 'Sources checked on the first attempt.'
+                  : 'Sources not all checked.'}
               </strong>{' '}
               {final.verified
                 ? rounds.length > 1 &&

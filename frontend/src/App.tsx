@@ -167,6 +167,15 @@ export default function App() {
   // stops in October 2010 while oil flows on), not the field screen's verdict on it, which
   // would answer the question before the agent does.
   const [view, setView] = useState<View>('well')
+  // A run about the plan alone (its chart, its limits) opens on the plan, once.
+  const [viewFor, setViewFor] = useState<string | null>(null)
+  if (state.id && state.final && viewFor !== state.id) {
+    setViewFor(state.id)
+    const used = new Set(state.steps.flatMap((s) => s.tool_calls.map((c) => c.name)))
+    const planOnly = ['look_at_page', 'plan_vs_actual', 'field_vs_design'].some((t) => used.has(t))
+    const wellTools = ['production_monthly', 'detect_events', 'well_operations', 'production_log', 'fit_decline', 'forecast_production', 'waterflood', 'run_python']
+    if (planOnly && !wellTools.some((t) => used.has(t))) setView('plan')
+  }
   // The demo's five steps: which one the reader is on, and whether the agent's log is open.
   const [step, setStep] = useState<Step>(() => {
     const params = new URLSearchParams(window.location.search)
@@ -618,7 +627,7 @@ export default function App() {
                 <span className="as-of-label">Data up to</span>
                 <IsoDate value={asOf} onChange={setAsOf} />
               </label>
-              <button className="run-button" type="submit" disabled={running}>
+              <button className={`run-button${state.id ? '' : ' is-quiet'}`} type="submit" disabled={running}>
                 {running ? 'Running' : 'Ask the agent'}
               </button>
             </div>

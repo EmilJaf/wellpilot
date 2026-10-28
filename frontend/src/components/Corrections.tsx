@@ -45,18 +45,35 @@ export function Diff({ pieces }: { pieces: Piece[] }) {
 // Errors of meaning first (a limit said to hold, a number given another name, unit,
 // direction, date or well, a cause stated as fact), then the bookkeeping (a number not
 // declared, not in the cited result).
-const MEANING = /stayed within|is named|is written in|is written as|belongs to|wrong way|only for|dead gauge|states a cause|ties it|date|called the change|model's P50|none of its evidence/
+const MEANING = /stayed within|is named|is written in|is written as|belongs to|wrong way|only for|dead gauge|states a cause|ties it|date|called the change|model's P50|none of its evidence|share below|survey of|calls the decline|is the fit from|rests on evidence with warnings/
+
+const BOOKKEEPING = /undeclared|round '|three significant|claim holds \d+ numbers/i
 
 export function CaughtList({ items: all, max = 4 }: { items: Correction[]; max?: number }) {
   // The same problem raised twice in one answer (a number written twice) is listed once.
   const items = all.filter(
     (c, i) => all.findIndex((d) => d.target === c.target && problemText(d) === problemText(c)) === i,
   )
-  const ranked = [...items].sort((a, b) => Number(!MEANING.test(a.problem)) - Number(!MEANING.test(b.problem)))
+  // Bookkeeping (a number written without naming its source, a rounding) is one line; what
+  // the answer got wrong is listed, so a real catch is not lost among the paperwork.
+  const bookkeeping = items.filter((c) => BOOKKEEPING.test(c.problem) && !MEANING.test(c.problem))
+  const ranked = items
+    .filter((c) => !bookkeeping.includes(c))
+    .sort((a, b) => Number(!MEANING.test(a.problem)) - Number(!MEANING.test(b.problem)))
   const shown = ranked.slice(0, max)
   return (
     <div className="caught">
-      <p className="caught-title">The checker caught {items.length === 1 ? 'this' : `these ${items.length}`} before you saw the answer:</p>
+      <p className="caught-title">
+        {ranked.length === 0
+          ? 'The checker sent the answer back for its paperwork:'
+          : `The checker caught ${ranked.length === 1 ? 'this' : `these ${ranked.length}`} before you saw the answer:`}
+      </p>
+      {bookkeeping.length > 0 && (
+        <p className="caught-paperwork">
+          {bookkeeping.length === 1 ? 'One number was' : `${bookkeeping.length} numbers were`} written without naming
+          the result it comes from, or not rounded; the agent added the sources.
+        </p>
+      )}
       <ul>
         {shown.map((c, i) => {
           const fixed = c.changes.length > 0 && !c.changes[0].startsWith('The run ended')
@@ -72,7 +89,7 @@ export function CaughtList({ items: all, max = 4 }: { items: Correction[]; max?:
           )
         })}
       </ul>
-      {items.length > max && <p className="caught-more">and {items.length - max} more, below.</p>}
+      {ranked.length > max && <p className="caught-more">and {ranked.length - max} more, below.</p>}
     </div>
   )
 }
