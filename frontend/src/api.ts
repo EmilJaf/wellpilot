@@ -151,13 +151,15 @@ export const api = {
   runs: () => fetch('/api/runs').then((r) => json<RunSummary[]>(r)),
   evidence: (runId: string, evidenceId: string) =>
     fetch(`/api/runs/${runId}/evidence/${evidenceId}`).then((r) => json<Evidence>(r)),
-  fieldPlan: () => fetch('/api/field/plan').then((r) => json<unknown>(r)),
-  fieldDesign: () => fetch('/api/field/design').then((r) => json<unknown>(r)),
+  // With `end`, the field only up to that day (the time machine before its reveal).
+  fieldPlan: (end?: string | null) => fetch(`/api/field/plan${end ? `?end=${end}` : ''}`).then((r) => json<unknown>(r)),
+  fieldDesign: (end?: string | null) => fetch(`/api/field/design${end ? `?end=${end}` : ''}`).then((r) => json<unknown>(r)),
   // With `end`, only the days up to it: what an agent cut at that date could see.
   daily: (well: string, end?: string | null) =>
     fetch(`/api/wells/${encodeURIComponent(well)}/daily${end ? `?end=${end}` : ''}`).then((r) => json<Table>(r)),
   timeline: () => fetch('/api/field/timeline').then((r) => json<Timeline>(r)),
-  planFigure: () => fetch('/api/field/plan-figure').then((r) => json<PlanFigure>(r)),
+  planFigure: (end?: string | null) =>
+    fetch(`/api/field/plan-figure${end ? `?end=${end}` : ''}`).then((r) => json<PlanFigure>(r)),
   planFigureImageUrl: () => '/api/field/plan-figure/image',
   // The well's daily-report jobs; with `end`, only those done by then.
   operations: (well: string, end?: string | null) =>

@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+from pathlib import Path
 from types import SimpleNamespace
 
 import httpx
@@ -597,3 +598,25 @@ async def test_an_answer_says_what_each_meta_model_did(settings) -> None:
     assert live["muse"]["model"] == "fake" and live["muse"]["tool_calls"] >= 1
     assert live["sam"] == {"figures": [], "logs": []}
     assert saved["result"]["meta_models"] == live
+
+
+async def test_the_field_views_hide_the_days_after_end(tmp_path) -> None:
+    """The time machine's Plan tab and well list: with `end`, nothing after that day (the
+    outside review saw actual production to 2016 beside an answer as of 2010)."""
+    import shutil
+
+    shutil.copytree(Path(__file__).parent / "fixtures" / "processed", tmp_path / "processed")
+    settings = Settings(_env_file=None, data_dir=tmp_path, frontend_dir=tmp_path / "none")
+    async with client_for(create_app(settings, llm_factory=fake_llm)) as client:
+        plan = (await client.get("/api/field/plan?end=2010-12-31")).json()
+        whole = (await client.get("/api/field/plan")).json()
+        design = (await client.get("/api/field/design?end=2010-12-31")).json()
+        wells = (await client.get("/api/wells?end=2010-12-31")).json()
+
+    assert plan["actual_data_ends"] == "2010-12-31" and plan["actual_last_year"] == 2010
+    assert whole["actual_last_year"] > 2010
+    months = [str(m) for m in design["months"]["rows"]] if design.get("months") else []
+    assert all("2011" not in m for m in months)
+    oil = wells["columns"].index("cum_oil_sm3")
+    producers = {r[0] for r in wells["rows"] if r[oil]}
+    assert producers == {"F-12", "F-14"}  # F-11, F-15 D and F-1 C came later

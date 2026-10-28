@@ -168,14 +168,12 @@ export default function App() {
   const [markers, setMarkers] = useState<{ key: string; list: Marker[] }>({ key: '', list: [] })
   const [recorded, setRecorded] = useState<RunSummary | null>(null)
   const [runsLoaded, setRunsLoaded] = useState(false)
-  const [plan, setPlan] = useState<{ result: PlanResult | null; design: DesignResult | null; error?: string } | null>(null)
-
-  useEffect(() => {
-    if (view !== 'plan' || plan) return
-    Promise.all([api.fieldPlan(), api.fieldDesign().catch(() => null)])
-      .then(([result, design]) => setPlan({ result: result as PlanResult, design: design as DesignResult | null }))
-      .catch((e: Error) => setPlan({ result: null, design: null, error: e.message }))
-  }, [view, plan])
+  const [plan, setPlan] = useState<{
+    end: string | null
+    result: PlanResult | null
+    design: DesignResult | null
+    error?: string
+  } | null>(null)
 
   const running = state.status === 'starting' || state.status === 'running'
   // The time machine: the date the agent's data stops at (the open run's, or the one in the
@@ -193,6 +191,38 @@ export default function App() {
       requestAnimationFrame(() => evidencePanel.current?.scrollIntoView({ block: 'start', behavior: 'smooth' }))
     }
   }
+  // What the field views may show: before the reveal, nothing after the time machine's date.
+  const shownEnd = pastDate && !revealed ? pastDate : null
+
+  useEffect(() => {
+    if (view !== 'plan' || (plan && plan.end === shownEnd)) return
+    let current = true
+    Promise.all([api.fieldPlan(shownEnd), api.fieldDesign(shownEnd).catch(() => null)])
+      .then(([result, design]) => {
+        if (current) setPlan({ end: shownEnd, result: result as PlanResult, design: design as DesignResult | null })
+      })
+      .catch((e: Error) => {
+        if (current) setPlan({ end: shownEnd, result: null, design: null, error: e.message })
+      })
+    return () => {
+      current = false
+    }
+  }, [view, plan, shownEnd])
+
+  useEffect(() => {
+    let current = true
+    fetch(`/api/wells${shownEnd ? `?end=${shownEnd}` : ''}`)
+      .then((r) => r.json() as Promise<Table>)
+      .then((t) => {
+        const oil = t.columns.indexOf('cum_oil_sm3')
+        if (current) setWells(t.rows.filter((r) => Number(r[oil]) > 0).map((r) => String(r[0])))
+      })
+      .catch(() => current && setWells([]))
+    return () => {
+      current = false
+    }
+  }, [shownEnd])
+
   // An opened run's question and date go in the ask bar, so the bar never shows another day.
   const [inBar, setInBar] = useState<string | null>(null)
   if (state.id && state.question && state.id !== inBar) {
@@ -232,13 +262,6 @@ export default function App() {
       })
       .catch(() => setRecorded(null))
       .finally(() => setRunsLoaded(true))
-    fetch('/api/wells')
-      .then((r) => r.json() as Promise<Table>)
-      .then((t) => {
-        const oil = t.columns.indexOf('cum_oil_sm3')
-        setWells(t.rows.filter((r) => Number(r[oil]) > 0).map((r) => String(r[0])))
-      })
-      .catch(() => setWells([]))
   }, [])
 
   useEffect(() => {
@@ -680,6 +703,7 @@ export default function App() {
               ) : view === 'history' ? (
                 <FieldTimeline
                   asOf={pastDate}
+                  end={shownEnd}
                   onOpenWell={(w) => {
                     setPickedWell(w)
                     setView('well')
@@ -687,6 +711,12 @@ export default function App() {
                 />
               ) : view === 'inside' ? (
                 <InsideWell well={well} asOf={pastDate} onOpenWell={setPickedWell} />
+              ) : view === 'accuracy' && shownEnd ? (
+                <p className="empty">
+                  This tab scores forecasts against what the wells produced later, which would give away the
+                  period after {shownEnd}. It opens with the rest of the data
+                  {canReveal ? ' when you choose "Show what happened next"' : ' once the date is cleared'}.
+                </p>
               ) : view === 'accuracy' ? (
                 <AccuracyView />
               ) : view === 'hindsight' && state.id ? (
@@ -695,10 +725,12 @@ export default function App() {
                 <div className="charts field-view">
                   {plan?.result ? (
                     <>
-                      <h3 className="accuracy-title">The field against its 2005 plan</h3>
+                      <h3 className="accuracy-title">
+                        The field against its 2005 plan{shownEnd ? `, with data up to ${shownEnd}` : ''}
+                      </h3>
                       <PlanChart result={plan.result} />
                       {plan.result.by_production_year && <PlanByProductionYear table={plan.result.by_production_year} />}
-                      <PlanFigure />
+                      <PlanFigure end={shownEnd} />
                       {plan.design && (
                         <>
                           <h3 className="accuracy-title field-view-second">Against the limits the platform was designed for</h3>

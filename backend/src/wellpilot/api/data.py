@@ -50,27 +50,30 @@ DAILY_COLUMNS = [
 ]
 
 
-def _store(request: Request) -> ProductionStore:
-    return request.app.state.runs.store()
+def _store(request: Request, end: date | None = None) -> ProductionStore:
+    """The data, or (with end) only what an agent cut at that day could see."""
+    return request.app.state.runs.store(end)
 
 
 @router.get("/wells")
-def wells(request: Request) -> dict:
-    return list_wells(_store(request), NoArgs())
+def wells(request: Request, end: date | None = None) -> dict:
+    return list_wells(_store(request, end), NoArgs())
 
 
+# The views of the field take `end` like the well charts: during a time-machine answer they
+# show only the data up to its date, so the page gives away nothing the agent could not see.
 @router.get("/field/plan")
-def field_plan(request: Request) -> dict:
+def field_plan(request: Request, end: date | None = None) -> dict:
     """The field's production by year against the 2005 plan: the same result the agent's
     plan_vs_actual tool returns."""
     try:
-        return plan_vs_actual(_store(request), NoArgs())
+        return plan_vs_actual(_store(request, end), NoArgs())
     except ValueError as e:
         raise HTTPException(404, str(e)) from None
 
 
 @router.get("/field/plan-figure")
-def field_plan_figure(request: Request) -> dict:
+def field_plan_figure(request: Request, end: date | None = None) -> dict:
     """The plan's forecast curve as drawn in Figure 4.2 (PUD p.23), read off the picture
     (by SAM 3.1, checked by colour; python -m wellpilot.ingest.figure), with the field's
     oil rate per calendar day by month to set it against."""
@@ -80,7 +83,7 @@ def field_plan_figure(request: Request) -> dict:
             404, "the figure has not been read; run python -m wellpilot.ingest.figure"
         )
     monthly = (
-        _store(request)
+        _store(request, end)
         .query(
             "SELECT strftime(date, '%Y-%m') AS month, sum(oil_sm3) / count(DISTINCT date) AS rate "
             "FROM production_daily GROUP BY 1 HAVING sum(oil_sm3) > 0 ORDER BY 1"
@@ -126,10 +129,10 @@ def field_screen_view(request: Request, as_of: date | None = None) -> dict:
 
 
 @router.get("/field/design")
-def field_design(request: Request) -> dict:
+def field_design(request: Request, end: date | None = None) -> dict:
     """The field by month against the plan's design limits: the field_vs_design tool's result."""
     try:
-        return field_vs_design(_store(request), NoArgs())
+        return field_vs_design(_store(request, end), NoArgs())
     except ValueError as e:
         raise HTTPException(404, str(e)) from None
 

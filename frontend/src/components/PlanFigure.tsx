@@ -9,15 +9,19 @@ const time = (month: string) => Date.parse(`${month}-15T00:00:00Z`)
  * against the field's oil rate. The figure is the only place the plan shows the rate it
  * expected day by day; the reading carries its check (a colour trace of the same pixels).
  */
-export function PlanFigure() {
+export function PlanFigure({ end }: { end?: string | null }) {
   const [loaded, setLoaded] = useState<{ value?: Figure; error?: string } | null>(null)
 
   useEffect(() => {
+    let current = true
     api
-      .planFigure()
-      .then((value) => setLoaded({ value }))
-      .catch((e: Error) => setLoaded({ error: e.message }))
-  }, [])
+      .planFigure(end)
+      .then((value) => current && setLoaded({ value }))
+      .catch((e: Error) => current && setLoaded({ error: e.message }))
+    return () => {
+      current = false
+    }
+  }, [end])
 
   // Not read yet: say nothing rather than show an empty chart.
   if (!loaded?.value) return null

@@ -20,7 +20,45 @@ const time = (iso: string) => Date.parse(iso.length === 7 ? `${iso}-15T00:00:00Z
  * and the work done on the well from its daily reports. Hover to read; click a row to open
  * the well.
  */
-export function FieldTimeline({ asOf, onOpenWell }: { asOf: string | null; onOpenWell: (well: string) => void }) {
+/**
+ * The history as far as `end` (the time machine before its reveal): wells that had started,
+ * their months, the issues flagged and the work begun by then. An issue cleared later reads
+ * as open; its text, written at a later month end, is left out.
+ */
+function upTo(t: Timeline, end: string): Timeline {
+  const month = end.slice(0, 7)
+  return {
+    ...t,
+    wells: t.wells
+      .filter((w) => w.first_oil <= end)
+      .map((w) => {
+        const keep = w.oil_rate.month.map((m) => m <= month)
+        const rate = w.oil_rate.rate.filter((_, i) => keep[i])
+        const days = w.oil_rate.month.filter((_, i) => keep[i])
+        return {
+          ...w,
+          // The life total would give the later years away; the rates are per producing day,
+          // so no total is rebuilt from them.
+          oil_sm3: -1,
+          oil_rate: { month: days, rate },
+          issues: w.issues
+            .filter((i) => i.first_flagged <= end)
+            .map((i) => (i.cleared && i.cleared <= end ? i : { ...i, cleared: null, text: '' })),
+          work: w.work.filter((j) => j.start <= end).map((j) => (j.end <= end ? j : { ...j, end })),
+        }
+      }),
+  }
+}
+
+export function FieldTimeline({
+  asOf,
+  end,
+  onOpenWell,
+}: {
+  asOf: string | null
+  end?: string | null
+  onOpenWell: (well: string) => void
+}) {
   const [loaded, setLoaded] = useState<{ value?: Timeline; error?: string } | null>(null)
 
   useEffect(() => {
@@ -33,7 +71,7 @@ export function FieldTimeline({ asOf, onOpenWell }: { asOf: string | null; onOpe
   if (!loaded) return <p className="empty field-view">Loading the field&rsquo;s history</p>
   if (!loaded.value) return <p className="empty field-view">The history could not load: {loaded.error}</p>
   // The plot mounts with the data, so its width is measured on an element that exists.
-  return <TimelinePlot t={loaded.value} asOf={asOf} onOpenWell={onOpenWell} />
+  return <TimelinePlot t={end ? upTo(loaded.value, end) : loaded.value} asOf={asOf} onOpenWell={onOpenWell} />
 }
 
 function TimelinePlot({ t, asOf, onOpenWell }: { t: Timeline; asOf: string | null; onOpenWell: (well: string) => void }) {
@@ -108,9 +146,11 @@ function TimelinePlot({ t, asOf, onOpenWell }: { t: Timeline; asOf: string | nul
               <text className="timeline-well" x={4} y={top + 14}>
                 {w.well}
               </text>
-              <text className="timeline-sub" x={4} y={top + 29}>
-                {(w.oil_sm3 / 1e6).toFixed(2)} MSm³
-              </text>
+              {w.oil_sm3 >= 0 && (
+                <text className="timeline-sub" x={4} y={top + 29}>
+                  {(w.oil_sm3 / 1e6).toFixed(2)} MSm³
+                </text>
+              )}
               <polyline className="timeline-oil" points={points} />
               {alarms.map((i) => {
                 const x0 = xAt(time(i.since && i.since < i.first_flagged ? i.first_flagged : i.first_flagged))
