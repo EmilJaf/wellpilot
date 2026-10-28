@@ -14,7 +14,18 @@ The same ids go into FEATURED_RUNS for the public deployment.
 
 The featured runs (Muse Spark Open on Baseten, recorded by the eval):
 
-- 8aef8d548380, the time machine: "Which wells need attention right now, and why? Forecast
+- 0d95b4d9cf46, the time machine as served now (Oct 28 night): the same question with data
+  up to 2010-12-31. Its headline in plain words (the gauge dead, water now most of what the
+  well makes, oil about half), the forecast with its range (359,000 Sm3, 324,000 to 470,000).
+  The checker caught two errors of meaning before it was shown: "the field has stayed within
+  its design limits" while injection had passed its capacity in 3 months (the answer now
+  says so), and the P10 called the P50. The second opinion found it sound. 8 steps, $0.27.
+- a5dc0b339ff9, the agent's own Python (Oct 28 night): F-12's water cut against its choke
+  over 2011-2013. Its first run_python typed the numbers into the code; the sandbox flagged
+  that it read no data, and the agent recomputed from the daily data itself (36 months,
+  r = 0.60). 9 steps, $0.18.
+
+- 8aef8d548380, the earlier time machine (kept for the tests that read it): "Which wells need attention right now, and why? Forecast
   the next 12 months of oil for the well that needs it most." with data up to 2010-12-31.
   F-12 first (dead gauge; rate 55% lower since May 2010, a gradual shift); its 2011 forecast
   359k Sm3 against 340k produced (+6%), the whole-history fit 685k (+102%), the band from

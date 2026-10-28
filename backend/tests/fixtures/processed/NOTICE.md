@@ -4,7 +4,7 @@ These files are derived from the Volve field dataset: the daily production sheet
 by `wellpilot.ingest.production`, and two reports (the 2005 development plan, PUD, and
 F-11 B's completion report) read by `wellpilot.ingest.reports` and
 `wellpilot.ingest.report_facts` on Muse Spark Open; F-12's well work from its daily
-drilling reports (`wellpilot.ingest.operations`, F-12's rows only) and its production logs
+drilling reports (`wellpilot.ingest.operations`, F-12's and F-14's rows) and its production logs
 (`wellpilot.ingest.production_logs`: the 2010 survey's LAS files and the 2009 survey read
 off its report's plots by `wellpilot.ingest.log_plots`). They are a test fixture, so CI can
 check the analysis and the facts the demo quotes against real data, and replay the frozen
@@ -24,5 +24,5 @@ Refresh after an ingest change (the test_real_volve_sheet test fails until you d
        data/processed/production_manifest.json backend/tests/fixtures/processed/
     cp data/processed/{production_logs.parquet,production_log_plots.json} backend/tests/fixtures/processed/
 
-and for the well work, F-12's rows of `well_operations.parquet` and
-`well_operation_steps.parquet` (`df[df.well == "F-12"].to_parquet(...)`).
+and for the well work, F-12's and F-14's rows of `well_operations.parquet` and
+`well_operation_steps.parquet` (`df[df.well.isin(["F-12", "F-14"])].to_parquet(...)`).

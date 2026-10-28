@@ -416,10 +416,13 @@ class _Pool:
                         for v, _, suffix in _numbers_in_text(leaf, european):
                             if abs(v) not in typed_numbers:
                                 self.numbers.append(v)
-                                # "omlag 6 MSm3" is also 6 million: a claim's "6 million"
-                                # finds it either way.
+                                # "omlag 6 MSm3" is also 6 million, and a tool's "55% lower"
+                                # also 0.55: a claim's "6 million" or "55%" declared as a
+                                # fraction finds it either way.
                                 self.numbers.extend(
-                                    v * k for k in SCALES.get(suffix or "", ()) if k >= 1000
+                                    v * k
+                                    for k in SCALES.get(suffix or "", ())
+                                    if k >= 1000 or (k == 0.01 and suffix in ("%", "percent"))
                                 )
         self.years = {d[:4] for d in self.dates}
         self.text = "|".join(texts)

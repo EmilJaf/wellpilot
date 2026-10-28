@@ -6,11 +6,10 @@
   "question": "Which wells need attention right now, and why? Forecast the next 12 months of oil for the well that needs it most."
  },
  "to_review": false,
- "note": "Oct 28 night: finding 5, 'The field has stayed within its design limits: peak oil ... water cut ...', is about the limits as a whole, and E3 has water injection over capacity in 3 months by 2010. Round 2's 'water now makes up about 69%' was a false rejection ('up' read as a rise), fixed. Reviewed: fair (55% declared from E2, which lacks it; 33 not in the cited results; the design limits; undeclared 61%).",
+ "note": "Oct 28 night: finding 5, 'The field has stayed within its design limits: peak oil ... water cut ...', is about the limits as a whole, and E3 has water injection over capacity in 3 months by 2010. Round 2's 'water now makes up about 69%' was a false rejection ('up' read as a rise), fixed. Reviewed: fair (55% declared from E2, which lacks it; 33 not in the cited results; the design limits; undeclared 61%). Oct 28 night: '55%' declared as 0.5512 from the screen's '55% lower' was a false rejection: a tool's percent now also reads as a fraction.",
  "expected": {
   "accepted": false,
   "flagged": [
-   "Finding 2",
    "Finding 3",
    "Finding 5",
    "Summary"
