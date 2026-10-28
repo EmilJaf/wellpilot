@@ -6,11 +6,14 @@
   WellPilot console. Visual rules borrowed from high-performance control-room displays
   (ISA-101): a quiet grey console where colour is reserved for meaning. Oil is green and
   water blue (the industry's plotting convention); amber and red appear only when
-  something is abnormal: a fit warning, a dead gauge, a rejected claim. Normal, selected
-  and verified states stay in ink.
+  something is abnormal: a fit warning, a dead gauge, a rejected claim. Normal and verified
+  states stay in ink: "verified" is a check mark and words, never green, which means oil.
+  One more colour, indigo, marks only what the reader can act on and where they are (the
+  step, the tab, buttons, links); it sits far from water's blue in hue and lightness.
 
-  Reading order is a story: how the agent worked, what it answered, the data behind it.
-  The answer is the widest, most readable column; on a narrow screen it comes first.
+  Reading order is a story, told in five steps across the top: ask, watch the agent work,
+  its checked answer, what happened next, try to fool the checker. The left column holds
+  the story; the right one the data behind it.
 */
 :root {
   --canvas: #e6e9eb;
@@ -23,6 +26,12 @@
   --rule-strong: #b4bcc3;
   --shut-wash: #e3e6e9;
   --future-wash: rgba(31, 38, 45, 0.07); /* the time machine: data after the agent's date */
+
+  --brand: #3730a3; /* indigo: actions and "you are here", 9.5:1 on white */
+  --brand-strong: #312e81;
+  --brand-band: #1e1b4b;
+  --brand-wash: #eef0ff;
+  --brand-line: #c7caf7;
 
   --oil: #008300;
   --water: #2a78d6;
@@ -54,7 +63,7 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid var(--ink);
+  outline: 2px solid var(--brand);
   outline-offset: 2px;
 }
 
@@ -68,43 +77,48 @@ button {
 
 .app {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
   height: 100vh;
 }
 
 .topbar {
-  display: grid;
-  grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
-  gap: 28px;
-  align-items: start;
-  padding: 16px 24px 14px;
-  background: var(--sheet);
-  border-bottom: 1px solid var(--rule-strong);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 20px;
+  padding: 11px 24px 10px;
+  background: var(--brand-band);
+  color: #fff;
 }
 
 .wordmark {
   font-stretch: var(--wide);
   font-weight: 800;
-  font-size: 24px;
+  font-size: 22px;
   letter-spacing: -0.01em;
-  line-height: 1;
+  line-height: 1.1;
   margin: 0;
 }
 
 .tagline {
-  margin: 8px 0 0;
+  margin: 0;
   font-size: 13.5px;
   line-height: 1.45;
-  color: var(--ink-2);
+  color: var(--brand-line); /* 10:1 on the band */
 }
 
-/* log | answer | data, answer the widest */
+/* the story | the data behind it */
 .console {
   display: grid;
-  grid-template-columns: minmax(280px, 330px) minmax(0, 1.1fr) minmax(0, 1fr);
-  grid-template-areas: "log answer data";
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
   gap: 1px;
   background: var(--rule-strong);
+  min-height: 0;
+}
+
+.story-col {
+  background: var(--sheet);
+  overflow: auto;
   min-height: 0;
 }
 
@@ -114,18 +128,8 @@ button {
   min-height: 0;
 }
 
-.log-panel {
-  grid-area: log;
-}
-
-.answer-panel {
-  grid-area: answer;
-  background: var(--sheet) !important;
-}
-
 /* data column: the charts stay put while the evidence below them scrolls */
 .console > section.center {
-  grid-area: data;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -153,10 +157,6 @@ button {
   padding: 12px 18px 10px;
   background: inherit;
   border-bottom: 1px solid var(--rule);
-}
-
-.answer-panel .panel-head {
-  background: var(--sheet);
 }
 
 .log-panel .panel-head,
@@ -207,20 +207,229 @@ button {
   }
   .console {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: "answer" "data" "log";
   }
+  .story-col,
   .console > section,
   .console > section.center,
   .evidence-scroll {
     overflow: visible;
   }
   .topbar {
-    grid-template-columns: 1fr;
-    gap: 14px;
-    padding: 14px 16px;
+    padding: 10px 16px 9px;
   }
   .panel-body {
     padding: 16px 16px 24px;
+  }
+}
+
+/* ---------- the story in five steps ---------- */
+
+.story {
+  position: relative; /* the steps' offsets are measured from the bar */
+  background: var(--sheet);
+  border-bottom: 1px solid var(--rule-strong);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.story ol {
+  display: flex;
+  gap: 4px;
+  margin: 0;
+  padding: 8px 20px;
+  list-style: none;
+  min-width: max-content;
+}
+
+.story li {
+  display: flex;
+  align-items: center;
+}
+
+/* a hairline between steps: they are a sequence, though any one opens on its own */
+.story li + li::before {
+  content: "";
+  width: 18px;
+  height: 1px;
+  margin-right: 4px;
+  background: var(--rule-strong);
+}
+
+.story-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px 5px 6px;
+  border-radius: 999px;
+  color: var(--ink-2);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.story-step:hover {
+  color: var(--brand);
+  background: var(--brand-wash);
+}
+
+.story-number {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  font-size: 12.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.story-number svg {
+  width: 13px;
+  height: 13px;
+}
+
+.story-step.is-done {
+  color: var(--ink);
+}
+
+.story-step.is-done .story-number {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+.story-step.is-current {
+  background: var(--brand);
+  color: #fff;
+}
+
+.story-step.is-current .story-number {
+  border-color: #fff;
+}
+
+@media (max-width: 1100px) {
+  .story ol {
+    padding: 8px 16px;
+  }
+}
+
+/* ---------- the agent's work, in one line that stays in sight ---------- */
+
+.work {
+  border-bottom: 1px solid var(--rule);
+}
+
+.work-bar {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto;
+  grid-template-areas: "icon text toggle" ". ticks ticks";
+  gap: 6px 10px;
+  align-items: center;
+  width: 100%;
+  padding: 12px 28px 12px;
+  border: 0;
+  background: var(--brand-wash);
+  text-align: left;
+  font-size: 14.5px;
+  color: var(--ink-2);
+}
+
+.work-bar:hover {
+  background: #e4e7ff;
+}
+
+.work-bar > svg {
+  grid-area: icon;
+  width: 18px;
+  height: 18px;
+  color: var(--brand);
+}
+
+.work-text {
+  grid-area: text;
+}
+
+.work-text strong {
+  color: var(--ink);
+}
+
+.work-toggle {
+  grid-area: toggle;
+  color: var(--brand);
+  font-size: 13.5px;
+  font-weight: 650;
+  text-decoration: underline;
+  text-decoration-color: var(--brand-line);
+  text-underline-offset: 3px;
+  white-space: nowrap;
+}
+
+/* a tick per tool call, grouped by step; the checker's verdicts as taller marks */
+.work-ticks {
+  grid-area: ticks;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px 9px;
+  min-height: 14px;
+}
+
+.work-step {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.work-step i {
+  display: block;
+  width: 3px;
+  height: 10px;
+  border-radius: 1px;
+  background: var(--ink-3);
+}
+
+.work-step i.tick-error {
+  background: var(--alarm);
+}
+
+.work-step i.tick-accepted,
+.work-step i.tick-rejected {
+  width: 4px;
+  height: 14px;
+  background: var(--ink);
+}
+
+.work-step i.tick-rejected {
+  background: var(--alarm);
+}
+
+.work-log .log-panel {
+  max-height: min(62vh, 640px);
+  overflow: auto;
+  background: var(--panel);
+  border-top: 1px solid var(--rule);
+}
+
+.work-log .log-panel .panel-head {
+  align-items: flex-start;
+}
+
+.work-log .log-panel .panel-head h2 {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+@media (max-width: 1100px) {
+  .work-bar {
+    padding: 12px 16px;
+    grid-template-columns: 18px minmax(0, 1fr);
+    grid-template-areas: "icon text" ". ticks" ". toggle";
+  }
+  .work-toggle {
+    justify-self: start;
   }
 }
 
@@ -229,16 +438,30 @@ button {
 .ask {
   display: grid;
   gap: 10px;
+  padding: 16px 28px 14px;
+  border-bottom: 1px solid var(--rule);
 }
 
+@media (max-width: 1100px) {
+  .ask {
+    padding: 14px 16px 12px;
+  }
+}
+
+/* the question on a line of its own; voice, date and the button under it */
 .ask-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
   gap: 8px;
 }
 
-.ask-row:has(.mic-button) {
-  grid-template-columns: minmax(0, 1fr) auto auto auto;
+.ask-row input[type="text"] {
+  flex: 1 1 100%;
+}
+
+.ask-row .run-button {
+  margin-left: auto;
 }
 
 /* Ask by voice: a mic that becomes a stop button with the seconds counting. */
@@ -289,22 +512,16 @@ button {
 }
 
 @media (max-width: 700px) {
-  .ask-row {
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-  .ask-row:has(.mic-button) {
-    grid-template-columns: auto minmax(0, 1fr) auto;
-  }
   .ask-row:has(.mic-button) .as-of-label {
     display: none; /* the date input says what it is; the mic and the button need the width */
   }
-  .ask input[type="text"] {
-    grid-column: 1 / -1;
+  .ask-row .run-button {
+    flex: 1 1 auto; /* the rest of the row, or the whole of its own */
   }
 }
 
 .ask input[type="text"]:focus-visible {
-  outline: 2px solid var(--ink);
+  outline: 2px solid var(--brand);
   outline-offset: -1px;
 }
 
@@ -331,8 +548,8 @@ button {
   padding: 10px 18px;
   border: 0;
   border-radius: 6px;
-  background: var(--ink);
-  color: var(--sheet);
+  background: var(--brand);
+  color: #fff;
   font-weight: 650;
 }
 
@@ -343,7 +560,7 @@ button {
 
 .primary-button:hover,
 .run-button:hover:not(:disabled) {
-  background: #000;
+  background: var(--brand-band);
 }
 
 .suggestions {
@@ -365,17 +582,17 @@ button {
   padding: 0;
   border: 0;
   background: none;
-  color: var(--ink-2);
+  color: var(--brand);
   text-align: left;
   text-decoration: underline;
-  text-decoration-color: var(--rule-strong);
+  text-decoration-color: var(--brand-line);
   text-underline-offset: 3px;
 }
 
 .suggestion:hover,
 .link-button:hover {
-  color: var(--ink);
-  text-decoration-color: var(--ink);
+  color: var(--brand-band);
+  text-decoration-color: currentColor;
 }
 
 /* ---------- answer: intro, live status, the verified answer ---------- */
@@ -500,11 +717,13 @@ button {
 }
 
 .summary-lead {
-  margin: 0 0 8px;
-  font-size: 17px;
-  line-height: 1.5;
-  font-weight: 600;
-  max-width: 64ch;
+  margin: 0 0 10px;
+  font-size: 21px;
+  line-height: 1.38;
+  font-weight: 650;
+  letter-spacing: -0.005em;
+  max-width: 40ch;
+  text-wrap: pretty;
 }
 
 .summary {
@@ -529,7 +748,7 @@ button {
 
 @media (max-width: 700px) {
   .summary-lead {
-    font-size: 16.5px;
+    font-size: 18.5px;
   }
   .summary {
     font-size: 15px;
@@ -618,7 +837,7 @@ button {
 .num {
   padding: 0 1px;
   border: 0;
-  border-bottom: 1.5px dotted var(--ink-2);
+  border-bottom: 1.5px dotted var(--brand);
   background: none;
   font-variant-numeric: tabular-nums;
   line-height: inherit;
@@ -627,8 +846,8 @@ button {
 
 .num:hover,
 .num:focus-visible {
-  background: var(--canvas);
-  border-bottom: 1.5px solid var(--ink);
+  background: var(--brand-wash);
+  border-bottom: 1.5px solid var(--brand);
 }
 
 .claim q,
@@ -1284,9 +1503,41 @@ code,
 }
 
 .tabs button[aria-selected="true"] {
-  background: var(--sheet);
-  color: var(--ink);
-  box-shadow: 0 0 0 1px var(--rule-strong);
+  background: var(--brand);
+  color: #fff;
+}
+
+.tabs button:hover:not([aria-selected="true"]) {
+  color: var(--brand);
+}
+
+.subtabs {
+  flex-basis: 100%;
+  display: flex;
+  gap: 18px;
+  margin-top: 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.subtabs button {
+  padding: 2px 0 4px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.subtabs button[aria-selected="true"] {
+  color: var(--brand);
+  border-bottom-color: var(--brand);
+}
+
+.subtabs button:hover {
+  color: var(--brand);
 }
 
 /* ---------- field vs plan ---------- */
@@ -3142,23 +3393,6 @@ code,
   margin: 0 0 8px;
   color: var(--ink-2);
   max-width: 68ch;
-}
-
-/* First visit: no run, so no agent log; the answer and the data share the width. */
-.console.console-intro {
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-  grid-template-areas: "answer data";
-}
-
-.console.console-intro > .log-panel {
-  display: none;
-}
-
-@media (max-width: 1100px) {
-  .console.console-intro {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: "answer" "data";
-  }
 }
 
 /* The status: one sentence, one line of facts, the checker's story behind a disclosure. */

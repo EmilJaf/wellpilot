@@ -1,6 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from 'react'
 import { api, type OperationJob, type RunSummary, type Table } from './api'
 import { AgentLog } from './components/AgentLog'
+import { StoryBar } from './components/StoryBar'
+import { STEPS, type Step } from './story'
+import { WorkBar } from './components/WorkBar'
 import { PlanFigure } from './components/PlanFigure'
 import { FieldTimeline } from './components/FieldTimeline'
 import { InsideWell } from './components/InsideWell'
@@ -33,6 +36,50 @@ const EXAMPLES = [
 type EventRow = { kind: string; signal: string; start: string; end: string | null; details: Record<string, unknown> }
 
 const NO_MARKERS: Marker[] = []
+
+type View = 'screen' | 'history' | 'well' | 'inside' | 'plan' | 'accuracy' | 'hindsight'
+type Group = 'field' | 'well' | 'plan' | 'forecasts'
+// Seven views under four tabs: a reader meets four names, the rest is one click inside.
+const GROUP: Record<View, Group> = {
+  screen: 'field',
+  history: 'field',
+  well: 'well',
+  inside: 'well',
+  plan: 'plan',
+  accuracy: 'forecasts',
+  hindsight: 'forecasts',
+}
+const TABS: { group: Group; label: string }[] = [
+  { group: 'field', label: 'Field' },
+  { group: 'well', label: 'Well' },
+  { group: 'plan', label: '2005 plan' },
+  { group: 'forecasts', label: 'Forecasts' },
+]
+const FIRST: Record<Group, View> = { field: 'screen', well: 'well', plan: 'plan', forecasts: 'accuracy' }
+const SUBS: Record<Group, { view: View; label: string }[]> = {
+  field: [
+    { view: 'screen', label: 'All wells' },
+    { view: 'history', label: 'History' },
+  ],
+  well: [
+    { view: 'well', label: 'Production' },
+    { view: 'inside', label: 'Inside the well' },
+  ],
+  plan: [],
+  forecasts: [
+    { view: 'hindsight', label: 'What happened next' },
+    { view: 'accuracy', label: 'Past forecasts' },
+  ],
+}
+
+const stepFromUrl = (): Step | null => {
+  const n = Number(new URLSearchParams(window.location.search).get('step'))
+  return STEPS.some((s) => s.step === n) ? (n as Step) : null
+}
+
+/** Bring a part of the story column into view, once it has rendered. */
+const scrollToId = (id: string) =>
+  requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ block: 'start', behavior: 'smooth' }))
 
 /** A job on the well in a few words, from what its reports say was done. */
 function workLabel(job: OperationJob): string {
@@ -70,9 +117,17 @@ export default function App() {
   // The data column shows one well's daily data, the field against its 2005 plan, or how
   // close past forecasts came.
   // A first visit opens on the field screen; a shared run opens on its well.
-  const [view, setView] = useState<'screen' | 'history' | 'well' | 'inside' | 'plan' | 'accuracy' | 'hindsight'>(() =>
+  const [view, setView] = useState<View>(() =>
     new URLSearchParams(window.location.search).get('run') ? 'well' : 'screen',
   )
+  // The demo's five steps: which one the reader is on, and whether the agent's log is open.
+  const [step, setStep] = useState<Step>(() => {
+    const params = new URLSearchParams(window.location.search)
+    return stepFromUrl() ?? (params.get('replay') === '1' ? 2 : params.get('run') ? 3 : 1)
+  })
+  const [logOpen, setLogOpen] = useState(false)
+  // A step that needs the recorded run to finish loading first (the reveal, the checker).
+  const [pending, setPending] = useState<Step | null>(null)
   // The reader can fold the charts away to give the evidence the whole column.
   const [chartsShown, setChartsShown] = useState(true)
   const setSelectedEvidence = (id: string | null, clicked?: Focus) => {
@@ -104,6 +159,7 @@ export default function App() {
   const [work, setWork] = useState<{ key: string; list: Marker[] }>({ key: '', list: [] })
   const [markers, setMarkers] = useState<{ key: string; list: Marker[] }>({ key: '', list: [] })
   const [recorded, setRecorded] = useState<RunSummary | null>(null)
+  const [runsLoaded, setRunsLoaded] = useState(false)
   const [plan, setPlan] = useState<{ result: PlanResult | null; design: DesignResult | null; error?: string } | null>(null)
 
   useEffect(() => {
@@ -123,6 +179,7 @@ export default function App() {
     setRevealed(true)
     setSelected(null)
     setView('hindsight')
+    setStep(4)
     // On a narrow screen the data panel sits below the answer: bring it into view.
     if (window.innerWidth < 1100) {
       requestAnimationFrame(() => evidencePanel.current?.scrollIntoView({ block: 'start', behavior: 'smooth' }))
@@ -149,12 +206,6 @@ export default function App() {
   const well = pickedWell ?? agentWell ?? 'F-12'
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const runId = params.get('run')
-    if (runId) open(runId, params.get('replay') === '1')
-  }, [open])
-
-  useEffect(() => {
     if (!canRecord()) return
     api
       .health()
@@ -172,6 +223,7 @@ export default function App() {
         setRecorded(machine ?? verified.find((r) => r.as_of) ?? verified[0] ?? null)
       })
       .catch(() => setRecorded(null))
+      .finally(() => setRunsLoaded(true))
     fetch('/api/wells')
       .then((r) => r.json() as Promise<Table>)
       .then((t) => {
@@ -250,22 +302,137 @@ export default function App() {
     setSelectedFinding(null)
     setPickedWell(null)
     setRevealed(false)
+    setPending(null)
     if (view === 'hindsight') setView('screen')
+  }
+
+  // A run the reader starts or replays moves the story on: working is step 2, its answer
+  // step 3. A run opened already finished does not.
+  const [moving, setMoving] = useState(false)
+  const follow = () => {
+    setMoving(true)
+    setStep(2)
+    setLogOpen(true)
   }
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault()
     if (!question.trim() || running) return
     reset()
-    const runId = await ask(question.trim(), asOf || undefined)
-    if (runId) window.history.replaceState(null, '', `?run=${runId}`)
+    follow()
+    await ask(question.trim(), asOf || undefined)
   }
 
   const replay = (runId: string) => {
     reset()
     open(runId, true)
-    window.history.replaceState(null, '', `?run=${runId}&replay=1`)
+    follow()
   }
+
+  const [seenStatus, setSeenStatus] = useState(state.status)
+  if (state.status !== seenStatus) {
+    setSeenStatus(state.status)
+    if (moving && (state.status === 'done' || state.status === 'error')) {
+      setMoving(false)
+      // The answer is in: the log folds to its one line so the answer is in sight. A run that
+      // failed keeps its log open; it says where the run stopped.
+      if (state.status === 'done') {
+        setStep(3)
+        setLogOpen(false)
+      }
+    }
+  }
+
+  // Steps already seen get a tick in the story bar.
+  const [visited, setVisited] = useState<ReadonlySet<Step>>(() => new Set())
+  const [seenStep, setSeenStep] = useState(step)
+  if (step !== seenStep) {
+    setSeenStep(step)
+    setVisited(new Set([...visited, seenStep]))
+  }
+
+  // Any step opens on its own. Steps after the first need a run: the open one, else the one
+  // the address names, else the recorded time-machine run.
+  const goToStep = (target: Step, named: string | null = null) => {
+    setStep(target)
+    const load = !state.id && !named && recorded ? recorded.id : null
+    if (target === 1) {
+      setQuestion(EXAMPLES[0].question)
+      setAsOf(EXAMPLES[0].asOf)
+      setLogOpen(false)
+      scrollToId('ask')
+      ;(document.getElementById('question') as HTMLInputElement | null)?.focus({ preventScroll: true })
+      return
+    }
+    if (target === 2) {
+      if (load) replay(load)
+      else setLogOpen(true)
+      scrollToId('work')
+      return
+    }
+    if (load) {
+      reset()
+      open(load, false)
+    }
+    setLogOpen(false)
+    if (target === 3) {
+      setView('well')
+      scrollToId('answer')
+    } else setPending(target) // once the run's answer is in
+  }
+
+  // Steps 4 and 5 act on a finished answer: open what the agent could not see (or, for a run
+  // with no past date, how close past forecasts came), or the checker to fool.
+  const finishStep = useEffectEvent(() => {
+    if (!pending || state.status !== 'done' || !state.final) return
+    setPending(null)
+    if (pending === 5) scrollToId('fool')
+    else if (state.asOf) reveal()
+    else setView('accuracy')
+  })
+  // eslint-disable-next-line react/set-state-in-effect -- the answer comes in from the run's stream
+  useEffect(() => finishStep(), [pending, state.status, state.final])
+
+  // The address opens what it names: a run (?run=, replayed with &replay=1) and a step
+  // (?step=N, for a judge coming back or a video take). Safe to run twice, as React's strict
+  // mode does: the run hook stops its stream on a (simulated) unmount.
+  const openFromUrl = useEffectEvent(() => {
+    const params = new URLSearchParams(window.location.search)
+    const runId = params.get('run')
+    const target = stepFromUrl()
+    if (!runId) return
+    if (params.get('replay') === '1' || target === 2) replay(runId)
+    else open(runId, false)
+    if (target && target !== 2) goToStep(target, runId)
+  })
+  // eslint-disable-next-line react/set-state-in-effect -- the address is outside React
+  useEffect(() => openFromUrl(), [])
+  // With no run named, a later step opens on the recorded time-machine run once its id is in.
+  const stepFromUrlOnRecorded = useEffectEvent(() => {
+    const target = stepFromUrl()
+    if (!runsLoaded || !target || target < 2 || new URLSearchParams(window.location.search).get('run')) return
+    goToStep(target)
+  })
+  // eslint-disable-next-line react/set-state-in-effect -- the address is outside React
+  useEffect(() => stepFromUrlOnRecorded(), [runsLoaded])
+
+  // ...and keeps saying where the reader is, so a reload or a shared link lands there.
+  useEffect(() => {
+    if (!state.id && new URLSearchParams(window.location.search).get('run')) return // still loading it
+    const search = state.id ? `?run=${state.id}&step=${step}` : step > 1 ? `?step=${step}` : ''
+    if (search !== window.location.search) window.history.replaceState(null, '', search || window.location.pathname)
+  }, [state.id, step])
+
+  // Seven views under four tabs; a tab reopens the view last seen under it.
+  const lastIn = useRef<Partial<Record<Group, View>>>({})
+  useEffect(() => {
+    lastIn.current[GROUP[view]] = view
+  }, [view])
+  const openGroup = (g: Group) => {
+    const last = lastIn.current[g]
+    setView(last && (last !== 'hindsight' || (revealed && canReveal)) ? last : FIRST[g])
+  }
+  const subs = SUBS[GROUP[view]].filter((s) => s.view !== 'hindsight' || canReveal)
 
   const MAX_CLIP_MS = 15_000
 
@@ -310,133 +477,126 @@ export default function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <div className="brand">
-          <h1 className="wordmark">WellPilot</h1>
-          <p className="tagline">
-            Well analysis by an AI agent whose every number is checked against the field data. On
-            Meta&rsquo;s open-weight Muse Spark Open.
-          </p>
-        </div>
-        <form className="ask" onSubmit={submit}>
-          <div className="ask-row">
-            <label className="sr-only" htmlFor="question">
-              Question
-            </label>
-            <input
-              id="question"
-              type="text"
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              placeholder="Ask about a well, e.g. why F-12 declined after 2010"
-            />
-            {voiceOn !== false && (
-              <button
-                type="button"
-                className={`mic-button${voice.status === 'recording' ? ' is-recording' : ''}`}
-                onClick={toggleVoice}
-                disabled={voice.status === 'transcribing' || running}
-                aria-pressed={voice.status === 'recording'}
-                aria-label={voice.status === 'recording' ? 'Stop recording' : 'Ask by voice'}
-                title={voice.status === 'recording' ? 'Stop recording' : 'Ask by voice: up to 15 seconds, transcribed by the same model'}
-              >
-                {voice.status === 'recording' ? <StopIcon /> : <MicIcon />}
-                <span className="mic-state">
-                  {voice.status === 'recording'
-                    ? `0:${String(voice.seconds).padStart(2, '0')}`
-                    : voice.status === 'transcribing'
-                      ? 'Transcribing'
-                      : 'Voice'}
-                </span>
-              </button>
-            )}
-            <label className="as-of" title="For backtests: the agent sees no data after this day, as if it were that day.">
-              <span className="as-of-label">Data up to</span>
-              <input type="date" value={asOf} min="2008-01-01" max="2016-12-01" onChange={(e) => setAsOf(e.target.value)} />
-            </label>
-            <button className="run-button" type="submit" disabled={running}>
-              {running ? 'Running' : 'Ask the agent'}
-            </button>
-          </div>
-          {voice.note && (
-            <p className="voice-note" role="status">
-              {voice.note}
-            </p>
-          )}
-          <div className="suggestions">
-            <span className="suggestions-label">Try</span>
-            {EXAMPLES.map((e) => (
-              <button
-                key={e.label}
-                type="button"
-                className="suggestion"
-                title={e.asOf ? `${e.question} (data up to ${e.asOf})` : e.question}
-                onClick={() => {
-                  setQuestion(e.question)
-                  setAsOf(e.asOf)
-                }}
-              >
-                {e.label}
-              </button>
-            ))}
-            {recorded && (
-              <button type="button" className="link-button" onClick={() => replay(recorded.id)} disabled={running}>
-                or watch a recorded run
-              </button>
-            )}
-          </div>
-        </form>
+        <h1 className="wordmark">WellPilot</h1>
+        <p className="tagline">
+          An AI agent for well analysis whose every number is checked against the field data. On Meta&rsquo;s
+          open-weight Muse Spark Open.
+        </p>
       </header>
+      <StoryBar current={step} done={(s) => visited.has(s)} onStep={(s) => goToStep(s)} />
 
-      {/* Until a run is open the agent log has nothing to show: two columns, not three. */}
-      <main className={`console${state.status === 'idle' ? ' console-intro' : ''}`}>
-        {/* One boundary per panel: a bad evidence render must not hide the live log. The
-            answer comes first in reading order; on a wide screen it sits in the middle. */}
-        <ErrorBoundary>
-          <Answer
-            state={state}
-            recorded={recorded}
-            selectedFinding={selectedFinding}
-            selectedEvidence={selectedEvidence}
-            onSelectFinding={(i) => {
-              setSelectedFinding(i)
-              const first = i !== null ? state.final?.findings[i]?.evidence_ids[0] : undefined
-              if (first) setSelectedEvidence(first)
-            }}
-            onSelectEvidence={setSelectedEvidence}
-            onReplay={replay}
-            revealed={revealed}
-            onReveal={canReveal ? reveal : undefined}
-            wells={wells}
-          />
-        </ErrorBoundary>
+      <main className="console">
+        {/* The story column: the question, the agent working on it, its checked answer. One
+            boundary per part: a bad evidence render must not hide the live log. */}
+        <div className="story-col">
+            <form id="ask" className="ask" onSubmit={submit} aria-label="Ask the agent">
+              <div className="ask-row">
+                <label className="sr-only" htmlFor="question">
+                  Question
+                </label>
+                <input
+                  id="question"
+                  type="text"
+                  value={question}
+                  onChange={(e) => setQuestion(e.target.value)}
+                  placeholder="Ask about a well, e.g. why F-12 declined after 2010"
+                />
+                {voiceOn !== false && (
+                  <button
+                    type="button"
+                    className={`mic-button${voice.status === 'recording' ? ' is-recording' : ''}`}
+                    onClick={toggleVoice}
+                    disabled={voice.status === 'transcribing' || running}
+                    aria-pressed={voice.status === 'recording'}
+                    aria-label={voice.status === 'recording' ? 'Stop recording' : 'Ask by voice'}
+                    title={voice.status === 'recording' ? 'Stop recording' : 'Ask by voice: up to 15 seconds, transcribed by the same model'}
+                  >
+                    {voice.status === 'recording' ? <StopIcon /> : <MicIcon />}
+                    <span className="mic-state">
+                      {voice.status === 'recording'
+                        ? `0:${String(voice.seconds).padStart(2, '0')}`
+                        : voice.status === 'transcribing'
+                          ? 'Transcribing'
+                          : 'Voice'}
+                    </span>
+                  </button>
+                )}
+                <label className="as-of" title="For backtests: the agent sees no data after this day, as if it were that day.">
+                  <span className="as-of-label">Data up to</span>
+                  <input type="date" value={asOf} min="2008-01-01" max="2016-12-01" onChange={(e) => setAsOf(e.target.value)} />
+                </label>
+                <button className="run-button" type="submit" disabled={running}>
+                  {running ? 'Running' : 'Ask the agent'}
+                </button>
+              </div>
+              {voice.note && (
+                <p className="voice-note" role="status">
+                  {voice.note}
+                </p>
+              )}
+              <div className="suggestions">
+                <span className="suggestions-label">Try</span>
+                {EXAMPLES.map((e) => (
+                  <button
+                    key={e.label}
+                    type="button"
+                    className="suggestion"
+                    title={e.asOf ? `${e.question} (data up to ${e.asOf})` : e.question}
+                    onClick={() => {
+                      setQuestion(e.question)
+                      setAsOf(e.asOf)
+                    }}
+                  >
+                    {e.label}
+                  </button>
+                ))}
+                {recorded && (
+                  <button type="button" className="link-button" onClick={() => replay(recorded.id)} disabled={running}>
+                    or watch a recorded run
+                  </button>
+                )}
+              </div>
+            </form>
+          <ErrorBoundary>
+            <WorkBar state={state} open={logOpen} onToggle={() => setLogOpen(!logOpen)}>
+              <AgentLog state={state} selectedEvidence={selectedEvidence} onSelectEvidence={setSelectedEvidence} />
+            </WorkBar>
+          </ErrorBoundary>
+          <ErrorBoundary>
+            <Answer
+              state={state}
+              recorded={recorded}
+              selectedFinding={selectedFinding}
+              selectedEvidence={selectedEvidence}
+              onSelectFinding={(i) => {
+                setSelectedFinding(i)
+                const first = i !== null ? state.final?.findings[i]?.evidence_ids[0] : undefined
+                if (first) setSelectedEvidence(first)
+              }}
+              onSelectEvidence={setSelectedEvidence}
+              onReplay={replay}
+              revealed={revealed}
+              onReveal={canReveal ? reveal : undefined}
+              wells={wells}
+            />
+          </ErrorBoundary>
+        </div>
 
         <ErrorBoundary>
           <section aria-label="Well data and evidence" className="center">
             <div className="panel-head">
               <div className="tabs" role="tablist" aria-label="Data to show">
-                <button type="button" role="tab" aria-selected={view === 'screen'} onClick={() => setView('screen')}>
-                  All wells
-                </button>
-                <button type="button" role="tab" aria-selected={view === 'history'} onClick={() => setView('history')}>
-                  History
-                </button>
-                <button type="button" role="tab" aria-selected={view === 'well'} onClick={() => setView('well')}>
-                  Well {well}
-                </button>
-                <button type="button" role="tab" aria-selected={view === 'inside'} onClick={() => setView('inside')}>
-                  Inside {well}
-                </button>
-                <button type="button" role="tab" aria-selected={view === 'plan'} onClick={() => setView('plan')}>
-                  Plan
-                </button>
-                <button type="button" role="tab" aria-selected={view === 'accuracy'} onClick={() => setView('accuracy')}>
-                  Accuracy
-                </button>
-                {canReveal && (
-                  <button type="button" role="tab" aria-selected={view === 'hindsight'} onClick={reveal}>
-                    What happened
+                {TABS.map((t) => (
+                  <button
+                    key={t.group}
+                    type="button"
+                    role="tab"
+                    aria-selected={GROUP[view] === t.group}
+                    onClick={() => openGroup(t.group)}
+                  >
+                    {t.group === 'well' ? `Well ${well}` : t.label}
                   </button>
-                )}
+                ))}
               </div>
               {view === 'well' && (
                 <button type="button" className="link-button charts-toggle" aria-pressed={!chartsShown} onClick={() => setChartsShown(!chartsShown)}>
@@ -456,6 +616,21 @@ export default function App() {
                     </option>
                   ))}
                 </select>
+              )}
+              {subs.length > 1 && (
+                <div className="subtabs" role="tablist" aria-label="Views under this tab">
+                  {subs.map((t) => (
+                    <button
+                      key={t.view}
+                      type="button"
+                      role="tab"
+                      aria-selected={view === t.view}
+                      onClick={() => (t.view === 'hindsight' ? reveal() : setView(t.view))}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
               )}
             </div>
             {view === 'well' && chartsShown && span?.well === well && (
@@ -524,10 +699,6 @@ export default function App() {
               )}
             </div>
           </section>
-        </ErrorBoundary>
-
-        <ErrorBoundary>
-          <AgentLog state={state} selectedEvidence={selectedEvidence} onSelectEvidence={setSelectedEvidence} />
         </ErrorBoundary>
       </main>
       <footer className="credits">

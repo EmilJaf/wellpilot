@@ -122,10 +122,7 @@ export function Answer(props: Props) {
   const { state } = props
   const final = state.final
   return (
-    <section aria-label="Answer" className="answer-panel">
-      <div className="panel-head">
-        <h2>Answer</h2>
-      </div>
+    <section id="answer" aria-label="Answer" className="answer-panel">
       <div className="panel-body answer-body" aria-live="polite">
         {final ? (
           <Final {...props} />
@@ -305,6 +302,15 @@ function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSe
   const facts = final.findings.filter((f) => f.confidence === 'fact').length
   return (
     <>
+      {/* The headline is the agent's own summary, checked like every finding: no line of
+          the answer is written by the page. */}
+      {final.summary && (
+        <section className="conclusion" aria-label="Conclusion">
+          <h3 className="sr-only">Conclusion</h3>
+          <Summary text={final.summary} spans={final.summary_spans} open={onSelectEvidence} quoteSource={anyReport} />
+        </section>
+      )}
+
       <div className={`status${final.verified ? '' : ' status-alarm'}`} role="status">
         <div className="status-main">
           {final.verified ? <CheckIcon /> : <AlarmIcon />}
@@ -349,8 +355,6 @@ function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSe
         </details>
       </div>
 
-      {final.meta_models && <MetaLine m={final.meta_models} open={onSelectEvidence} />}
-
       {state.asOf && (
         <div className="past">
           <p>
@@ -364,12 +368,7 @@ function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSe
         </div>
       )}
 
-      {final.summary && (
-        <section className="conclusion" aria-label="Conclusion">
-          <h3 className="section-label">Conclusion</h3>
-          <Summary text={final.summary} spans={final.summary_spans} open={onSelectEvidence} quoteSource={anyReport} />
-        </section>
-      )}
+      {final.meta_models && <MetaLine m={final.meta_models} open={onSelectEvidence} />}
 
       {review && (
         <section className={`second-opinion${review.points.length ? '' : ' is-sound'}`} aria-label="Second opinion">

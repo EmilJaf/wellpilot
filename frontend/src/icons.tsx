@@ -51,3 +51,12 @@ export const StopIcon = () => (
     <rect x="3.5" y="3.5" width="9" height="9" rx="1" fill="currentColor" />
   </svg>
 )
+
+export const StepsIcon = () => (
+  <svg {...base}>
+    <circle cx="3.5" cy="3.5" r="1.5" />
+    <circle cx="12.5" cy="8" r="1.5" />
+    <circle cx="3.5" cy="12.5" r="1.5" />
+    <path d="M5 3.5h4.5a3 3 0 0 1 0 6H6.5a3 3 0 0 0 0 6" transform="translate(0 -1.5) scale(1 .85)" />
+  </svg>
+)

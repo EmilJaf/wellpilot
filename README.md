@@ -19,6 +19,8 @@ Built for the Meta Global AI Developer Hackathon (Oct 26 - Nov 4, 2026), Indie t
 4. **Click any number.** It opens the exact tool result it came from, the value marked, with the Python that produced it.
 5. **Try to fool the checker.** Change a number, add a cause, give the value to another well, and the checker sends it back, citing the source. Or let the model try: it wrote 36 false versions of verified answers; the checker caught 30, and the four real holes it found are closed.
 
+The app tells the same story in five steps across its top: ask as of 2010, watch it work, the answer, what happened next, try to fool it. Any step opens on its own, and each has an address: `?step=4` opens what happened next on the recorded run.
+
 ## Could the model just remember Volve?
 
 Volve is a public dataset, and a model may have read about it. Three things keep the time machine honest:
@@ -134,7 +136,7 @@ flowchart LR
 - **What the checker does not check:** meaning. "Pressure collapsed to 0" would pass when the evidence says the gauge reads 0; whether the reasoning holds is for the reader, and that is why every number is one click from its source.
 - **Quality gates:** `python -m wellpilot.ingest.facts_gate` (free) checks the report facts: the plan's table rows, the design limits, the key quotes verbatim, no unverified quote, quotes located on their pages. `python -m wellpilot.eval` runs 12 real questions through the agent and checks each answer: verified, the right tools called, the facts any correct answer contains, claims in plain words, a step and cost budget. Latest runs (Oct 27, Muse Spark Open): all 12 answers verified; 6 pass every check, the others go over a step or cost budget or write a claim with more than four numbers.
 - **Backend:** Python 3.13, FastAPI, Server-Sent Events, DuckDB, pandas, scipy, ruptures, pypdfium2. Runs are background tasks saved as JSON and replayable. About 560 tests, including the featured runs replayed in CI.
-- **Frontend:** React, TypeScript, Vite, uPlot, hand-written SVG charts. A control-room palette after ISA-101: grey by default, colour only for meaning (oil green, water blue, amber caution, red alarm).
+- **Frontend:** React, TypeScript, Vite, uPlot, hand-written SVG charts. A control-room palette after ISA-101: grey by default, colour only for meaning (oil green, water blue, amber caution, red alarm). "Verified" is a check mark and words, never green, since green means oil. One more colour, indigo, marks only what you can act on and where you are (the step, the tab, buttons, links), far from water's blue.
 
 ## Next: the checker as a teacher
 

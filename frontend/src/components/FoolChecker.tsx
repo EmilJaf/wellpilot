@@ -140,7 +140,7 @@ export function FoolChecker({
   const onlyLabel = claim === original.claim && confidence === 'fact' && original.confidence === 'inference'
 
   return (
-    <section className="fool" aria-label="Try to fool the checker">
+    <section id="fool" className="fool" aria-label="Try to fool the checker">
       <h3 className="section-label">Try to fool the checker</h3>
       <p className="fool-lead">
         Change a finding and press Check again. The checker runs on this run's saved tool results; no model is
