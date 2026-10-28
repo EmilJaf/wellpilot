@@ -158,9 +158,14 @@ def normalize_dates(text: str) -> str:
     return MONTH_YEAR.sub(lambda m: iso(m[2], m[1], None) or m[0], text)
 
 
+DASHES = str.maketrans(dict.fromkeys("\u2010\u2011\u2012\u2013\u2212", "-"))
+
+
 def _normalize(text: str) -> str:
-    """The claim as the checker reads it: ISO dates, ASCII minus and hyphen."""
-    return normalize_dates(text.replace("\u2212", "-").replace("\u2013", "-"))
+    """The claim as the checker reads it: ISO dates, ASCII minus and hyphen. The model
+    sometimes writes "2010\u201107\u201118" and "F\u201112" with non-breaking hyphens; each
+    dash stays one character, so positions still index the text as written."""
+    return normalize_dates(text.translate(DASHES))
 
 
 # Unit conversions a calculation may use without citing them (besides powers of ten): days,
@@ -169,11 +174,11 @@ CONSTANTS = {7.0, 12.0, 24.0, 30.0, 30.44, 52.0, 60.0, 365.0, 365.25, 3600.0, 86
 CONSTANTS |= {6.2898, 0.159, 0.158987, 35.3147}
 # Causes are interpretations: the data shows timing and size, not why.
 # "Water drive" and "gas drive" are recovery mechanisms, and "the fit results in E9" points
-# at evidence: neither is a claim about why.
+# at evidence: neither is a claim about why. The verb is one: "water drove the fall".
 CAUSAL = re.compile(
     r"\b(because|caus(?:e|ed|es|ing)|"
-    r"(?<!water )(?<!gas )(?<!aquifer )(?<!depletion )(?<!gravity )"
-    r"dr(?:ove|ives?|iven|iving|ivers?)|"
+    r"(?<!water )(?<!gas )(?<!aquifer )(?<!depletion )(?<!gravity )(?<!water-)drives?\b|"
+    r"dr(?:ove|iven|iving|ivers?)|"
     r"due to|led to|leads? to|result(?:s|ed)? (?:from|in)(?! E\d)|(?:as a )?result of|"
     r"responsible for|(?:was|were|is|are|be) (?:\w+ )?responsible|attribut(?:able|ed) to|"
     r"triggered by|owing to|thanks to|brought on by|stemming from|resulting from|"
@@ -712,10 +717,13 @@ def _reads_as(reading: Reading, candidates: Iterable[float]) -> bool:
 GROUP_BEFORE = re.compile(r"(?:^|[^\w.,])\d{1,3}[ \u00a0\u202f]$")
 # Window lengths in calendar units ("30-day median", "12 month forecast", "the next 12
 # months", "365 days after the cutoff") describe a method, not the data, so they need no
-# declaring. Any other duration ("45-day shut-in", "30 days of shut-in") does.
+# declaring. Any other duration ("45-day shut-in", "30 days of shut-in") does. 60 days is
+# the window production_log measures a plug by ("in the 60 days after").
 CALENDAR_WINDOW = re.compile(
-    r"\b(?:12|24|30|90|180|365)[-\s](?:month|hour|day)\b"
+    r"\b(?:12|24|30|60|90|180|365)[-\s](?:month|hour|day)\b"
     r"|\b(?:12\s+months|24\s+hours|(?:90|180|365)\s+days)\b"
+    r"|(?:(?<=next )|(?<=first )|(?<=the ))60\s+days\b"
+    r"|\b60\s+days(?=\s+(?:after|before|later|on average))"
 )
 DECIMAL_COMMA = re.compile(r"\d,\d{1,2}(?!\d)")
 DOTTED_THOUSANDS = re.compile(r"[1-9]\d{0,2}(?:\.\d{3})+")
@@ -827,7 +835,9 @@ PERIOD_TIED = re.compile(
     re.IGNORECASE,
 )
 DATE_FIRST = re.compile(
-    r"\b(?:in|on|during|for)\s+(\d{4}-\d{2}(?:-\d{2})?)\b,?\s+(?:[^\s\d,;.]+\s+){0,6}?"
+    # "reached 80% in 2012-06 and peaked at 86%": a new clause after "and" is not that month's.
+    r"\b(?:in|on|during|for)\s+(\d{4}-\d{2}(?:-\d{2})?)\b,?\s+"
+    r"(?:(?!(?:and|but|while|whereas|then)\b)[^\s\d,;.]+\s+){0,6}?"
     r"(?:was|were|is|had|made|produced|averaged|read|reached|at|of)\s+"
     r"(?:about|around|roughly|approximately|~)?\s*$",
     re.IGNORECASE,
@@ -885,6 +895,18 @@ def _row_mismatch(
                 ]
                 if not any(_reads_as(r, values) for r in readings):
                     return f"{part} {year}", f"rows {min(wanted)} to {max(wanted)}"
+            continue
+        # A design limit or capacity written with a date in its sentence is the plan's, not
+        # that month's ("hit 80% in 2012-06 but never exceeded its capacity of 13,000").
+        if re.search(
+            r"\b(?:capacit\w*|limits?|maximum)\s*(?:of|at|is|was|:)?\s*(?:about|around|~)?\s*$",
+            text[:start],
+            re.I,
+        ) or re.match(
+            r"\s*(?:Sm3(?:/d)?\s*)?(?:(?:liquid|oil|water|injection)\s+)?(?:capacity|limit|design)",
+            text[end:],
+            re.I,
+        ):
             continue
         tied = re.match(TIED, text[end:])
         # "...in 2013-12, while the choke averaged 77% in 2011": a number with its own year
@@ -1396,6 +1418,12 @@ def _quantity(blanked: str, start: int, end: int, after: bool = True) -> str | N
             if share and " of" in found.group(0) and re.fullmatch(r"liquids?", name, re.I):
                 return None
     if name is None:
+        # "made water about 21 months after first oil": a duration, not an amount of water,
+        # also when the unit is part of the declared text ("passed 5% water at 21 months").
+        if DURATION_AFTER.match(blanked[end:]) or re.search(
+            r"\b(?:days?|weeks?|months?|years?|hours?)\s*$", blanked[start:end], re.I
+        ):
+            return None
         before = blanked[max(0, start - 60) : start]
         # "a correlation between water cut and choke of 0.60": the number is the
         # correlation's, not the last quantity named before it.
@@ -1409,6 +1437,12 @@ def _quantity(blanked: str, start: int, end: int, after: bool = True) -> str | N
         if not (last and LINK.fullmatch(before[last.end() :])):
             return None
         name = last.group(0)
+        # "when water was 30%": a share of the stream named before it is its water cut too.
+        if re.fullmatch(r"water", name, re.I) and (
+            blanked[start:end].rstrip().endswith("%")
+            or re.match(r"\s*(?:%|percent)", blanked[end:])
+        ):
+            return "water cut"
     return next(q for q, (text, _) in QUANTITIES.items() if re.fullmatch(text, name, re.I))
 
 
@@ -1442,9 +1476,16 @@ def _attribution(
     # percentage), says which value is meant: "about 97%" declared 0.9665 is that month's
     # water cut, not an uptime near 0.97. Used for what the value is named, only.
     scales = [] if exact is None else [exact, exact * 100, exact / 100]
+    # A declared value may be a rounding of the value it means ("0.676" for 0.6758): at its
+    # own precision, which may also be another value's exact one.
+    places = 0 if exact is None else max(0, -Decimal(repr(abs(exact))).as_tuple().exponent)
 
     def at_scale(lf: _Leaf) -> bool:
-        return any(abs(lf.value - x) <= 1e-9 * max(1, abs(x)) for x in scales)
+        return any(
+            abs(lf.value - x) <= 1e-9 * max(1, abs(x))
+            or (places and round(lf.value, places) == round(x, places) and x == exact)
+            for x in scales
+        )
 
     meant = [lf for lf in held if at_scale(lf)] or held
     # Names as written: "P50" is no page reference here.
@@ -1530,6 +1571,11 @@ def _attribution(
             model = next((m for m in MODELS.findall(meant[0].labels)), "another")
             return f"is the {model} model's P50 in {item.id}, not the forecast's own"
         unit = _written_unit(blanked, end)
+        # Tool-speak "oil_sm3_per_day 1850 days 48": "days" is the next value's name.
+        if own_part and re.match(
+            r"\s*[a-z_]*(?:days?|weeks?|months?|years?)\s+-?\d", blanked[end:], re.I
+        ):
+            unit = None
         dims = {lf.dim for lf in held}
         known = dims - {None}
         if unit and known and unit not in known:
@@ -1602,7 +1648,26 @@ def _attribution(
             return f"is written as a rise, but {item.id} has it as a fall ({held[0].value:g})"
         if fall and all(lf.sign == 1 for lf in held):
             return f"is written as a fall, but {item.id} has it as a rise ({held[0].value:g})"
-        if STEP_WORDS.search(_part(blanked, start, commas=False)) and _gradual(held, leaves):
+        # "fell 72% around 2010-07-18": a fall at a date is the change across it; the change
+        # between two periods' means is a shift ("shifted down", "between the periods").
+        at_date = (
+            re.search(
+                rf"\b(?:{FALL_WORDS}|{RISE_WORDS})\b[^.;]{{0,25}}$",
+                blanked[max(0, start - 40) : start],
+                re.I,
+            )
+            and re.match(
+                r"[^.;,]{0,30}?\b(?:around|on|at|in)\s+(?:\d{4}-\d{2}|(?:early|mid|late)[- ]\d{4})",
+                text[end:],
+                re.I,
+            )
+            and not re.search(
+                r"between|period|shift|gradual", _part(blanked, start, commas=False), re.I
+            )
+        )
+        if (STEP_WORDS.search(_part(blanked, start, commas=False)) or at_date) and _gradual(
+            held, leaves
+        ):
             across = _across_text(leaves, {lf.record for lf in held})
             measured = f" {item.id} measures {across} across the change itself;" if across else ""
             return (
@@ -2145,6 +2210,13 @@ def _inconsistent(label, blanked, declared, unused) -> list[str]:
         m = COMPARE.search(between)
         if not m or re.search(r"[;.]\s", between) or len(between) > 60:
             continue
+        # "rose from 3% to over 50%": the word bounds the second number, it does not set the
+        # first against it.
+        if re.search(r"\b(?:to|from|at|reached|reaching)\s+$", between[: m.start()], re.I):
+            continue
+        # "above 50% by month 28 and above 80% by month 48": a second level, not a comparison.
+        if re.search(r"\b(?:and|or|but|while|whereas|then)\b", between[: m.start()], re.I):
+            continue
         # The newer words compare only right after the number, with nothing in between that
         # starts another subject ("10,800 under the 13,000 limit, but injection exceeded its
         # 16,000"), and "over" is no time span ("down 7.8% over the last 90 days").
@@ -2451,7 +2523,19 @@ def _declared(
                 f"which the text ties it to; that row has {wrong_row[1]}."
             )
         elif wrong := attributed(number, fits, item):
-            problems.append(f"{label}: '{number.text}' {wrong}. Write what the evidence says.")
+            # Often only the id is wrong: another cited result has the number as written.
+            better = [
+                e
+                for e in sorted(citable or ())
+                if e != where
+                and (other := log.get(e)) is not None
+                and any(_reads_as(r, _Pool([other]).numbers) for r in fits)
+                and not attributed(number, fits, other)
+            ]
+            hint = f" {better[0]} has it as written: declare that id." if better else ""
+            problems.append(
+                f"{label}: '{number.text}' {wrong}. Write what the evidence says.{hint}"
+            )
         elif record := _record_mismatch(masked_dates, number.text, fits, leaves_of(item)):
             problems.append(
                 f"{label}: '{number.text}' is in {where}, but the text ties it to {record[0]}, "
@@ -3231,6 +3315,8 @@ def _year_records(label, blanked, declared, unused, items, leaves_of) -> list[st
                 if lf.value is not None and any(_reads_as(r, [lf.value]) for r in fits)
             ]
             dated = [lf for lf in held if lf.record_days]
+            if len(dated) < len(held):  # an undated value (a log's depth table) may be the year's
+                continue
             covered = any(
                 any(day.startswith(m["year"]) for day in lf.record_days)
                 for item in items
@@ -3686,6 +3772,14 @@ def check_submission(submission: Submission, log: EvidenceLog, question: str = "
     submission = _hyphenated(submission, log)
     free = _question_numbers(question)
     free_dates = REPORT_DATES | set(DATE.findall(_normalize(question)))
+    # "Over 2011 to 2013" bounds a window: its years' first and last days need no source.
+    # They still belong to a well where the evidence dates them (F-12's 2011-01 is no
+    # F-14 month), so they are not added to the dates no well owns below.
+    bounds = {
+        f"{y}-{md}"
+        for y in re.findall(r"\b((?:19|20)\d{2})\b", question)
+        for md in ("01-01", "12-31", "01", "12")
+    }
     calcs = _calculations(log)
     sound = [e for e in log if not (e.id in calcs and calcs[e.id].unsupported)]
     walked: dict[str, list[_Leaf]] = {}
@@ -3702,6 +3796,7 @@ def check_submission(submission: Submission, log: EvidenceLog, question: str = "
 
     days = sorted({lf.day for e in log for lf in leaves_of(e) if lf.day and len(lf.day) == 10})
     unowned = free_dates | ({days[0], days[-1]} if days else set())
+    free_dates |= bounds
     failures = _gauge_failures(log, leaves_of)
     dead = _dead_gauges(log, leaves_of)
 

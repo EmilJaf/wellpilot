@@ -13,7 +13,7 @@ work. A production engineer answering both questions with a stopwatch would repl
 
 ## 1. "Which wells need attention right now, and why? Forecast the next 12 months of oil for the well that needs it most." (as of 2010-12-31)
 
-| Work | By hand | Estimate | With WellPilot (run 9291bac14418) |
+| Work | By hand | Estimate | With WellPilot (run 69519dd0a995) |
 |---|---|---|---|
 | Rank the wells | Pull the daily production of the 4 wells active by then: 4,544 daily rows (1,054 for F-12). Compute each well's oil change over 90 days, its water cut and uptime. | 1-2 h | `field_screen`: 1 call |
 | A pressure that "fell to zero" | Notice F-12's downhole pressure reads 0 on 81 days from 2010-10-12 while oil keeps flowing; total the oil produced meanwhile (123,258 Sm3) to see it is a dead gauge. | 0.5 h | flagged by the screen and `detect_events` |
@@ -21,9 +21,9 @@ work. A production engineer answering both questions with a stopwatch would repl
 | Work done on the wells | Find the well-work reports since first oil among the field's daily reports (file names carry the date): 28 report days for F-12 and F-14 (production logs in March 2009 and September 2010, F-12's plug), read at 2-5 minutes a day, and line each job up with the rate. | 1-2 h | `well_operations`: 2 calls |
 | Where the water comes in | Open the September 2010 production log (3 LAS passes) and work out how much water enters below the plug set that month. | 2-4 h | `production_log`: 2 calls |
 | The plan's limits | Find the design limits in the 53-page development plan, in Norwegian (Table 4.3, page 23), and compare the field's monthly totals. | 0.5-1 h | `field_vs_design`: 1 call |
-| Forecast with a range | Fit Arps declines on candidate windows, forecast 2011, and put a range on it from how far earlier forecasts made the same way were off (5 of them, each refitted on its own date). | 2-4 h | `fit_decline` 2, `forecast_production` 2 |
-| Write it up | A source for every number. | 1 h | every number, date and quote checked; the first answer sent back and fixed |
-| **Total** | | **9-17 h: about 1-2 working days** | **8 steps, 17 tool calls, 36 s of model and tool time, about $0.23** |
+| Forecast with a range | Fit Arps declines on candidate windows, forecast 2011, and put a range on it from how far earlier forecasts made the same way were off (5 of them, each refitted on its own date). | 2-4 h | `fit_decline` 2, `forecast_production` 1 |
+| Write it up | A source for every number. | 1 h | every number, date and quote checked; the answer sent back twice and fixed |
+| **Total** | | **9-17 h: about 1-2 working days** | **9 steps, 19 tool calls, 44 s of model and tool time, about $0.31** |
 
 What happened next: the forecast said 359,000 Sm3 for 2011; F-12 produced 340,000 (+6%).
 Decline fits on fixed windows made the same day said +2% to +24%, the whole-history fit
@@ -31,13 +31,13 @@ Decline fits on fixed windows made the same day said +2% to +24%, the whole-hist
 
 ## 2. "F-12's water cut fell from about 0.97 to about 0.3 at the end of 2014. What was done to the well, and why did the plug set in 2010 not do the same?"
 
-| Work | By hand | Estimate | With WellPilot (run 3dbb4c8e390f) |
+| Work | By hand | Estimate | With WellPilot (run 3d27b4a64831) |
 |---|---|---|---|
 | Find the jobs | Search F-12's 165 daily drilling reports for the 2010 and 2014 work; read the plug depths (3210 m, 3150 m) and the new perforations (3126.2-3130.7 m). | 1-3 h | `well_operations`: 3 calls |
 | Where the water came in | Open the 2010 production log (3 LAS passes, about 4,200 depth samples) and the March 2009 survey, which exists only as plot pictures in a 17-page PDF (digitize three plots, or read the report's summary); work out how much oil and water entered below each plug depth. | 4-10 h | `production_log`: 1 call (the 2009 pictures read by SAM 3.1 at ingest) |
-| Before and after | Water cut and oil 60 days before and after each job. | 1 h | `production_monthly`, `run_sql`, `calculate` |
+| Before and after | Water cut and oil 60 days before and after each job. | 1 h | `production_monthly`, `production_log` (before and after each plug), `calculate` |
 | Write it up | A source for every number. | 1 h | the first answer sent back and fixed |
-| **Total** | | **7-15 h: about 1-2 working days** | **9 steps, 13 tool calls, 46 s, about $0.33** |
+| **Total** | | **7-15 h: about 1-2 working days** | **8 steps, 12 tool calls, 51 s, about $0.28** |
 
 ## What the published figures say
 

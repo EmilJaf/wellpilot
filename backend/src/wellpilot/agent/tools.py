@@ -969,16 +969,20 @@ def _depth_work(store: ProductionStore, well: str, surveys: list[dict]) -> dict:
                 for interval in job["perforations"]
                 for a, b in re.findall(r"(\d{4}(?:\.\d+)?)-(\d{4}(?:\.\d+)?)", interval)
             ]
-            text = " ".join(d["summary"] for d in job["summaries"])
-            for depth in PLUG.findall(text):
+            # Each plug on the day its report says it was set (a job may run for days).
+            set_on = [
+                (d["date"], depth) for d in job["summaries"] for depth in PLUG.findall(d["summary"])
+            ]
+            for day, depth in set_on:
                 start, end = pd.Timestamp(job["start"]), pd.Timestamp(job["end"])
                 back = _back_on(store, well, end)
                 plugs.append(
                     {
-                        "date": job["start"],
+                        "date": day,
                         "depth_m": float(depth.replace(",", ".")),
-                        "before_60_days": rates(store, well, start - pd.Timedelta(days=60), start),
-                        "after_60_days": rates(store, well, back, back + pd.Timedelta(days=60))
+                        "window_days": 60,  # before the job, and from the well's return
+                        "before": rates(store, well, start - pd.Timedelta(days=60), start),
+                        "after": rates(store, well, back, back + pd.Timedelta(days=60))
                         if back is not None
                         else None,
                     }

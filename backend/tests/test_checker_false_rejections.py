@@ -242,6 +242,18 @@ def test_C3_thirty_day_median_without_hyphen() -> None:
     assert check(f, log=log) == []
 
 
+def test_C3b_dates_and_wells_with_non_breaking_hyphens() -> None:
+    """Run eb43551c59a6 wrote "2010\u201107\u201118" and "F\u201112" (U+2011): the 07, 18 and 12
+    were read as undeclared numbers."""
+    log = corpus_log(F12)
+    f = finding(
+        "F\u201112\u2019s 30 day median water cut first exceeded 0.05 on 2009\u201110\u201131.",
+        ["E5"],
+        [d("0.05", 0.05, "E5")],
+    )
+    assert check(f, log=log) == []
+
+
 def test_C4_hyphenated_windows_control() -> None:
     log = corpus_log(F14)
     f = finding("The 12-month forecast P50 is 276 078 Sm3.", ["E7"], [d("276 078", 276078, "E7")])
@@ -704,3 +716,53 @@ def test_N2_invented_quote_control() -> None:
     log = corpus_log(F12)
     f = finding("The PUD says “water will never reach the producers at all”.", ["E4"], [])
     assert check(f, log=log) != []
+
+
+def test_C3c_a_level_reached_and_water_named_before_its_share() -> None:
+    """Run f9bfb2c4cf60: "rose from near 3% to over 50%" is no claim that 3% exceeds 50%, and
+    "when water was 30%" names the water cut, like "30% water"."""
+    log = EvidenceLog()
+    eid = add(
+        log,
+        "production_monthly",
+        {"well": "F-12"},
+        {
+            "columns": ["month", "water_cut"],
+            "rows": [["2008-03", 0.03], ["2010-02", 0.3], ["2010-06", 0.5]],
+        },
+    )
+    rose = finding(
+        "F-12's water cut rose from near 3% to over 50%.",
+        [eid],
+        [d("3%", 0.03, eid), d("50%", 0.5, eid)],
+    )
+    assert check(rose, log=log) == []
+    named = finding("F-12 reached it in 2010-02 when water was 30%.", [eid], [d("30%", 0.3, eid)])
+    assert check(named, log=log) == []
+
+
+def test_C3d_a_duration_declared_with_its_unit_names_no_quantity() -> None:
+    """Run 15eee4c880d2: "first passed 5% water at 21 months", with "21 months" declared,
+    was read as 21 months of water."""
+    log = EvidenceLog()
+    eid = add(
+        log,
+        "detect_events",
+        {"well": "F-12"},
+        {
+            "events": [
+                {
+                    "kind": "threshold",
+                    "signal": "water_cut",
+                    "value": 0.05,
+                    "months_after_first_oil": 20.6,
+                }
+            ]
+        },
+    )
+    f = finding(
+        "F-12 first passed 5% water at 21 months.",
+        [eid],
+        [d("5%", 0.05, eid), d("21 months", 20.6, eid)],
+    )
+    assert check(f, log=log) == []

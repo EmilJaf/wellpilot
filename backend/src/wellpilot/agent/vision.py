@@ -178,8 +178,10 @@ VISION_TOOL = Tool(
     "approximate and carry a warning. Where SAM 3.1 measured the figure (the plan's forecast "
     "curve), cross_check says for each reading whether SAM's measurement of the same pixels "
     "agrees and by how much they differ; SAM's own values go to the reader, not to you. "
-    "Readings both agree on lose the warning; where they disagree, report your reading as an "
-    "inference and say that SAM's measurement differs, by how much.",
+    "Readings both agree on lose the warning. Where they disagree, look at the page once more "
+    "with a narrower question about that one value (where the curve starts and stops being "
+    "flat, in months, say), then report what you read as an inference and say whether SAM's "
+    "measurement still differs, by how much.",
     LookArgs,
     look_at_page,
 )

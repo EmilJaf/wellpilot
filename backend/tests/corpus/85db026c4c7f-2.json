@@ -6,10 +6,11 @@
   "question": "Why did well F-12 decline faster after 2010? Compare with the 2005 development plan."
  },
  "to_review": false,
- "note": "Reviewed Oct 28 night: fair. The plan's quote is in E4, which the finding does not cite; undeclared 21 and 28. Oct 28 night (seventh panel): verdict changed on purpose by the new rules (a conclusion drawn with ', so' in a fact).",
+ "note": "Reviewed Oct 28 night: fair. The plan's quote is in E4, which the finding does not cite; undeclared 21 and 28. Oct 28 night (seventh panel): verdict changed on purpose by the new rules (a conclusion drawn with ', so' in a fact). Oct 29 (seventh panel): verdict changed on purpose (a conclusion drawn with ', so' in a fact; a gradual shift's period-mean change written as a fall at a date).",
  "expected": {
   "accepted": false,
   "flagged": [
+   "Finding 2",
    "Finding 4",
    "Finding 6",
    "Summary"

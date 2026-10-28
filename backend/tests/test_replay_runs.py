@@ -30,9 +30,12 @@ async def test_a_frozen_run_replays_as_recorded(run_id: str) -> None:
     assert differences(run, replayed) == []
 
 
-CLAIM = "F-12's oil rate fell from 4 050 to 1 146 Sm3/d around 2010-07-18."
+CLAIM = (
+    "F-12's mean oil rate fell from 4 050 to 1 146 Sm3/d between the periods before and "
+    "after 2010-07-18."
+)
 SUBMISSION = {
-    "summary": "F-12 stepped down on 2010-07-18.",
+    "summary": "F-12's rate shifted down around 2010-07-18.",
     "summary_numbers": [],
     "findings": [
         {
@@ -112,3 +115,16 @@ async def test_a_run_with_a_second_opinion_replays_as_recorded() -> None:
     assert run.verified and run.review["outcome"] == "revised"
     assert record.tokens() == sum(s.prompt_tokens + s.completion_tokens for s in run.steps) + 700
     assert differences(saved, await replay(saved, FIXTURES / "processed")) == []
+
+
+def test_a_result_that_only_gained_fields_replays_as_recorded() -> None:
+    """A tool that adds fields (the log's perforations, its age) or rewords its note leaves
+    a recorded run's view of the old fields, and the numbers it cited, as they were."""
+    from wellpilot.agent.replay import _holds
+
+    then = {"well": "F-12", "surveys": [{"date": "2010-09-22", "share": 0.325}], "note": "old"}
+    now = {**then, "surveys": [{"date": "2010-09-22", "share": 0.325}], "note": "new", "age": 3}
+
+    assert _holds(now, then)
+    assert not _holds({**now, "surveys": [{"date": "2010-09-22", "share": 0.33}]}, then)
+    assert not _holds({k: v for k, v in now.items() if k != "well"}, then)

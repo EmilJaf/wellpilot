@@ -108,17 +108,28 @@ async def replay(run: dict, processed_dir: Path) -> AgentRun:
     )
 
 
+def _holds(now, then) -> bool:
+    """Does today's result still hold everything the recording had? A tool that only adds
+    fields (the log's perforations, its age) leaves the model's view of the old ones, and the
+    numbers it cited, unchanged."""
+    if isinstance(then, dict) and isinstance(now, dict):
+        # A tool's "note" explains its fields; rewording it changes no result.
+        return all(k == "note" or (k in now and _holds(now[k], v)) for k, v in then.items())
+    if isinstance(then, list) and isinstance(now, list):
+        return len(then) == len(now) and all(_holds(a, b) for a, b in zip(now, then, strict=True))
+    return json.dumps(now, sort_keys=True) == json.dumps(then, sort_keys=True)
+
+
 def differences(run: dict, replayed: AgentRun) -> list[str]:
-    """What the replay changed: each evidence result, the check rounds, the verdict."""
+    """What the replay changed: each evidence result (a result that only gained fields is
+    the same), the check rounds, the verdict."""
     found = []
     saved = run["evidence"]
     for item in replayed.evidence:
         before = saved.get(item.id)
         if before is None:
             found.append(f"{item.id} ({item.tool}) is new")
-        elif json.dumps(before["result"], sort_keys=True) != json.dumps(
-            item.result, sort_keys=True
-        ):
+        elif not _holds(json.loads(json.dumps(item.result, default=str)), before["result"]):
             found.append(f"{item.id} ({item.tool}) returns something else now")
     missing = set(saved) - {e.id for e in replayed.evidence}
     found += [f"{eid} is no longer produced" for eid in sorted(missing)]

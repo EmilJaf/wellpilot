@@ -44,11 +44,14 @@ def reply(tool_calls) -> ChatCompletion:
 
 
 ANSWER = {
-    "summary": "F-12's oil rate stepped down around 2010-07-18.",
+    "summary": "F-12's oil rate shifted down around 2010-07-18.",
     "summary_numbers": [],
     "findings": [
         {
-            "claim": "F-12's oil rate fell from 4 050 to 1 146 Sm3/d around 2010-07-18.",
+            "claim": (
+                "F-12's mean oil rate fell from 4 050 to 1 146 Sm3/d between the periods "
+                "before and after 2010-07-18."
+            ),
             "evidence_ids": ["E1"],
             "confidence": "fact",
             "numbers": [

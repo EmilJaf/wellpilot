@@ -6,12 +6,14 @@
   "question": "Which wells need attention right now, and why? Forecast the next 12 months of oil for the well that needs it most."
  },
  "to_review": false,
- "note": "Reviewed (Oct 28 evening): fair; undeclared numbers, facts or unhedged summary numbers on warned evidence (a picture reading that disagrees with SAM, the agent's own code), an unhedged cause, '69%' called water when it is the water cut, detail values not in the cited results.",
+ "note": "Reviewed (Oct 28 evening): fair; undeclared numbers, facts or unhedged summary numbers on warned evidence (a picture reading that disagrees with SAM, the agent's own code), an unhedged cause, '69%' called water when it is the water cut, detail values not in the cited results. Oct 29 (seventh panel): verdict changed on purpose (a gradual shift's period-mean change written as a fall at a date).",
  "expected": {
   "accepted": false,
   "flagged": [
    "Finding 1",
+   "Finding 2",
    "Finding 3",
+   "Finding 4",
    "Finding 5"
   ]
  },

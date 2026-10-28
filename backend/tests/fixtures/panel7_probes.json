@@ -780,6 +780,16 @@
    "kind": "from-to order (choke)",
    "scope": "in",
    "why": "54.2 -> 51.18"
+  },
+  {
+   "id": "D22",
+   "run": "85db026c4c7f",
+   "index": "S",
+   "text": "F-12's water breakthrough in early 2010 pushed water cut to about 50% after 28 months and its oil rate fell about 72% around July 2010 with the choke unchanged, declining near 0.45 per year as water filled its liquid capacity. This timing matches the 2005 plan's forecast of breakthrough after about 2 years, while the field later ran above the plan's 80% water cut design but stayed within oil and liquid rate capacities with voidage near 1.",
+   "conf": null,
+   "kind": "unhedged cause in the shipped summary ('pushed')",
+   "scope": "in",
+   "why": "an unhedged cause ('pushed') in a summary; caught since Oct 29"
   }
  ],
  "true": [
@@ -1082,16 +1092,6 @@
    "kind": "cause as inference? (control)",
    "scope": "in",
    "why": "an inference stating a cause is allowed"
-  },
-  {
-   "id": "E33",
-   "run": "85db026c4c7f",
-   "index": 2,
-   "text": "Its oil rate fell about 72% around 2010-07-18 to about 1,146 Sm3/d while the choke was cut from about 54% to 51%.",
-   "conf": "fact",
-   "kind": "choke values",
-   "scope": "in",
-   "why": ""
   }
  ],
  "open": [
@@ -1336,16 +1336,6 @@
    "why": "21 months is the 5% crossing"
   },
   {
-   "id": "D22",
-   "run": "85db026c4c7f",
-   "index": "S",
-   "text": "F-12's water breakthrough in early 2010 pushed water cut to about 50% after 28 months and its oil rate fell about 72% around July 2010 with the choke unchanged, declining near 0.45 per year as water filled its liquid capacity. This timing matches the 2005 plan's forecast of breakthrough after about 2 years, while the field later ran above the plan's 80% water cut design but stayed within oil and liquid rate capacities with voidage near 1.",
-   "conf": null,
-   "kind": "unhedged cause in the shipped summary ('pushed')",
-   "scope": "in",
-   "why": "verified featured summary"
-  },
-  {
    "id": "G02",
    "run": "063034849654",
    "index": 1,
@@ -1424,6 +1414,16 @@
    "kind": "hedge that governs another clause (summary)",
    "scope": "in",
    "why": ""
+  },
+  {
+   "id": "E33",
+   "run": "85db026c4c7f",
+   "index": 2,
+   "text": "Its oil rate fell about 72% around 2010-07-18 to about 1,146 Sm3/d while the choke was cut from about 54% to 51%.",
+   "conf": "fact",
+   "kind": "choke values",
+   "scope": "in",
+   "why": "written true by the reviewer; rejected on purpose since Oct 29: 72% is the change between the two periods' means, 22% across 2010-07-18, and 'fell 72% around 2010-07-18' reads as a step at that date (the panel's own complaint about the 72%)"
   }
  ]
 }

@@ -109,12 +109,11 @@ CASES = [
     ),
     Case(
         "plug_decision_2014",
-        "F-12's water cut is near 0.97 and its oil rate has fallen below 200 Sm3/d. Where along "
-        "the well does its water come in, and at what depth would a plug shut off most of the "
-        "water while keeping the oil? Use its production logs and the work done on it before.",
+        "F-12's water cut is near 0.97 and its oil rate has fallen below 200 Sm3/d. What would "
+        "you recommend doing to the well, and why?",
         as_of=date(2014, 10, 31),
         tools=("production_log",),
-        mentions=(r"31[3-6]\d", r"3210|2010"),
+        mentions=(r"3[,\s]?1(?:4[7-9]|5\d|60)", r"3[,\s]?210|2010"),  # blank pipe
         max_steps=10,
     ),
     Case(

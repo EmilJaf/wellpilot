@@ -370,3 +370,14 @@ def test_a_row_tie_is_judged_only_when_it_is_unambiguous() -> None:
     assert not any("row" in p for p in day)  # (the day itself is not in E1: another rule)
     missing = check("Water cut was 0.85 in 2011-03.", [eid], cut, log)
     assert not any("row" in p for p in missing)
+
+
+def test_water_drove_is_a_cause_water_drive_is_not() -> None:
+    """Run 7b95c36af427's fact "Water drove the fall: ..." passed: the exception for the
+    recovery mechanism ("water drive") covered the verb too."""
+    from wellpilot.agent.checker import CAUSAL
+
+    assert CAUSAL.search("Water drove the fall: water cut was 51%.")
+    assert CAUSAL.search("Water driving the decline.")
+    assert not CAUSAL.search("The reservoir is under water drive.")
+    assert not CAUSAL.search("A gas drive mechanism.")

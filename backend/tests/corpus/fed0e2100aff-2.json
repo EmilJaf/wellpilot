@@ -6,10 +6,13 @@
   "question": "Which wells need attention right now, and why? Forecast the next 12 months of oil for the well that needs it most."
  },
  "to_review": false,
- "note": "",
+ "note": "Oct 29 (seventh panel): verdict changed on purpose (a gradual shift's period-mean change written as a fall at a date).",
  "expected": {
-  "accepted": true,
-  "flagged": []
+  "accepted": false,
+  "flagged": [
+   "Finding 3",
+   "Finding 5"
+  ]
  },
  "submission": {
   "summary": "F-12 needs attention most urgently: its downhole pressure gauge has been dead since 2010-10-12 and water now makes up about 69% of its fluid with oil rate falling, while F-14 also needs watching for rising water and lower oil. The forecast for F-12 is uncertain due to a poor fit and suggests about 368,000 Sm3 of oil in the next 12 months, range 302,000 to 674,000 Sm3 based on past forecast errors.",

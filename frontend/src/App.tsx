@@ -30,9 +30,9 @@ const EXAMPLES = [
     asOf: '2010-12-31',
   },
   {
-    label: 'Where to plug F-12 (2014)',
+    label: 'What to do with F-12 (2014)',
     question:
-      "F-12's water cut is near 0.97 and its oil rate has fallen below 200 Sm3/d. Where along the well does its water come in, and at what depth would a plug shut off most of the water while keeping the oil? Use its production logs and the work done on it before.",
+      "F-12's water cut is near 0.97 and its oil rate has fallen below 200 Sm3/d. What would you recommend doing to the well, and why?",
     asOf: '2014-10-31',
   },
   { label: 'F-12 decline vs the 2005 plan', question: 'Why did well F-12 decline faster after 2010? Compare with the 2005 development plan.', asOf: '' },

@@ -135,7 +135,8 @@ PYTHON_TOOL = Tool(
     f"{MAX_CALLS_PER_RUN} calls per question, {TIMEOUT_S:.0f} s each. Read the rows with sql() "
     "or daily() inside the code: never paste values from earlier results (code that reads no "
     "rows is refused). What the code returns is an inference, never a fact; on an error, fix "
-    "the code from the traceback.",
+    "the code from the traceback. Two series that both trend over time correlate whatever "
+    "drives them: correlate their month-to-month changes, not their levels.",
     PythonArgs,
     run_python,
 )

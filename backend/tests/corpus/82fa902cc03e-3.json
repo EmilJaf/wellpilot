@@ -6,10 +6,13 @@
   "question": "Which wells need attention right now, and why? Forecast the next 12 months of oil for the well that needs it most."
  },
  "to_review": false,
- "note": "Oct 28 evening: 'a water cut of 67% under the 80% limit' was a false rejection (the level is named before the number); fixed, so this last round is accepted. The run itself ended unverified and was not featured.",
+ "note": "Oct 28 evening: 'a water cut of 67% under the 80% limit' was a false rejection (the level is named before the number); fixed, so this last round is accepted. The run itself ended unverified and was not featured. Oct 29 (seventh panel): verdict changed on purpose (a gradual shift's period-mean change written as a fall at a date).",
  "expected": {
-  "accepted": true,
-  "flagged": []
+  "accepted": false,
+  "flagged": [
+   "Finding 2",
+   "Finding 4"
+  ]
  },
  "submission": {
   "summary": "F-12 needs attention most — its downhole pressure gauge has been dead since 2010-10-12 and water is now most of its production at about 69% water cut after a 55% oil rate drop since May 2010. F-14 also needs watching with about 61% water cut and a gradual oil decline. The field stayed within oil, liquid and water-cut limits but exceeded water injection capacity on 3 months. For F-12 the next 12 months forecast central estimate is about 359,000 Sm3, range 324,000 to 470,000, but the fit is poor so this is uncertain.",

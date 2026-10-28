@@ -74,7 +74,8 @@ with what the well did after (plugs_set). Asked where to set a plug, answer with
 blank pipe (blank_pipe_m; never inside a perforated interval), what it would cut off of the \
 water and of the oil from the log, whether new perforations above it would be needed to keep \
 the oil, and how old the log is (since_survey): if the water cut has moved far since, say a \
-new log should confirm it first. Lead the answer with the recommendation. {drive} When a \
+new log should confirm the depth before the job, but still give the depth and what it would \
+do on the log you have. Lead the answer with the recommendation. {drive} When a \
 waterflooded well's water cut rises, check with \
 waterflood whether liquid held while the choke opened (water taking the well's capacity) and \
 how much oil the WOR trend leaves before the economic water cut; its field voidage \
@@ -115,7 +116,11 @@ all declared; the fit behind it (model, window, r2_log, di, b) and exact values 
 detail, copied as the tools give them: the detail's numbers need no declaring, but each \
 must be in the evidence the finding cites. Keep fit statistics out of claims and the \
 summary, and never write internal scores or field names. For a share such as water cut, \
-give the values before and after, not a percent change. Translate every quote that is not \
+give the values before and after, not a percent change. A regime change gives two \
+changes: between the periods' means (relative_change) and across the date itself \
+(change_across). Write the first as a difference between periods ("averaged 72% less after \
+2010-07-18 than before"), never as a fall at the date; a step at a date is the change across. \
+Translate every quote that is not \
 in English, in brackets right after it. A summary number from evidence with warnings needs \
 a hedge in its own sentence ("the fit suggests").
 - A checker verifies every declared number, date and quote against the evidence, and that \
