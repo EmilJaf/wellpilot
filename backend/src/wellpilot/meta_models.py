@@ -11,17 +11,53 @@ LOOK = "look_at_page"
 LOG = "production_log"
 
 
-def meta_models(events: list[dict], evidence: dict[str, dict]) -> dict:
+# Not SAM's reading: what the report itself says, depths, and the colour-trace check.
+NOT_READ = ("report_says", "perforated_zones", "agreement_with_colour", "depth", "_m")
+
+
+def _numbers(node) -> list[float]:
+    """The values SAM read off a survey's pictures (shares and rates)."""
+    if isinstance(node, bool):
+        return []
+    if isinstance(node, int | float):
+        return [float(node)]
+    if isinstance(node, dict):
+        return [
+            n
+            for k, v in node.items()
+            if not any(x in str(k) for x in NOT_READ)
+            for n in _numbers(v)
+        ]
+    if isinstance(node, list):
+        return [n for v in node for n in _numbers(v)]
+    return []
+
+
+def _answer_numbers(result: dict | None) -> list[tuple[str, float]]:
+    """(evidence id, value) of every number the answer declares."""
+    if not result:
+        return []
+    declared = list(result.get("summary_numbers") or [])
+    declared += [n for f in result.get("findings") or [] for n in f.get("numbers") or []]
+    return [
+        (str(n.get("evidence_id")), float(n["value"]))
+        for n in declared
+        if isinstance(n.get("value"), int | float)
+    ]
+
+
+def meta_models(events: list[dict], evidence: dict[str, dict], answer: dict | None = None) -> dict:
     started = next((e for e in events if e.get("type") == "run_started"), {})
     steps = [e for e in events if e.get("type") == "step"]
     calls = [
         c for s in steps for c in s.get("tool_calls", []) if c.get("name") != "submit_findings"
     ]
     review = next((e for e in events if e.get("type") == "review"), None)
+    answers = _answer_numbers(answer)
     figures, logs = [], []
     for eid, item in evidence.items():
         result = item.get("result") or {}
-        if item.get("tool") == LOOK and result.get("cross_check"):
+        if item.get("tool") == LOOK and isinstance(result, dict) and result.get("cross_check"):
             judged = [c for c in result["cross_check"] if c.get("agree") is not None]
             figures.append(
                 {
@@ -36,9 +72,18 @@ def meta_models(events: list[dict], evidence: dict[str, dict]) -> dict:
                     ),
                 }
             )
-        if item.get("tool") == LOG and any(
-            "sam-3.1" in str(s.get("read_from", "")) for s in result.get("surveys", [])
-        ):
+        # A production log is credited to SAM only when the answer states a number from the
+        # survey SAM read off its pictures, not when the agent merely called the tool.
+        surveys = result.get("surveys", []) if isinstance(result, dict) else []
+        read = [s for s in surveys if "sam-3.1" in str(s.get("read_from", ""))]
+        values = [v for s in read for v in _numbers(s)]
+        used = [
+            v
+            for source, v in answers
+            if source == eid
+            and any(abs(abs(v) - abs(x)) <= max(abs(x) * 0.005, 1e-9) for x in values)
+        ]
+        if item.get("tool") == LOG and read and used:
             logs.append(eid)
     return {
         "muse": {

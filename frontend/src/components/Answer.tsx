@@ -329,6 +329,19 @@ function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSe
         </section>
       )}
 
+      {state.asOf && (
+        <div className="past">
+          <p>
+            <strong>Answered as of {state.asOf}.</strong> The agent saw no data after that day.
+          </p>
+          {onReveal && (
+            <button type="button" className={revealed ? 'link-button' : 'primary-button'} onClick={onReveal}>
+              Show what happened next
+            </button>
+          )}
+        </div>
+      )}
+
       <div className={`status${final.verified ? '' : ' status-alarm'}`} role="status">
         <div className="status-main">
           {final.verified ? <CheckIcon /> : <AlarmIcon />}
@@ -360,15 +373,13 @@ function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSe
             </p>
           </div>
         </div>
-        {sentBack.length > 0 && fixes.length > 0 && <CaughtList items={fixes} />}
         <details className="status-more">
           <summary>
             {sentBack.length > 0
-              ? fixes.length > 0
-                ? 'How the agent fixed each, and what the checker checks'
-                : `What the checker caught (${problems})`
+              ? `What the checker caught (${problems}) and how the agent fixed it`
               : 'What the checker checks'}
           </summary>
+          {sentBack.length > 0 && fixes.length > 0 && <CaughtList items={fixes} />}
           <p className="status-note">
             Every number, date and quote in the answer was found in the tool result it cites, as the well,
             quantity, direction and event the text says, and causes are marked as inferences. Not checked: whether
@@ -379,19 +390,6 @@ function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSe
       </div>
 
       {final.meta_models && <MetaLine m={final.meta_models} open={onSelectEvidence} />}
-
-      {state.asOf && (
-        <div className="past">
-          <p>
-            <strong>Answered as of {state.asOf}.</strong> The agent saw no data after that day.
-          </p>
-          {onReveal && (
-            <button type="button" className={revealed ? 'link-button' : 'primary-button'} onClick={onReveal}>
-              Show what happened next
-            </button>
-          )}
-        </div>
-      )}
 
       {review && (
         <section className={`second-opinion${review.points.length ? '' : ' is-sound'}`} aria-label="Second opinion">

@@ -137,6 +137,20 @@ async def look_at_page(store: ProductionStore, llm: LLM, args: LookArgs) -> dict
     return to_jsonable(result)
 
 
+def for_the_model(result: dict) -> dict:
+    """A look_at_page result as the model is shown it: SAM 3.1's measured values stay out,
+    only whether each reading agrees with them and by how much. The model's reading cannot
+    be swapped for SAM's after the fact; the evidence keeps both for the reader and the
+    checker."""
+    shown = {k: v for k, v in result.items() if k != "measured_by_sam"}
+    if isinstance(result.get("cross_check"), list):
+        shown["cross_check"] = [
+            {k: v for k, v in c.items() if k not in ("sam", "sam_unit")}
+            for c in result["cross_check"]
+        ]
+    return shown
+
+
 async def look(store: ProductionStore, llm: LLM, arguments: str) -> dict:
     """Run a look_at_page call from the model: {"result": ...} or {"error": ...}, like
     tools.execute."""
@@ -162,9 +176,10 @@ VISION_TOOL = Tool(
     "plan's oil forecast profile is a figure on PUD page 23; completion reports hold survey "
     "tables, time-depth charts and schematics as pictures). Values read off a picture are "
     "approximate and carry a warning. Where SAM 3.1 measured the figure (the plan's forecast "
-    "curve), each reading is set against that measurement in cross_check: readings both "
-    "agree on lose the warning; where they disagree, report SAM's measured value and say "
-    "they differ.",
+    "curve), cross_check says for each reading whether SAM's measurement of the same pixels "
+    "agrees and by how much they differ; SAM's own values go to the reader, not to you. "
+    "Readings both agree on lose the warning; where they disagree, report your reading as an "
+    "inference and say that SAM's measurement differs, by how much.",
     LookArgs,
     look_at_page,
 )

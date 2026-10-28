@@ -171,3 +171,20 @@ def test_the_error_splits_into_rate_and_time_on_stream(stores) -> None:
     combined = (1 + d["rate_error"]) * (1 + d["uptime_error"]) - 1
     assert abs(combined - f["methods"][0]["error"]) < 0.01
     assert d["uptime_actual"] < d["uptime_forecast"]  # 2011 had more time shut in
+
+
+def test_the_work_done_after_the_date_and_its_worth() -> None:
+    """Asked at the end of October 2014, F-12's next job was the plug at 3150 m and the new
+    perforations of 2014-11-22..27: water cut 0.97 to about 0.34, oil 177 to about 860
+    Sm3/d, and the year after it well above the decline it was on."""
+    from wellpilot.hindsight import _work_next
+
+    full = ProductionStore(Path(__file__).parent / "fixtures" / "processed")
+
+    (job,) = [j for j in _work_next(full, pd.Timestamp("2014-10-31"), ["F-12"])]
+
+    assert (job["start"], job["end"], job["plug_m"]) == ("2014-11-22", "2014-11-27", 3150.0)
+    assert job["before"]["water_cut"] > 0.95 and job["after"]["water_cut"] < 0.4
+    assert job["before"]["oil_sm3_per_day"] < 200 < 800 < job["after"]["oil_sm3_per_day"]
+    assert job["extra_oil_sm3"] > 100_000 and job["price_usd_per_bbl"] == 50.0
+    assert job["extra_value_usd"] == round(job["extra_oil_sm3"] * 6.2898 * 50, -5)

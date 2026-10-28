@@ -447,6 +447,26 @@ export type Hindsight = {
     gauge_dead_at_cut: boolean
     gauge_back_on: string | null
   }[]
+  /** Work done on the wells the answer names soon after the date, and what it was worth. */
+  work_next?: {
+    well: string
+    start: string
+    end: string
+    kind: string
+    summary: string
+    plug_m: number | null
+    perforations: string[]
+    before: { water_cut: number; oil_sm3_per_day: number; days: number }
+    back_on: string
+    after: { water_cut: number; oil_sm3_per_day: number; days: number } | null
+    oil_year_after_sm3: number
+    trend_year_after_sm3: number | null
+    trend_fit: { model: string; from: string } | null
+    extra_oil_sm3: number | null
+    extra_oil_bbl: number | null
+    price_usd_per_bbl: number
+    extra_value_usd: number | null
+  }[]
 }
 
 /**

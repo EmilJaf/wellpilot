@@ -94,6 +94,34 @@ const stepFromUrl = (): Step | null => {
 const scrollToId = (id: string) =>
   requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ block: 'start', behavior: 'smooth' }))
 
+/** A date typed as YYYY-MM-DD, the way the data and the answers write it (a browser's date
+ * picker shows the reader's locale, 31.12.2010 or 12/31/2010). Empty means all the data. */
+function IsoDate({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  // What the reader is typing, until it is a whole date (or they leave the field).
+  const [draft, setDraft] = useState<string | null>(null)
+  const text = draft ?? value
+  const valid = (t: string) => t === '' || (/^\d{4}-\d{2}-\d{2}$/.test(t) && t >= '2008-01-01' && t <= '2016-12-01')
+  return (
+    <input
+      type="text"
+      inputMode="numeric"
+      placeholder="YYYY-MM-DD"
+      aria-label="Data up to, YYYY-MM-DD; empty for all the data"
+      aria-invalid={!valid(text)}
+      value={text}
+      size={10}
+      onChange={(e) => {
+        const typed = e.target.value.trim()
+        if (valid(typed)) {
+          onChange(typed)
+          setDraft(null)
+        } else setDraft(e.target.value)
+      }}
+      onBlur={() => setDraft(null)}
+    />
+  )
+}
+
 /** A job on the well in a few words, from what its reports say was done. */
 function workLabel(job: OperationJob): string {
   const text = job.summaries.map((s) => s.summary).join(' ')
@@ -129,10 +157,10 @@ export default function App() {
   const evidencePanel = useRef<HTMLDivElement>(null)
   // The data column shows one well's daily data, the field against its 2005 plan, or how
   // close past forecasts came.
-  // A first visit opens on the field screen; a shared run opens on its well.
-  const [view, setView] = useState<View>(() =>
-    new URLSearchParams(window.location.search).get('run') ? 'well' : 'screen',
-  )
+  // A first visit opens on F-12's charts up to the date: the puzzle (the pressure line
+  // stops in October 2010 while oil flows on), not the field screen's verdict on it, which
+  // would answer the question before the agent does.
+  const [view, setView] = useState<View>('well')
   // The demo's five steps: which one the reader is on, and whether the agent's log is open.
   const [step, setStep] = useState<Step>(() => {
     const params = new URLSearchParams(window.location.search)
@@ -145,10 +173,11 @@ export default function App() {
   const [chartsShown, setChartsShown] = useState(true)
   const setSelectedEvidence = (id: string | null, clicked?: Focus) => {
     setSelected(id)
-    // A quote opens its report page, and a result that is a page (the model's reading of
-    // one, a page of the plan): fold the charts away so the page shows large.
+    // A clicked number or quote opens its source with the value marked, and a result that is
+    // a page (the model's reading of one, a page of the plan): fold the charts away so the
+    // source shows large. "Show charts" brings them back.
     const tool = state.steps.flatMap((step) => step.tool_calls).find((c) => c.evidence_id === id)?.name
-    if (clicked?.quote || (tool && PAGE_TOOLS.has(tool))) setChartsShown(false)
+    if (clicked || (tool && PAGE_TOOLS.has(tool))) setChartsShown(false)
     // The field and accuracy views fill the column: go back to the well, where evidence shows.
     if (id) setView('well')
     setFocus(clicked ?? null)
@@ -581,7 +610,7 @@ export default function App() {
               )}
               <label className="as-of" title="For backtests: the agent sees no data after this day, as if it were that day.">
                 <span className="as-of-label">Data up to</span>
-                <input type="date" value={asOf} min="2008-01-01" max="2016-12-01" onChange={(e) => setAsOf(e.target.value)} />
+                <IsoDate value={asOf} onChange={setAsOf} />
               </label>
               <button className="run-button" type="submit" disabled={running}>
                 {running ? 'Running' : 'Ask the agent'}

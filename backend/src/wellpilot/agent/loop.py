@@ -37,7 +37,7 @@ from wellpilot.agent.sandbox import (
     as_inference,
 )
 from wellpilot.agent.tools import TOOLS_BY_NAME, execute, tool_schemas
-from wellpilot.agent.vision import LOOK, VISION_TOOL, look
+from wellpilot.agent.vision import LOOK, VISION_TOOL, for_the_model, look
 from wellpilot.data.store import ProductionStore
 from wellpilot.ingest.reports import REPORTS_BY_ID
 from wellpilot.llm import LLM, json_schema
@@ -657,11 +657,14 @@ async def run_agent(
                     record["evidence_id"] = evidence.id
             record["result"] = payload
             step.tool_calls.append(record)
+            shown = payload
+            if name == LOOK and isinstance(payload.get("result"), dict):
+                shown = {**payload, "result": for_the_model(payload["result"])}
             messages.append(
                 {
                     "role": "tool",
                     "tool_call_id": call.id,
-                    "content": json.dumps(payload, ensure_ascii=False, default=str),
+                    "content": json.dumps(shown, ensure_ascii=False, default=str),
                 }
             )
         # A submission written as the reply instead of a call: checked the same way, so a

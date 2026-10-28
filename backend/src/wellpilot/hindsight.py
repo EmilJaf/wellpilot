@@ -5,22 +5,35 @@ has answered, this reads the full data and shows, for every forecast the run mad
 oil the well actually produced over the forecast's days, and what the classic decline fit
 (the whole history up to the same date) would have said. For every well, it also shows
 the year after the date beside the year before: oil, water cut, and whether a dead
-downhole gauge came back. And the model's reasoning, read for dates and values from the
-hidden period (reasoning_check).
+downhole gauge came back. For the wells the answer names, the work done on them soon after
+the date (a plug, new perforations) and what it was worth: the oil of the year after it
+above the decline the well was on. And the model's reasoning, read for dates and values from
+the hidden period (reasoning_check).
 
 Only the API calls this, after a run ends; nothing here reaches the agent.
 """
 
+import re
+
 import pandas as pd
 
-from wellpilot.agent.tools import fit_warnings
+from wellpilot.agent.checker import WELL
+from wellpilot.agent.tools import OperationsArgs, fit_warnings, well_operations
 from wellpilot.analysis.decline import fit_decline, forecast, nominal_coverage
+from wellpilot.analysis.inside import PLUG, _back_on
+from wellpilot.analysis.inside import _production as _rates
 from wellpilot.backtest import RECENT_MONTHS, _curve, weekly_rate
 from wellpilot.data.store import ProductionStore
 from wellpilot.reasoning_check import reasoning_check
 
 YEAR = pd.Timedelta(days=365)
 WATER_CUT_DAYS = 30  # water cut at a date: the median over the flowing days of the month before
+WORK_DAYS = 180  # work done this soon after the date is a decision the answer could inform
+RATE_DAYS = 60  # rates before and after a job: the median producing-day rate over 60 days
+BBL_PER_SM3 = 6.2898
+# The value line's price is an assumption the reader can see and change in their head, not
+# a price from the data; Brent was near this in 2015, when F-12's job paid back.
+PRICE_USD_PER_BBL = 50.0
 
 
 def _production(store: ProductionStore, well: str, start=None, end=None) -> pd.DataFrame:
@@ -228,6 +241,89 @@ def _next_year(full: ProductionStore, cut: pd.Timestamp) -> list[dict]:
     return rows
 
 
+def _work_next(full: ProductionStore, cut: pd.Timestamp, wells: list[str]) -> list[dict]:
+    """Work done on the named wells within WORK_DAYS after the cut, each with the well's
+    rate and water cut before and after it, and the oil of the year after it above the
+    decline the well was on (an Arps fit on the year before the job, forecast over the same
+    days)."""
+    found = []
+    for well in wells:
+        try:
+            jobs = well_operations(
+                full,
+                OperationsArgs(
+                    well=well,
+                    start=(cut + pd.Timedelta(days=1)).date(),
+                    end=(cut + pd.Timedelta(days=WORK_DAYS)).date(),
+                ),
+            )["jobs"]
+        except ValueError:
+            continue
+        for job in jobs:
+            if job["kind"] not in ("workover", "other"):
+                continue
+            start, end = pd.Timestamp(job["start"]), pd.Timestamp(job["end"])
+            back = _back_on(full, well, end)
+            before = _rates(full, well, start - pd.Timedelta(days=RATE_DAYS), start)
+            if back is None or before is None:
+                continue
+            after = _rates(full, well, back, back + pd.Timedelta(days=RATE_DAYS))
+            daily = _production(full, well)
+            actual = float(daily.loc[daily["date"].between(back, back + YEAR), "oil_sm3"].sum())
+            try:
+                fit = fit_decline(daily, start=start - YEAR, end=start).best
+                trend = float(forecast(fit, 365, n_boot=50, start=back).cumulative["p50"])
+            except (ValueError, RuntimeError):
+                fit, trend = None, None
+            extra = actual - trend if trend is not None else None
+            text = " ".join(s["summary"] for s in job["summaries"])
+            plug = PLUG.search(text)
+            found.append(
+                {
+                    "well": well,
+                    "start": job["start"],
+                    "end": job["end"],
+                    "kind": job["kind"],
+                    # The day that says what was done ("Installed ... plug ... at 3150 m").
+                    "summary": next(
+                        (s["summary"] for s in job["summaries"] if PLUG.search(s["summary"])),
+                        next((s["summary"] for s in job["summaries"]), ""),
+                    ),
+                    "plug_m": float(plug.group(1).replace(",", ".")) if plug else None,
+                    "perforations": job["perforations"],
+                    "before": before,
+                    "back_on": back.date().isoformat(),
+                    "after": after,
+                    "oil_year_after_sm3": round(actual),
+                    "trend_year_after_sm3": round(trend) if trend is not None else None,
+                    "trend_fit": (
+                        {"model": fit.model, "from": fit.t0.date().isoformat()} if fit else None
+                    ),
+                    "extra_oil_sm3": round(extra) if extra is not None else None,
+                    "extra_oil_bbl": round(extra * BBL_PER_SM3) if extra is not None else None,
+                    "price_usd_per_bbl": PRICE_USD_PER_BBL,
+                    "extra_value_usd": (
+                        round(extra * BBL_PER_SM3 * PRICE_USD_PER_BBL, -5)
+                        if extra is not None
+                        else None
+                    ),
+                }
+            )
+    return found
+
+
+def _named_wells(run: dict, full: ProductionStore) -> list[str]:
+    """The producing wells the question or the answer names, in the data's order."""
+    result = run.get("result") or {}
+    text = " ".join(
+        [run.get("question", ""), result.get("summary", "")]
+        + [f.get("claim", "") for f in result.get("findings") or []]
+    )
+    named = {re.sub(r"\s+", " ", m.group(0)).removeprefix("15/9-") for m in WELL.finditer(text)}
+    wells = full.query("SELECT DISTINCT well FROM production_daily ORDER BY 1").rows["well"]
+    return [w for w in wells if w in named]
+
+
 def hindsight(run: dict, full: ProductionStore, past: ProductionStore) -> dict:
     """`run` is a saved run (question, as_of, result, evidence by id); `past` is the store
     the run saw (cut at its as-of date), `full` the whole data."""
@@ -247,6 +343,7 @@ def hindsight(run: dict, full: ProductionStore, past: ProductionStore) -> dict:
         "as_of": cut.date().isoformat(),
         "forecasts": forecasts,
         "wells": _next_year(full, cut),
+        "work_next": _work_next(full, cut, _named_wells(run, full)),
         "reasoning": reasoning_check(run, full),
     }
 

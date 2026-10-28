@@ -131,3 +131,26 @@ async def test_only_the_measured_values_of_an_agreed_reading_back_a_fact(process
 
     assert check("8,400", 8400) == []
     assert any("not in" in p for p in check("9,500", 9500))
+
+
+def test_the_model_is_shown_the_verdict_not_sams_values() -> None:
+    from wellpilot.agent.vision import for_the_model
+
+    result = {
+        "answer": "about 8 400 for about 2 years",
+        "readings": [{"label": "plateau rate", "value": 8400, "unit": "Sm3/d"}],
+        "measured_by_sam": {"plateau": {"sm3_per_day": 8464, "months": 19}},
+        "cross_check": [
+            {"label": "plateau rate", "muse": 8400, "sam": 8464, "sam_unit": "Sm3/d",
+             "difference": 64, "agree": True},
+            {"label": "plateau length", "muse": 24, "sam": 19, "sam_unit": "months",
+             "difference": 5.0, "agree": False},
+        ],
+    }  # fmt: skip
+
+    shown = for_the_model(result)
+
+    assert "measured_by_sam" not in shown and "8464" not in str(shown) and "19" not in str(shown)
+    verdicts = [(c["agree"], c["difference"]) for c in shown["cross_check"]]
+    assert verdicts == [(True, 64), (False, 5.0)]
+    assert result["cross_check"][0]["sam"] == 8464  # the evidence keeps them for the reader

@@ -79,7 +79,9 @@ export function HindsightView({ runId }: { runId: string }) {
         set against what it said.
       </p>
       {h.reasoning && <ReasoningLine r={h.reasoning} asOf={h.as_of} />}
-      {h.forecasts.length === 0 && <p className="empty">The agent made no forecast in this run.</p>}
+      {h.forecasts.length === 0 && !h.work_next?.length && (
+        <p className="empty">The agent made no forecast in this run.</p>
+      )}
       {answered.map((f) => (
         <ForecastCase key={f.evidence_id} f={f} />
       ))}
@@ -97,6 +99,10 @@ export function HindsightView({ runId }: { runId: string }) {
           ))}
         </details>
       )}
+
+      {h.work_next?.map((w) => (
+        <WorkNext key={`${w.well}-${w.start}`} w={w} asOf={h.as_of} />
+      ))}
 
       <h4 className="case-title hindsight-wells-title">Every producing well, a year later</h4>
       <table className="case-table hindsight-wells">
@@ -136,6 +142,60 @@ export function HindsightView({ runId }: { runId: string }) {
   )
 }
 
+/** The work done on a well the answer named, soon after the date: what it was, the well
+ * before and after it, and the year after it against the decline it was on. */
+function WorkNext({ w, asOf }: { w: NonNullable<Hindsight['work_next']>[number]; asOf: string }) {
+  const millions = (usd: number) => `$${(usd / 1e6).toFixed(usd >= 1e7 ? 0 : 1)} million`
+  return (
+    <section className="work-next">
+      <h4 className="case-title">
+        What was done to {w.well} next: {w.start === w.end ? w.start : `${w.start} to ${w.end}`}
+      </h4>
+      <p className="work-next-what">
+        {w.plug_m !== null ? `A plug set at ${w.plug_m.toLocaleString('en-US')} m` : `A ${w.kind} job`}
+        {w.perforations.length > 0 && `, perforations at ${w.perforations.join(', ')}`}. The daily report says: &ldquo;
+        {w.summary}&rdquo;
+      </p>
+      <table className="case-table work-next-table">
+        <thead>
+          <tr>
+            <th scope="col" />
+            <th scope="col" className="num-col">Oil per producing day</th>
+            <th scope="col" className="num-col">Water cut</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">60 days before</th>
+            <td className="num-col">{w.before.oil_sm3_per_day.toLocaleString('en-US')} Sm³/d</td>
+            <td className="num-col">{cut(w.before.water_cut)}</td>
+          </tr>
+          {w.after && (
+            <tr>
+              <th scope="row">Back on stream from {w.back_on}</th>
+              <td className="num-col">{w.after.oil_sm3_per_day.toLocaleString('en-US')} Sm³/d</td>
+              <td className="num-col">{cut(w.after.water_cut)}</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+      {w.extra_oil_sm3 !== null && w.trend_year_after_sm3 !== null && (
+        <p className="work-next-worth">
+          In the year after it the well made <strong>{volume(w.oil_year_after_sm3)}</strong> of oil; on the decline it
+          was on before the job ({w.trend_fit?.model} fit from {w.trend_fit?.from}) it would have made about{' '}
+          {volume(w.trend_year_after_sm3)}. The difference, about <strong>{volume(w.extra_oil_sm3)}</strong> (
+          {((w.extra_oil_bbl ?? 0) / 1e6).toFixed(2)} million barrels), is worth about{' '}
+          <strong>{millions(w.extra_value_usd ?? 0)}</strong> at an assumed ${w.price_usd_per_bbl} a barrel.
+        </p>
+      )}
+      <p className="chart-note-line">
+        The agent answered as of {asOf} and could not see this job. Set it beside the answer: did the agent point at
+        the depth where the water came in?
+      </p>
+    </section>
+  )
+}
+
 function ForecastCase({ f }: { f: Hindsight['forecasts'][number] }) {
   const [agent, classic] = f.methods
   const band = f.calibrated_band
@@ -151,6 +211,7 @@ function ForecastCase({ f }: { f: Hindsight['forecasts'][number] }) {
         the forecast was <strong>{signed(agent.error)}</strong>.
       </p>
       <CaseChart detail={f} />
+      {f.fixed_windows && f.fixed_windows.length > 0 && <ErrorBars f={f} />}
       {f.decomposition && <Decomposition d={f.decomposition} />}
       {f.fixed_windows && f.fixed_windows.length > 0 && (
         <p className="hindsight-fixed">
@@ -199,6 +260,42 @@ function ForecastCase({ f }: { f: Hindsight['forecasts'][number] }) {
         </p>
       )}
     </section>
+  )
+}
+
+/** Every forecast made the same day, as its error against the outcome: the agent's own
+ * window, each fixed window and the whole history, so the textbook fit's miss is one bar of
+ * several, not the only comparison. */
+function ErrorBars({ f }: { f: Hindsight['forecasts'][number] }) {
+  const [agent, classic] = f.methods
+  const rows = [
+    { label: 'Agent, its own window', error: agent.error, agent: true },
+    ...(f.fixed_windows ?? [])
+      .filter((w) => w.error !== null)
+      .map((w) => ({ label: `Last ${w.months} months`, error: w.error!, agent: false })),
+    { label: 'Whole history (textbook)', error: classic.error, agent: false },
+  ]
+  const reach = Math.max(0.25, ...rows.map((r) => Math.min(Math.abs(r.error), 1.2)))
+  const at = (e: number) => 50 + (Math.max(-reach, Math.min(reach, e)) / reach) * 50
+  return (
+    <figure className="error-bars-case" aria-label="Forecast error of each method made the same day">
+      <figcaption>Each forecast made on {f.cutoff}, against what the well then produced</figcaption>
+      <ul>
+        {rows.map((r) => (
+          <li key={r.label} className={r.agent ? 'is-agent' : undefined}>
+            <span className="error-bars-label">{r.label}</span>
+            <span className="error-bars-track">
+              <span className="error-bars-zero" />
+              <span
+                className="error-bars-bar"
+                style={{ left: `${Math.min(50, at(r.error))}%`, width: `${Math.abs(at(r.error) - 50)}%` }}
+              />
+            </span>
+            <span className="error-bars-value">{signed(r.error)}</span>
+          </li>
+        ))}
+      </ul>
+    </figure>
   )
 }
 

@@ -1,4 +1,3 @@
-
 """Backtest on a synthetic well; the agent method uses a scripted fake LLM (no tokens)."""
 
 import json

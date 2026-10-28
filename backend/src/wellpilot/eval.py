@@ -108,6 +108,16 @@ CASES = [
         max_steps=10,
     ),
     Case(
+        "plug_decision_2014",
+        "F-12's water cut is near 0.97 and its oil rate has fallen below 200 Sm3/d. Where along "
+        "the well does its water come in, and at what depth would a plug shut off most of the "
+        "water while keeping the oil? Use its production logs and the work done on it before.",
+        as_of=date(2014, 10, 31),
+        tools=("production_log",),
+        mentions=(r"31[3-6]\d", r"3210|2010"),
+        max_steps=10,
+    ),
+    Case(
         "own_code_f12",
         "Over 2011 to 2013, how closely did F-12's monthly water cut follow its choke opening? "
         "Give the correlation and what it suggests.",
