@@ -6,7 +6,7 @@
 
 Oil wells produce less over time, and engineers have to tell why (the reservoir running out, water flooding in, a broken sensor, work done on the well) and what comes next. Today that takes an engineer one to two working days across production databases, PDF reports and spreadsheets (our estimate, set against what operators have published; no one has timed it yet). WellPilot answers in about a minute, on Meta's open-weight model Muse Spark Open, and every number in its answer links to the data and the code that produced it.
 
-- Live demo: _link added at deploy_
+- Live demo: https://wellpilot.fly.dev (recorded answers open without a key; live questions are rate-limited)
 - Demo video: _link added at submission_
 
 Built for the Meta Global AI Developer Hackathon (Oct 26 - Nov 4, 2026), Indie track, "Push the Frontier". The data is Equinor's open Volve field (Norwegian North Sea, 2008-2016).
