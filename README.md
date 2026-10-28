@@ -4,7 +4,7 @@
 
 ![Given data only up to the end of 2010, the agent found where F-12's decline changed, fitted from there, and forecast 2011 within 6%](frontend/public/og.png)
 
-Oil wells produce less over time, and engineers have to tell why (the reservoir running out, water flooding in, a broken sensor, work done on the well) and what comes next. Today that takes hours across production databases, PDF reports and spreadsheets. WellPilot answers in about a minute, on Meta's open-weight model Muse Spark Open, and every number in its answer links to the data and the code that produced it.
+Oil wells produce less over time, and engineers have to tell why (the reservoir running out, water flooding in, a broken sensor, work done on the well) and what comes next. Today that takes an engineer one to three days across production databases, PDF reports and spreadsheets (our estimate, set against what operators have published; no one has timed it yet). WellPilot answers in about a minute, on Meta's open-weight model Muse Spark Open, and every number in its answer links to the data and the code that produced it.
 
 - Live demo: _link added at deploy_
 - Demo video: _link added at submission_
@@ -76,12 +76,12 @@ WellPilot turns that into one question, answered in under a minute (a median of 
 
 What one answer covers, counted from the data ([by hand vs with the agent](docs/by-hand-vs-agent.md)):
 
-| Question | By hand | With the agent |
-|---|---|---|
-| Which wells need attention at the end of 2010, and next year's oil for the worst one | 4,544 daily rows, F-12's 142 daily drilling reports, the design limits in a 53-page Norwegian plan, decline fits on several windows and a range from earlier forecasts' errors | 17 tool calls in 36 s, about $0.23, every number checked |
-| What was done to F-12 in 2014, and why the 2010 plug did not work | 165 daily drilling reports, a production log in 3 digital passes and a 2009 one that exists only as pictures in a PDF | 13 tool calls in 46 s, about $0.33 |
+| Question | By hand | Estimated by hand | With the agent |
+|---|---|---|---|
+| Which wells need attention at the end of 2010, and next year's oil for the worst one | 4,544 daily rows, F-12's 142 daily drilling reports, a production log, the design limits in a 53-page Norwegian plan, decline fits on several windows and a range from earlier forecasts' errors | 12-27 h | 17 tool calls in 36 s, about $0.23, every number checked |
+| What was done to F-12 in 2014, and why the 2010 plug did not work | 165 daily drilling reports, a production log in 3 digital passes and a 2009 one that exists only as pictures in a PDF | 7-15 h | 13 tool calls in 46 s, about $0.33 |
 
-We have not yet timed an engineer on these; the page above has the protocol, and timing one engineer on question 1 is the next measurement. A pilot on another field needs a daily production export in these columns and a one-file field description (see "Running it on another field").
+The hours are our estimate per step, not a timing: we found no published time study for these tasks. What operators and service companies have published sets the scale: an operator's routine review at 5-15 minutes per well per day and 50-100 wells per engineer (Arrow Energy, SPE workshop 2025), a well review for intervention candidates at 3 days per well (SLB with Pertamina, 2024), well models at 4-5 wells per engineer per day (ONGC, JPT 2026). The page above lists the steps, the sources and a protocol; timing one engineer on question 1 is the next measurement. A pilot on another field needs a daily production export in these columns and a one-file field description (see "Running it on another field").
 
 ## What it does
 
