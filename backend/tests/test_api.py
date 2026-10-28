@@ -620,3 +620,65 @@ async def test_the_field_views_hide_the_days_after_end(tmp_path) -> None:
     oil = wells["columns"].index("cum_oil_sm3")
     producers = {r[0] for r in wells["rows"] if r[oil]}
     assert producers == {"F-12", "F-14"}  # F-11, F-15 D and F-1 C came later
+
+
+async def test_no_key_does_not_use_up_the_hourly_runs(settings) -> None:
+    """A 503 for a missing key used to count as a run started: the outside review."""
+
+    def no_key() -> LLM:
+        raise RuntimeError("MODEL_API_KEY is not set")
+
+    app = create_app(
+        settings.model_copy(update={"runs_per_client_per_hour": 1}), llm_factory=no_key
+    )
+    async with client_for(app) as client:
+        for _ in range(3):
+            response = await client.post("/api/runs", json={"question": "Which well?"})
+            assert response.status_code == 503
+
+
+async def test_readers_edits_and_new_dates_are_limited_per_client(settings) -> None:
+    """Checks spend no tokens but CPU; a date not cached yet builds a store. Each has an
+    hourly limit per client; the operator's key skips both."""
+    limited = settings.model_copy(
+        update={"checks_per_client_per_hour": 2, "stores_per_client_per_hour": 1}
+    )
+    async with client_for(create_app(limited, llm_factory=fake_llm)) as client:
+        run_id, _ = await run_to_end(client)
+        edit = {
+            "findings": [{"index": 1, "claim": "F-12 produced on 60 days.", "confidence": "fact"}]
+        }
+        checks = [
+            (await client.post(f"/api/runs/{run_id}/check", json=edit)).status_code
+            for _ in range(3)
+        ]
+        dates = [
+            (await client.get(f"/api/field/screen?as_of=2010-02-{day}")).status_code
+            for day in ("10", "10", "11")
+        ]
+        cached = (await client.get("/api/field/screen?as_of=2010-02-10")).status_code
+
+    assert checks == [200, 200, 429]
+    assert dates == [200, 200, 429] and cached == 200  # the same date again is free
+
+
+async def test_a_runs_hindsight_is_computed_once(settings, monkeypatch) -> None:
+    from wellpilot.api import runs as runs_module
+
+    calls = []
+
+    def counted(run, full, cut):
+        calls.append(run["question"])
+        return {"forecasts": []}
+
+    monkeypatch.setattr(runs_module, "hindsight", counted)
+    async with client_for(create_app(settings, llm_factory=fake_llm)) as client:
+        started = await client.post(
+            "/api/runs", json={"question": "Which well?", "as_of": "2010-02-01"}
+        )
+        run_id = started.json()["id"]
+        await client.get(f"/api/runs/{run_id}/events")
+        first = await client.get(f"/api/runs/{run_id}/hindsight")
+        second = await client.get(f"/api/runs/{run_id}/hindsight")
+
+    assert first.status_code == second.status_code == 200 and len(calls) == 1

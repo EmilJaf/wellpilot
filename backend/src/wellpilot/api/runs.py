@@ -220,6 +220,8 @@ class RunManager:
         voice_per_client_per_hour: int = 20,
         voice_max_audio_b64: int = 1_500_000,
         attacks_per_client_per_hour: int = 10,
+        checks_per_client_per_hour: int = 120,
+        stores_per_client_per_hour: int = 30,
         review_answers: bool = True,
         run_timeout_s: float | None = 600.0,
         featured: tuple[str, ...] | None = None,
@@ -239,6 +241,8 @@ class RunManager:
         self.voice_per_client_per_hour = voice_per_client_per_hour
         self.voice_max_audio_b64 = voice_max_audio_b64
         self.attacks_per_client_per_hour = attacks_per_client_per_hour
+        self.checks_per_client_per_hour = checks_per_client_per_hour
+        self.stores_per_client_per_hour = stores_per_client_per_hour
         self.review_answers = review_answers
         self.run_timeout_s = run_timeout_s
         # A tuple lists only those runs. None lists every saved run in development and none
@@ -256,6 +260,12 @@ class RunManager:
         self._starts: dict[str, deque[float]] = {}
         self._voice: dict[str, deque[float]] = {}  # voice questions per client, by start time
         self._attacks: dict[str, deque[float]] = {}  # the model's attempts on the checker
+        self._checks: dict[str, deque[float]] = {}  # readers' edits checked
+        self._builds: dict[str, deque[float]] = {}  # stores built for a client's new dates
+        self._building: dict[date | None, threading.Lock] = {}
+        # Checking is CPU-bound Python: two at a time keep the server answering the rest.
+        self.check_slots = threading.BoundedSemaphore(2)
+        self._hindsight: OrderedDict[str, dict] = OrderedDict()  # a finished run's never changes
         # A restart (a deploy, an idle machine stopped) must not reset today's spend.
         self._spent: tuple[date, int] = (datetime.now(UTC).date(), self._spent_on_disk())
 
@@ -294,16 +304,57 @@ class RunManager:
             with suppress(TimeoutError):
                 await asyncio.wait_for(self.sandboxes.aclose(), 3)
 
-    def store(self, as_of: date | None = None) -> ProductionStore:
+    def store(
+        self, as_of: date | None = None, client: str | None = None, privileged: bool = False
+    ) -> ProductionStore:
+        """The data cut at as_of, from the cache or built (about a second). A build holds a
+        lock for its date only, so readers of other dates wait for nothing. With a client
+        (a date a visitor typed), a build counts against its hourly limit: Refused."""
         with self._stores_lock:
             if as_of in self._stores:
                 self._stores.move_to_end(as_of)
                 return self._stores[as_of]
+            building = self._building.setdefault(as_of, threading.Lock())
+        with building:
+            with self._stores_lock:
+                if as_of in self._stores:  # built while this one waited
+                    return self._stores[as_of]
+            if client is not None:
+                self._allow(
+                    self._builds,
+                    client,
+                    privileged,
+                    self.stores_per_client_per_hour,
+                    f"limit of {self.stores_per_client_per_hour} new dates per hour reached; "
+                    "pick a date already shown",
+                    budget=False,
+                )
             store = ProductionStore(self.processed_dir, as_of=as_of)
-            self._stores[as_of] = store
-            while len(self._stores) > STORE_CACHE_SIZE:
-                self._stores.popitem(last=False)
+            with self._stores_lock:
+                self._stores[as_of] = store
+                while len(self._stores) > STORE_CACHE_SIZE:
+                    self._stores.popitem(last=False)
+                self._building.pop(as_of, None)
             return store
+
+    def allow_check(self, client: str, privileged: bool = False) -> None:
+        """A reader's edit checked: no tokens, but CPU. Raises Refused."""
+        self._allow(
+            self._checks,
+            client,
+            privileged,
+            self.checks_per_client_per_hour,
+            f"limit of {self.checks_per_client_per_hour} checks per hour reached; try again later",
+            budget=False,
+        )
+
+    def hindsight_of(self, record: "RunRecord", compute: Callable[[], dict]) -> dict:
+        """A finished run's hindsight, computed once."""
+        if record.id not in self._hindsight:
+            self._hindsight[record.id] = compute()
+            while len(self._hindsight) > 64:
+                self._hindsight.popitem(last=False)
+        return self._hindsight[record.id]
 
     def tokens_spent_today(self) -> int:
         day, spent = self._spent
@@ -335,8 +386,9 @@ class RunManager:
     def start(
         self, request: RunRequest, client: str = "local", privileged: bool = False
     ) -> RunRecord:
-        self._check_limits(client, privileged)
+        # No key: 503 before the visitor's hourly allowance is touched.
         llm = self.llm_factory()  # raises RuntimeError when no API key is configured
+        self._check_limits(client, privileged)
         record = RunRecord(new_run_id(), request.question.strip(), request.as_of)
         self.runs[record.id] = record
         effort = request.reasoning or self.default_reasoning
@@ -431,6 +483,7 @@ class RunManager:
         privileged: bool,
         limit: int,
         refusal: str,
+        budget: bool = True,
     ) -> None:
         if privileged:
             return
@@ -440,7 +493,7 @@ class RunManager:
             starts.popleft()
         if len(starts) >= limit:
             raise Refused(refusal)
-        if self.tokens_spent_today() >= self.daily_token_budget:
+        if budget and self.tokens_spent_today() >= self.daily_token_budget:
             raise Refused("today's demo budget is used up")
         starts.append(now)
 
@@ -579,7 +632,9 @@ def run_hindsight(run_id: str, request: Request) -> dict:
         "events": record.events,  # the model's reasoning, read for the hidden period
     }
     try:
-        return hindsight(run, manager.store(None), manager.store(record.as_of))
+        return manager.hindsight_of(
+            record, lambda: hindsight(run, manager.store(None), manager.store(record.as_of))
+        )
     except ValueError as e:
         raise HTTPException(404, str(e)) from None
 
@@ -596,6 +651,16 @@ def check_edit(run_id: str, body: CheckRequest, request: Request) -> dict:
     result = record.result or {}
     if not result.get("findings"):
         raise HTTPException(409, "the run has no answer to edit")
+    manager = _manager(request)
+    try:
+        manager.allow_check(
+            client_id(request, manager.trusted_proxy),
+            manager.is_operator(request.headers.get("x-operator-key")),
+        )
+    except Refused as e:
+        raise HTTPException(429, str(e)) from None
+    if not manager.check_slots.acquire(timeout=10):
+        raise HTTPException(429, "the checker is busy; try again in a moment")
     try:
         return check_edits(
             record.question,
@@ -606,6 +671,8 @@ def check_edit(run_id: str, body: CheckRequest, request: Request) -> dict:
         )
     except IndexError as e:
         raise HTTPException(422, str(e)) from None
+    finally:
+        manager.check_slots.release()
 
 
 @router.get("/{run_id}/evidence/{evidence_id}")

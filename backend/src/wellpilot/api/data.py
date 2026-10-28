@@ -26,6 +26,7 @@ from wellpilot.agent.tools import (
 from wellpilot.agent.vision import VISION_TOOL
 from wellpilot.analysis.inside import inside_well
 from wellpilot.analysis.timeline import TIMELINE_FILE
+from wellpilot.api.runs import Refused, client_id
 from wellpilot.backtest import RESULTS_FILE, SUMMARY_FILE, case_detail, film
 from wellpilot.data.store import ProductionStore
 from wellpilot.ingest.figure import CURVE_FILE, OVERLAY_FILE
@@ -51,8 +52,19 @@ DAILY_COLUMNS = [
 
 
 def _store(request: Request, end: date | None = None) -> ProductionStore:
-    """The data, or (with end) only what an agent cut at that day could see."""
-    return request.app.state.runs.store(end)
+    """The data, or (with end) only what an agent cut at that day could see. A date not
+    cached yet costs a store build, counted against the visitor's hourly limit (429)."""
+    manager = request.app.state.runs
+    if end is None:
+        return manager.store()
+    try:
+        return manager.store(
+            end,
+            client_id(request, manager.trusted_proxy),
+            manager.is_operator(request.headers.get("x-operator-key")),
+        )
+    except Refused as e:
+        raise HTTPException(429, str(e)) from None
 
 
 @router.get("/wells")
@@ -125,7 +137,7 @@ def field_plan_figure_image(request: Request) -> FileResponse:
 @router.get("/field/screen")
 def field_screen_view(request: Request, as_of: date | None = None) -> dict:
     """Every well ranked by what needs attention, as of a day (default: the end of the data)."""
-    return field_screen(request.app.state.runs.store(as_of), NoArgs())
+    return field_screen(_store(request, as_of), NoArgs())
 
 
 @router.get("/field/design")
@@ -182,7 +194,7 @@ def field_timeline(request: Request) -> dict:
 def well_operation_jobs(well: str, request: Request, end: date | None = None) -> dict:
     """The well's daily-report jobs (drilling, completion, work on the well), as the
     well_operations tool gives them; `end` hides later ones, as for the daily data."""
-    store = request.app.state.runs.store(end)
+    store = _store(request, end)
     if "well_operations" not in store.tables:
         return {"well": well, "jobs": []}
     try:
@@ -195,7 +207,7 @@ def well_operation_jobs(well: str, request: Request, end: date | None = None) ->
 def well_inside(well: str, request: Request, end: date | None = None) -> dict:
     """The well along its depth: its production logs, perforated zones and the work done on
     it with what it produced before and after (analysis.inside); `end` hides later ones."""
-    store = request.app.state.runs.store(end)
+    store = _store(request, end)
     if "production_logs" not in store.tables:
         raise HTTPException(404, "no production logs are loaded")
     try:
