@@ -1,0 +1,576 @@
+{
+ "note": "Edits of the frozen runs by the sixth panel's simulated AI engineer (Oct 28). 'caught': false versions the checker must send back; 'true': true versions it must accept; 'open': false versions it still passes, kept to measure progress.",
+ "caught": [
+  {
+   "id": "A15",
+   "run": "9291bac14418",
+   "index": 3,
+   "text": "F-12's oil rate held at 5 130 Sm3/d in 2010 while the choke was closed from 60% to 53%, showing water taking capacity, with field voidage replacement near 1.08.",
+   "conf": "fact",
+   "kind": "quantity",
+   "why": "5130 is liquid rate"
+  },
+  {
+   "id": "A26",
+   "run": "9291bac14418",
+   "index": 6,
+   "text": "For F-12 the next 12 months are forecast at about 302,000 Sm3, range 324,000 to 470,000 Sm3 calibrated; the fit is poor so the number is uncertain.",
+   "conf": "inference",
+   "kind": "P50 by model",
+   "why": "302158 is the exponential model's P50; the forecast P50 is 359007"
+  },
+  {
+   "id": "B03",
+   "run": "5ceeb3c745cc",
+   "index": 2,
+   "text": "Oil rate dropped 72% in four weeks around 2010-07-18, from 4 050 to 1 146 Sm3/d weekly mean, a gradual shift as water took capacity.",
+   "conf": "fact",
+   "kind": "across-vs-between",
+   "why": "across -22%"
+  },
+  {
+   "id": "B05",
+   "run": "5ceeb3c745cc",
+   "index": 2,
+   "text": "Oil rate dropped 72% around 2010-07-18, from 4 050 to 1 146 Sm3/d weekly mean, a gradual shift brought on by water taking capacity.",
+   "conf": "fact",
+   "kind": "cause as fact",
+   "why": "brought on by"
+  },
+  {
+   "id": "B07",
+   "run": "5ceeb3c745cc",
+   "index": 2,
+   "text": "Oil rate dropped 72% around 2010-07-18, from 4 050 to 1 146 Sm3/d weekly mean, a gradual shift stemming from water taking capacity.",
+   "conf": "fact",
+   "kind": "cause as fact",
+   "why": "stemming from"
+  },
+  {
+   "id": "B10",
+   "run": "5ceeb3c745cc",
+   "index": 2,
+   "text": "Oil rate dropped 72% around 2010-07-18, from 4 050 to 1 146 bbl/d weekly mean, a gradual shift as water took capacity.",
+   "conf": "fact",
+   "kind": "unit",
+   "why": "Sm3/d"
+  },
+  {
+   "id": "B11",
+   "run": "5ceeb3c745cc",
+   "index": 2,
+   "text": "Water rate dropped 72% around 2010-07-18, from 4 050 to 1 146 Sm3/d weekly mean, a gradual shift as water took capacity.",
+   "conf": "fact",
+   "kind": "phase",
+   "why": "oil_rate"
+  },
+  {
+   "id": "C03",
+   "run": "3dbb4c8e390f",
+   "index": 1,
+   "text": "F-12 was shut in from 2014-11-30 to 2014-12-31 for a workover that set a plug at 3 150 ft and perforated a new zone from 3126.2 to 3130.7 mMD.",
+   "conf": "fact",
+   "kind": "unit",
+   "why": "m"
+  },
+  {
+   "id": "C11",
+   "run": "3dbb4c8e390f",
+   "index": 2,
+   "text": "Monthly oil cut fell from about 97% in October 2014 to about 31% in January 2015 after the workover.",
+   "conf": "fact",
+   "kind": "quantity",
+   "why": "water cut"
+  },
+  {
+   "id": "C13",
+   "run": "3dbb4c8e390f",
+   "index": 3,
+   "text": "In September 2010 the water was entering mostly above the 2010 plug depth, so a plug at 3 210 m would only shut off about 32% of the oil.",
+   "conf": "fact",
+   "kind": "phase",
+   "why": "water_share 0.325, oil_share 0.011"
+  },
+  {
+   "id": "F03",
+   "run": "9291bac14418",
+   "index": 5,
+   "text": "The field as a whole has always run below every design capacity, running at 67% water cut under the 80% limit and below liquid and water handling capacity.",
+   "conf": "fact",
+   "kind": "within limits",
+   "why": "injection over"
+  },
+  {
+   "id": "F12",
+   "run": "5ceeb3c745cc",
+   "index": 2,
+   "text": "Oil rate improved 72% around 2010-07-18, from 4 050 to 1 146 Sm3/d weekly mean, a gradual shift as water took capacity.",
+   "conf": "fact",
+   "kind": "direction vocab",
+   "why": "fall"
+  },
+  {
+   "id": "F14",
+   "run": "5ceeb3c745cc",
+   "index": 2,
+   "text": "Oil rate dropped 72% around 2010-07-18, from 4 050 to 1 146 Sm3/d weekly mean, a gradual shift resulting from water taking capacity.",
+   "conf": "fact",
+   "kind": "cause vocab",
+   "why": "resulting from"
+  },
+  {
+   "id": "F16",
+   "run": "5ceeb3c745cc",
+   "index": 2,
+   "text": "Oil rate dropped 72% around 2010-07-18, from 4 050 to 1 146 Sm3/d weekly mean, a gradual shift, the outcome of water taking capacity.",
+   "conf": "fact",
+   "kind": "cause vocab",
+   "why": "outcome of"
+  },
+  {
+   "id": "F17",
+   "run": "5ceeb3c745cc",
+   "index": 2,
+   "text": "Oil rate dropped 72% around 2010-07-18, from 4 050 to 1 146 Sm3/d weekly mean, a gradual shift that water breakthrough produced.",
+   "conf": "fact",
+   "kind": "cause vocab",
+   "why": "produced"
+  },
+  {
+   "id": "F19",
+   "run": "5ceeb3c745cc",
+   "index": 2,
+   "text": "Oil rate dropped 72% around 2010-07-18, from 4 050 to 1 146 Sm3/d weekly mean, a gradual shift; water breakthrough was responsible.",
+   "conf": "fact",
+   "kind": "cause vocab",
+   "why": "responsible"
+  },
+  {
+   "id": "F21",
+   "run": "5ceeb3c745cc",
+   "index": 2,
+   "text": "Oil rate dropped 72% around 2010-07-18, from 4 050 to 1 146 Sm3/d weekly mean, a gradual shift following from water breakthrough.",
+   "conf": "fact",
+   "kind": "cause vocab",
+   "why": "following from"
+  },
+  {
+   "id": "F31",
+   "run": "5ceeb3c745cc",
+   "index": "S",
+   "text": "F-12's oil most likely fell after mid-2010 because injected water broke through and took the well's liquid capacity: water cut jumped to 0.51 around February 2010 and first exceeded 50% in June 2010, oil rate fell 72% to about 1 146 Sm3/d, then declined at about 0.45 per year while liquid stayed near 5 130 Sm3/d and choke opened to 100%. The 2005 plan expected breakthrough after about 2 years at about 6 million Sm3 cumulative and a 9 000 Sm3/d plateau for about 19 months with a 0.80 water cut limit; F-12 matched that timing but then exceeded the design water cut while the platform stayed under all its capacities.",
+   "conf": "-",
+   "kind": "within limits",
+   "why": "injection over"
+  },
+  {
+   "id": "F35",
+   "run": "5ceeb3c745cc",
+   "index": 5,
+   "text": "The 2005 plan forecast a maximum water cut of 0.80 and plateau of 9 000 Sm3/d; the field hit 0.80 in June 2012, as the plan put it: „Produksjonen øker grunnet fallende vannrate“.",
+   "conf": "fact",
+   "kind": "fake quote low-9",
+   "why": "invented quote"
+  },
+  {
+   "id": "F46",
+   "run": "3dbb4c8e390f",
+   "index": 2,
+   "text": "F-12's oil rate fell from about 97% in October 2014 to about 31% in January 2015 after the workover.",
+   "conf": "fact",
+   "kind": "quantity",
+   "why": "water cut"
+  },
+  {
+   "id": "F47",
+   "run": "3dbb4c8e390f",
+   "index": 2,
+   "text": "Monthly uptime fell from about 97% in October 2014 to about 31% in January 2015 after the workover.",
+   "conf": "fact",
+   "kind": "quantity",
+   "why": "water cut"
+  },
+  {
+   "id": "F48",
+   "run": "3dbb4c8e390f",
+   "index": 2,
+   "text": "Monthly gas-oil ratio fell from about 97% in October 2014 to about 31% in January 2015 after the workover.",
+   "conf": "fact",
+   "kind": "quantity",
+   "why": "water cut"
+  },
+  {
+   "id": "F49",
+   "run": "3dbb4c8e390f",
+   "index": 2,
+   "text": "Monthly choke fell from about 97% in October 2014 to about 31% in January 2015 after the workover.",
+   "conf": "fact",
+   "kind": "quantity",
+   "why": "water cut"
+  },
+  {
+   "id": "G02",
+   "run": "9291bac14418",
+   "index": 1,
+   "text": "Well F14 needs attention most: its downhole pressure gauge is dead since 2010-10-12 and its water cut is 69%, while its oil rate fell 55% around 2010-05-02.",
+   "conf": "fact",
+   "kind": "well format",
+   "why": "F-12"
+  },
+  {
+   "id": "G04",
+   "run": "9291bac14418",
+   "index": 1,
+   "text": "F-12 needs attention most: its downhole pressure gauge is dead since 12.10.2009 and its water cut is 69%, while its oil rate fell 55% around 2010-05-02.",
+   "conf": "fact",
+   "kind": "date format (Norwegian)",
+   "why": "2010-10-12"
+  },
+  {
+   "id": "G05",
+   "run": "9291bac14418",
+   "index": 1,
+   "text": "F-12 needs attention most: its downhole pressure gauge is dead since 10/12/2009 and its water cut is 69%, while its oil rate fell 55% around 2010-05-02.",
+   "conf": "fact",
+   "kind": "date format (US)",
+   "why": "2010-10-12"
+  },
+  {
+   "id": "G06",
+   "run": "9291bac14418",
+   "index": 1,
+   "text": "F-12 needs attention most: its downhole pressure gauge is dead since Q2 2010 and its water cut is 69%, while its oil rate fell 55% around 2010-05-02.",
+   "conf": "fact",
+   "kind": "date format (quarter)",
+   "why": "Q4"
+  },
+  {
+   "id": "G07",
+   "run": "9291bac14418",
+   "index": 1,
+   "text": "F-12 needs attention most: its downhole pressure gauge is dead since early 2010 and its water cut is 69%, while its oil rate fell 55% around 2010-05-02.",
+   "conf": "fact",
+   "kind": "date words",
+   "why": "Oct 2010"
+  },
+  {
+   "id": "G08",
+   "run": "9291bac14418",
+   "index": 1,
+   "text": "F-12 needs attention most: its downhole pressure gauge is dead since 2010-10-12 and its water cut is 69%, while its oil rate fell 55% in spring 2009.",
+   "conf": "fact",
+   "kind": "date words",
+   "why": "2010-05-02"
+  },
+  {
+   "id": "G13",
+   "run": "5ceeb3c745cc",
+   "index": 6,
+   "text": "The downhole pressure gauge failed in late 2009 and read zero for 2 095 days while the well still made 1.13 million Sm3, so pressure was not lost.",
+   "conf": "fact",
+   "kind": "date words",
+   "why": "2010"
+  },
+  {
+   "id": "G16",
+   "run": "5ceeb3c745cc",
+   "index": 2,
+   "text": "Oil rate dropped 72% within days of 2010-07-18, from 4 050 to 1 146 Sm3/d weekly mean, a gradual shift as water took capacity.",
+   "conf": "fact",
+   "kind": "abrupt vocab",
+   "why": "across 22%"
+  },
+  {
+   "id": "G19",
+   "run": "5ceeb3c745cc",
+   "index": 2,
+   "text": "Oil rate dropped 72% in a single week around 2010-07-18, from 4 050 to 1 146 Sm3/d weekly mean, a gradual shift as water took capacity.",
+   "conf": "fact",
+   "kind": "abrupt vocab",
+   "why": "across 22%"
+  },
+  {
+   "id": "G25",
+   "run": "b94856e6bedd",
+   "index": 2,
+   "text": "F-12's oil rate rose continuously from 72% in Jan 2011 to 95% in Dec 2013 while choke stayed high, averaging 77% in 2011 and at 100% in 2012.",
+   "conf": "inference",
+   "kind": "quantity",
+   "why": "water cut"
+  },
+  {
+   "id": "G26",
+   "run": "b94856e6bedd",
+   "index": 2,
+   "text": "Water cut rose continuously from 72% in Jan 2011 to 95% in Dec 2013 while water cut stayed high, averaging 77% in 2011 and at 100% in 2012.",
+   "conf": "inference",
+   "kind": "quantity",
+   "why": "choke"
+  },
+  {
+   "id": "G31",
+   "run": "9291bac14418",
+   "index": 2,
+   "text": "F-12's water comes from below 3 165 m; the plug set at 3 210 m on 2010-09-23 can only shut off about 33% to 38% of its oil and almost none of its water.",
+   "conf": "fact",
+   "kind": "phase swap",
+   "why": "33-38% is water share"
+  }
+ ],
+ "true": [
+  {
+   "id": "A21",
+   "run": "9291bac14418",
+   "index": 5,
+   "text": "The field as a whole is still inside all its design limits, including water injection capacity, running at 67% water cut under the 80% limit and below liquid and water handling capacity.",
+   "conf": "fact",
+   "kind": "within limits",
+   "why": "true at the run's date (injection passed capacity in 2008-12, not at the end of 2010); the checker judges histories, not states"
+  },
+  {
+   "id": "F01",
+   "run": "9291bac14418",
+   "index": 5,
+   "text": "The field as a whole is still inside its water injection capacity, running at 67% water cut under the 80% limit and below liquid and water handling capacity.",
+   "conf": "fact",
+   "kind": "within limits",
+   "why": "true at the run's date (injection passed capacity in 2008-12, not at the end of 2010); the checker judges histories, not states"
+  },
+  {
+   "id": "F04",
+   "run": "9291bac14418",
+   "index": 5,
+   "text": "The field as a whole is still under all its design limits, injection included, running at 67% water cut under the 80% limit.",
+   "conf": "fact",
+   "kind": "within limits",
+   "why": "true at the run's date (injection passed capacity in 2008-12, not at the end of 2010); the checker judges histories, not states"
+  },
+  {
+   "id": "T06",
+   "run": "9291bac14418",
+   "index": 6,
+   "text": "For F-12 the fit suggests about 359 thousand Sm3 of oil over the next 12 months (calibrated range 324 thousand to 470 thousand Sm3); the fit is poor so the number is uncertain.",
+   "conf": "inference",
+   "kind": "true rephrase",
+   "why": "thousand"
+  },
+  {
+   "id": "T07",
+   "run": "9291bac14418",
+   "index": 3,
+   "text": "In 2010 F-12's liquid rate stayed at 5 130 Sm3/d as its choke went from 60% down to 53%, with field voidage replacement near 1.08.",
+   "conf": "fact",
+   "kind": "true rephrase",
+   "why": ""
+  },
+  {
+   "id": "T08",
+   "run": "b94856e6bedd",
+   "index": 2,
+   "text": "From 72% in Jan 2011, the water cut climbed to 95% in Dec 2013, while the choke averaged 77% in 2011 and 100% in 2012.",
+   "conf": "inference",
+   "kind": "true rephrase",
+   "why": ""
+  },
+  {
+   "id": "F37",
+   "run": "5ceeb3c745cc",
+   "index": 5,
+   "text": "The 2005 plan said “Maksimum vannkutt” … “Platåraten på 9.000” and the field hit 0.80 in June 2012 and stayed below its 13 000 Sm3/d liquid limit.",
+   "conf": "fact",
+   "kind": "ellipsis splice",
+   "why": "both in E14"
+  },
+  {
+   "id": "F38",
+   "run": "5ceeb3c745cc",
+   "index": 5,
+   "text": "The 2005 plan said “Platåraten på 9.000 Sm3 /d” … “Maksimum vannkutt 0,80” and the field hit 0.80 in June 2012 and stayed below its 13 000 Sm3/d liquid limit.",
+   "conf": "fact",
+   "kind": "two quotes",
+   "why": "two separate quotes, true"
+  },
+  {
+   "id": "T19",
+   "run": "c8501c918af6",
+   "index": 2,
+   "text": "In the figure the plateau runs from 2008-03 to 2009-09, about 19 months, as the text's 'about 19 months' says.",
+   "conf": "inference",
+   "kind": "true rephrase",
+   "why": ""
+  }
+ ],
+ "open": [
+  {
+   "id": "A14",
+   "run": "9291bac14418",
+   "index": 3,
+   "text": "F-12's liquid rate held at 5 130 Sm3/d in 2010 while the choke was closed from 53% to 60%, showing water taking capacity, with field voidage replacement near 1.08.",
+   "conf": "fact",
+   "kind": "from X to Y",
+   "why": "E5 by_year 59.88 (2009) -> 53.17 (2010)"
+  },
+  {
+   "id": "A16",
+   "run": "9291bac14418",
+   "index": 3,
+   "text": "F-12's liquid rate held at 5 130 Sm3/d in 2009 while the choke was closed from 60% to 53%, showing water taking capacity, with field voidage replacement near 1.08.",
+   "conf": "fact",
+   "kind": "row tie",
+   "why": "2009 row liquid 4740"
+  },
+  {
+   "id": "A19",
+   "run": "9291bac14418",
+   "index": 3,
+   "text": "F-12's liquid rate held at 5 130 Sm3/d in 2010 while the choke was closed from 60% to 53%, showing water taking capacity, with field voidage replacement near 1.28.",
+   "conf": "fact",
+   "kind": "quantity",
+   "why": "1.28 is surface_ratio, replacement_ratio 1.08"
+  },
+  {
+   "id": "A23",
+   "run": "9291bac14418",
+   "index": 5,
+   "text": "F-12 is still inside its design limits, running at 67% water cut under the 80% limit and below liquid and water handling capacity.",
+   "conf": "fact",
+   "kind": "well",
+   "why": "0.6715 is the field's"
+  },
+  {
+   "id": "A38",
+   "run": "9291bac14418",
+   "index": "S",
+   "text": "F-12 needs attention most: its downhole pressure gauge has been dead since October and its water cut is now about 69% after a sharp fall in oil rate in 2010. F-14 also needs watching as its water cut has fallen to about 61%. For F-12 the fit suggests the next 12 months will make about 359,000 Sm3 of oil, range 324,000 to 470,000 Sm3 (calibrated band, bootstrap scatter alone would look narrower).",
+   "conf": "-",
+   "kind": "direction",
+   "why": "F-14 water cut rose"
+  },
+  {
+   "id": "A39",
+   "run": "9291bac14418",
+   "index": "S",
+   "text": "F-12 needs attention most: its downhole pressure gauge has been dead since August and its water cut is now about 69% after a sharp fall in oil rate in 2010. F-14 also needs watching as its water cut has risen to about 61%. For F-12 the fit suggests the next 12 months will make about 359,000 Sm3 of oil, range 324,000 to 470,000 Sm3 (calibrated band, bootstrap scatter alone would look narrower).",
+   "conf": "-",
+   "kind": "date (month word)",
+   "why": "gauge dead since 2010-10-12"
+  },
+  {
+   "id": "B08",
+   "run": "5ceeb3c745cc",
+   "index": 2,
+   "text": "Oil rate dropped 72% around 2010-07-18, from 4 050 to 1 146 Sm3/d weekly mean, a gradual shift, so water took capacity.",
+   "conf": "fact",
+   "kind": "cause as fact",
+   "why": "so (consequence)"
+  },
+  {
+   "id": "B13",
+   "run": "5ceeb3c745cc",
+   "index": 5,
+   "text": "The 2005 plan forecast a maximum water cut of 0.80 and plateau of 9 000 Sm3/d; F-12 hit 0.80 in June 2012 and stayed below its 13 000 Sm3/d liquid limit.",
+   "conf": "fact",
+   "kind": "well",
+   "why": "2012-06 is the field's month; F-12 crossed 2012-02-14"
+  },
+  {
+   "id": "B15",
+   "run": "5ceeb3c745cc",
+   "index": 5,
+   "text": "The 2005 plan forecast a maximum water cut of 0.80 and plateau of 9 000 Sm3/d for 2 years; the field hit 0.80 in June 2012 and stayed below its 13 000 Sm3/d liquid limit.",
+   "conf": "fact",
+   "kind": "duration",
+   "why": "plateau 19 months; 2 years is breakthrough"
+  },
+  {
+   "id": "B29",
+   "run": "5ceeb3c745cc",
+   "index": 6,
+   "text": "The downhole pressure gauge failed on 2010-10-12 and read zero for 1830 days while the well still made 1.13 million Sm3, so pressure was not lost.",
+   "conf": "fact",
+   "kind": "quantity",
+   "why": "1830 flowing days, zero for 2095 days"
+  },
+  {
+   "id": "C14",
+   "run": "3dbb4c8e390f",
+   "index": 3,
+   "text": "In September 2010 the water was entering mostly above the 2010 plug depth, so a plug at 3 210 m would only shut off about 97% of the water.",
+   "conf": "fact",
+   "kind": "depth tie",
+   "why": "0.971 is below 3150, not 3210"
+  },
+  {
+   "id": "C15",
+   "run": "3dbb4c8e390f",
+   "index": 3,
+   "text": "In March 2009 the water was entering mostly above the 2010 plug depth, so a plug at 3 210 m would only shut off about 32% of the water.",
+   "conf": "fact",
+   "kind": "survey date",
+   "why": "2009 survey has no water"
+  },
+  {
+   "id": "D03",
+   "run": "b94856e6bedd",
+   "index": 1,
+   "text": "From 2011-01 to 2013-12 F-14’s month-average water cut and choke had a weak-moderate positive correlation of 0.40 on 36 months, and 0.41 on daily data.",
+   "conf": "inference",
+   "kind": "well",
+   "why": "E6 is F-12"
+  },
+  {
+   "id": "D05",
+   "run": "b94856e6bedd",
+   "index": 1,
+   "text": "From 2011-01 to 2013-12 F-12’s month-average water cut and choke had a weak-moderate positive correlation of 0.41 on 36 months, and 0.40 on daily data.",
+   "conf": "inference",
+   "kind": "swap labels",
+   "why": "monthly 0.3969, daily 0.4132"
+  },
+  {
+   "id": "D10",
+   "run": "b94856e6bedd",
+   "index": 2,
+   "text": "Water cut rose continuously from 72% in Jan 2011 to 95% in Dec 2013 while choke stayed high, averaging 77% in 2012 and at 100% in 2011.",
+   "conf": "inference",
+   "kind": "row tie (year)",
+   "why": "by_year 2011 77.11, 2012 100"
+  },
+  {
+   "id": "E06",
+   "run": "c8501c918af6",
+   "index": 2,
+   "text": "The figure's plateau lasts about 2 years from 2008-03 to 2009-09, matching the text's 'about 19 months'.",
+   "conf": "inference",
+   "kind": "duration",
+   "why": "19 months (2 years is Muse's misreading)"
+  },
+  {
+   "id": "F24",
+   "run": "5ceeb3c745cc",
+   "index": "S",
+   "text": "F-12's oil fell after mid-2010 because injected water broke through, as is likely for F-14 too and took the well's liquid capacity: water cut jumped to 0.51 around February 2010 and first exceeded 50% in June 2010, oil rate fell 72% to about 1 146 Sm3/d, then declined at about 0.45 per year while liquid stayed near 5 130 Sm3/d and choke opened to 100%. The 2005 plan expected breakthrough after about 2 years at about 6 million Sm3 cumulative and a 9 000 Sm3/d plateau for about 19 months with a 0.80 water cut limit; F-12 matched that timing but then exceeded the design water cut while the platform stayed under its liquid and oil capacities.",
+   "conf": "-",
+   "kind": "hedge misplaced",
+   "why": ""
+  },
+  {
+   "id": "F27",
+   "run": "5ceeb3c745cc",
+   "index": "S",
+   "text": "F-12's oil most likely fell after mid-2010 because injected water broke through and took the well's liquid capacity: water cut jumped to 0.51 around February 2011 and first exceeded 50% in June 2010, oil rate fell 72% to about 1 146 Sm3/d, then declined at about 0.45 per year while liquid stayed near 5 130 Sm3/d and choke opened to 100%. The 2005 plan expected breakthrough after about 2 years at about 6 million Sm3 cumulative and a 9 000 Sm3/d plateau for about 19 months with a 0.80 water cut limit; F-12 matched that timing but then exceeded the design water cut while the platform stayed under its liquid and oil capacities.",
+   "conf": "-",
+   "kind": "date",
+   "why": "2010-02-14"
+  },
+  {
+   "id": "G30",
+   "run": "9291bac14418",
+   "index": 4,
+   "text": "F-12 also needs watching: its water cut is 61% and F-14's oil rate fell 34% around 2010-01-10.",
+   "conf": "fact",
+   "kind": "well",
+   "why": "61% is F-14"
+  }
+ ]
+}

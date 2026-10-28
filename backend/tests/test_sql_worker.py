@@ -47,7 +47,8 @@ def test_isolated_results_equal_the_in_process_ones(processed_dir, isolated) -> 
     plain = ProductionStore(processed_dir, as_of=pd.Timestamp("2010-01-05").date())
     for sql in (
         "SELECT * FROM production_daily ORDER BY well, date",
-        "SELECT well, max(date) AS last, sum(oil_sm3) AS oil FROM production_daily GROUP BY well",
+        "SELECT well, max(date) AS last, sum(oil_sm3) AS oil FROM production_daily GROUP BY well "
+        "ORDER BY well",  # a group's order is not fixed between two processes
     ):
         a, b = isolated.query_untrusted(sql), plain.query_untrusted(sql)
         pd.testing.assert_frame_equal(a.rows, b.rows)

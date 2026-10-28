@@ -6,12 +6,10 @@
   "question": "When was well F-11 B completed, and how does its completion report's timing compare with when it started producing?"
  },
  "to_review": false,
- "note": "Fair: 2013-07-22 cited without the evidence that read it off the chart.",
+ "note": "Fair: 2013-07-22 cited without the evidence that read it off the chart. Oct 28 night: accepted on purpose. The dates are on the cited report page in Norwegian form (30.06.2013, 04.07.2013, 22.07.2013), which the checker now reads as ISO dates; the earlier rejection was a false one.",
  "expected": {
-  "accepted": false,
-  "flagged": [
-   "Finding 1"
-  ]
+  "accepted": true,
+  "flagged": []
  },
  "submission": {
   "summary": "Well 15/9-F-11 B (producer F-11) was completed in late June to July 2013 with handover on 2013-07-22 and first oil shortly after on 2013-07-24. Its Final Well Report (Completion) was issued as Final on 2013-09-04, after production had started.",

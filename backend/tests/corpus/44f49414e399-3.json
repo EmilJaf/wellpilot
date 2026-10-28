@@ -6,10 +6,12 @@
   "question": "Why did well F-12 decline faster after 2010? Compare with the 2005 development plan."
  },
  "to_review": false,
- "note": "",
+ "note": "Oct 28 night: rejected on purpose. 'liquid stayed near 5,100 Sm3/d' is declared 5105 from E4, production_monthly, which has no liquid column: 5105 is an oil rate per producing day there. Caught once 'stayed' let the name reach its number.",
  "expected": {
-  "accepted": true,
-  "flagged": []
+  "accepted": false,
+  "flagged": [
+   "Summary"
+  ]
  },
  "submission": {
   "summary": "F-12's sharp drop after mid-2010 was water breakthrough taking its liquid capacity; oil fell 72% to 1,146 Sm3/d as water cut rose from 3% to 51% and then to 81%, while liquid stayed near 5,100 Sm3/d with the choke at 100%. The 2005 plan [\"Vannproduksjonen kommer først og fremst fra injeksjonsvannet som bryter gjennom i brønnene etter omlag 2 år.\", \"Water production comes primarily from injection water that breaks through in the wells after about 2 years.\"] expected breakthrough after about 2 years, which F-12 matched at 21 months, but the field later ran at the design water cut of 80% and produced below its P50 forecast.",

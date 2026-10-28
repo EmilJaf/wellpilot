@@ -10,11 +10,15 @@ import difflib
 from dataclasses import asdict
 
 from wellpilot.agent.checker import (
+    QUOTED,
     WRITTEN_NUMBER,
     DeclaredNumber,
     Finding,
     Submission,
     _numbers_in_text,
+    _Pool,
+    _readings,
+    _reads_as,
     check_submission,
     display_spans,
 )
@@ -128,10 +132,60 @@ def redeclare(
                     DeclaredNumber(text=same[0], value=reading[0], evidence_id=n.evidence_id)
                 )
                 declared_texts.add(same[0])
+    # A number moved inside a quote is checked with the quote, word for word: a declaration
+    # would read the plan's "9.000" as nine.
+    quoted = [(m.start(), m.end()) for m in QUOTED.finditer(edited)]
+    carried = [
+        c
+        for c in carried
+        if not any(
+            a <= m.start() and m.end() <= b
+            for m in WRITTEN_NUMBER.finditer(edited)
+            if m.group(0).strip() == c.text
+            for a, b in quoted
+        )
+    ]
     # Declarations written nowhere in the text stay as they were: the checker reads them as
     # another form of a number ("100%" covers a "1.0" written later), so an unedited claim
     # keeps its verdict.
     return carried + unused
+
+
+def declare_typed(
+    edited: str, numbers: list[DeclaredNumber] | None, cited: list[str], log: EvidenceLog
+) -> list[DeclaredNumber] | None:
+    """Numbers a reader typed that no declaration carries ("2 years" rewritten as "19
+    months"), declared from the first cited result that holds them, as the agent would have
+    declared them. One no cited result holds stays undeclared, and the checker says so."""
+    if numbers is None:
+        return None
+    quoted = [(m.start(), m.end()) for m in QUOTED.finditer(edited)]
+    texts = {n.text for n in numbers}
+    added: list[DeclaredNumber] = []
+    for m in WRITTEN_NUMBER.finditer(edited):
+        token = m.group(0).strip()
+        if token in texts or any(a <= m.start() and m.end() <= b for a, b in quoted):
+            continue
+        reading = _reads(token, False)
+        # Small numbers are found anywhere ("3" in "sam-3.1"): those stay the reader's to
+        # declare. A percentage must be in the source as the share it is.
+        if reading is None or abs(reading[0]) <= 10:
+            continue
+        percent = reading[2] in ("%", "percent", "pct")
+        readings = [(v / 100, u / 100, sc) for v, u, sc in _readings(token)] if percent else None
+        source = next(
+            (
+                e
+                for e in cited
+                if (item := log.get(e))
+                and any(_reads_as(r, _Pool([item]).numbers) for r in readings or _readings(token))
+            ),
+            None,
+        )
+        if source:
+            added.append(DeclaredNumber(text=token, value=reading[0], evidence_id=source))
+            texts.add(token)
+    return numbers + added
 
 
 def check_edits(
@@ -155,7 +209,12 @@ def check_edits(
             update={
                 "claim": claim,
                 "confidence": confidence,
-                "numbers": redeclare(original.claim, original.numbers, claim),
+                "numbers": declare_typed(
+                    claim,
+                    redeclare(original.claim, original.numbers, claim),
+                    original.evidence_ids,
+                    log,
+                ),
             }
         )
         edited.add(index)
