@@ -22,7 +22,7 @@ from wellpilot.agent import sandbox_runner
 from wellpilot.agent.checker import DeclaredNumber, Finding, Submission, check_submission
 from wellpilot.agent.evidence import EvidenceLog
 from wellpilot.agent.loop import SUBMIT, run_agent
-from wellpilot.agent.sandbox import NO_DATA, RUN_PYTHON, run_python
+from wellpilot.agent.sandbox import NO_DATA, OWN_CODE, RUN_PYTHON, run_python
 from wellpilot.data.store import ProductionStore
 from wellpilot.llm import LLM
 
@@ -79,7 +79,7 @@ def test_the_code_sees_the_data_up_to_the_runs_date_only(box, tmp_path) -> None:
 
     result = payload["result"]
     assert result["result"]["last"] == "2010-12-31" and result["rows_read"] > 1000
-    assert result["warnings"] == []
+    assert result["warnings"] == [OWN_CODE]  # what code returns is never a fact
     # The full copy is gone: the code cannot read past the date by another path.
     assert not (tmp_path / "volve").exists()
 
@@ -111,7 +111,8 @@ def test_errors_come_back_for_the_agent_to_fix(box, monkeypatch) -> None:
 def test_code_that_reads_no_data_carries_a_warning(box) -> None:
     payload = call(box, "result = 4050 * 1.0")
 
-    assert payload["result"]["rows_read"] == 0 and payload["result"]["warnings"] == [NO_DATA]
+    assert payload["result"]["rows_read"] == 0
+    assert payload["result"]["warnings"] == [OWN_CODE, NO_DATA]
 
 
 def test_numbers_typed_into_the_code_are_not_evidence(box) -> None:
@@ -129,7 +130,7 @@ def test_numbers_typed_into_the_code_are_not_evidence(box) -> None:
         finding = Finding(
             claim=f"F-12 {text} Sm3.",
             evidence_ids=[eid],
-            confidence="fact",
+            confidence="inference",
             numbers=[DeclaredNumber(text=text.split()[-1], value=value, evidence_id=eid)],
         )
         return check_submission(Submission(summary="Done.", findings=[finding]), log)
@@ -151,7 +152,7 @@ def test_the_loop_offers_run_python_only_with_a_sandbox_and_limits_it(box) -> No
         "summary": "Done.",
         "summary_numbers": [],
         "findings": [
-            {"claim": "F-12 had data.", "evidence_ids": ["E1"], "confidence": "fact", "numbers": []}
+            {"claim": "F-12 had data.", "evidence_ids": ["E1"], "confidence": "inference", "numbers": []}
         ],
     }
     replies = iter([*script([code] * 5), completion(tool_calls=[(SUBMIT, submission)])])
@@ -216,7 +217,7 @@ async def test_a_run_through_the_api_gets_a_sandbox_and_closes_it(tmp_path, monk
         "summary": "Done.",
         "summary_numbers": [],
         "findings": [
-            {"claim": "F-12 had data.", "evidence_ids": ["E1"], "confidence": "fact", "numbers": []}
+            {"claim": "F-12 had data.", "evidence_ids": ["E1"], "confidence": "inference", "numbers": []}
         ],
     }
     replies = [*script([code]), completion(tool_calls=[(SUBMIT, submission)])]
@@ -301,3 +302,36 @@ async def test_the_cli_and_eval_tool_runs_in_a_sandbox_and_closes_it() -> None:
 
     async with python_tool(None, None) as none:
         assert none is None
+
+
+def test_a_finding_on_the_codes_result_is_an_inference(box) -> None:
+    """The outside review: code that reads one row and returns a typed-in forecast passed
+    as a fact. Whatever the code computes, a fact may not rest on it."""
+    code = "d = sql('SELECT oil_sm3 FROM production_daily LIMIT 1')\nresult = 336023"
+    payload = call(box, code)
+    log = EvidenceLog()
+    eid = log.add(RUN_PYTHON, {"purpose": "x", "code": code}, payload["result"], run_python).id
+    finding = Finding(
+        claim="F-12 will make 336,023 Sm3.",
+        evidence_ids=[eid],
+        confidence="fact",
+        numbers=[DeclaredNumber(text="336,023", value=336023, evidence_id=eid)],
+    )
+
+    problems = check_submission(Submission(summary="Done.", findings=[finding]), log)
+    assert any("marked fact" in p for p in problems), problems
+
+
+def test_a_result_line_printed_by_the_code_is_not_taken(box) -> None:
+    """Code that prints a line shaped like the runner's result and stops before the runner
+    writes its own: the server only takes the line carrying its nonce."""
+    code = (
+        "import os, sys, json\n"
+        "sys.__stdout__.write('__wellpilot_result__' + json.dumps({'result': 1, 'printed': '', "
+        "'rows_read': 9999}) + '\\n')\n"
+        "sys.__stdout__.flush()\n"
+        "os._exit(0)"
+    )
+    payload = call(box, code)
+
+    assert "error" in payload, payload

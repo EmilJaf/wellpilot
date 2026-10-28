@@ -76,7 +76,7 @@ def jsonable(value):
     return str(value)
 
 
-def run(code: str) -> None:
+def run(code: str, nonce: str = "") -> None:
     import duckdb
     import numpy as np
     import pandas as pd
@@ -99,6 +99,10 @@ def run(code: str) -> None:
         return sql("SELECT * FROM production_daily WHERE well = ? ORDER BY date", [well])
 
     namespace = {"pd": pd, "np": np, "sql": sql, "daily": daily, "__name__": "__agent__"}
+    # The result line carries a nonce from the server: a line the code prints that looks
+    # like it (or one printed before os._exit) is not taken for the result. The code is not
+    # handed the nonce; the result stays an inference all the same.
+    del sys.argv[1:]
     printed = io.StringIO()
     # Tracebacks quote the agent's own lines, and only its frames: what it needs to fix.
     linecache.cache[SOURCE] = (len(code), None, code.splitlines(True), SOURCE)
@@ -118,9 +122,9 @@ def run(code: str) -> None:
         "printed": printed.getvalue()[-PRINTED_CHARS:],
         "rows_read": read["rows"],
     }
-    print(MARKER + json.dumps(out))
+    print(MARKER + nonce + json.dumps(out))
 
 
 if __name__ == "__main__":
     mode, argument = sys.argv[1], sys.argv[2]
-    prepare(argument) if mode == "prepare" else run(argument)
+    prepare(argument) if mode == "prepare" else run(argument, *sys.argv[3:4])

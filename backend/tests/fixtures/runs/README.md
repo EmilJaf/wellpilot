@@ -14,11 +14,6 @@ The same ids go into FEATURED_RUNS for the public deployment.
 
 The featured runs (Muse Spark Open on Baseten, recorded by the eval):
 
-- a5dc0b339ff9, the agent's own Python (Oct 28 night): F-12's water cut against its choke
-  over 2011-2013. Its first run_python typed the numbers into the code; the sandbox flagged
-  that it read no data, and the agent recomputed from the daily data itself (36 months,
-  r = 0.60). 9 steps, $0.18.
-
 - 8aef8d548380, the time machine as served (again from Oct 28, after an outside review): "Which wells need attention right now, and why? Forecast
   the next 12 months of oil for the well that needs it most." with data up to 2010-12-31.
   F-12 first (dead gauge; rate 55% lower since May 2010, a gradual shift); its 2011 forecast
@@ -53,4 +48,6 @@ Retired (in `../retired_runs/`, still read by tests): e51eada95269 (its finding 
 rejected) and 0d95b4d9cf46 (Oct 28: its "maximum water cut 67% below the 80% limit" reads
 as a difference from the limit, and "oil about half its earlier rate" writes a number in
 words; both are now sent back, so it no longer replays as recorded). Re-record the time
-machine to replace it.
+machine to replace it. a5dc0b339ff9 (the agent's own Python,
+Oct 28) is retired too: its finding 1 is a fact resting on run_python, and what code
+returns is now always an inference. Re-record the own_code_f12 eval case to replace it.

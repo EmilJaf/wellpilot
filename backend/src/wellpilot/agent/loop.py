@@ -29,7 +29,13 @@ from wellpilot.agent.checker import (
 )
 from wellpilot.agent.evidence import Evidence, EvidenceLog
 from wellpilot.agent.review import Review, revise_message
-from wellpilot.agent.sandbox import MAX_CALLS_PER_RUN, PYTHON_TOOL, RUN_PYTHON, PythonFn
+from wellpilot.agent.sandbox import (
+    MAX_CALLS_PER_RUN,
+    PYTHON_TOOL,
+    RUN_PYTHON,
+    PythonFn,
+    as_inference,
+)
 from wellpilot.agent.tools import TOOLS_BY_NAME, execute, tool_schemas
 from wellpilot.agent.vision import LOOK, VISION_TOOL, look
 from wellpilot.data.store import ProductionStore
@@ -630,6 +636,8 @@ async def run_agent(
                             "question; answer with the evidence you have"
                         }
                     )
+                    if isinstance(payload.get("result"), dict):  # recorded ones too
+                        payload = {**payload, "result": as_inference(payload["result"])}
                 else:
                     # Tools are synchronous (DuckDB, scipy); keep the event loop free.
                     payload = await asyncio.to_thread(execute, store, name, arguments)

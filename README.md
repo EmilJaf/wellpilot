@@ -241,7 +241,7 @@ fly auth login
 fly launch --copy-config --no-deploy        # creates the app; it may pick another name
 fly secrets set BASETEN_API_KEY=...          # the model key, never committed
 fly secrets set OPERATOR_KEY=$(openssl rand -hex 24)   # lifts the public limits for you
-fly secrets set FEATURED_RUNS=8aef8d548380,b2b80c7484ee,c8501c918af6,b4396314f788,a5dc0b339ff9   # the runs the public site lists and replays
+fly secrets set FEATURED_RUNS=8aef8d548380,b2b80c7484ee,c8501c918af6,b4396314f788   # the runs the public site lists and replays
 fly secrets set MODAL_TOKEN_ID=... MODAL_TOKEN_SECRET=...   # run_python in Modal Sandboxes (optional)
 fly deploy
 ```

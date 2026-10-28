@@ -16,6 +16,7 @@ offered.
 import asyncio
 import json
 import logging
+import secrets
 import time
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
@@ -55,13 +56,27 @@ class Sandbox(Protocol):
     async def close(self) -> None: ...
 
 
-def _parse(code: int, stdout: str, stderr: str) -> dict:
-    marker = stdout.rfind(sandbox_runner.MARKER)
+OWN_CODE = (
+    "computed by the agent's own code, which the checker cannot rerun: a finding resting on "
+    "it is an inference (the code is shown beside the result)"
+)
+
+
+def as_inference(result: dict) -> dict:
+    """A run_python result as evidence: warned, live or replayed, so a finding citing it
+    is an inference. Code can return any number it likes (one row read, a constant
+    returned), so what it computed is never shown as a fact from the data."""
+    return {**result, "warnings": list(dict.fromkeys([OWN_CODE, *result.get("warnings", [])]))}
+
+
+def _parse(code: int, stdout: str, stderr: str, nonce: str = "") -> dict:
+    tag = sandbox_runner.MARKER + nonce
+    marker = stdout.rfind(tag)
     if code != 0 or marker < 0:
         # The traceback's end says what went wrong; the agent fixes its code from it.
         tail = (stderr or stdout).strip()[-1500:]
         return {"error": f"the code failed:\n{tail}" if tail else "the code failed"}
-    out = json.loads(stdout[marker + len(sandbox_runner.MARKER) :])
+    out = json.loads(stdout[marker + len(tag) :].splitlines()[0])
     if out["result"] is None:
         return {"error": "the code set no `result`; assign the answer to `result`"}
     return {"output": out}
@@ -74,9 +89,11 @@ async def run_python(sandbox: Sandbox, arguments: str) -> dict:
         args = PythonArgs.model_validate_json(arguments or "{}")
     except ValidationError as e:
         return {"error": f"invalid arguments for {RUN_PYTHON}: {e}"}
+    nonce = secrets.token_hex(8)
     try:
         parsed = _parse(
-            *await sandbox.exec("python", RUNNER_PATH, "run", args.code, limit_s=TIMEOUT_S)
+            *await sandbox.exec("python", RUNNER_PATH, "run", args.code, nonce, limit_s=TIMEOUT_S),
+            nonce,
         )
     except TimeoutError:
         return {"error": f"the code ran longer than {TIMEOUT_S:.0f} s; make it smaller"}
@@ -92,7 +109,7 @@ async def run_python(sandbox: Sandbox, arguments: str) -> dict:
             "result": out["result"],
             "printed": out["printed"],
             "rows_read": out["rows_read"],
-            "warnings": [] if out["rows_read"] else [NO_DATA],
+            "warnings": [OWN_CODE] + ([] if out["rows_read"] else [NO_DATA]),
         }
     )
     if len(json.dumps(result, ensure_ascii=False)) > MAX_RESULT_CHARS:
@@ -109,7 +126,8 @@ PYTHON_TOOL = Tool(
     "columns as run_sql's), and daily(well) for one well's days. Data after the as-of date "
     "is not there; there is no network. Assign the answer to `result`. At most "
     f"{MAX_CALLS_PER_RUN} calls per question, {TIMEOUT_S:.0f} s each. Numbers you type into "
-    "the code are not evidence; on an error, fix the code from the traceback.",
+    "the code are not evidence, and what the code returns is an inference, never a fact; "
+    "on an error, fix the code from the traceback.",
     PythonArgs,
     run_python,
 )
