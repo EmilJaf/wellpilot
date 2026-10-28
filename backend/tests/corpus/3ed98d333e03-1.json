@@ -6,13 +6,14 @@
   "question": "When was well F-11 B completed, and how does its completion report's timing compare with when it started producing?"
  },
  "to_review": false,
- "note": "Fair: dates read off the time-depth chart cited without the look_at_page evidence; calculations from 42 and 22, which no evidence holds.",
+ "note": "Fair: dates read off the time-depth chart cited without the look_at_page evidence; calculations from 42 and 22, which no evidence holds. Oct 28: the summary now gets the findings' checks; its '2 days later' is the same unsupported duration as finding 2.",
  "expected": {
   "accepted": false,
   "flagged": [
    "Finding 1",
    "Finding 2",
-   "Finding 3"
+   "Finding 3",
+   "Summary"
   ]
  },
  "submission": {

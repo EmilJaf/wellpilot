@@ -81,12 +81,53 @@ def redeclare(
         if len(tokens) != 1:
             continue
         new_text = tokens[0].group(0).strip()
+        # Two numbers swapped ("from 0.97 to 0.31" -> "from 0.31 to 0.97"): each keeps the
+        # agent's own declaration, with its full value.
+        swapped = next((n for n in numbers if n.text == new_text and n is not declared), None)
+        if swapped is not None:
+            if swapped not in carried:
+                carried.append(swapped)
+            continue
         reading = _reads(new_text, _convention(declared))
         if reading is None:
             continue
         carried.append(
             DeclaredNumber(text=new_text, value=reading[0], evidence_id=declared.evidence_id)
         )
+    # A number the reader only moved ("69% water cut" -> "a water cut of 69%", "from 186 to
+    # 862" -> "to 862 from 186") is the same number: its declaration follows it.
+    dropped = [
+        n
+        for span in spans
+        if (n := next((d for d in numbers if d.text == text[span["start"] : span["end"]]), None))
+        and n not in carried
+        and n not in unused
+    ]
+
+    def exact(written: str) -> float | None:
+        """A number as written, a percent as its fraction: "69%" and "0.69" are equal."""
+        found = _numbers_in_text(written, False)
+        if len(found) != 1:
+            return None
+        value, _, suffix = found[0]
+        return round(value / 100 if suffix in ("%", "percent", "pct") else value, 9)
+
+    declared_texts = {c.text for c in carried}
+    for n in dropped:
+        tokens = [m.group(0).strip() for m in WRITTEN_NUMBER.finditer(edited)]
+        if n.text in tokens and n.text not in declared_texts:
+            carried.append(n)
+            declared_texts.add(n.text)
+            continue
+        # Written in another form ("69%" as "0.69"): the same value, declared as written.
+        same = [t for t in tokens if t not in declared_texts and exact(t) == exact(n.text)]
+        if len(same) == 1:
+            reading = _reads(same[0], False)
+            if reading is not None:
+                carried.append(
+                    DeclaredNumber(text=same[0], value=reading[0], evidence_id=n.evidence_id)
+                )
+                declared_texts.add(same[0])
     # Declarations written nowhere in the text stay as they were: the checker reads them as
     # another form of a number ("100%" covers a "1.0" written later), so an unedited claim
     # keeps its verdict.

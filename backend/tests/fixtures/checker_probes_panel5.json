@@ -1,0 +1,770 @@
+[
+ {
+  "run": "8aef8d548380",
+  "index": 1,
+  "claim": "F-12 needs attention most: alarm level at 1 551 Sm3/d oil with 69% water cut, downhole gauge dead since 2010-10-12 for 81 days, 123 258 Sm3 oil without pressure data.",
+  "confidence": null,
+  "tag": "A0 original",
+  "accepted": true
+ },
+ {
+  "run": "8aef8d548380",
+  "index": 1,
+  "claim": "F-12 needs attention most: alarm level at 1 551 Sm3/d oil with three-quarters water cut, downhole gauge dead since 2010-10-12 for 81 days, 123 258 Sm3 oil without pressure data.",
+  "confidence": null,
+  "tag": "A4 number word",
+  "accepted": false
+ },
+ {
+  "run": "8aef8d548380",
+  "index": 1,
+  "claim": "F-12 needs attention most: alarm level at 1 551 Sm3/d water with 69% water cut, downhole gauge dead since 2010-10-12 for 81 days, 123 258 Sm3 oil without pressure data.",
+  "confidence": null,
+  "tag": "A5 oil->water",
+  "accepted": false
+ },
+ {
+  "run": "8aef8d548380",
+  "index": 1,
+  "claim": "F-12 needs attention most: alarm level at 1 551 bbl/d oil with 69% water cut, downhole gauge dead since 2010-10-12 for 81 days, 123 258 Sm3 oil without pressure data.",
+  "confidence": null,
+  "tag": "A6 Sm3->bbl",
+  "accepted": false
+ },
+ {
+  "run": "8aef8d548380",
+  "index": 1,
+  "claim": "F-12 needs attention most: alarm level at 1 551 Sm3/d oil with 69% water cut, downhole gauge dead since 2010-10-12 for 81 weeks, 123 258 Sm3 oil without pressure data.",
+  "confidence": null,
+  "tag": "A7 days->weeks",
+  "accepted": false
+ },
+ {
+  "run": "8aef8d548380",
+  "index": 1,
+  "claim": "F-12 needs attention most: alarm level at 1 551 Sm3/d oil with 69% water cut; its downhole pressure collapsed on 2010-10-12, 81 days ago, 123 258 Sm3 oil since.",
+  "confidence": null,
+  "tag": "A9 pressure collapsed",
+  "accepted": false
+ },
+ {
+  "run": "8aef8d548380",
+  "index": 1,
+  "claim": "F-12 needs attention most: alarm level at 1 551 Sm3/d oil with 69% water cut; reservoir pressure has been zero since 2010-10-12 for 81 days, 123 258 Sm3 oil since.",
+  "confidence": null,
+  "tag": "A10 reservoir pressure zero",
+  "accepted": false
+ },
+ {
+  "run": "8aef8d548380",
+  "index": 1,
+  "claim": "F-12 needs attention most: alarm level at 1 551 Sm3/d oil with 69% water cut, downhole gauge dead since 2010-10-12 for 9 days, 123 258 Sm3 oil without pressure data.",
+  "confidence": null,
+  "tag": "A25 81->9 days",
+  "accepted": false
+ },
+ {
+  "run": "8aef8d548380",
+  "index": 2,
+  "claim": "F-12’s oil rate rose 55% around 2010-05-02 to 1 888 Sm3/d, a gradual shift with water cut rising from 3% to 57% and liquid holding while choke narrowed.",
+  "confidence": null,
+  "tag": "A11 fell->rose",
+  "accepted": false
+ },
+ {
+  "run": "8aef8d548380",
+  "index": 2,
+  "claim": "F-12’s oil rate fell 55% around 2010-05-02 to 1 888 Sm3/d, an abrupt step with water cut rising from 3% to 57% and liquid holding while choke narrowed.",
+  "confidence": null,
+  "tag": "A12 abrupt",
+  "accepted": false
+ },
+ {
+  "run": "8aef8d548380",
+  "index": 2,
+  "claim": "F-12’s oil rate fell 55% around 2010-05-02 to 1 888 Sm3/d, a gradual shift with water cut falling from 57% to 3% and liquid holding while choke narrowed.",
+  "confidence": null,
+  "tag": "A14 wc reversed",
+  "accepted": false
+ },
+ {
+  "run": "8aef8d548380",
+  "index": 2,
+  "claim": "F-12’s oil rate fell 55% around 2010-05-02 to 1 888 Sm3/d, a gradual shift with water cut rising from 3% to 57% and liquid collapsing while choke opened wide.",
+  "confidence": null,
+  "tag": "A14b liquid collapsing",
+  "accepted": false
+ },
+ {
+  "run": "8aef8d548380",
+  "index": 3,
+  "claim": "F-14 is on caution: oil rate 2 175 Sm3/d with 61% water cut, 34% higher around 2010-01-10, a gradual change.",
+  "confidence": null,
+  "tag": "A15 lower->higher",
+  "accepted": false
+ },
+ {
+  "run": "8aef8d548380",
+  "index": 3,
+  "claim": "F-12 is on caution: oil rate 2 175 Sm3/d with 61% water cut, 34% lower around 2010-01-10, a gradual change.",
+  "confidence": null,
+  "tag": "A16 F-14->F-12",
+  "accepted": false
+ },
+ {
+  "run": "8aef8d548380",
+  "index": 4,
+  "claim": "Field totals have never exceeded any design limit: liquid peaked at 10 826 Sm3/d versus 13 000 capacity and water cut peaked at 67% versus 80% design.",
+  "confidence": null,
+  "tag": "A17 any design limit",
+  "accepted": false
+ },
+ {
+  "run": "8aef8d548380",
+  "index": 4,
+  "claim": "Field totals have not exceeded design: oil peaked at 10 826 Sm3/d versus 13 000 capacity and water cut peaked at 67% versus 80% design.",
+  "confidence": null,
+  "tag": "A18 liquid->oil",
+  "accepted": false
+ },
+ {
+  "run": "8aef8d548380",
+  "index": 5,
+  "claim": "Forecast for F-12 for next 12 months (2011-01-01 to 2011-12-31) is 359 007 Sm3 P10 with calibrated band 324 192 to 469 712 Sm3.",
+  "confidence": null,
+  "tag": "A19 P50->P10",
+  "accepted": false
+ },
+ {
+  "run": "8aef8d548380",
+  "index": 5,
+  "claim": "Forecast for F-12 for next 12 months (2011-01-01 to 2011-12-31) is 359 007 Sm3 P50 with calibrated band 324 192 to 469 712 Sm3.",
+  "confidence": "fact",
+  "tag": "A20 inference->fact",
+  "accepted": false
+ },
+ {
+  "run": "8aef8d548380",
+  "index": 5,
+  "claim": "Forecast for F-14 for next 12 months (2011-01-01 to 2011-12-31) is 359 007 Sm3 P50 with calibrated band 324 192 to 469 712 Sm3.",
+  "confidence": null,
+  "tag": "A21 well",
+  "accepted": false
+ },
+ {
+  "run": "8aef8d548380",
+  "index": 5,
+  "claim": "Forecast for F-12 for next 12 months (2011-01-01 to 2011-12-31) is 359 007 bbl P50 with calibrated band 324 192 to 469 712 bbl.",
+  "confidence": null,
+  "tag": "A22 bbl",
+  "accepted": false
+ },
+ {
+  "run": "8aef8d548380",
+  "index": 5,
+  "claim": "Forecast for F-12 for next 12 months (2011-01-01 to 2011-12-31) is 359 007 Sm3 per month P50 with calibrated band 324 192 to 469 712 Sm3.",
+  "confidence": null,
+  "tag": "A23 per month",
+  "accepted": false
+ },
+ {
+  "run": "8aef8d548380",
+  "index": 5,
+  "claim": "Forecast for F-12 for next 12 months (2011-01-01 to 2011-12-31) is 359 007 Sm3 P50 from an exponential fit, with calibrated band 324 192 to 469 712 Sm3.",
+  "confidence": null,
+  "tag": "A24 model name",
+  "accepted": false
+ },
+ {
+  "run": "8aef8d548380",
+  "index": 5,
+  "claim": "Forecast for F-12 for next 12 months (2012-01-01 to 2012-12-31) is 359 007 Sm3 P50 with calibrated band 324 192 to 469 712 Sm3.",
+  "confidence": null,
+  "tag": "A24b forecast year shifted",
+  "accepted": false
+ },
+ {
+  "run": "8aef8d548380",
+  "index": "S",
+  "claim": "F-12 needs attention most: it is on alarm with a dead downhole gauge and water taking capacity. F-14 is on caution with rising water cut. Field totals have not exceeded the platform’s design limits for liquid, oil or water cut. Forecast for F-12 for the next 12 months is 359 thousand Sm3 oil.",
+  "confidence": null,
+  "tag": "A26 drop hedge",
+  "accepted": false
+ },
+ {
+  "run": "8aef8d548380",
+  "index": "S",
+  "claim": "F-14 needs attention most: it is on alarm with a dead downhole gauge and water taking capacity. F-12 is on caution with rising water cut. Field totals have not exceeded the platform’s design limits for liquid, oil or water cut. Forecast for F-12 for the next 12 months suggests about 359 thousand Sm3 oil, but the fit is poor so uncertainty is high.",
+  "confidence": null,
+  "tag": "A27 swap wells summary",
+  "accepted": false
+ },
+ {
+  "run": "8aef8d548380",
+  "index": "S",
+  "claim": "F-12 needs attention most because its reservoir is depleting. Forecast for F-12 for the next 12 months suggests about 359 thousand Sm3 oil, but the fit is poor so uncertainty is high.",
+  "confidence": null,
+  "tag": "A29 cause summary",
+  "accepted": false
+ },
+ {
+  "run": "8aef8d548380",
+  "index": 1,
+  "claim": "F-12 needs attention most: alarm level at 1 551 Sm3/d oil with 69% water cut; its reservoir lost pressure on 2010-10-12, 81 days ago, 123 258 Sm3 oil since.",
+  "confidence": null,
+  "tag": "A10b reservoir lost pressure",
+  "accepted": false
+ },
+ {
+  "run": "8aef8d548380",
+  "index": 1,
+  "claim": "F-12 needs attention most: alarm level at 1 551 Sm3/d oil with 69% water cut; downhole pressure dropped to 0 bar on 2010-10-12 as the reservoir depleted, 123 258 Sm3 oil since.",
+  "confidence": null,
+  "tag": "A10c dropped to 0 depleted",
+  "accepted": false
+ },
+ {
+  "run": "8aef8d548380",
+  "index": 1,
+  "claim": "F-12 needs attention most: alarm level at 1 551 Sm3/d oil with 69% water cut; pressure support was lost on 2010-10-12, 81 days ago, 123 258 Sm3 oil since.",
+  "confidence": null,
+  "tag": "A10d pressure support lost",
+  "accepted": false
+ },
+ {
+  "run": "b2b80c7484ee",
+  "index": 1,
+  "claim": "F-12’s oil rate fell 72% overnight on 2010-07-18, from 4 050 to 1 146 Sm3/d (weekly mean).",
+  "confidence": null,
+  "tag": "B1 overnight",
+  "accepted": false
+ },
+ {
+  "run": "b2b80c7484ee",
+  "index": 1,
+  "claim": "F-14’s oil rate fell 72% around 2010-07-18, from 4 050 to 1 146 Sm3/d (weekly mean).",
+  "confidence": null,
+  "tag": "B2 well",
+  "accepted": false
+ },
+ {
+  "run": "b2b80c7484ee",
+  "index": 1,
+  "claim": "F-12’s oil rate fell 72% around 2010-07-18, from 1 146 to 4 050 Sm3/d (weekly mean).",
+  "confidence": null,
+  "tag": "B3 from-to reversed",
+  "accepted": false
+ },
+ {
+  "run": "b2b80c7484ee",
+  "index": 1,
+  "claim": "F-12’s oil rate fell 72% around 2009-07-18, from 4 050 to 1 146 Sm3/d (weekly mean).",
+  "confidence": null,
+  "tag": "B4 date shift",
+  "accepted": false
+ },
+ {
+  "run": "b2b80c7484ee",
+  "index": 1,
+  "claim": "F-12’s oil rate fell 22% around 2010-07-18, from 4 050 to 1 146 Sm3/d (weekly mean).",
+  "confidence": null,
+  "tag": "B6 across vs between",
+  "accepted": false
+ },
+ {
+  "run": "b2b80c7484ee",
+  "index": 2,
+  "claim": "Water cut rose from 3% to 81% around 2010-02-14.",
+  "confidence": null,
+  "tag": "B7 skip middle",
+  "accepted": false
+ },
+ {
+  "run": "b2b80c7484ee",
+  "index": 2,
+  "claim": "Water cut rose from 3% to 51% around 2010-10-24 and then to 81% around 2010-02-14.",
+  "confidence": null,
+  "tag": "B8 dates swapped",
+  "accepted": false
+ },
+ {
+  "run": "b2b80c7484ee",
+  "index": 3,
+  "claim": "Before breakthrough F-12 produced flat at 0.0545 per year, after it declined at about 0.45 per month.",
+  "confidence": null,
+  "tag": "B9 per month",
+  "accepted": false
+ },
+ {
+  "run": "b2b80c7484ee",
+  "index": 3,
+  "claim": "Before breakthrough F-12 produced flat at 0.0545 per year, after it declined at about 0.45 per year.",
+  "confidence": "fact",
+  "tag": "B10 warned->fact",
+  "accepted": false
+ },
+ {
+  "run": "b2b80c7484ee",
+  "index": 4,
+  "claim": "Liquid fell sharply while water took capacity and the choke closed, with reservoir pressure collapsing.",
+  "confidence": "fact",
+  "tag": "B11 meaning flipped",
+  "accepted": false
+ },
+ {
+  "run": "b2b80c7484ee",
+  "index": 5,
+  "claim": "Production logs showed oil from the upper perforations and water from below, so the 2010 plug at 3210 m could only remove about 33% of oil and 1% of water.",
+  "confidence": null,
+  "tag": "B12 swap shares",
+  "accepted": false
+ },
+ {
+  "run": "b2b80c7484ee",
+  "index": 6,
+  "claim": "The 2005 plan expected water breakthrough after about 5 years at about 6 MSm3; F-12 broke through after 21 months.",
+  "confidence": null,
+  "tag": "B15 plan 5 years",
+  "accepted": false
+ },
+ {
+  "run": "b2b80c7484ee",
+  "index": 6,
+  "claim": "The 2005 plan expected water breakthrough after about 2 years at about 6 MSm3; F-12 broke through after 9 months.",
+  "confidence": null,
+  "tag": "B16 9 months",
+  "accepted": false
+ },
+ {
+  "run": "b2b80c7484ee",
+  "index": 6,
+  "claim": "The 2005 plan expected water breakthrough after about 2 years at about 6 million barrels; F-12 broke through after 21 months.",
+  "confidence": null,
+  "tag": "B17 barrels",
+  "accepted": false
+ },
+ {
+  "run": "b2b80c7484ee",
+  "index": 8,
+  "claim": "Decline after the later water-cut rise and plug rises to 0.43 per year, twice the 0.45 per year before.",
+  "confidence": null,
+  "tag": "B20 twice",
+  "accepted": false
+ },
+ {
+  "run": "b2b80c7484ee",
+  "index": 6,
+  "claim": "The 2005 plan said water “bryter gjennom i brønnene etter omlag 3 år”; F-12 broke through after 21 months.",
+  "confidence": null,
+  "tag": "B22 misquote",
+  "accepted": false
+ },
+ {
+  "run": "b2b80c7484ee",
+  "index": 6,
+  "claim": "The 2005 plan said water “bryter gjennom i brønnene etter omlag 2 år” [breaks through because the injectors sit too close]; F-12 broke through after 21 months.",
+  "confidence": "fact",
+  "tag": "B23 invented translation cause",
+  "accepted": false
+ },
+ {
+  "run": "b2b80c7484ee",
+  "index": 6,
+  "claim": "The 2005 plan said water “bryter gjennom i brønnene etter omlag 2 år” [breaks through after about 20 years]; F-12 broke through after 21 months.",
+  "confidence": null,
+  "tag": "B23b wrong translation",
+  "accepted": false
+ },
+ {
+  "run": "b4396314f788",
+  "index": 2,
+  "claim": "Oil rate after the workover rose to 862 Sm3/d, more than ten times the 186 Sm3/d just before.",
+  "confidence": null,
+  "tag": "C1 ten times",
+  "accepted": false
+ },
+ {
+  "run": "b4396314f788",
+  "index": 2,
+  "claim": "Oil rate after the workover rose to 862 Sm3/d, less than half the 186 Sm3/d just before.",
+  "confidence": null,
+  "tag": "C2 less than half",
+  "accepted": false
+ },
+ {
+  "run": "b4396314f788",
+  "index": 2,
+  "claim": "Oil rate after the workover fell to 862 Sm3/d, from 186 Sm3/d just before.",
+  "confidence": null,
+  "tag": "C3 fell to (rise)",
+  "accepted": false
+ },
+ {
+  "run": "b4396314f788",
+  "index": 1,
+  "claim": "At end-2014 F-12 was shut in for 32 days from 2014-11-30, then reperforated after a plug was set at 3150 m, and water cut rose from 0.31 to 0.97.",
+  "confidence": null,
+  "tag": "C4 reversed rise",
+  "accepted": false
+ },
+ {
+  "run": "b4396314f788",
+  "index": 1,
+  "claim": "At end-2014 F-12 was shut in for 32 months from 2014-11-30, then reperforated after a plug was set at 3150 m, and water cut fell from 0.97 to 0.31.",
+  "confidence": null,
+  "tag": "C5 months",
+  "accepted": false
+ },
+ {
+  "run": "b4396314f788",
+  "index": 1,
+  "claim": "At end-2014 F-12 was shut in for 32 days from 2014-11-30, then reperforated after a plug was set at 3150 ft, and water cut fell from 0.97 to 0.31.",
+  "confidence": null,
+  "tag": "C6 feet",
+  "accepted": false
+ },
+ {
+  "run": "b4396314f788",
+  "index": 1,
+  "claim": "At end-2014 F-12 was shut in for 32 days from 2014-12-30, then reperforated after a plug was set at 3150 m, and water cut fell from 0.97 to 0.31.",
+  "confidence": null,
+  "tag": "C6b date",
+  "accepted": false
+ },
+ {
+  "run": "b4396314f788",
+  "index": 4,
+  "claim": "The 2014 plug at 3150 m could shut off only 3% of the water, and the new shallow perforations restored oil above it.",
+  "confidence": null,
+  "tag": "C9 only 3%",
+  "accepted": false
+ },
+ {
+  "run": "b4396314f788",
+  "index": 1,
+  "claim": "At end-2014 F-12 was shut in for 32 days from 2014-11-30, then reperforated after a plug was set at 3150 m, and water cut fell from 0.97 to 0.31. The drop happened because the reservoir recharged during the shut-in.",
+  "confidence": "fact",
+  "tag": "C10 cause as fact",
+  "accepted": false
+ },
+ {
+  "run": "b4396314f788",
+  "index": 1,
+  "claim": "At end-2014 F-12 was shut in for 32 days from 2014-11-30, then reperforated after a plug was set at 3150 m, and water cut fell from 0.97 to 0.31. The drop most likely happened because the reservoir recharged during the shut-in.",
+  "confidence": "fact",
+  "tag": "C10b hedged cause as fact",
+  "accepted": false
+ },
+ {
+  "run": "b4396314f788",
+  "index": 1,
+  "claim": "At end-2014 F-12 was shut in for 32 days from 2014-11-30, then reperforated after a plug was set at 3150 m, and water cut fell from 0.97 to 0.31. Thanks to the shut-in, the reservoir recharged, which brought the water cut down.",
+  "confidence": "fact",
+  "tag": "C10c thanks to",
+  "accepted": false
+ },
+ {
+  "run": "b4396314f788",
+  "index": 2,
+  "claim": "Oil rate after the workover rose to 755 Sm3/d, more than four times the 186 Sm3/d just before.",
+  "confidence": null,
+  "tag": "C11 other row 2015-02",
+  "accepted": false
+ },
+ {
+  "run": "033bb064359f",
+  "index": 1,
+  "claim": "Over 2011-01 to 2013-12 F-12’s monthly water cut and choke opening had a Pearson correlation of -0.68 across 36 months, Spearman 0.48, both statistically significant.",
+  "confidence": null,
+  "tag": "D1 sign",
+  "accepted": false
+ },
+ {
+  "run": "033bb064359f",
+  "index": 1,
+  "claim": "Over 2011-01 to 2013-12 F-12’s monthly water cut and choke opening had a Pearson correlation of 0.48 across 36 months, Spearman 0.68, both statistically significant.",
+  "confidence": null,
+  "tag": "D3 swap labels",
+  "accepted": false
+ },
+ {
+  "run": "033bb064359f",
+  "index": 2,
+  "claim": "Water cut rose continuously from 72% in early 2012 to 95% in late 2013 while choke went from about 50% to pegged near 100% in 2012-2013, so water cut kept rising after choke had no further room.",
+  "confidence": null,
+  "tag": "D4 year shift",
+  "accepted": false
+ },
+ {
+  "run": "033bb064359f",
+  "index": 2,
+  "claim": "Water cut fell continuously from 95% in early 2011 to 72% in late 2013 while choke went from about 100% to near 50% in 2012-2013.",
+  "confidence": null,
+  "tag": "D5 reversed",
+  "accepted": false
+ },
+ {
+  "run": "033bb064359f",
+  "index": 3,
+  "claim": "The positive correlation reflects a common time trend on waterflood, not choke driving water: the well was already above the 80% design limit from Feb 2011 and oil fell as water took liquid capacity.",
+  "confidence": null,
+  "tag": "D6 month shift",
+  "accepted": false
+ },
+ {
+  "run": "033bb064359f",
+  "index": 1,
+  "claim": "Over 2011-01 to 2013-12 F-12’s monthly water cut and choke opening had a Pearson correlation of 0.68 across 36 years, Spearman 0.48, both statistically significant.",
+  "confidence": null,
+  "tag": "D7 years",
+  "accepted": false
+ },
+ {
+  "run": "033bb064359f",
+  "index": 1,
+  "claim": "Over 2011-01 to 2013-12 F-14’s monthly water cut and choke opening had a Pearson correlation of 0.68 across 36 months, Spearman 0.48, both statistically significant.",
+  "confidence": null,
+  "tag": "D8 well",
+  "accepted": false
+ },
+ {
+  "run": "033bb064359f",
+  "index": 2,
+  "claim": "Water cut rose continuously from 79% in early 2011 to 95% in late 2013 while choke went from about 50% to pegged near 100% in 2012-2013, so water cut kept rising after choke had no further room.",
+  "confidence": null,
+  "tag": "D9 72->79 other row",
+  "accepted": false
+ },
+ {
+  "run": "c8501c918af6",
+  "index": 1,
+  "claim": "The forecast figure 4.2 shows oil plateau at about 8,460 Sm3/d, just above the 9,000 Sm3/d oil capacity in the text and Table 4.3.",
+  "confidence": null,
+  "tag": "E1 below->above",
+  "accepted": false
+ },
+ {
+  "run": "c8501c918af6",
+  "index": 2,
+  "claim": "The figure's plateau lasts about 19 months from 2009-03 to 2010-09, matching the text's 'about 19 months'.",
+  "confidence": null,
+  "tag": "E3 dates shifted",
+  "accepted": false
+ },
+ {
+  "run": "c8501c918af6",
+  "index": 2,
+  "claim": "The figure's plateau lasts about 9 months from 2008-03 to 2009-09, matching the text's 'about 9 months'.",
+  "confidence": null,
+  "tag": "E4 9 months",
+  "accepted": false
+ },
+ {
+  "run": "c8501c918af6",
+  "index": 1,
+  "claim": "The forecast figure 4.2 shows oil plateau at about 8,460 Sm3/month, just below the 9,000 Sm3/d oil capacity in the text and Table 4.3.",
+  "confidence": null,
+  "tag": "E5 per month",
+  "accepted": false
+ },
+ {
+  "run": "c8501c918af6",
+  "index": "S",
+  "claim": "The plan states a plateau of 9,000 Sm3/d for about 19 years in the text and Table 4.3 on page 23; the figure on the same page likely shows a slightly lower plateau around 8,460 Sm3/d for about 19 months from 2008-03 to 2009-09.",
+  "confidence": null,
+  "tag": "E7 summary years",
+  "accepted": false
+ },
+ {
+  "run": "b4396314f788",
+  "index": 2,
+  "claim": "Oil rate after the workover rose to 862 Sm3/d, more than 10 times the 186 Sm3/d just before.",
+  "confidence": null,
+  "tag": "C1b 10 times digits",
+  "accepted": false
+ },
+ {
+  "run": "b4396314f788",
+  "index": 2,
+  "claim": "Oil rate after the workover rose to 862 Sm3/d, more than seven times the 186 Sm3/d just before.",
+  "confidence": null,
+  "tag": "C1c seven",
+  "accepted": false
+ },
+ {
+  "run": "b4396314f788",
+  "index": 1,
+  "claim": "At end-2014 F-12 was shut in for 32 days from 2014-11-30, then reperforated after a plug was set at 3150 m, and water cut fell from 0.97 to 0.31. The shut-in made the water cut drop.",
+  "confidence": "fact",
+  "tag": "X1 'made' cause fact",
+  "accepted": false
+ },
+ {
+  "run": "b4396314f788",
+  "index": 1,
+  "claim": "At end-2014 F-12 was shut in for 32 days from 2014-11-30, then reperforated after a plug was set at 3150 m, and water cut fell from 0.97 to 0.31. The reason the water cut dropped was the shut-in.",
+  "confidence": "fact",
+  "tag": "X2 'the reason' fact",
+  "accepted": false
+ },
+ {
+  "run": "b4396314f788",
+  "index": 1,
+  "claim": "At end-2014 F-12 was shut in for 32 days from 2014-11-30, then reperforated after a plug was set at 3150 m, and water cut fell from 0.97 to 0.31. The shut-in let the reservoir recharge and pushed the water cut down.",
+  "confidence": "fact",
+  "tag": "X3 'let/pushed' fact",
+  "accepted": false
+ },
+ {
+  "run": "b4396314f788",
+  "index": 1,
+  "claim": "At end-2014 F-12 was shut in for 32 days from 2014-11-30, then reperforated after a plug was set at 3150 m, and water cut fell from 0.97 to 0.31. The water cut dropped as a result of the shut-in.",
+  "confidence": "fact",
+  "tag": "X4 as a result of",
+  "accepted": false
+ },
+ {
+  "run": "b4396314f788",
+  "index": 1,
+  "claim": "At end-2014 F-12 was shut in for 32 days from 2014-11-30, then reperforated after a plug was set at 3150 m, and water cut fell from 0.97 to 0.31. The water cut drop came from the shut-in, not the plug.",
+  "confidence": "fact",
+  "tag": "X5 came from",
+  "accepted": false
+ },
+ {
+  "run": "8aef8d548380",
+  "index": 4,
+  "claim": "Field totals have not exceeded design: liquid peaked at 10 826 Sm3/d versus 13 000 capacity, water injection stayed under its capacity, and water cut peaked at 67% versus 80% design.",
+  "confidence": null,
+  "tag": "X7 injection under capacity",
+  "accepted": false
+ },
+ {
+  "run": "8aef8d548380",
+  "index": 1,
+  "claim": "F-12 is the well most in need of attention: on alarm, producing 1 551 Sm3/d of oil at a 69% water cut; its downhole gauge has read zero since 2010-10-12 (81 days), during which it produced 123 258 Sm3 of oil.",
+  "confidence": null,
+  "tag": "T1 rephrase",
+  "accepted": true
+ },
+ {
+  "run": "8aef8d548380",
+  "index": 1,
+  "claim": "F-12 needs attention most: alarm level at 1 551 Sm3/d oil with about 70% water cut, downhole gauge dead since 2010-10-12 for 81 days, 123 258 Sm3 oil without pressure data.",
+  "confidence": null,
+  "tag": "T2 about 70%",
+  "accepted": true
+ },
+ {
+  "run": "8aef8d548380",
+  "index": 1,
+  "claim": "F-12 needs attention most: alarm level at about 1 550 Sm3/d oil with 69% water cut, downhole gauge dead since 2010-10-12 for 81 days, about 123 000 Sm3 oil without pressure data.",
+  "confidence": null,
+  "tag": "T3 rounded",
+  "accepted": true
+ },
+ {
+  "run": "8aef8d548380",
+  "index": 1,
+  "claim": "F-12 needs attention most: alarm level at 1 551 Sm3/d oil with a water cut of 0.69, downhole gauge dead since 12 October 2010 for 81 days, 123 258 Sm3 oil without pressure data.",
+  "confidence": null,
+  "tag": "T4 0.69 + date words",
+  "accepted": true
+ },
+ {
+  "run": "b4396314f788",
+  "index": 2,
+  "claim": "Oil rate after the workover rose to 862 Sm3/d, more than 4 times the 186 Sm3/d just before.",
+  "confidence": null,
+  "tag": "T5 4 digits",
+  "accepted": true
+ },
+ {
+  "run": "b4396314f788",
+  "index": 2,
+  "claim": "After the workover the oil rate rose from 186 to 862 Sm3/d.",
+  "confidence": null,
+  "tag": "T6 reorder from-to",
+  "accepted": true
+ },
+ {
+  "run": "033bb064359f",
+  "index": 2,
+  "claim": "Water cut climbed from 72% in January 2011 to 95% in December 2013 while the choke went from about 50% to near 100% in 2012-2013.",
+  "confidence": null,
+  "tag": "T7 months in words",
+  "accepted": true
+ },
+ {
+  "run": "c8501c918af6",
+  "index": 1,
+  "claim": "Figure 4.2 draws the oil plateau at about 8 460 Sm3/d, a little under the 9 000 Sm3/d oil capacity given in the text and Table 4.3.",
+  "confidence": null,
+  "tag": "T8 spaces",
+  "accepted": true
+ },
+ {
+  "run": "b2b80c7484ee",
+  "index": 1,
+  "claim": "Between the periods before and after 2010-07-18, F-12’s weekly mean oil rate fell 72%, from 4 050 to 1 146 Sm3/d.",
+  "confidence": null,
+  "tag": "T9 reordered",
+  "accepted": true
+ },
+ {
+  "run": "b4396314f788",
+  "index": 1,
+  "claim": "F-12 was shut in for 32 days from 2014-11-30; a plug was set at 3150 m and the well reperforated, after which the water cut fell from 0.97 to 0.31.",
+  "confidence": null,
+  "tag": "T10 reordered",
+  "accepted": true
+ },
+ {
+  "run": "8aef8d548380",
+  "index": "S",
+  "claim": "F-12 needs attention most: its downhole gauge died on 2010-05-02 and its reservoir pressure has collapsed since. Forecast for F-12 for the next 12 months suggests about 359 thousand Sm3 oil, but the fit is poor so uncertainty is high.",
+  "confidence": null,
+  "tag": "S1 gauge date + collapse in summary",
+  "accepted": false
+ },
+ {
+  "run": "8aef8d548380",
+  "index": "S",
+  "claim": "F-12 needs attention most: its reservoir pressure fell to zero in October 2010. Forecast for F-12 for the next 12 months suggests about 359 thousand Sm3 oil, but the fit is poor so uncertainty is high.",
+  "confidence": null,
+  "tag": "S2 pressure fell to zero summary",
+  "accepted": false
+ },
+ {
+  "run": "8aef8d548380",
+  "index": "S",
+  "claim": "F-12 needs attention most: water cut is falling and the well is recovering. Forecast for F-12 for the next 12 months suggests about 359 thousand Sm3 oil, but the fit is poor so uncertainty is high.",
+  "confidence": null,
+  "tag": "S3 wc falling summary",
+  "accepted": false
+ },
+ {
+  "run": "8aef8d548380",
+  "index": "S",
+  "claim": "F-12 needs attention most. Forecast for F-12 for the next 12 months suggests about 359 thousand Sm3 oil per month, but the fit is poor so uncertainty is high.",
+  "confidence": null,
+  "tag": "S4 per month summary",
+  "accepted": false
+ },
+ {
+  "run": "b2b80c7484ee",
+  "index": "S",
+  "claim": "F-12’s oil rate most likely collapsed after mid-2010 because injection water broke through; the post-breakthrough decline stays near 0.43 per month.",
+  "confidence": null,
+  "tag": "S5 per month decline summary",
+  "accepted": false
+ },
+ {
+  "run": "b4396314f788",
+  "index": "S",
+  "claim": "F-12’s water cut drop at end-2014 was a workover after a 32-day shut-in. That cut water cut from about 0.31 to 0.97 and lifted oil rate to about 862 Sm3/d.",
+  "confidence": null,
+  "tag": "S6 reversed from-to summary",
+  "accepted": false
+ }
+]
