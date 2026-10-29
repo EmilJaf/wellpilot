@@ -488,7 +488,15 @@ export type Hindsight = {
     on_latest_log?: {
       survey: string
       date: string
-      depths: { depth_m: number; water_share?: [number, number]; oil_share?: [number, number] }[]
+      plugs_set_since?: { date: string; depth_m: number }[]
+      depths: {
+        depth_m: number
+        water_share?: [number, number]
+        oil_share?: [number, number]
+        // with a plug set after the log: at or below it, nothing new; above it, a share of the flow left
+        already_isolated?: boolean
+        of_flow_left?: { water_share?: [number, number]; oil_share?: [number, number] }
+      }[]
     } | null
   }[]
 }

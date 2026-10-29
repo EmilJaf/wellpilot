@@ -1714,6 +1714,19 @@ code,
 
 /* ---------- footer ---------- */
 
+.credits-page {
+  display: none;
+}
+
+@media (max-width: 1100px) {
+  .story-col > .credits {
+    display: none;
+  }
+  .credits-page {
+    display: block;
+  }
+}
+
 /* at the end of the story column: there on every page, never in the way */
 .credits {
   margin: 0;
@@ -3609,6 +3622,15 @@ code,
   font-stretch: var(--narrow);
   font-variant-numeric: tabular-nums;
   line-height: 1.15;
+}
+
+.verdict-figures.is-quiet dd {
+  font-size: 17px;
+}
+
+.work-next-log tr.is-isolated td {
+  color: var(--ink-3);
+  text-align: left;
 }
 
 @media (max-width: 700px) {

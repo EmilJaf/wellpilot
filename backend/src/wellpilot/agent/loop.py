@@ -72,12 +72,14 @@ When a well has a production log, production_log shows where along the well its 
 water came in: pass a plug's depth to see what the plug could shut off, and compare that \
 with what the well did after (plugs_set). Asked where to set a plug, compare every \
 blank-pipe gap (at_blank_pipe gives the water and oil entering below each end of each gap), \
-then give each gap as its own finding (what a plug there would cut off of the water and of \
-the oil on the log) and recommend one: a depth in blank pipe (never inside a perforated \
-interval), whether new perforations above it would be needed to keep the oil, and how old \
-the log is (since_survey): if the water cut has moved far since, say a new log should \
-confirm the depth before the job, but still give the depth and what it would do on the log \
-you have. Lead the answer with the recommendation. {drive} When a waterflooded well's water \
+then give each gap as its own finding (what a plug there would cut off of the water and of the \
+oil on the log) and recommend one. A plug already in the hole (plugs_set) shut off what enters \
+below it: a gap marked already_isolated cuts nothing new, so never recommend it, and for the \
+others give of_flow_left, the share of what still flows. Recommend: a depth in blank pipe (never \
+inside a perforated interval), whether new perforations above it would be needed to keep the oil, \
+and how old the log is (since_survey): if the water cut has moved far since, say a new log should \
+confirm the depth before the job, but still give the depth and what it would do on the log you \
+have. Lead the answer with the recommendation. {drive} When a waterflooded well's water \
 cut rises, check with \
 waterflood whether liquid held while the choke opened (water taking the well's capacity) and \
 how much oil the WOR trend leaves before each reference water cut (0.80, 0.90, 0.95 are \

@@ -101,9 +101,13 @@ WRITTEN_NUMBER = re.compile(
 SUFFIX_AFTER = re.compile(
     r"\s*(?:%|percent\b|pct\b|million\b|mill\b\.?|thousand\b|M(?=Sm)|k(?=Sm)|km\b)"
 )
-# The rest of a range up to a scale word: " to 0.47" in "0.32 to 0.47 million".
+# The rest of a range up to a scale word: " to 0.47" in "0.32 to 0.47 million", "-33" in
+# "31-33%".
 RANGE_SCALE = re.compile(
-    r"\s*(?:-|to|and)\s*(?:about\s+)?\d[\d.,]*(?=\s*(?:million\b|mill\b|thousand\b|M(?=Sm)|k(?=Sm)))"
+    r"\s*(?:(?:-|to|and)\s*(?:about\s+)?\d[\d.,]*"
+    r"(?=\s*(?:million\b|mill\b|thousand\b|M(?=Sm)|k(?=Sm)))"
+    # a percent only across a dash or "to": "0.60 and about 36%" is two numbers
+    r"|(?:-|to)\s*\d[\d.,]*(?=\s*(?:%|percent\b)))"
 )
 SQL_STRING = re.compile(r"'((?:[^']|'')*)'")
 SCALES = {
@@ -2853,6 +2857,9 @@ def _well_key(name: str) -> str:
     return WELLBORE_OF.get(key, key)
 
 
+RELATED_WELL = re.compile(r"\b(?:as|with|than|like|alongside|together with)\s+$", re.I)
+
+
 def _wells_without_evidence(claim: str, detail: str, cited: list[Evidence]) -> list[str]:
     """Wells the finding names that none of its evidence is about. Evidence without a well
     argument (SQL, field-wide tools, calculations, report searches without a filter) may
@@ -2867,7 +2874,16 @@ def _wells_without_evidence(claim: str, detail: str, cited: list[Evidence]) -> l
         for e in cited
         for m in WELL.finditer(json.dumps(e.result, default=str))
     }
-    named = dict.fromkeys(m.group(0).strip() for m in WELL.finditer(claim))
+    # A well the results name, set beside the one they are about ("at the same time as F-14",
+    # from a shut-in's "Same time as F-14"), is not a claim about that well.
+    named = dict.fromkeys(
+        m.group(0).strip()
+        for m in WELL.finditer(claim)
+        if not (
+            _well_key(m.group(0)) in mentioned
+            and RELATED_WELL.search(claim[max(0, m.start() - 30) : m.start()])
+        )
+    )
     strangers = [w for w in named if _well_key(w) not in about]
     in_detail = dict.fromkeys(m.group(0).strip() for m in WELL.finditer(detail))
     return strangers + [w for w in in_detail if _well_key(w) not in mentioned | set(strangers)]
@@ -3316,8 +3332,8 @@ BOUND_BEFORE = re.compile(
     re.IGNORECASE,
 )
 APPROX = re.compile(
-    r"(?:about|around|roughly|approximately|nearly|almost|some|circa|ca\.|close to|"
-    r"on the order of|~|≈)\s*$",
+    r"(?:about|around|roughly|approximately|nearly|near|almost|some|circa|ca\.|close to|"
+    r"(?:just|slightly|a little|a bit) (?:under|over|below|above)|on the order of|~|≈)\s*$",
     re.I,
 )
 IN_MONTHS = {"days": 1 / 30.44, "weeks": 1 / 4.345, "months": 1.0, "years": 12.0}

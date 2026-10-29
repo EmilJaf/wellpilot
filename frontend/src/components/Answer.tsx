@@ -200,7 +200,11 @@ export function Answer(props: Props) {
             )}
           </div>
         ) : (
-          <Live steps={state.steps} thinking={state.thinking} />
+          state.mode === 'saved' ? (
+            <p className="empty">Loading the recorded answer</p>
+          ) : (
+            <Live steps={state.steps} thinking={state.thinking} />
+          )
         )}
       </div>
     </section>
@@ -404,7 +408,7 @@ function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSe
         {final.verified ? <CheckIcon /> : <AlarmIcon />}
         <p className="status-line">
           <strong>
-            {final.verified ? 'Every number, date and quote matches its source.' : 'Not every number could be checked.'}
+            {final.verified ? 'Every number, date and quote was found in the result it cites.' : 'Not every number could be checked.'}
           </strong>{' '}
           {final.verified
             ? sentBack.length > 0 && caughtLine

@@ -144,8 +144,10 @@ export function FoolChecker({
       <h3 className="fool-title">Try to fool the checker</h3>
       <p className="fool-lead">
         Edit a finding below, or pick a trick, then check it. The checker is plain code, no AI: it compares the text
-        with this run&rsquo;s saved results, so it catches wrong numbers, units, dates, wells, directions, quotes and
-        causes stated as facts. It does not judge meaning in words (&ldquo;most&rdquo; for &ldquo;least&rdquo; passes).
+        with this run&rsquo;s saved results. It catches a number that is not in its source, and many a wrong unit,
+        date, well or direction, a changed quote and a cause stated as a fact; it can miss a value taken from the wrong
+        row of the right result, and it does not judge meaning in words (&ldquo;most&rdquo; for &ldquo;least&rdquo;
+        passes).
       </p>
       <div className="fool-pick">
         <label>

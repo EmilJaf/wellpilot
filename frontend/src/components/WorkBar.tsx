@@ -37,10 +37,14 @@ export function WorkBar({ state, open, onToggle, children }: { state: RunState; 
       <button type="button" className="work-bar" aria-expanded={open} onClick={onToggle}>
         <StepsIcon />
         <span className="work-text">
-          {running ? (
+          {running && state.mode === 'saved' ? (
+            'Loading the recorded run'
+          ) : running ? (
             <>
-              {who} is working on its own: step {Math.max(state.thinking ?? state.steps.length, 1)}, {tools.length} tool{' '}
-              {tools.length === 1 ? 'call' : 'calls'} so far
+              {state.mode === 'replay' && 'Replaying a recorded run: '}
+              {who} {state.mode === 'replay' ? 'works' : 'is working'} on its own: step{' '}
+              {Math.max(state.thinking ?? state.steps.length, 1)}, {tools.length} tool {tools.length === 1 ? 'call' : 'calls'} so
+              far
             </>
           ) : (
             <>

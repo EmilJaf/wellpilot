@@ -448,22 +448,49 @@ def _on_latest_log(log: dict | None, depths: list[float]) -> dict | None:
     if not log or not log["surveys"] or not depths:
         return None
     survey = log["surveys"][-1]
+
+    def span(rows: list[dict], phase: str) -> list[float]:
+        return [min(r[phase] for r in rows), max(r[phase] for r in rows)]
+
     out = []
     for depth in depths:
         rows = [r for p in survey["passes"] for r in p["below"] if r["depth_m"] == depth]
         if not rows:
             continue
+        # A plug set after the log already shut off what entered below it: then what a plug
+        # here would cut is a share of the flow left above that plug (production_log's
+        # of_flow_left), and a depth at or below it cuts nothing new.
+        left = [r["of_flow_left"] for r in rows if "of_flow_left" in r]
         out.append(
             {
                 "depth_m": depth,
                 **{
-                    phase: [min(r[phase] for r in rows), max(r[phase] for r in rows)]
+                    phase: span(rows, phase)
                     for phase in ("water_share", "oil_share")
                     if all(phase in r for r in rows)
                 },
+                **(
+                    {
+                        "already_isolated": any(r.get("already_isolated") for r in rows),
+                        "of_flow_left": {
+                            phase: span(left, phase)
+                            for phase in ("water_share", "oil_share")
+                            if all(phase in r for r in left)
+                        },
+                    }
+                    if left
+                    else {}
+                ),
             }
         )
-    return {"survey": survey["survey"], "date": survey["date"], "depths": out} if out else None
+    if not out:
+        return None
+    return {
+        "survey": survey["survey"],
+        "date": survey["date"],
+        "plugs_set_since": survey.get("plugs_set_since") or [],
+        "depths": out,
+    }
 
 
 def _named_wells(run: dict, full: ProductionStore) -> list[str]:

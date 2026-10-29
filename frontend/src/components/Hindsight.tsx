@@ -88,15 +88,19 @@ export function HindsightView({ runId, onReady }: { runId: string; onReady?: () 
       {h.work_next?.map((w) => (
         <WorkNext key={`${w.well}-${w.start}`} w={w} asOf={h.as_of} />
       ))}
-      {!!h.work_next?.length && answered.length > 0 && (
-        <p className="chart-note-line hindsight-before-job">
-          The {answered.length === 1 ? 'forecast' : 'forecasts'} below {answered.length === 1 ? 'was' : 'were'} made
-          for the well as it was, before that job.
-        </p>
+      {answered.map((f) =>
+        h.work_next?.some((w) => w.well === f.well) ? (
+          <details key={f.evidence_id} className="hindsight-tried">
+            <summary>
+              The forecast the answer gave for {f.well}, made for the well as it was: off by {signed(f.methods[0].error)}, as
+              no forecast could see the job
+            </summary>
+            <ForecastCase f={f} overtaken />
+          </details>
+        ) : (
+          <ForecastCase key={f.evidence_id} f={f} />
+        ),
       )}
-      {answered.map((f) => (
-        <ForecastCase key={f.evidence_id} f={f} />
-      ))}
       {tried.length > 0 && (
         <details className="hindsight-tried">
           <summary>
@@ -159,6 +163,10 @@ function WorkNext({ w, asOf }: { w: NonNullable<Hindsight['work_next']>[number];
   const pick = w.depth?.answer_plug_m[0]
   const range = w.extra_oil_range_sm3
   const value = w.extra_value_range_usd
+  // The answer's depth at or below a plug already in the hole (on the last log's terms).
+  const isolatedBy = w.on_latest_log?.depths.some((d) => d.depth_m === pick && d.already_isolated)
+    ? w.on_latest_log.plugs_set_since?.[0]?.depth_m
+    : undefined
   return (
     <section className="work-next">
       <h4 className="case-title">
@@ -171,7 +179,10 @@ function WorkNext({ w, asOf }: { w: NonNullable<Hindsight['work_next']>[number];
           {newPerforations(w.depth)}.{' '}
           {pick !== undefined && (
             <>
-              The answer&rsquo;s plug depth was about <strong>{pick.toLocaleString('en-US')} m</strong>.
+              The answer&rsquo;s plug depth was about <strong>{pick.toLocaleString('en-US')} m</strong>
+              {isolatedBy !== undefined
+                ? `, below the plug already set at ${isolatedBy.toLocaleString('en-US')} m: a plug there would shut off nothing new.`
+                : '.'}
             </>
           )}
         </p>
@@ -211,8 +222,7 @@ function WorkNext({ w, asOf }: { w: NonNullable<Hindsight['work_next']>[number];
           The whole field on the same days: water {w.field_before.water_sm3_per_day.toLocaleString('en-US')} →{' '}
           {w.field_after.water_sm3_per_day.toLocaleString('en-US')} Sm³/d, oil{' '}
           {w.field_before.oil_sm3_per_day.toLocaleString('en-US')} →{' '}
-          {w.field_after.oil_sm3_per_day.toLocaleString('en-US')} Sm³/d. Less water to lift and treat leaves the
-          platform room for its other wells.
+          {w.field_after.oil_sm3_per_day.toLocaleString('en-US')} Sm³/d.
         </p>
       )}
       {range && w.trend_year_after_sm3 !== null && (
@@ -258,28 +268,48 @@ function OnLatestLog({ log, plug }: { log: NonNullable<NonNullable<Hindsight['wo
     const [a, b] = r.map((v) => Math.round(v * 100))
     return a === b ? `${a}%` : `${a}-${b}%`
   }
+  // A plug set after the log already shut off what entered below it: what a new plug cuts is
+  // then a share of the flow left above that one, and nothing at or below it.
+  const old = log.plugs_set_since?.[0]
   return (
     <table className="case-table work-next-log">
       <caption>
         On the last log before the job ({log.survey}, {log.date}), a plug shuts off what enters below it
+        {old && (
+          <>
+            ; the plug set at {old.depth_m.toLocaleString('en-US')} m on {old.date} already shut off what entered
+            below that, so the shares are of the flow left above it
+          </>
+        )}
       </caption>
       <thead>
         <tr>
           <th scope="col">A plug at</th>
-          <th scope="col" className="num-col">Water below it</th>
-          <th scope="col" className="num-col">Oil below it</th>
+          <th scope="col" className="num-col">Water it cuts</th>
+          <th scope="col" className="num-col">Oil it cuts</th>
         </tr>
       </thead>
       <tbody>
-        {log.depths.map((d) => (
-          <tr key={d.depth_m}>
-            <th scope="row">
-              {d.depth_m.toLocaleString('en-US')} m, {d.depth_m === plug ? 'the operator’s' : 'the answer’s'}
-            </th>
-            <td className="num-col">{pct(d.water_share) ?? 'not logged'}</td>
-            <td className="num-col">{pct(d.oil_share) ?? 'not logged'}</td>
-          </tr>
-        ))}
+        {log.depths.map((d) => {
+          const shares = d.of_flow_left ?? d
+          return (
+            <tr key={d.depth_m} className={d.already_isolated ? 'is-isolated' : ''}>
+              <th scope="row">
+                {d.depth_m.toLocaleString('en-US')} m, {d.depth_m === plug ? 'the operator’s' : 'the answer’s'}
+              </th>
+              {d.already_isolated && old ? (
+                <td className="num-col" colSpan={2}>
+                  nothing new: already shut off by the {old.depth_m.toLocaleString('en-US')} m plug
+                </td>
+              ) : (
+                <>
+                  <td className="num-col">{pct(shares.water_share) ?? 'not logged'}</td>
+                  <td className="num-col">{pct(shares.oil_share) ?? 'not logged'}</td>
+                </>
+              )}
+            </tr>
+          )
+        })}
       </tbody>
     </table>
   )
@@ -339,14 +369,15 @@ function DepthStrip({
   )
 }
 
-function ForecastCase({ f }: { f: Hindsight['forecasts'][number] }) {
+function ForecastCase({ f, overtaken = false }: { f: Hindsight['forecasts'][number]; overtaken?: boolean }) {
   const [agent, classic] = f.methods
   const band = f.calibrated_band
   return (
     <section className="case hindsight-forecast" aria-label={`${f.well} forecast against the outcome`}>
       <h4 className="case-title">{f.well}: forecast against the outcome</h4>
-      {/* The turn of the story, in three numbers before any prose. */}
-      <dl className="verdict-figures">
+      {/* The turn of the story, in three numbers before any prose; not for a forecast a job
+          on the well overtook. */}
+      <dl className={`verdict-figures${overtaken ? ' is-quiet' : ''}`}>
         <div>
           <dt>The agent forecast</dt>
           <dd>{volume(agent.p50_sm3)}</dd>

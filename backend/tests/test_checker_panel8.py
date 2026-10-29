@@ -169,3 +169,45 @@ def test_a_figure_reading_sam_disagrees_with_must_say_so() -> None:
         "about 8,400 Sm3/d."
     )
     assert _declared("063034849654", 2, agreed, "inference", numbers[:2], detail="") == []
+
+
+@pytest.mark.parametrize(
+    ("run_id", "index", "claim"),
+    [
+        # "near"/"just under" round like "about" (0.6939 as 70%)
+        (
+            "69519dd0a995",
+            1,
+            "F-12 needs attention most: it makes about 1,600 Sm3/d of oil at a water cut near 70%, "
+            "with its downhole gauge dead since 2010-10-12.",
+        ),
+        (
+            "69519dd0a995",
+            1,
+            "F-12 needs attention most: it makes 1 551 Sm3/d oil at a water cut just under 70%, "
+            "with its downhole gauge dead since 2010-10-12.",
+        ),
+        # a well the cited result names beside the one it is about
+        (
+            "69519dd0a995",
+            2,
+            "F-12 was shut in for 12 days from 2010-08-16, at the same time as F-14, and came "
+            "back about 10% higher at 2,000 Sm3/d.",
+        ),
+        # a range sharing its percent sign
+        (
+            "dca494b07eb4",
+            5,
+            "On the 2010 log's low-rate pass, a plug anywhere in the 3,180–3,220 m blank pipe "
+            "would shut off about 31–33% of the water and about 1% of the oil.",
+        ),
+    ],
+)
+def test_panel9_true_rephrasings_pass(run_id: str, index: int, claim: str) -> None:
+    """The ninth panel's four false rejections (judges9/ai_engineer/probes.json A07, T05,
+    T07, T14), through the reader's-edit check as the judge ran them."""
+    run = _run(run_id)
+    log = EvidenceLog.restore(run["evidence"].values())
+    confidence = run["result"]["findings"][index - 1]["confidence"]
+    out = check_edits(run["question"], run["result"], log, [(index, claim, confidence)], None)
+    assert out["accepted"], out["problems"]

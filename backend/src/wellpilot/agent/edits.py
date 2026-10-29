@@ -82,6 +82,21 @@ def redeclare(
         ):
             carried.append(declared)
             continue
+        # A number made a range ("31%" -> "31-33%"): both ends, with the same evidence id.
+        if len(tokens) == 2 and re.fullmatch(
+            r"\s*(?:-|–|to|and)\s*", edited[tokens[0].end() : tokens[1].start()]
+        ):
+            for token in tokens:
+                reading = _reads(token.group(0).strip(), _convention(declared))
+                if reading is not None:
+                    carried.append(
+                        DeclaredNumber(
+                            text=token.group(0).strip(),
+                            value=reading[0],
+                            evidence_id=declared.evidence_id,
+                        )
+                    )
+            continue
         # Digits typed against it make another number ("0." before "69%"): that one is
         # checked, with the same evidence id.
         if len(tokens) != 1:

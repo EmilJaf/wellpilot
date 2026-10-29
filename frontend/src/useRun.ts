@@ -12,6 +12,9 @@ export type RunState = {
   final: FinalEvent | null
   review: ReviewEvent | null // the second opinion, once given
   error: string | null
+  // A question asked now, a recorded run played back paced like a live one, or a recorded
+  // run opened at once (loading, it is no agent at work).
+  mode: 'live' | 'replay' | 'saved'
 }
 
 const initial: RunState = {
@@ -25,10 +28,11 @@ const initial: RunState = {
   final: null,
   review: null,
   error: null,
+  mode: 'live',
 }
 
 type Action =
-  | { type: 'reset'; id: string | null; question: string }
+  | { type: 'reset'; id: string | null; question: string; mode: RunState['mode'] }
   | { type: 'event'; event: RunEvent }
   | { type: 'failed'; message: string }
   | { type: 'clear' }
@@ -43,6 +47,7 @@ function reducer(state: State, action: Action): State {
       lastSeq: -1,
       id: action.id,
       question: action.question,
+      mode: action.mode,
       status: action.id ? 'running' : 'starting',
     }
   }
@@ -125,7 +130,7 @@ export function useRun() {
   const ask = useCallback(
     async (question: string, asOf?: string) => {
       stop.current()
-      dispatch({ type: 'reset', id: null, question })
+      dispatch({ type: 'reset', id: null, question, mode: 'live' })
       try {
         const run = await api.startRun(question, asOf)
         follow(run.id, false)
@@ -140,7 +145,7 @@ export function useRun() {
 
   const open = useCallback(
     (runId: string, replay = false) => {
-      dispatch({ type: 'reset', id: runId, question: '' })
+      dispatch({ type: 'reset', id: runId, question: '', mode: replay ? 'replay' : 'saved' })
       follow(runId, replay)
     },
     [follow],

@@ -125,6 +125,16 @@ def _leads(answer: Submission, log: EvidenceLog) -> list[str]:
     text = " ".join([answer.summary, *(f.claim + " " + (f.detail or "") for f in answer.findings)])
     named = _days(text)
     leads: list[str] = []
+    # Plugs already in the hole, whatever dates the answer names: advice to set a plug where
+    # one already sits (or below it) changes nothing.
+    for e in log:
+        if e.tool == "production_log" and isinstance(e.result, dict):
+            for plug in e.result.get("plugs_set") or []:
+                leads.append(
+                    f"{e.id} production_log: a plug is already in the hole at "
+                    f"{plug.get('depth_m')} m (set {plug.get('date')}); a new plug at or below "
+                    "it, or in the blank pipe around it, shuts off nothing new"
+                )
     for e in log:
         for day, what in _records(e.result):
             when = _days(day)

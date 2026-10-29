@@ -1023,6 +1023,45 @@ def _depth_work(store: ProductionStore, well: str, surveys: list[dict]) -> dict:
     }
 
 
+def _after_plugs(survey: dict, plugs: list[dict], passes: dict) -> None:
+    """A plug set after a survey has already shut off what entered below it. On that log a
+    depth at or below the plug (or anywhere in the blank pipe around it) cuts nothing new, and
+    a depth above it cuts only the flow between the two: of_flow_left gives that as a share of
+    what the log measured above the plug. F-12's 2010 log was run the day before its 3210 m
+    plug, so its shares below 3210 m were gone by 2014."""
+    later = [p for p in plugs if p["date"] > survey["date"]]
+    if not later:
+        return
+    plug = min(p["depth_m"] for p in later)  # the shallowest shuts off the most
+    survey["plugs_set_since"] = [{"date": p["date"], "depth_m": p["depth_m"]} for p in later]
+    for p in survey["passes"]:
+        gone = inflow_below(passes[p["pass"]], plug)
+        if not gone:
+            continue
+        for row in p["below"]:
+            row["already_isolated"] = row["depth_m"] >= plug
+            row["of_flow_left"] = _left(row["depth_m"], row, plug, gone)
+        for gap in p["at_blank_pipe"]:
+            # Blank pipe has no inflow, so a gap that holds the plug, or lies below it, adds
+            # nothing to what the plug already shuts off.
+            gap["already_isolated"] = gap["blank_pipe_m"][1] >= plug
+            gap["of_flow_left_below_top"] = _left(
+                gap["blank_pipe_m"][0], gap["below_top"], plug, gone
+            )
+
+
+def _left(depth: float, shares: dict, plug: float, gone: dict) -> dict:
+    """What a plug at `depth` would cut of the flow left above an old plug at `plug`, which
+    already shut off `gone` of each phase."""
+    if depth >= plug:
+        return {k: 0.0 for k in gone}
+    return {
+        k: round(max(0.0, (shares[k] - gone[k]) / (1 - gone[k])), 3) if gone[k] < 1 else 0.0
+        for k in gone
+        if k in shares
+    }
+
+
 def production_log(store: ProductionStore, args: LogArgs) -> dict:
     """Where along the well the oil and the water came in, from its production logs."""
     _check_well(store, args.well)
@@ -1111,6 +1150,7 @@ def production_log(store: ProductionStore, args: LogArgs) -> dict:
                 for gap in work["blank_pipe_m"]
                 if (top := inflow_below(log, gap[0])) and (bottom := inflow_below(log, gap[1]))
             ]
+        _after_plugs(survey, work["plugs_set"], passes)
     return to_jsonable(
         {
             "well": args.well,
@@ -1127,7 +1167,11 @@ def production_log(store: ProductionStore, args: LogArgs) -> dict:
             "before and after). A bridge plug is set in blank pipe, never inside a perforated "
             "interval (inside_perforation_m names the interval a depth falls in; blank_pipe_m "
             "lists the gaps, and each pass's at_blank_pipe gives the shares below the top and "
-            "the bottom of every gap: the depths a plug can actually be set at). since_survey "
+            "the bottom of every gap: the depths a plug can actually be set at). A plug set "
+            "after a survey (its plugs_set_since) already shut off what entered below it: on "
+            "that log a depth or gap at or below it is already_isolated (a plug there cuts "
+            "nothing new), and of_flow_left gives what a shallower plug would cut as a share "
+            "of the flow left above the old plug. since_survey "
             "says how old the latest log is and how far the "
             "water cut has moved since: an old log may no longer show where the water enters, "
             "and a new one would settle it. Each survey's passes were run at several surface "
