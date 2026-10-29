@@ -1109,6 +1109,10 @@ def _written_unit(text: str, end: int) -> str | None:
 
 
 DURATION_TABLES = ("days", "weeks", "months", "years")
+# Between two items of a list: "80%, 90% and 95%", "3% or 5%".
+LIST_JOIN = re.compile(
+    r"\s*(?:%|percent)?\s*(?:,\s*(?:and\s+|or\s+)?|\s+(?:and|or)\s+)(?:about\s+|~\s*)?"
+)
 
 
 def _key_dim(name: str, cell: bool = False) -> str | None:
@@ -1327,7 +1331,17 @@ def _leaves(item: Evidence) -> list[_Leaf]:
             for key, child in node.items():
                 key = str(key).lower()
                 field_wide = key.startswith("field")
-                walk(child, (*keys[-1:], key), kinds, None if field_wide else here, record, days)
+                # The plan's limits ("design_limits": {"water_cut": {"value": 0.8}}) are
+                # limits, whatever their own keys say.
+                marks = ("limit",) if re.fullmatch(r"(?:design_)?limits?", key) else ()
+                walk(
+                    child,
+                    (*keys[-1:], key),
+                    kinds + marks,
+                    None if field_wide else here,
+                    record,
+                    days,
+                )
         elif isinstance(node, list):
             for child in node:
                 if isinstance(child, dict) and not isinstance(child.get("columns"), list):
@@ -1932,6 +1946,16 @@ def _description(text: str, blanked: str, start: int, end: int) -> dict[str, tup
     own_end = min([clause_end, *following[:1]])
     left = blanked[max(own_start, start - 30) : start]
     right = blanked[end:own_end]
+    # A list ("80%, 90% and 95% water cut limits"): its items share the words after it.
+    last_start, last_end = start, end
+    for m in numbers(end):
+        if m.start() >= clause_end or not LIST_JOIN.fullmatch(blanked[last_end : m.start()]):
+            break
+        last_start, last_end = m.start(), m.end()
+    listed = last_end > end
+    if listed:
+        after = [m.start() for m in numbers(last_end)]
+        list_right = blanked[last_end : min([clause_end, *after[:1]])]
     for side, pattern in SIDE_LEFT.items():
         if re.search(pattern, left, re.I):
             said["side"] = (side, 2)
@@ -1965,7 +1989,9 @@ def _description(text: str, blanked: str, start: int, end: int) -> dict[str, tup
     ):
         said["stat"] = ("p50", 2)
     if not NOT_A_LEVEL.match(blanked, end):
-        if name := _quantity(blanked, start, end):
+        if name := _quantity(blanked, start, end) or (
+            listed and _quantity(blanked, last_start, last_end)
+        ):
             said["quantity"] = (name, 2)
         elif names := list(_NAMES.finditer(blanked, own_start, start)):
             said["quantity"] = (names[-1].group(0), 1)
@@ -2042,8 +2068,10 @@ def _description(text: str, blanked: str, start: int, end: int) -> dict[str, tup
     for grain, pattern in GRAIN_TEXT.items():
         if re.search(pattern, own, re.I):
             said["grain"] = (grain, 2)
-    if re.search(REF_TEXT, blanked[max(own_start, start - 40) : start], re.I) or re.match(
-        rf"[^,;]{{0,30}}?{REF_TEXT}", right, re.I
+    if (
+        re.search(REF_TEXT, blanked[max(own_start, start - 40) : start], re.I)
+        or re.match(rf"[^,;]{{0,30}}?{REF_TEXT}", right, re.I)
+        or (listed and re.match(rf"[^,;]{{0,30}}?{REF_TEXT}", list_right, re.I))
     ):
         said["ref"] = ("limit", 2)
     return said
@@ -2067,7 +2095,9 @@ def _fit_scores(said: dict[str, tuple[str, int]], leaf: _Leaf) -> dict[str, int]
     if "grain" in said:
         by(GRAIN_LABEL, "grain")
     if "ref" in said:
-        out["ref"] = said["ref"][1] if re.search(REF_LABEL, labels) else 0
+        # A limit or reference point; a month's or year's measurement is none.
+        w = said["ref"][1]
+        out["ref"] = w if re.search(REF_LABEL, labels) else -w if leaf.row_day else 0
     if "quantity" in said:
         name, w = said["quantity"]
         key = next((k for k, (t, _) in QUANTITIES.items() if re.fullmatch(t, name, re.I)), None)
