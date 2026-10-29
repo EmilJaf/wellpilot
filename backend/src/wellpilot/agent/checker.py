@@ -1373,7 +1373,22 @@ def _leaves(item: Evidence) -> list[_Leaf]:
                     )
                     # A record inside a dated one (a log's shares inside its survey) is of
                     # that date.
+                    start = len(found)
                     walk(child, keys, kinds, well, next(records), child_days or days)
+                    # A row of a table written as records ({"month": "2014-11", ...}) has
+                    # its row's date, as a column table's row has.
+                    day = next(
+                        (
+                            str(child[k])[:10]
+                            for k in child
+                            if str(k).lower() in (*DATE_COLUMNS, "year")
+                            and re.fullmatch(r"\d{4}(?:-\d{2}(?:-\d{2})?)?\S*", str(child[k]))
+                        ),
+                        None,
+                    )
+                    if day and not child_days:
+                        for i in range(start, len(found)):
+                            found[i] = dataclasses.replace(found[i], row_day=day)
                 else:
                     walk(child, keys, kinds, well, record, days)
         else:
@@ -2657,12 +2672,19 @@ def _reversed(label, blanked, declared, unused, log, leaves_of) -> list[str]:
 
 
 def _spans_of(blanked: str, declared, unused) -> list:
-    return sorted(
-        (start, end, id(d), d)
+    """Where each declaration is written, in order; of two at one place ("31%" and "31"),
+    the longer."""
+    spans = sorted(
+        (start, -end, id(d), d)
         for d in declared
         if d not in unused
         for start, end in _standalone(blanked, d.text)[:1]
     )
+    out = []
+    for start, end, key, d in spans:
+        if not out or out[-1][0] != start:
+            out.append((start, -end, key, d))
+    return out
 
 
 def _fits_of(d) -> list[Reading]:
@@ -2962,7 +2984,13 @@ def _unpaired(label, blanked, declared, unused, log: EvidenceLog, leaves_of) -> 
         if not (ranged or changed) or a.evidence_id != b.evidence_id:
             continue
         item = log.get(a.evidence_id)
-        if item is None:
+        # A calculation's inputs are typed from other results: it says nothing of their kind.
+        # Two years are a span of time ("from 2008 to 2010"), no change of a value.
+        if (
+            item is None
+            or item.tool == "calculate"
+            or all(1900 <= x.value <= 2100 and x.value == int(x.value) for x in (a, b))
+        ):
             continue
         leaves = leaves_of(item)
         fits_a, fits_b = _fits_of(a), _fits_of(b)
@@ -2978,6 +3006,18 @@ def _unpaired(label, blanked, declared, unused, log: EvidenceLog, leaves_of) -> 
         ]
         if not held_a or not held_b:
             continue
+
+        def exactly(held: list[_Leaf], declared: DeclaredNumber) -> list[_Leaf]:
+            # The declared value, where the result holds it exactly, says which is meant
+            # ("31%" declared 0.3107 is the water cut, not a month of 31 days).
+            v = declared.value
+            return [
+                lf
+                for lf in held
+                if any(abs(lf.value - x) <= 1e-9 * max(1, abs(x)) for x in (v, v * 100, v / 100))
+            ] or held
+
+        held_a, held_b = exactly(held_a, a), exactly(held_b, b)
         # Depths ("from 3,135 to 3,221 m" spans a log's zones) and numbers only a tool's prose
         # holds (its summary lines name them loosely) are not judged.
         if "metres" in (

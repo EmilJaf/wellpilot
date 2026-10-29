@@ -201,11 +201,26 @@ def test_a_figure_reading_sam_disagrees_with_must_say_so() -> None:
             "On the 2010 log's low-rate pass, a plug anywhere in the 3,180–3,220 m blank pipe "
             "would shut off about 31–33% of the water and about 1% of the oil.",
         ),
+        # the pair rule (Oct 29 night): a change whose ends a calculation lists among its
+        # inputs, and a day of a date the edit declared beside the same number written "31%"
+        (
+            "485c17df2acb",
+            2,
+            "After the 2014 job oil went up about 4.8-fold, from 177 to 857 Sm3/d, and water "
+            "cut fell from 97% to 34%.",
+        ),
+        (
+            "3d27b4a64831",
+            1,
+            "F-12 was shut in 32 days from 2014-11-30 to 2014-12-31 and returned with water cut "
+            "down from about 97% to about 31% and oil up about 5 times.",
+        ),
     ],
 )
 def test_panel9_true_rephrasings_pass(run_id: str, index: int, claim: str) -> None:
-    """The ninth panel's four false rejections (judges9/ai_engineer/probes.json A07, T05,
-    T07, T14), through the reader's-edit check as the judge ran them."""
+    """The ninth panel's true edits the checker sent back (judges9/ai_engineer/probes.json
+    A07, T05, T07, T14; D06 and the eighth panel's S05 after the pair rule), through the
+    reader's-edit check as the judges ran them."""
     run = _run(run_id)
     log = EvidenceLog.restore(run["evidence"].values())
     confidence = run["result"]["findings"][index - 1]["confidence"]
