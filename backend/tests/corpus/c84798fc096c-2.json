@@ -6,10 +6,11 @@
   "question": "Was F-12's falling oil rate in 2011-2013 a loss of reservoir pressure or water taking over the well? How much oil was left before an uneconomic water cut?"
  },
  "to_review": false,
- "note": "Fair: 80% written but not declared.",
+ "note": "Fair: 80% written but not declared. Oct 29 night (checker bench): verdict changed on purpose. Finding 3's 'voidage replacement was 1.02 in 2013' is wrong: E4's 2013 row has 1.03; 1.02 is 2011's and 2012's.",
  "expected": {
   "accepted": false,
   "flagged": [
+   "Finding 3",
    "Finding 5"
   ]
  },

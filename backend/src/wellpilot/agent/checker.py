@@ -1882,9 +1882,15 @@ def _description(text: str, blanked: str, start: int, end: int) -> dict[str, tup
     names (yearly, monthly)."""
     said: dict[str, tuple[str, int]] = {}
     begin = max([0, *(m.end() for m in CLAUSE.finditer(blanked, 0, start))])
-    previous = [m.end() for m in NUMBER.finditer(blanked, begin, start)]
+
+    def numbers(a: int, b: int | None = None) -> list[re.Match]:
+        # A year is no number here: "689 067 Sm3 in 2009" keeps its date.
+        found = NUMBER.finditer(blanked, a) if b is None else NUMBER.finditer(blanked, a, b)
+        return [m for m in found if not re.fullmatch(r"(?:19|20)\d{2}", m.group(0).strip())]
+
+    previous = [m.end() for m in numbers(begin, start)]
     own_start = previous[-1] if previous else begin
-    following = [m.start() for m in NUMBER.finditer(blanked, end)]
+    following = [m.start() for m in numbers(end)]
     clause_end = min([len(blanked), *(m.start() for m in CLAUSE.finditer(blanked, end))])
     own_end = min([clause_end, *following[:1]])
     left = blanked[max(own_start, start - 30) : start]
@@ -1898,8 +1904,10 @@ def _description(text: str, blanked: str, start: int, end: int) -> dict[str, tup
     # Statistics are read in the text as written (the blanked text hides "P10").
     head = text[max(0, start - 80) : start]
     if m := (
-        re.search(r"\b(P10|P50|P90)\s*(?:of|at|is|was|:)?\s*(?:about\s+|around\s+|~\s*)?$", head)
-        or re.match(r"\s*(?:Sm3(?:/d)?\s*)?\(?(P10|P50|P90)\b", text[end : end + 20])
+        re.search(
+            r"\b(P10|P50|P90)\s*(?:of|at|is|was|:)?\s*(?:about\s+|around\s+|~\s*)?$", head, re.I
+        )
+        or re.match(r"\s*(?:Sm3(?:/d)?\s*)?\(?(P10|P50|P90)\b", text[end : end + 20], re.I)
     ):
         said["stat"] = (m.group(1).lower(), 2)
     elif re.search(
@@ -1912,6 +1920,13 @@ def _description(text: str, blanked: str, start: int, end: int) -> dict[str, tup
         re.I,
     ):
         said["stat"] = ("p10", 2)
+    elif re.search(
+        r"\b(?:forecasts?|forecast to (?:make|produce)|(?:will|would) (?:make|produce)|"
+        r"expected to (?:make|produce)|central estimate)\b[^.;,()\d]{0,30}$",
+        head,
+        re.I,
+    ):
+        said["stat"] = ("p50", 2)
     if not NOT_A_LEVEL.match(blanked, end):
         if name := _quantity(blanked, start, end):
             said["quantity"] = (name, 2)
@@ -1922,7 +1937,10 @@ def _description(text: str, blanked: str, start: int, end: int) -> dict[str, tup
     # was 1 759", "around 2010-05-02 to 1 888"), with no comma, bracket, "and" or "vs" in
     # between. "In November 2014 to 30.33%": a period before "to" is the number before's.
     # (A range of dates, "in 2014-12-2015-01", is no one date.)
-    when = r"(\d{4}-\d{2}(?:-\d{2}(?!\d))?|(?:19|20)\d{2}(?!-\d))(?!\s*(?:-|–|to)\s*\d{4})"
+    when = (
+        r"(?:(?:early|mid|late)[\s-]+)?"
+        r"(\d{4}-\d{2}(?!\d)(?:-\d{2}(?!\d))?|(?:19|20)\d{2}(?!-\d))(?!\s*(?:-|–|to)\s*\d{4})"
+    )
     days = []
     if m := re.match(
         rf"\s*(?:(?!(?:and|or|but|vs|versus|while)\b)[%\w/]+\s*){{0,2}}?\s*"
@@ -1938,8 +1956,11 @@ def _description(text: str, blanked: str, start: int, end: int) -> dict[str, tup
         re.I,
     ):
         tail = m.group("tail")
-        period_to = (m.group("prep") or "").lower() in ("in", "during", "by") and re.match(
-            r"\s*to\b", tail
+        # A period before "to X" is the start's ("from 97% in late 2014 to about 31%", "the
+        # late-2014 drop to about 0.31"), but an event's own date is its ("fell 55% around
+        # 2010-05-02 to 1 888").
+        period_to = (m.group("prep") or "").lower() not in ("around", "on", "at", "since") and (
+            re.match(r"\s*(?:(?:drop|fall|decline|rise|jump|cut|shift)\s+)?to\b", tail)
         )
         # "A choke cut on 2018-11-07 from 70% to 40%": the date is the change's; the value
         # it started from stands in the row before it.
@@ -1950,12 +1971,15 @@ def _description(text: str, blanked: str, start: int, end: int) -> dict[str, tup
             and not from_value
         ):
             days.append(m.group(2))
-    # "Cut to 40% in 2018-11": a level reached during a month is the next month's row too.
+    # "Cut to 40% in 2018-11": a level reached during a month (a year) is the next month's
+    # (year's) row too.
     if said.get("side", ("",))[0] == "after":
         for day in list(days):
             if re.fullmatch(r"\d{4}-\d{2}", day):
                 y, mo = int(day[:4]), int(day[5:])
                 days.append(f"{y + mo // 12}-{mo % 12 + 1:02d}")
+            elif re.fullmatch(r"\d{4}", day):
+                days.append(str(int(day) + 1))
     if days:
         said["dates"] = ("|".join(days), 2)
     # The grain its own phrase names: "yearly average choke went from 77.1%", not "monthly
@@ -2044,7 +2068,13 @@ def _best_fit(
     if not rivals:
         return None
     mine = max((_fit_scores(said, lf) for lf in held), key=lambda f: sum(f.values()))
-    best = max(rivals, key=lambda lf: sum(_fit_scores(said, lf).values()))
+    # The rival to name: one of the same family as the value written when one fits as well
+    # (the 2013 row of the column it was read from, not a water cut that year).
+    families = {_family(lf) for lf in held}
+    best = max(
+        rivals,
+        key=lambda lf: (sum(_fit_scores(said, lf).values()), _family(lf) in families),
+    )
     theirs = _fit_scores(said, best)
     strong = sum(theirs.get(k, 0) - mine.get(k, 0) for k in STRONG)
     if sum(theirs.values()) >= sum(mine.values()) + 3 and strong >= 2:
@@ -2707,6 +2737,101 @@ RANGE_BEFORE = re.compile(
 RANGE_JOIN = re.compile(r"\s*(?:%|[^\W\d]+\d?(?:/[^\W\d]+)?)?\s*(?:to|and|-|–)\s*")
 
 
+# The tokens that tell two ends of one quantity apart: before and after, then and now, the
+# low and high of a band. Without them, the two ends of a range or change share a family.
+END_TOKENS = re.compile(
+    r"(?:(?<=[|_])|^)(?:before|after|then|now|start|end|first|last|low|high|p10|p50|p90|min|"
+    r"max|ctx_\w+)(?=[|_]|$)"
+)
+
+
+def _family(leaf: _Leaf) -> str:
+    """What a value is, without which end of it: "details|before_mean|regime_change|oil_rate"
+    and "...after_mean..." share a family, "calibrated_band_sm3|p10" and
+    "cumulative_oil_sm3|p10" (the bootstrap's) do not."""
+    plain = END_TOKENS.sub("", leaf.labels.lower())
+    return re.sub(r"_+(?=[|]|$)|(?<=[|])_+|\|+(?=\||$)", "", plain).strip("|_")
+
+
+def _unpaired(label, blanked, declared, unused, log: EvidenceLog, leaves_of) -> list[str]:
+    """Two numbers written as one range ("range 324,000 to 470,000") or one change ("from
+    4 050 to 1 146", "from 63% then to 97% now") that their result holds only as different
+    things: the low end of one band and the high end of another, the before of one event and
+    the after of another, a water cut and an uptime. Two table rows of one column are a
+    pair ("from 72% in 2011-01 to 95% in 2013-12")."""
+    problems = []
+    spans = _spans_of(blanked, declared, unused)
+    for (a_start, a_end, _, a), (b_start, _, _, b) in zip(spans, spans[1:], strict=False):
+        between = blanked[a_end:b_start]
+        ranged = RANGE_BEFORE.search(blanked[max(0, a_start - 40) : a_start]) and (
+            RANGE_JOIN.fullmatch(between)
+        )
+        changed = PAIR_FROM.search(blanked[max(0, a_start - 20) : a_start]) and re.fullmatch(
+            r"\s*(?:%|Sm3(?:/d)?|bar|m)?\s*(?:then\s+|before\s+)?(?:to|->|→)\s*"
+            r"(?:about|around|roughly|nearly)?\s*[~≈]?\s*",
+            between,
+        )
+        if not (ranged or changed) or a.evidence_id != b.evidence_id:
+            continue
+        item = log.get(a.evidence_id)
+        if item is None:
+            continue
+        leaves = leaves_of(item)
+        fits_a, fits_b = _fits_of(a), _fits_of(b)
+        held_a = [
+            x
+            for x in leaves
+            if x.value is not None and any(_reads_as(r, [x.value]) for r in fits_a)
+        ]
+        held_b = [
+            y
+            for y in leaves
+            if y.value is not None and any(_reads_as(r, [y.value]) for r in fits_b)
+        ]
+        if not held_a or not held_b:
+            continue
+        # Depths ("from 3,135 to 3,221 m" spans a log's zones) and numbers only a tool's prose
+        # holds (its summary lines name them loosely) are not judged.
+        if "metres" in (
+            _written_unit(blanked, a_start + len(a.text)),
+            _written_unit(blanked, b_start + len(b.text)),
+        ) or any(
+            all(
+                re.match(r"summary\b", lf.labels) or re.search(r"_m\b|depth", lf.labels)
+                for lf in held
+            )
+            for held in (held_a, held_b)
+        ):
+            continue
+
+        def first_day(leaf: _Leaf) -> str:
+            return min(leaf.record_days, default="")
+
+        if not any(
+            _family(x) == _family(y)
+            and (
+                (x.row_day is not None and y.row_day is not None)
+                or x.record == y.record
+                # across a series of events: the first one's before, a later one's after
+                or (
+                    x.record_days
+                    and y.record_days
+                    and re.search(SIDE_LABEL["before"], x.labels)
+                    and re.search(SIDE_LABEL["after"], y.labels)
+                    and first_day(x) <= first_day(y)
+                )
+            )
+            for x in held_a
+            for y in held_b
+        ):
+            problems.append(
+                f"{label}: '{a.text}' and '{b.text}' are written as the two ends of one "
+                f"{'range' if ranged else 'change'}, but in {item.id} they are "
+                f"{held_a[0].labels.replace('|', ' ')} and {held_b[0].labels.replace('|', ' ')}."
+            )
+    return problems
+
+
 def _range_order(label, blanked, declared, unused) -> list[str]:
     """A range written high to low ("calibrated range 470,000 to 324,000"): its ends read
     as each other's."""
@@ -2983,6 +3108,7 @@ def _declared(
     items = [i for i in (log.get(e) for e in (citable or {d.evidence_id for d in declared})) if i]
     problems += _moved_to(label, text, blanked, declared, unused, items, leaves_of)
     problems += _range_order(label, blanked, declared, unused)
+    problems += _unpaired(label, blanked, declared, unused, log, leaves_of)
     problems += _time_order(label, blanked, declared, unused, items)
     problems += _inconsistent(label, blanked, declared, unused)
     problems += _ratios(label, blanked, declared, unused)
