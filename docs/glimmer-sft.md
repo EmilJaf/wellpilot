@@ -42,50 +42,95 @@ checker's blind spots.
 
 ## Steps (Emil runs them; they use the Fireworks account)
 
-1. Redeem the Fireworks promo code before Nov 3 (Billing -> Credits -> Redeem Promo).
-2. Build the data (free; already built, rerun after the corpus grows):
+About 30 minutes of hands-on time, spread over an evening; training itself runs on its own.
 
-   ```bash
-   cd backend && uv run python -m wellpilot.training build
-   ```
+**1. Prepare (once, about 5 minutes).**
+- Redeem the Fireworks promo code (Billing -> Credits -> Redeem Promo); it must be done by Nov 3.
+- Install the CLI and sign in; `whoami` prints the account id the commands below need:
 
-3. In the Fireworks console: Datasets -> upload `data/training/writer/train.jsonl`; then
-   Fine-tuning -> new supervised job: base model `accounts/fireworks/models/muse-glimmer-30b`,
-   the dataset, LoRA defaults (rank 16), 2 epochs, max context at least 32768, output model
-   `wellpilot-glimmer-writer`.
-4. When it finishes, deploy the base model with add-ons and load the adapter (with `firectl`,
-   or Deployments in the console):
+  ```bash
+  brew tap fw-ai/firectl
+  ```
 
-   ```bash
-   firectl deployment create accounts/fireworks/models/muse-glimmer-30b --deployment-shape <bf16 shape> --enable-addons
-   ```
+  ```bash
+  brew install firectl
+  ```
 
-   ```bash
-   firectl load-lora wellpilot-glimmer-writer --deployment <deployment id>
-   ```
+  ```bash
+  firectl signin
+  ```
 
-5. Score base, tuned, and Muse Spark Open (from `backend/`):
+  ```bash
+  firectl whoami
+  ```
 
-   ```bash
-   LLM_PROVIDER=fireworks FIREWORKS_MODEL="accounts/fireworks/models/muse-glimmer-30b#<deployment id>" uv run python -m wellpilot.training eval --label glimmer-base
-   ```
+**2. Upload the data and start training (about 5 minutes; then it runs by itself).**
 
-   ```bash
-   LLM_PROVIDER=fireworks FIREWORKS_MODEL="accounts/<account>/models/wellpilot-glimmer-writer#<deployment id>" uv run python -m wellpilot.training eval --label glimmer-tuned
-   ```
+```bash
+cd ~/wellpilot && firectl dataset create wellpilot-writer data/training/writer/train.jsonl
+```
 
-   ```bash
-   uv run python -m wellpilot.training eval --label muse
-   ```
+```bash
+firectl sftj create --base-model accounts/fireworks/models/muse-glimmer-30b --dataset wellpilot-writer --output-model wellpilot-glimmer-writer --epochs 2 --lora-rank 16 --max-context-length 32768
+```
 
-6. Delete the deployment:
+Check on it with `firectl sftj get <job id>` (the id is printed by the command above). If it
+says examples were cut at the context limit, start it again with `--max-context-length 65536`.
+Training is free for Glimmer until Nov 30.
 
-   ```bash
-   firectl deployment delete <deployment id>
-   ```
+**3. While it trains: the reference on Muse Spark Open (Baseten, about $0.5-0.8).**
 
-Each scorecard goes to `data/evals/writer-<label>-<time>.json`. Claude then reads them and
-a sample of the answers and writes the result up, whatever it is.
+```bash
+cd ~/wellpilot/backend && uv run python -m wellpilot.training eval --label muse
+```
+
+**4. When training is done: one machine for both Glimmers (billing starts here, $8 an hour).**
+- Find a deployment shape for the base model; pick a BF16 one (FP8 and FP4 shapes cannot
+  hold an adapter). If the list is unclear, send it to Claude.
+
+  ```bash
+  firectl deployment-shape-version match --model accounts/fireworks/models/muse-glimmer-30b
+  ```
+
+- Create the deployment with add-ons, wait until `firectl deployment get <deployment id>`
+  says it is ready, then load the trained adapter:
+
+  ```bash
+  firectl deployment create accounts/fireworks/models/muse-glimmer-30b --deployment-shape <BF16 shape> --enable-addons
+  ```
+
+  ```bash
+  firectl load-lora wellpilot-glimmer-writer --deployment <deployment id>
+  ```
+
+**5. Score both (about 20-40 minutes in all).** First try three items, to see the model
+answers at all; then the full set. Replace `<account>` and `<deployment id>`:
+
+```bash
+cd ~/wellpilot/backend && LLM_PROVIDER=fireworks FIREWORKS_MODEL="accounts/fireworks/models/muse-glimmer-30b#accounts/<account>/deployments/<deployment id>" uv run python -m wellpilot.training eval --label glimmer-base --limit 3
+```
+
+```bash
+cd ~/wellpilot/backend && LLM_PROVIDER=fireworks FIREWORKS_MODEL="accounts/fireworks/models/muse-glimmer-30b#accounts/<account>/deployments/<deployment id>" uv run python -m wellpilot.training eval --label glimmer-base
+```
+
+```bash
+cd ~/wellpilot/backend && LLM_PROVIDER=fireworks FIREWORKS_MODEL="accounts/<account>/models/wellpilot-glimmer-writer#accounts/<account>/deployments/<deployment id>" uv run python -m wellpilot.training eval --label glimmer-tuned
+```
+
+**6. Stop the billing.**
+
+```bash
+firectl deployment delete <deployment id>
+```
+
+```bash
+firectl deployment list
+```
+
+Each scorecard is written to `data/evals/writer-<label>-<time>.json`. Tell Claude when the
+three are there: it reads them and a sample of the answers and writes the result up,
+whatever it is. If a command fails (a model name format, a shape), paste its output.
 
 ## What to expect, honestly
 
