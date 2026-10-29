@@ -4203,14 +4203,84 @@ MONTH_RANGE = re.compile(
     r"\b(\d{4})-(\d{2})(?!-\d)\s*(?:to|through|until|-|–)\s*(\d{4})-(\d{2})(?!-\d)"
 )
 MONTH_COUNT = re.compile(r"\b(\d{1,3})[\s-]*(months?|years?)\b", re.IGNORECASE)
+YEAR_RANGE = re.compile(
+    r"(?<![\d-])((?:19|20)\d{2})\s*(?:to|through|until|-|–)\s*((?:19|20)\d{2})(?![\d-])"
+)
+# The words between a number and a quote that stands for it: "oil capacity 9,000 Sm3/d
+# ("Oljekapasitet 9000 Sm3 /d")", "a maximum water cut of 0.80: “Maksimum vannkutt 0,80”".
+BEFORE_QUOTE = re.compile(
+    r"\s*(?:%|percent|[kM]?S?m3(?:\s*/\s*d(?:ay)?)?|m\s?MD|m|bar|months?|years?)?\s*"
+    r"(?:\(|\[|:|,|—|–)?\s*(?:as\s+|quoted\s+as\s+)?$",
+    re.IGNORECASE,
+)
+
+
+def _quote_neighbours(label: str, text: str) -> list[str]:
+    """A number written right before a quote, or in the translation right after it, that
+    the quote does not hold: "oil capacity 16,000 Sm3/d ("Oljekapasitet 9000 Sm3 /d")",
+    "“Maks vanninnhold 80 %” [Maximum water content 150%]". The quote is checked against
+    the page elsewhere; the number beside it must be the quote's own."""
+    problems = []
+    text = _translations_outside(canonical(text))
+    for m in QUOTED_CLAIM.finditer(text):
+        quote = m.group(1)
+        held = {
+            v
+            for european in (False, True)
+            for v, _, _ in _numbers_in_text(_blank(quote, REFERENCE), european)
+        }
+        if not held:
+            continue
+        around: list[str] = []
+        before = list(NUMBER.finditer(_blank(text[: m.start()], WELL, DATE, REFERENCE)))
+        if before and BEFORE_QUOTE.fullmatch(text[before[-1].end() : m.start()]):
+            around.append(before[-1].group(0))
+        if m.group(2):
+            around += [
+                n.group(0) for n in NUMBER.finditer(_blank(m.group(2), WELL, DATE, REFERENCE))
+            ]
+        for written in around:
+            readings = _numbers_in_text(written)
+            if not readings:
+                continue
+            value, decimals, _ = readings[0]
+            percent = written.rstrip().endswith(("%", "percent"))
+            tolerance = 0.5 * 10**-decimals + 1e-9
+            if value <= 10 and value == int(value) and not percent:
+                continue
+            if not any(
+                abs(value - q) <= tolerance
+                or (percent and abs(value / 100 - q) <= tolerance / 100)
+                or abs(value - q * 100) <= tolerance
+                for q in held
+            ):
+                problems.append(
+                    f"{label}: '{written.strip()}' is written beside the quote “{quote}”, "
+                    f"which says {', '.join(f'{q:g}' for q in sorted(held))}. Write the "
+                    "quote's own number."
+                )
+    return problems
 
 
 def _month_spans(label: str, text: str) -> list[str]:
     """A month range and a count of months in one sentence that disagree: "over 2011-01 to
-    2012-12 ... across 36 months" (the range is 24)."""
+    2012-12 ... across 36 months" (the range is 24), "87 months of 2011-2013" (at most 36)."""
     problems = []
     for sentence in FULL_SENTENCE.split(normalize_dates(text)):
         ranges, counts = MONTH_RANGE.findall(sentence), MONTH_COUNT.findall(sentence)
+        years = YEAR_RANGE.findall(sentence)
+        if not ranges and len(years) == 1 and len(counts) == 1:
+            # A range of whole years holds at most its months (a count may be fewer: months
+            # with data).
+            y1, y2 = int(years[0][0]), int(years[0][1])
+            count, unit = int(counts[0][0]), counts[0][1].lower()
+            months = count * 12 if unit.startswith("year") else count
+            if y2 > y1 and months > (y2 - y1 + 1) * 12:
+                problems.append(
+                    f"{label}: {y1} to {y2} is at most {(y2 - y1 + 1) * 12} months, but the "
+                    f"sentence says {count} {unit}."
+                )
+            continue
         if len(ranges) != 1 or len(counts) != 1:
             continue
         y1, m1, y2, m2 = (int(v) for v in ranges[0])
@@ -4815,6 +4885,7 @@ def check_submission(submission: Submission, log: EvidenceLog, question: str = "
         problems += _pressure_misread(f"Finding {n}", own, failures, about)
         problems += _within_limits(f"Finding {n}", own, cited)
         problems += _month_spans(f"Finding {n}", own)
+        problems += _quote_neighbours(f"Finding {n}", finding.claim)
         problems += _report_claims(f"Finding {n}", own, cited)
         looks = [e for e in cited if e.tool == "look_at_page"]
         problems += _disputed(f"Finding {n}", finding.claim, finding.numbers, looks)
@@ -4896,6 +4967,7 @@ def check_submission(submission: Submission, log: EvidenceLog, question: str = "
     if misperiod := _periods(own, sound, leaves_of, ("gauge failure",)):
         problems.append(f"Summary: {'; '.join(misperiod)}. Give each event its own date.")
     problems += _month_spans("Summary", own)
+    problems += _quote_neighbours("Summary", submission.summary)
     problems += _report_claims("Summary", own, sound)
     problems += _disputed(
         "Summary",
