@@ -2111,7 +2111,20 @@ def _description(text: str, blanked: str, start: int, end: int) -> dict[str, tup
         said["work"] = ("|".join(work), 2)
     # The unit written right after it: a rate, a volume, metres, per year (a percent says
     # nothing: a change in a rate is a percentage too).
-    if (unit := _written_unit(blanked, end)) and unit != "barrels":
+    unit = _written_unit(blanked, end)
+    # A range shares the unit written after its end: "from 3126.2 to 3130.7 mMD".
+    if (
+        unit is None
+        and not re.search(r"%|percent|pct", blanked[start:end] + blanked[end : end + 9])
+        and (
+            m := re.match(
+                r"\s*(?:to|-|–)\s*(?:about\s+|~\s*)?\d(?:[\d.,\u00a0\u202f]|\s(?=\d{3}\b))*",
+                blanked[end:],
+            )
+        )
+    ):
+        unit = _written_unit(blanked, end + m.end())
+    if unit and unit != "barrels":
         said["unit"] = (unit, 2)
     # The grain its own phrase names: "yearly average choke went from 77.1%", not "monthly
     # water cut" earlier in the sentence.
@@ -2124,6 +2137,7 @@ def _description(text: str, blanked: str, start: int, end: int) -> dict[str, tup
     extreme = re.search(EXTREME, own, re.I)
     if extreme:
         said["extreme"] = ("", 0)
+        said.pop("grain", None)
     elif "grain" not in said:
         # "yearly water cut was 57% in 2010 ..., while liquid held at 5 130 Sm3/d in 2010":
         # the grain the clause named earlier, weakly.
@@ -4206,6 +4220,11 @@ MONTH_COUNT = re.compile(r"\b(\d{1,3})[\s-]*(months?|years?)\b", re.IGNORECASE)
 YEAR_RANGE = re.compile(
     r"(?<![\d-])((?:19|20)\d{2})\s*(?:to|through|until|-|–)\s*((?:19|20)\d{2})(?![\d-])"
 )
+# A number as a claim writes it, thousands grouped or not: "13,000", "9 000", "0.80", "80%".
+WRITTEN_RAW = re.compile(
+    r"(?<![\w.,])(?:\d{1,3}(?:[,\u00a0\u202f ]\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)(?!\.?\d)"
+    r"(?:\s*(?:%|percent\b))?"
+)
 # The words between a number and a quote that stands for it: "oil capacity 9,000 Sm3/d
 # ("Oljekapasitet 9000 Sm3 /d")", "a maximum water cut of 0.80: “Maksimum vannkutt 0,80”".
 BEFORE_QUOTE = re.compile(
@@ -4232,13 +4251,12 @@ def _quote_neighbours(label: str, text: str) -> list[str]:
         if not held:
             continue
         around: list[str] = []
-        before = list(NUMBER.finditer(_blank(text[: m.start()], WELL, DATE, REFERENCE)))
+        before = list(WRITTEN_RAW.finditer(_blank(text[: m.start()], WELL, DATE, REFERENCE)))
         if before and BEFORE_QUOTE.fullmatch(text[before[-1].end() : m.start()]):
             around.append(before[-1].group(0))
         if m.group(2):
-            around += [
-                n.group(0) for n in NUMBER.finditer(_blank(m.group(2), WELL, DATE, REFERENCE))
-            ]
+            translation = _blank(m.group(2), WELL, DATE, REFERENCE)
+            around += [n.group(0) for n in WRITTEN_RAW.finditer(translation)]
         for written in around:
             readings = _numbers_in_text(written)
             if not readings:
