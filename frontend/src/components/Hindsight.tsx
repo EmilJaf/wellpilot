@@ -411,6 +411,8 @@ function ForecastCase({ f, overtaken = false }: { f: Hindsight['forecasts'][numb
               : `where it had found ${f.well}’s rate shifting`}
             .{' '}
           </>
+        ) : agent.window_start === classic.window_start ? (
+          <>It fitted the whole history, as the textbook does. </>
         ) : (
           <>It fitted from {agent.window_start}, a window it chose itself. </>
         )}

@@ -2379,6 +2379,13 @@ def _inconsistent(label, blanked, declared, unused) -> list[str]:
         # "above 50% by month 28 and above 80% by month 48": a second level, not a comparison.
         if re.search(r"\b(?:and|or|but|while|whereas|then)\b", between[: m.start()], re.I):
             continue
+        # "81% of the oil entering below it, leaving 19%": the word has its own object, and
+        # the next number starts another clause.
+        if (
+            re.match(r"\s+(?:it|them|this|that|which)\b", between[m.end() :], re.I)
+            or "," in (between[m.end() :])
+        ):
+            continue
         # The newer words compare only right after the number, with nothing in between that
         # starts another subject ("10,800 under the 13,000 limit, but injection exceeded its
         # 16,000"), and "over" is no time span ("down 7.8% over the last 90 days").
@@ -3231,7 +3238,7 @@ LIMIT_NAMES = {
     "oil_sm3_per_day": r"\boil\b",
     "water_cut": r"water[\s_-]?cut",
     "water_inj_sm3_per_day": r"\binject",
-    "water_sm3_per_day": r"water\s+(?:handling|capacity)|produced water",
+    "water_sm3_per_day": r"water\s+(?:handling|capacity|rates?|production)|produced water",
 }
 
 
@@ -3268,14 +3275,15 @@ def _within_limits(label: str, text: str, items: list[Evidence]) -> list[str]:
             continue
         # The limits the claim is about: named after it in its clause ("without exceeding
         # liquid capacity"), else before it ("water handling stayed below capacity").
-        part_start = sentence.rfind(",", 0, m.start()) + 1
         part_end = sentence.find(",", m.end())
         after = sentence[m.start() : part_end if part_end >= 0 else len(sentence)]
-        named = [k for k, pattern in LIMIT_NAMES.items() if re.search(pattern, after, re.I)] or [
-            k
-            for k, pattern in LIMIT_NAMES.items()
-            if re.search(pattern, sentence[part_start : m.start()], re.I)
+        named_after = [k for k, pattern in LIMIT_NAMES.items() if re.search(pattern, after, re.I)]
+        # The subject itself ("the field's oil, liquid and water handling rates stayed under
+        # design limits") names the limits it means.
+        named_before = [
+            k for k, pattern in LIMIT_NAMES.items() if re.search(pattern, subject, re.I)
         ]
+        named = named_after or named_before
         # "stayed within its design limits: peak oil ..., water cut ...": the limits as a
         # whole, with examples after; "design limits for liquid, oil or water cut" names
         # the ones it means.
@@ -3302,12 +3310,31 @@ def _within_limits(label: str, text: str, items: list[Evidence]) -> list[str]:
         ]
         if listed:
             named = listed
+        elif named_before:
+            named = named_before
         elif whole:
             named = []
+        # A limit the sentence itself says was reached, in a clause of its own after a turn
+        # ("..., but field water cut reached the 80% limit"; "; it reached the 0.80 design
+        # water cut"), is not claimed as held. Not the claim's own clause: "within oil,
+        # liquid and injection rate limits but exceeded the 80% water cut" holds injection.
+        turn = re.search(
+            r"(?:,?\s+\b(?:but|while|whereas|although|though|yet)\b|;)", sentence[m.end() :], re.I
+        )
+        tail = sentence[m.end() + turn.end() :] if turn else ""
+        clause = re.split(r",?\s+\b(?:but|while|whereas|although|though|yet)\b|;", tail)[0]
+        exceeded = re.search(
+            r"\b(?:reach\w*|pass\w*|exceed\w*|hit|went over|was over|rose above|broke)\b",
+            clause,
+            re.I,
+        )
+        conceded = {
+            k for k, pattern in LIMIT_NAMES.items() if exceeded and re.search(pattern, clause, re.I)
+        }
         for item in results:
             against = item.result.get("field_against_limits") or {}
             limits = item.result.get("design_limits") or {}
-            for key in named or list(against):
+            for key in [k for k in named or list(against) if k not in conceded]:
                 months = (against.get(key) or {}).get("months_at_or_above") or 0
                 if months > 0:
                     limit = limits.get(key) or {}
@@ -3955,6 +3982,16 @@ def _depth_ties(label: str, text: str, declared, log: EvidenceLog, leaves_of) ->
                 text[max(0, written.start() - 20) : written.start()],
             ):
                 ends.append(float(re.sub(r"[^\d.]", "", low.group(1))))
+            # Blank pipe has no inflow: the share below any depth in a gap is the share below
+            # either end of it ("a plug at 3150 m" with the 3,147-3,161 m gap's 81%).
+            ends += [
+                end_
+                for e in log
+                if e.tool == "production_log" and isinstance(e.result, dict)
+                for gap in e.result.get("blank_pipe_m") or []
+                if len(gap) == 2 and gap[0] - 0.5 <= depth <= gap[1] + 0.5
+                for end_ in gap
+            ]
             if not any(abs(e - x) <= 1.5 for e in ends for x in depths):
                 shown = ", ".join(f"{x:g}" for x in sorted(depths))
                 problems.append(

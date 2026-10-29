@@ -21,26 +21,28 @@ FEATURED_RUNS lists them in this order):
   when the choke was cut from 83% to 58%). Its forecast fits from the shift it found:
   about 359k Sm3 for 2011, range 324k-470k, against 340k produced. Verified on attempt 3,
   second opinion sound. 9 steps, 19 tool calls, 44 s, $0.31.
-- dca494b07eb4, what to do with F-12, as of 2014-10-31: the 2010 plug at 3,210 m did not
-  help; the log is 1,500 days old, so a new log before any plug; on that log a plug in the
-  blank pipe at 3,180-3,220 m would cut about 31% of the water for about 1% of the oil (its
-  detail gives the upper gap, 3,147-3,161 m: 98% of the water, 81% of the oil). The
-  operator's plug three weeks later at 3,150 m, with a new zone above, cut the water; the
-  reveal sets both depths on the same log. Verified on attempt 2, second opinion sound.
-  10 steps, 16 tool calls, $0.46.
-- c6b4a6b047a8, F-12's decline against the 2005 plan: oil averaged 72% less after
-  2010-07-18 than before; water cut averaged 3% before early 2010 and 51% after; liquid
-  held near 5,130 Sm3/d while the choke opened to 100% by 2012; breakthrough as the plan's
-  "about 2 years" expected. Verified on attempt 2. 7 steps, 16 tool calls, $0.27.
+- 73a1757ab912, what to do with F-12, as of 2014-10-31: the 2010 plug at 3,210 m already
+  shuts off what enters below it, so the gaps there cut nothing new; the log is 1,500 days
+  old, so a new log before any job; on that log the only gap left, 3,147-3,161 m, would cut
+  about 98% of the water and 81% of the oil still flowing. The operator's plug three weeks
+  later was in that gap, at 3,150 m, with a new zone above. Verified on attempt 3, second
+  opinion sound. 10 steps, 14 tool calls, 80 s, $0.39. Replaces dca494b07eb4, which picked
+  the gap the 2010 plug already sat in.
+- 6af55f1b3eef, F-12's decline against the 2005 plan: oil averaged 72% less after
+  2010-07-18 than before, with only a small change across the date; water cut shifted
+  gradually from 3% to 51% around 2010-02-14; liquid held near 5,130 Sm3/d while the choke
+  opened to 100% by 2012; breakthrough at about 21 months against the plan's "about 2 years",
+  and the plan's 6 MSm3 at that point. Verified on attempt 3, second opinion sound. 10 steps,
+  18 tool calls, $0.46. Replaces c6b4a6b047a8 ("not a choke cut", "matched the 6 million").
 - c8501c918af6, the plan's forecast chart: the text's 9,000 Sm3/d for about 19 months, the
   figure's plateau at about 8,460 Sm3/d for 19 months (2008-03 to 2009-09). Recorded on
   Oct 28 before SAM 3.1's values were hidden from the model: the answer gives SAM's
   measurement, where the model's own reading was 8,400 Sm3/d. 5 steps, $0.08.
-- 485c17df2acb, F-12's 2014 water shut-off: the EVO plug at 3150 m and the new zone above
-  it (water cut 97% to 34%, oil 177 to 857 Sm3/d), against the 2010 plug at 3210 m; on the
-  same 2010 log a plug at 3150 m cuts about 97% of the water but also about 81% of the oil,
-  so without the new perforations the well would have lost its oil. Verified on attempt 3,
-  second opinion sound. 11 steps, $0.32.
+- 83a3114d185f, F-12's 2014 water shut-off: the 7-inch EVO plug at 3150 m set 2014-11-26
+  and the new perforation 3126.2-3130.7 m (water cut 0.97 to 0.34, oil 177 to 857 Sm3/d in
+  the 60 days after), against the 2010 plug at 3210 m in the blank pipe below most of the
+  flow. Verified on attempt 3, second opinion sound. 6 steps, 10 tool calls, 37 s, $0.24.
+  Replaces 485c17df2acb ("shut in on 2014-11-30 for a workover").
 - f7d3faebb139, the agent's own Python: F-12's monthly water cut against its choke over
   2011-2013 in the sandbox; all findings on it are inferences. 7 steps, 28 s, $0.18.
 - 3fc72959335a, an earlier reading of the plan's chart, kept for its replay (not featured).

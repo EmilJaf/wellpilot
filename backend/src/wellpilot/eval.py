@@ -73,6 +73,12 @@ CASES = [
         avoids=(
             r"water cut (?:jumped|spiked|stepped up)",
             r"choke (?:was |stayed )?unchanged\b(?! across)",
+            # Breakthrough came about when the plan said, but at ~4 MSm3, not its ~6.
+            r"match\w*[^.]{0,60}\b6(?:\.0)? ?(?:million|MSm3)",
+            # 0.80 is the platform's limit, not one well's (ninth panel).
+            r"F-12[^.]{0,80}(?:above|over|past|exceed\w*) (?:the |its )?(?:plan's |PUD's )?"
+            r"(?:80%|0[.,]80)[^.]{0,20}(?:design|facility) limit",
+            r"not (?:a|the) choke cut",
         ),
         max_steps=12,
         max_cost=0.35,
@@ -119,6 +125,8 @@ CASES = [
         "to the well, and why did the plug set in 2010 not do the same?",
         tools=("well_operations", "production_log"),
         mentions=(r"3150", r"3210", r"2009|2010-09"),
+        # The job ran 2014-11-22..27; the December shut-in was field-wide (ninth panel).
+        avoids=(r"shut in on 2014-11-30 for (?:a|the) workover",),
         max_steps=10,
     ),
     Case(
@@ -129,7 +137,11 @@ CASES = [
         tools=("production_log",),
         mentions=(r"3[,\s]?1(?:4[7-9]|5\d|60)", r"3[,\s]?210|2010"),  # blank pipe
         # No tool has costs or prices; a well making ~170 Sm3/d of oil is not shut in.
-        avoids=(r"uneconomic|no economic|economic limit|prepare\w* (?:the well )?for (?:a )?shut",),
+        avoids=(
+            r"uneconomic|no economic|economic limit|prepare\w* (?:the well )?for (?:a )?shut",
+            # The 3180-3220 m gap holds the 2010 plug: a plug there cuts nothing new.
+            r"recommend\w*[^.]{0,80}\b3[,\s]?(?:1[89]\d|2[0-2]\d)\s*m\b",
+        ),
         max_steps=10,
         max_cost=0.50,  # three production logs, each with every gap's shares
     ),

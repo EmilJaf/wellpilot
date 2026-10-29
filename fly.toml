@@ -12,7 +12,7 @@ kill_timeout = 10       # seconds after SIGTERM; the app saves runs in flight wi
   TRUSTED_PROXY = "fly"
   # The runs the public site lists and replays; each must be frozen in
   # backend/tests/fixtures/runs, the only runs the image holds (a test checks).
-  FEATURED_RUNS = "69519dd0a995,dca494b07eb4,c6b4a6b047a8,c8501c918af6,485c17df2acb,f7d3faebb139"
+  FEATURED_RUNS = "69519dd0a995,73a1757ab912,6af55f1b3eef,c8501c918af6,83a3114d185f,f7d3faebb139"
 
 [http_service]
   internal_port = 8080

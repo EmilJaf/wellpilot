@@ -31,13 +31,13 @@ Decline fits on fixed windows made the same day said +2% to +24%, the whole-hist
 
 ## 2. "F-12's water cut fell from about 0.97 to about 0.3 at the end of 2014. What was done to the well, and why did the plug set in 2010 not do the same?"
 
-| Work | By hand | Estimate | With WellPilot (run 485c17df2acb) |
+| Work | By hand | Estimate | With WellPilot (run 83a3114d185f) |
 |---|---|---|---|
 | Find the jobs | Search F-12's 165 daily drilling reports for the 2010 and 2014 work; read the plug depths (3210 m, 3150 m) and the new perforations (3126.2-3130.7 m). | 1-3 h | `well_operations`: 1 call |
 | Where the water came in | Open the 2010 production log (3 LAS passes, about 4,200 depth samples) and the March 2009 survey, which exists only as plot pictures in a 17-page PDF (digitize three plots, or read the report's summary); work out how much oil and water entered below each plug depth. | 4-10 h | `production_log`: 1 call (the 2009 pictures read by SAM 3.1 at ingest) |
-| Before and after | Water cut and oil 60 days before and after each job. | 1 h | `production_monthly`, `production_log` (before and after each plug), `calculate` (7 calls) |
+| Before and after | Water cut and oil 60 days before and after each job. | 1 h | `production_monthly`, `production_log` (before and after each plug) |
 | Write it up | A source for every number. | 1 h | the answer sent back twice and fixed |
-| **Total** | | **7-15 h: about 1-2 working days** | **11 steps, 12 tool calls, about a minute, about $0.32** |
+| **Total** | | **7-15 h: about 1-2 working days** | **6 steps, 10 tool calls, 37 s, about $0.24** |
 
 ## What the published figures say
 
