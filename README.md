@@ -237,7 +237,7 @@ uv run python -m wellpilot.ingest.report_facts   # facts read by Muse Spark (cal
 Tests and lint:
 
 ```bash
-cd backend && uv run pytest && uv run ruff check .
+cd backend && uv run pytest && uv run ruff check .   # fast tests; add -m "slow or not slow" -n auto for all, as CI does
 cd frontend && pnpm lint && pnpm build
 ```
 
