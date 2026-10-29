@@ -401,10 +401,9 @@ export type Domain = { x: [number, number]; y: [number, number] }
 
 /** Oil rate per producing day on a log scale, with the cut and the two forecasts. With a
     domain the axes are fixed (the film); without it they fit this case. */
-export function CaseChart({ detail, domain }: { detail: BacktestCase; domain?: Domain }) {
+export function CaseChart({ detail, domain, height = 240 }: { detail: BacktestCase; domain?: Domain; height?: number }) {
   const [host, width] = useWidth(520)
   const [hover, setHover] = useState<number | null>(null)
-  const height = 240
   const pad = { left: 44, right: 92, top: 18, bottom: 50 }
   const plotW = width - pad.left - pad.right
   const plotH = height - pad.top - pad.bottom

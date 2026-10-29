@@ -18,8 +18,24 @@ export function StoryBar({ current, done, onStep }: { current: Step; done: (s: S
       nav.scrollTo({ left: el.offsetLeft - 16, behavior: 'smooth' })
     }
   }, [current])
+  // A phone shows the current step only, with arrows to the ones beside it.
+  const at = STEPS.findIndex((s) => s.step === current)
+  const prev = STEPS[at - 1]
+  const next = STEPS[at + 1]
   return (
     <nav className="story" aria-label="The demo in five steps" ref={bar}>
+      <button
+        type="button"
+        className="story-arrow story-prev"
+        disabled={!prev}
+        onClick={() => prev && onStep(prev.step)}
+        aria-label={prev ? `Back to step ${prev.step}: ${prev.label}` : 'First step'}
+      >
+        &lsaquo;
+      </button>
+      <span className="story-count">
+        Step {current} of {STEPS.length}
+      </span>
       <ol>
         {STEPS.map(({ step, label, hint }) => (
           <li key={step}>
@@ -42,6 +58,15 @@ export function StoryBar({ current, done, onStep }: { current: Step; done: (s: S
           </li>
         ))}
       </ol>
+      <button
+        type="button"
+        className="story-arrow story-next"
+        disabled={!next}
+        onClick={() => next && onStep(next.step)}
+        aria-label={next ? `On to step ${next.step}: ${next.label}` : 'Last step'}
+      >
+        &rsaquo;
+      </button>
     </nav>
   )
 }

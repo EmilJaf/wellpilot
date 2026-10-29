@@ -77,7 +77,7 @@ button {
 
 .app {
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  grid-template-rows: auto auto minmax(0, 1fr);
   height: 100vh;
 }
 
@@ -126,6 +126,11 @@ button {
   background: var(--panel);
   overflow: auto;
   min-height: 0;
+}
+
+/* What happened next is the story's turn: the data column takes the larger share. */
+.console.is-wide-data {
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
 }
 
 /* data column: the charts stay put while the evidence below them scrolls */
@@ -178,7 +183,7 @@ button {
 
 .panel-head h2 {
   margin: 0;
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 700;
   font-stretch: var(--narrow);
   color: var(--ink);
@@ -205,7 +210,8 @@ button {
   .app {
     height: auto;
   }
-  .console {
+  .console,
+  .console.is-wide-data {
     grid-template-columns: minmax(0, 1fr);
   }
   .story-col,
@@ -262,7 +268,7 @@ button {
   padding: 5px 12px 5px 6px;
   border-radius: 999px;
   color: var(--ink-2);
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
@@ -314,6 +320,56 @@ button {
   }
 }
 
+.story-arrow,
+.story-count {
+  display: none;
+}
+
+/* A phone: the current step alone, "Step 2 of 5", with arrows either side. */
+@media (max-width: 700px) {
+  .story {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 8px;
+    overflow: visible;
+  }
+  .story ol {
+    flex: 1;
+    min-width: 0;
+    padding: 0;
+  }
+  .story li:not(:has(.is-current)) {
+    display: none;
+  }
+  .story li + li::before {
+    display: none;
+  }
+  .story-count {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink-3);
+    white-space: nowrap;
+  }
+  .story-arrow {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--rule-strong);
+    border-radius: 50%;
+    background: var(--sheet);
+    color: var(--brand);
+    font-size: 22px;
+    line-height: 1;
+  }
+  .story-arrow:disabled {
+    color: var(--rule-strong);
+    cursor: default;
+  }
+}
+
 /* ---------- the agent's work, in one line that stays in sight ---------- */
 
 .work {
@@ -331,7 +387,7 @@ button {
   border: 0;
   background: var(--brand-wash);
   text-align: left;
-  font-size: 14.5px;
+  font-size: 15px;
   color: var(--ink-2);
 }
 
@@ -522,7 +578,7 @@ button {
 
 .voice-note {
   margin: -2px 0 0;
-  font-size: 13px;
+  font-size: 13.5px;
   color: var(--ink-2);
 }
 
@@ -559,7 +615,7 @@ button {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 13px;
+  font-size: 13.5px;
   color: var(--ink-2);
   cursor: help;
 }
@@ -665,7 +721,7 @@ button {
 
 .intro-lead {
   margin: 0 0 18px;
-  font-size: 15.5px;
+  font-size: 15px;
   line-height: 1.55;
   color: var(--ink-2);
   max-width: 60ch;
@@ -700,7 +756,7 @@ button {
 }
 
 .intro-steps strong {
-  font-size: 14.5px;
+  font-size: 15px;
   color: var(--ink);
 }
 
@@ -713,7 +769,7 @@ button {
   margin-right: 7px;
   border: 1.5px solid var(--ink);
   border-radius: 50%;
-  font-size: 12px;
+  font-size: 12.5px;
   font-variant-numeric: tabular-nums;
 }
 
@@ -727,11 +783,97 @@ button {
   }
 }
 
-.intro-note {
-  margin: 18px 0 0;
-  font-size: 13px;
+/* the first screen's one thing to do: the question the recorded run was asked, and play */
+.intro-case {
+  margin: 0 0 16px;
+  padding: 16px 18px 14px;
+  border: 1px solid var(--rule-strong);
+  border-left: 4px solid var(--brand);
+  border-radius: 6px;
+  background: var(--panel);
+}
+
+.intro-case-label {
+  margin: 0 0 4px;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.intro-question {
+  margin: 0 0 14px;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.4;
+  max-width: 52ch;
+}
+
+.intro-cta {
+  padding: 12px 26px;
+  font-size: 16px;
+}
+
+.intro-after {
+  margin: 10px 0 0;
+  font-size: 13.5px;
   color: var(--ink-3);
-  max-width: 62ch;
+}
+
+.intro-more {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 18px;
+  margin: 0 0 22px;
+  font-size: 15px;
+}
+
+.examples-menu summary {
+  cursor: pointer;
+  color: var(--brand);
+}
+
+.examples-list {
+  display: grid;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding-left: 14px;
+  font-size: 15px;
+}
+
+/* the open run's question, in place of the ask bar */
+.asked {
+  padding: 14px 28px 12px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.asked-label {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  font-stretch: var(--narrow);
+  color: var(--ink-3);
+}
+
+.asked-question {
+  margin: 2px 0 6px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.45;
+  max-width: 70ch;
+}
+
+.asked .link-button {
+  font-size: 13.5px;
+}
+
+.ask-close {
+  margin-left: auto;
+}
+
+@media (max-width: 1100px) {
+  .asked {
+    padding: 12px 16px 10px;
+  }
 }
 
 .live-now {
@@ -760,7 +902,12 @@ button {
 
 .live-rejection {
   margin: 0 0 16px;
-  font-size: 14px;
+  font-size: 13.5px;
+}
+
+.summary-lead.is-short {
+  font-size: 26px;
+  line-height: 1.25;
 }
 
 .summary-lead {
@@ -783,7 +930,7 @@ button {
 
 .intro-who {
   margin: 22px 0 0;
-  font-size: 14px;
+  font-size: 13.5px;
   line-height: 1.55;
   color: var(--ink-2);
   max-width: 64ch;
@@ -795,7 +942,7 @@ button {
 
 @media (max-width: 700px) {
   .summary-lead {
-    font-size: 18.5px;
+    font-size: 18px;
   }
   .summary {
     font-size: 15px;
@@ -815,7 +962,7 @@ button {
   padding: 0 9px;
   border: 1.5px solid var(--ink);
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 700;
   font-stretch: var(--narrow);
   line-height: 1.6;
@@ -851,7 +998,7 @@ button {
 
 .finding-index {
   padding-top: 3px;
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 700;
   font-stretch: var(--narrow);
   font-variant-numeric: tabular-nums;
@@ -995,7 +1142,7 @@ button.evidence-chip[aria-pressed="true"] .chip-tool {
 }
 
 .track-time {
-  font-size: 12px;
+  font-size: 12.5px;
   font-stretch: var(--narrow);
   color: var(--ink-3);
   text-align: right;
@@ -1022,7 +1169,7 @@ button.evidence-chip[aria-pressed="true"] .chip-tool {
 .narration {
   margin: 0 0 6px;
   color: var(--ink-2);
-  font-size: 14px;
+  font-size: 13.5px;
 }
 
 .step-label {
@@ -1084,12 +1231,12 @@ button.evidence-chip[aria-pressed="true"] .chip-tool {
 
 .call-name {
   font-weight: 600;
-  font-size: 14px;
+  font-size: 13.5px;
 }
 
 .call-args {
   display: block;
-  font-size: 13px;
+  font-size: 13.5px;
   color: var(--ink-2);
   overflow-wrap: anywhere;
 }
@@ -1101,7 +1248,7 @@ button.evidence-chip[aria-pressed="true"] .chip-tool {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 700;
   font-stretch: var(--narrow);
   font-variant-numeric: tabular-nums;
@@ -1131,7 +1278,7 @@ button.evidence-chip[aria-pressed="true"] {
   margin: 4px 0 4px -6px;
   padding: 8px 10px;
   border-radius: 4px;
-  font-size: 13px;
+  font-size: 13.5px;
 }
 
 .flag svg {
@@ -1178,7 +1325,7 @@ button.evidence-chip[aria-pressed="true"] {
   align-items: center;
   gap: 8px;
   color: var(--ink-2);
-  font-size: 14px;
+  font-size: 13.5px;
 }
 
 .pulse {
@@ -1205,7 +1352,7 @@ button.evidence-chip[aria-pressed="true"] {
 /* Muse Spark Open's own reasoning for a step, folded away by default */
 .reasoning {
   margin: 0 0 6px;
-  font-size: 13px;
+  font-size: 13.5px;
   color: var(--ink-2);
 }
 
@@ -1266,7 +1413,7 @@ button.evidence-chip[aria-pressed="true"] {
   gap: 2px 14px;
   min-height: 21px;
   margin: 0 0 6px;
-  font-size: 13px;
+  font-size: 13.5px;
   color: var(--ink-2);
   font-variant-numeric: tabular-nums;
 }
@@ -1308,7 +1455,7 @@ button.evidence-chip[aria-pressed="true"] {
 
 .well-picker {
   font: inherit;
-  font-size: 13px;
+  font-size: 13.5px;
   padding: 3px 6px;
   border: 1px solid var(--rule-strong);
   border-radius: 4px;
@@ -1382,7 +1529,7 @@ button.evidence-chip[aria-pressed="true"] {
   background: var(--sheet);
   border-left: 3px solid var(--ink);
   border-radius: 4px;
-  font-size: 14px;
+  font-size: 13.5px;
 }
 
 .hit {
@@ -1418,7 +1565,7 @@ li.hit {
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr);
   gap: 2px 12px;
-  font-size: 13px;
+  font-size: 13.5px;
   color: var(--ink-2);
 }
 
@@ -1440,7 +1587,7 @@ code,
 
 .data-table {
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: 13.5px;
   font-variant-numeric: tabular-nums;
   width: 100%;
 }
@@ -1490,7 +1637,7 @@ code,
 
 .event-kind,
 .fact-source {
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 700;
   font-stretch: var(--narrow);
   color: var(--ink-3);
@@ -1502,7 +1649,7 @@ code,
 }
 
 .check-badge {
-  font-size: 12px;
+  font-size: 12.5px;
   font-stretch: var(--narrow);
   font-weight: 500;
   color: var(--ink-2);
@@ -1528,13 +1675,14 @@ code,
 
 /* ---------- footer ---------- */
 
+/* at the end of the story column: there on every page, never in the way */
 .credits {
   margin: 0;
-  padding: 7px 24px 9px;
-  border-top: 1px solid var(--rule-strong);
+  padding: 14px 28px 18px;
+  border-top: 1px solid var(--rule);
   background: var(--panel);
   color: var(--ink-3);
-  font-size: 12px;
+  font-size: 12.5px;
   line-height: 1.45;
 }
 
@@ -1559,7 +1707,7 @@ code,
   border: 0;
   border-radius: 4px;
   background: none;
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 600;
   color: var(--ink-2);
 }
@@ -1626,7 +1774,7 @@ code,
 
 .plan-note {
   fill: var(--ink-2);
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 600;
 }
 
@@ -1669,7 +1817,7 @@ code,
 
 .plan-summary {
   margin: 10px 0 4px;
-  font-size: 14.5px;
+  font-size: 15px;
   line-height: 1.5;
   max-width: 62ch;
 }
@@ -1684,7 +1832,7 @@ code,
 /* the reveal: the model's reasoning read for the hidden period */
 .reasoning-line {
   margin: 0 0 12px;
-  font-size: 13px;
+  font-size: 13.5px;
   line-height: 1.5;
   color: var(--ink-2);
 }
@@ -1698,7 +1846,7 @@ code,
 .reasoning-found ul {
   margin: 4px 0 0;
   padding-left: 18px;
-  font-size: 13px;
+  font-size: 13.5px;
 }
 
 /* what each Meta model did for this answer: one quiet line under the status */
@@ -1708,7 +1856,7 @@ code,
   padding: 9px 14px 10px;
   border: 1px solid var(--rule-strong);
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 13.5px;
   line-height: 1.55;
   color: var(--ink-2);
 }
@@ -1806,7 +1954,7 @@ code,
 
 .evidence-subhead {
   margin: 10px 0 4px;
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 650;
 }
 
@@ -1869,7 +2017,7 @@ code,
 
 .accuracy-lead {
   margin: 0 0 14px;
-  font-size: 14px;
+  font-size: 13.5px;
   line-height: 1.5;
   color: var(--ink-2);
   max-width: 64ch;
@@ -1943,14 +2091,14 @@ code,
 .error-bar-note {
   display: block;
   font-style: normal;
-  font-size: 12px;
+  font-size: 12.5px;
   color: var(--ink-3);
   font-weight: 400;
 }
 
 .accuracy-closer {
   margin: 12px 0 16px;
-  font-size: 14px;
+  font-size: 13.5px;
   line-height: 1.5;
   max-width: 64ch;
 }
@@ -2003,7 +2151,7 @@ code,
 
 .strip-well {
   fill: var(--ink-2);
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 600;
 }
 
@@ -2160,7 +2308,7 @@ code,
 
 .plan-figure-finding {
   margin: 0 0 4px;
-  font-size: 14.5px;
+  font-size: 15px;
 }
 
 .plan-figure-quotes {
@@ -2206,7 +2354,7 @@ code,
 }
 
 .inside-head {
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 650;
   fill: var(--ink);
 }
@@ -2297,7 +2445,7 @@ code,
 .inside-jobs {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: 13.5px;
   line-height: 1.4;
 }
 
@@ -2349,7 +2497,7 @@ code,
 }
 
 .inside-plots figcaption {
-  font-size: 12px;
+  font-size: 12.5px;
   color: var(--ink-3);
 }
 
@@ -2399,7 +2547,7 @@ code,
 }
 
 .timeline-well {
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 700;
   fill: var(--ink);
 }
@@ -2501,7 +2649,7 @@ code,
 }
 
 .film-count {
-  font-size: 13px;
+  font-size: 13.5px;
   color: var(--ink-3);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -2509,7 +2657,7 @@ code,
 
 .film-caption {
   margin: 0 0 6px;
-  font-size: 14px;
+  font-size: 13.5px;
   line-height: 1.5;
   color: var(--ink-2);
   max-width: 72ch;
@@ -2545,21 +2693,21 @@ code,
 
 .case-why-head {
   margin: 0 0 6px;
-  font-size: 14px;
+  font-size: 13.5px;
 }
 
 .case-why blockquote {
   margin: 0 0 8px;
   padding: 2px 0 2px 12px;
   border-left: 3px solid var(--ink);
-  font-size: 14.5px;
+  font-size: 15px;
   line-height: 1.5;
   max-width: 64ch;
 }
 
 .case-inference {
   margin: 0 0 6px;
-  font-size: 14px;
+  font-size: 13.5px;
   line-height: 1.5;
   max-width: 64ch;
 }
@@ -2582,7 +2730,7 @@ code,
   width: 100%;
   margin-top: 14px;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: 13.5px;
   font-variant-numeric: tabular-nums;
 }
 
@@ -2597,7 +2745,7 @@ code,
 .case-table thead th {
   font-weight: 600;
   color: var(--ink-3);
-  font-size: 12px;
+  font-size: 12.5px;
 }
 
 .case-table tbody th {
@@ -2616,7 +2764,7 @@ code,
 
 .case-question {
   margin-top: 12px;
-  font-size: 13px;
+  font-size: 13.5px;
   color: var(--ink-2);
 }
 
@@ -2700,7 +2848,7 @@ code,
   gap: 6px;
   align-items: flex-start;
   margin: 6px 0 0;
-  font-size: 13px;
+  font-size: 13.5px;
   line-height: 1.45;
   color: var(--ink-2);
 }
@@ -2765,7 +2913,7 @@ code,
 
 .design-limit-label {
   fill: var(--ink);
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 600;
   paint-order: stroke;
   stroke: var(--sheet);
@@ -2791,20 +2939,20 @@ code,
 .tool-code pre {
   max-height: 360px;
   overflow: auto;
-  font-size: 12px;
+  font-size: 12.5px;
 }
 
 .page-open {
   display: inline-block;
   margin-top: 6px;
-  font-size: 13px;
+  font-size: 13.5px;
   color: var(--ink-2);
 }
 
 .charts-toggle {
   margin-left: auto;
   margin-right: 10px;
-  font-size: 13px;
+  font-size: 13.5px;
   white-space: nowrap;
 }
 
@@ -2825,7 +2973,7 @@ code,
 /* ---------- the answer as a readout: status, conclusion, findings ---------- */
 
 .status {
-  margin-bottom: 18px;
+  margin: 18px 0;
   border: 1px solid var(--rule-strong);
   border-left: 4px solid var(--ink);
   border-radius: 6px;
@@ -2842,7 +2990,7 @@ code,
   grid-template-columns: 18px minmax(0, 1fr);
   gap: 10px;
   padding: 11px 14px 9px;
-  font-size: 14px;
+  font-size: 13.5px;
   color: var(--ink-2);
 }
 
@@ -2876,7 +3024,7 @@ code,
 .caught {
   padding: 9px 14px 10px 42px;
   border-top: 1px solid var(--rule);
-  font-size: 14px;
+  font-size: 13.5px;
   color: var(--ink-2);
 }
 
@@ -2920,7 +3068,7 @@ code,
 
 .caught-more {
   margin: 4px 0 0;
-  font-size: 13px;
+  font-size: 13.5px;
 }
 
 @media (max-width: 700px) {
@@ -3085,7 +3233,7 @@ code,
 }
 
 .screen-role {
-  font-size: 13px;
+  font-size: 13.5px;
   color: var(--ink-3);
 }
 
@@ -3097,7 +3245,7 @@ code,
 }
 
 .screen-metrics dt {
-  font-size: 12px;
+  font-size: 12.5px;
   font-stretch: var(--narrow);
   color: var(--ink-3);
 }
@@ -3208,7 +3356,7 @@ code,
   padding: 6px 10px;
   border: 1px solid var(--rule);
   border-radius: 4px;
-  font-size: 14px;
+  font-size: 13.5px;
 }
 
 .forecast-bands dt {
@@ -3356,8 +3504,13 @@ code,
 .finding-detail p {
   margin: 4px 0 0;
   color: var(--ink-2);
-  font-size: 14px;
+  font-size: 13.5px;
   line-height: 1.5;
+}
+
+.finding-detail .finding-ids {
+  color: var(--ink-3);
+  font-size: 12.5px;
 }
 
 /* ---------- the second opinion on the accepted answer ---------- */
@@ -3367,7 +3520,7 @@ code,
   border-left: 3px solid var(--caution);
   background: var(--caution-wash);
   border-radius: 0 4px 4px 0;
-  font-size: 14.5px;
+  font-size: 15px;
   line-height: 1.5;
 }
 
@@ -3397,6 +3550,37 @@ code,
   font-weight: 600;
 }
 
+/* the reveal's three numbers: forecast, outcome, error */
+.verdict-figures {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, max-content));
+  gap: 6px 36px;
+  margin: 6px 0 10px;
+}
+
+.verdict-figures dt {
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.verdict-figures dd {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 700;
+  font-stretch: var(--narrow);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+}
+
+@media (max-width: 700px) {
+  .verdict-figures {
+    gap: 6px 18px;
+  }
+  .verdict-figures dd {
+    font-size: 23px;
+  }
+}
+
 /* ---------- try to fool the checker: edit a finding, check it again ---------- */
 .fool {
   margin-top: 28px;
@@ -3407,7 +3591,7 @@ code,
 .fool-lead {
   margin: 4px 0 10px;
   color: var(--ink-2);
-  font-size: 14px;
+  font-size: 13.5px;
   line-height: 1.5;
   max-width: 62ch;
 }
@@ -3467,7 +3651,7 @@ code,
 
 .fool-result .flag {
   margin-left: 0;
-  font-size: 14px;
+  font-size: 13.5px;
 }
 
 .fool-closest {
@@ -3495,7 +3679,7 @@ code,
 
 .fool-attempts {
   margin-top: 6px;
-  font-size: 14px;
+  font-size: 13.5px;
 }
 
 .fool-attempts-head {
@@ -3558,7 +3742,7 @@ code,
 .status-facts {
   margin: 2px 0 0;
   padding: 0;
-  font-size: 13px;
+  font-size: 13.5px;
   color: var(--ink-3);
   font-variant-numeric: tabular-nums;
 }
@@ -3613,7 +3797,7 @@ code,
   grid-template-columns: minmax(0, 13em) minmax(0, 1fr) 4.5em;
   align-items: center;
   gap: 10px;
-  font-size: 13px;
+  font-size: 13.5px;
 }
 
 .error-bars-case li.is-agent {
@@ -3654,7 +3838,7 @@ code,
 .work-next-verdict {
   max-width: 68ch;
   margin: 8px 0 0;
-  font-size: 15.5px;
+  font-size: 15px;
   line-height: 1.5;
 }
 
@@ -3666,7 +3850,7 @@ code,
   width: 100%;
   max-width: 640px;
   height: auto;
-  font-size: 11px;
+  font-size: 11.5px;
 }
 
 .depth-strip figcaption {

@@ -22,6 +22,8 @@ type Props = {
   revealed: boolean
   onReveal?: () => void // a run made with data up to a past date: show what happened next
   wells: string[] // the field's wells, for the editor's "name another well" trick
+  onAsk: () => void // open the ask bar for a question of one's own
+  examples: ReactNode // the other recorded answers, for the first screen
 }
 
 /**
@@ -124,18 +126,43 @@ function firstSentenceEnd(text: string, spans: Span[] | undefined): number | nul
   return null
 }
 
-/** The summary with its first sentence, the plain answer, set apart as the lead. */
+/** Where the headline ends: the summary's first clause (before a dash, semicolon, colon or
+    comma) when it is a statement of 3 to 24 words, else its first sentence. A model's first
+    sentence runs to 40 words; its first clause is usually the answer ("F-12 needs attention
+    most"). The cut never falls inside a quote or a number. */
+function headlineEnd(text: string, spans: Span[] | undefined): number | null {
+  const sentence = firstSentenceEnd(text, spans)
+  const inside = (cut: number) => (spans ?? []).some((s) => s.start < cut && s.end > cut)
+  for (const m of text.slice(0, sentence ?? text.length).matchAll(/\s[—–]\s|[;:,]\s/g)) {
+    const cut = m.index ?? 0
+    const words = text.slice(0, cut).trim().split(/\s+/).length
+    if (words > 24) break
+    if (words >= 3 && !inside(cut)) return cut
+  }
+  return sentence
+}
+
+/** The summary with its first clause, the plain answer, as the headline; the rest of it reads
+    on beneath. The words are the agent's own, checked like every finding: the page only cuts
+    them and starts the rest with a capital. */
 function Summary({ text, spans, open, quoteSource }: { text: string; spans?: Span[]; open: Props['onSelectEvidence']; quoteSource?: string }) {
-  const cut = firstSentenceEnd(text, spans)
+  const cut = headlineEnd(text, spans)
   if (cut === null) return <p className="summary-lead">{bySpans(text, spans, open, quoteSource)}</p>
-  const rest = text.slice(cut).trimStart()
+  const rest = text.slice(cut).replace(/^[\s—–;:,]+/, '')
   const offset = text.length - rest.length
   const shift = (list: Span[] | undefined, from: number, to: number, by: number) =>
     list?.filter((s) => s.start >= from && s.end <= to).map((s) => ({ ...s, start: s.start - by, end: s.end - by }))
+  const head = text.slice(0, cut)
   return (
     <>
-      <p className="summary-lead">{bySpans(text.slice(0, cut), shift(spans, 0, cut, 0), open, quoteSource)}</p>
-      <p className="summary">{bySpans(rest, shift(spans, offset, text.length, offset), open, quoteSource)}</p>
+      <p className={`summary-lead${head.split(/\s+/).length <= 10 ? ' is-short' : ''}`}>
+        {bySpans(head, shift(spans, 0, cut, 0), open, quoteSource)}
+      </p>
+      {rest && (
+        <p className="summary">
+          {bySpans(rest.charAt(0).toUpperCase() + rest.slice(1), shift(spans, offset, text.length, offset), open, quoteSource)}
+        </p>
+      )}
     </>
   )
 }
@@ -149,7 +176,7 @@ export function Answer(props: Props) {
         {final ? (
           <Final {...props} />
         ) : state.status === 'idle' ? (
-          <Intro recorded={props.recorded} onReplay={props.onReplay} />
+          <Intro recorded={props.recorded} onReplay={props.onReplay} onAsk={props.onAsk} examples={props.examples} />
         ) : state.status === 'error' ? (
           <div className="empty">
             <p>
@@ -171,16 +198,48 @@ export function Answer(props: Props) {
   )
 }
 
-/** First visit: what this is, how to read it, and the one thing to try. */
-function Intro({ recorded, onReplay }: { recorded: RunSummary | null; onReplay: (id: string) => void }) {
+/** First visit: what this is and one thing to do, watch it work; asking your own question and
+    the other recorded answers come after it. */
+function Intro({
+  recorded,
+  onReplay,
+  onAsk,
+  examples,
+}: {
+  recorded: RunSummary | null
+  onReplay: (id: string) => void
+  onAsk: () => void
+  examples: ReactNode
+}) {
   return (
     <div className="intro">
       <h3 className="intro-title">Ask why a well changed.</h3>
       <p className="intro-lead">
-        An AI agent works it out on the field&rsquo;s own data and reports. Every number in its answer is
-        checked against the data before you see it. Set a past date and it answers as of that day; then see
-        what happened next.
+        An AI agent on Meta&rsquo;s open-weight Muse Spark Open works it out from the field&rsquo;s own data and
+        reports, and a checker verifies every number before you see it.
       </p>
+      {recorded && (
+        <div className="intro-case">
+          <p className="intro-case-label">
+            {recorded.as_of
+              ? `It is ${recorded.as_of}. The agent sees no data after that day, and is asked:`
+              : 'The agent is asked:'}
+          </p>
+          <p className="intro-question">{recorded.question}</p>
+          <button type="button" className="primary-button intro-cta" onClick={() => onReplay(recorded.id)}>
+            Watch it work
+          </button>
+          <p className="intro-after">
+            A recording of a real run, so no wait and no cost.{recorded.as_of && ' Afterwards, see whether its forecast came true.'}
+          </p>
+        </div>
+      )}
+      <div className="intro-more">
+        <button type="button" className="link-button" onClick={onAsk}>
+          Ask your own question
+        </button>
+        {examples}
+      </div>
       {/* plan, check, trace: the order the agent works in */}
       <ol className="intro-steps">
         <li>
@@ -196,19 +255,11 @@ function Intro({ recorded, onReplay }: { recorded: RunSummary | null; onReplay: 
           <span>Any number opens the tool result and the code that produced it.</span>
         </li>
       </ol>
-      {recorded && (
-        <button type="button" className="primary-button" onClick={() => onReplay(recorded.id)}>
-          {recorded.as_of ? `Watch it answer as of ${recorded.as_of}` : 'Watch a recorded run'}
-        </button>
-      )}
       <p className="intro-who">
         <strong>For production and reservoir engineers.</strong> Why output fell, whether a gauge or the reservoir is
-        to blame, what next year brings, how the field compares with its plan: questions that mean working across
-        databases, PDF reports and spreadsheets, answered in about a minute.
-      </p>
-      <p className="intro-note">
-        Runs on Muse Spark Open, Meta&rsquo;s open-weight model, so an operator can host it next to well data that
-        never leaves the company. The data here is Volve, a North Sea field Equinor published openly.
+        to blame, what next year brings: questions that mean working across databases, PDF reports and spreadsheets,
+        answered in about a minute. The model is open-weight, so an operator can run it next to data that never leaves
+        the company. The data here is Volve, a North Sea field Equinor published openly.
       </p>
     </div>
   )
@@ -317,7 +368,52 @@ function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSe
   const fixes = corrections(state.steps, final.findings)
   const history = fixes.length ? <CorrectionList items={fixes} bare /> : <Rounds rounds={rounds} />
   const seconds = state.steps.reduce((t, step) => t + step.seconds, 0)
-  const facts = final.findings.filter((f) => f.confidence === 'fact').length
+  const sam = final.meta_models && (final.meta_models.sam.figures.length > 0 || final.meta_models.sam.logs.length > 0)
+
+  // The answer first, then one line on how it was checked; the checker's rounds, the models'
+  // parts and the second opinion fold under it. An answer that did not pass says so first.
+  const status = (
+    <div className={`status${final.verified ? '' : ' status-alarm'}`} role="status">
+      <div className="status-main">
+        {final.verified ? <CheckIcon /> : <AlarmIcon />}
+        <p className="status-line">
+          <strong>
+            {final.verified ? 'Every number, date and quote matches its source.' : 'Not every number could be checked.'}
+          </strong>{' '}
+          {final.verified
+            ? sentBack.length > 0 &&
+              `The checker sent the answer back ${sentBack.length === 1 ? 'once' : sentBack.length === 2 ? 'twice' : `${sentBack.length} times`}, with ${problems} ${problems === 1 ? 'issue' : 'issues'}, and the agent fixed ${problems === 1 ? 'it' : 'them'}.`
+            : final.finished
+              ? final.findings.length
+                ? 'Problems remained after the last correction round.'
+                : 'No findings were submitted.'
+              : `Stopped early: ${final.stopped ?? 'step limit'}.`}
+          {final.verified && review?.outcome === 'revised' &&
+            ` A second opinion then questioned the reasoning, and the agent revised its answer${afterReview.length > 1 ? `, checked again on attempt ${afterReview.length}` : ''}.`}
+          {final.verified && review?.outcome === 'kept' &&
+            ' A second opinion then questioned the reasoning; the revision did not pass the checker, so this is the checked answer.'}
+        </p>
+      </div>
+      {sam && final.meta_models && <MetaLine m={final.meta_models} open={onSelectEvidence} />}
+      <details className="status-more">
+        <summary>How this answer was checked</summary>
+        <p className="status-facts">
+          {final.steps} steps and {final.evidence.length} tool results in {Math.round(seconds)} s,{' '}
+          {compact(final.tokens.input + final.tokens.output)} tokens.
+        </p>
+        <p className="status-note">
+          Every number, date and quote in the answer was found in the tool result it cites, as the well, quantity,
+          direction and event the text says, and causes are marked as inferences. Not checked: whether the reasoning
+          holds. That is for you to judge, and every source is one click away.
+        </p>
+        {sentBack.length > 0 && fixes.length > 0 && <CaughtList items={fixes} />}
+        {rounds.length > 0 && sentBack.length > 0 && history}
+        {!sam && final.meta_models && <MetaLine m={final.meta_models} open={onSelectEvidence} />}
+        {review && <SecondOpinion review={review} />}
+      </details>
+    </div>
+  )
+
   return (
     <>
       {/* The headline is the agent's own summary, checked like every finding: no line of
@@ -342,93 +438,10 @@ function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSe
         </div>
       )}
 
-      <div className={`status${final.verified ? '' : ' status-alarm'}`} role="status">
-        <div className="status-main">
-          {final.verified ? <CheckIcon /> : <AlarmIcon />}
-          <div>
-            <p className="status-line">
-              <strong>
-                {final.verified
-                  ? rounds.length > 1
-                    ? `Sources checked on attempt ${rounds.length}.`
-                    : 'Sources checked on the first attempt.'
-                  : 'Sources not all checked.'}
-              </strong>{' '}
-              {final.verified
-                ? rounds.length > 1 &&
-                  `The checker sent ${rounds.length === 2 ? 'the first answer' : `${rounds.length - 1} answers`} back with ${problems} ${problems === 1 ? 'problem' : 'problems'}; the agent fixed ${problems === 1 ? 'it' : 'them'}.`
-                : final.finished
-                  ? final.findings.length
-                    ? 'Problems remained after the last correction round.'
-                    : 'No findings were submitted.'
-                  : `Stopped early: ${final.stopped ?? 'step limit'}.`}
-              {final.verified && review?.outcome === 'revised' &&
-                ` Then a second opinion questioned the reasoning; the agent checked and revised its answer, and the checker verified it again${afterReview.length > 1 ? ` on attempt ${afterReview.length}` : ''}.`}
-              {final.verified && review?.outcome === 'kept' &&
-                ' Then a second opinion questioned the reasoning; the revision did not pass the checker, so this is the checked answer.'}
-            </p>
-            <p className="status-facts">
-              {final.steps} steps and {final.evidence.length} tool results in {Math.round(seconds)} s,{' '}
-              {compact(final.tokens.input + final.tokens.output)} tokens.
-            </p>
-          </div>
-        </div>
-        <details className="status-more">
-          <summary>
-            {sentBack.length > 0
-              ? `What the checker caught (${problems}) and how the agent fixed it`
-              : 'What the checker checks'}
-          </summary>
-          {sentBack.length > 0 && fixes.length > 0 && <CaughtList items={fixes} />}
-          <p className="status-note">
-            Every number, date and quote in the answer was found in the tool result it cites, as the well,
-            quantity, direction and event the text says, and causes are marked as inferences. Not checked: whether
-            the reasoning holds. That is for you to judge, and every source is one click away.
-          </p>
-          {rounds.length > 0 && sentBack.length > 0 && history}
-        </details>
-      </div>
-
-      {final.meta_models && <MetaLine m={final.meta_models} open={onSelectEvidence} />}
-
-      {review && (
-        <section className={`second-opinion${review.points.length ? '' : ' is-sound'}`} aria-label="Second opinion">
-          <h3 className="section-label">Second opinion</h3>
-          {review.points.length === 0 ? (
-            <p>
-              <CheckIcon /> A reviewer (the same model, reading as a senior reservoir engineer) found the reasoning
-              sound. It checks what the checker does not: whether the conclusion follows.
-            </p>
-          ) : (
-            <>
-              <p>
-                A reviewer (the same model, reading as a senior reservoir engineer) questioned the reasoning, which the
-                checker does not check:
-              </p>
-              <ol>
-                {review.points.map((p, i) => (
-                  <li key={i}>
-                    {p.point} <span className="second-opinion-check">Check: {p.check}</span>
-                  </li>
-                ))}
-              </ol>
-              <p className="second-opinion-outcome">
-                {review.outcome === 'revised'
-                  ? 'The agent ran the checks and revised its answer; the findings below are the revision, verified again.'
-                  : review.outcome === 'kept'
-                    ? 'The agent’s revision did not pass the checker, so the findings below are its checked answer from before the review.'
-                    : 'The agent is answering these points.'}
-              </p>
-            </>
-          )}
-        </section>
-      )}
+      {!final.verified && status}
 
       <div className="findings-head">
-        <h3 className="section-label">
-          Findings <span>{final.findings.length}: {facts} {facts === 1 ? 'fact' : 'facts'}, {final.findings.length - facts}{' '}
-          {final.findings.length - facts === 1 ? 'inference' : 'inferences'}</span>
-        </h3>
+        <h3 className="section-label">Findings</h3>
         <p className="findings-key">
           <span><i className="mark mark-fact" /> fact: shown by the data</span>
           <span><i className="mark" /> inference: an interpretation</span>
@@ -468,20 +481,6 @@ function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSe
                 >
                   {bySpans(finding.claim, finding.spans, onSelectEvidence, finding.evidence_ids.find(isReport))}
                 </p>
-                {finding.detail && (
-                  <details className="finding-detail">
-                    <summary>Details for engineers</summary>
-                    <p>{bySpans(finding.detail, finding.detail_spans, onSelectEvidence, finding.evidence_ids.find(isReport))}</p>
-                  </details>
-                )}
-                {fixed.length > 0 && (
-                  <p className="fix-tag">
-                    <RedoIcon />
-                    <span>
-                      <strong>Fixed after the checker sent it back:</strong> {[...new Set(fixed.flatMap((c) => c.changes))].join(' ')}
-                    </span>
-                  </p>
-                )}
                 <p className="sources">
                   <span className="sources-label">Sources</span>
                   {finding.evidence_ids.map((id) => (
@@ -490,26 +489,84 @@ function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSe
                       type="button"
                       className="evidence-chip"
                       aria-pressed={selectedEvidence === id}
+                      title={`Open tool result ${id}`}
                       onClick={() => {
                         onSelectFinding(i)
                         onSelectEvidence(id)
                       }}
                     >
-                      {id}
-                      {tools[id] && <span className="chip-tool">{toolName(tools[id])}</span>}
+                      {tools[id] ? toolName(tools[id]) : id}
                     </button>
                   ))}
                 </p>
+                {/* The fit statistics and the checker's corrections: for engineers, folded. */}
+                {(finding.detail || fixed.length > 0) && (
+                  <details className="finding-detail">
+                    <summary>Details for engineers</summary>
+                    {finding.detail && (
+                      <p>{bySpans(finding.detail, finding.detail_spans, onSelectEvidence, finding.evidence_ids.find(isReport))}</p>
+                    )}
+                    {fixed.length > 0 && (
+                      <p className="fix-tag">
+                        <RedoIcon />
+                        <span>
+                          <strong>Fixed after the checker sent it back:</strong>{' '}
+                          {[...new Set(fixed.flatMap((c) => c.changes))].join(' ')}
+                        </span>
+                      </p>
+                    )}
+                    <p className="finding-ids">Tool results: {finding.evidence_ids.join(', ')}</p>
+                  </details>
+                )}
               </div>
             </li>
           )
         })}
       </ol>
 
+      {final.verified && status}
+
       {state.id && final.findings.length > 0 && (
         <FoolChecker key={state.id} runId={state.id} findings={final.findings} selectedFinding={selectedFinding} wells={wells} />
       )}
     </>
+  )
+}
+
+/** A second reading of the answer's reasoning by the same model, as a senior reservoir
+    engineer: what the checker does not check. */
+function SecondOpinion({ review }: { review: NonNullable<RunState['review']> }) {
+  return (
+    <section className={`second-opinion${review.points.length ? '' : ' is-sound'}`} aria-label="Second opinion">
+      <h3 className="section-label">Second opinion</h3>
+      {review.points.length === 0 ? (
+        <p>
+          <CheckIcon /> A reviewer (the same model, reading as a senior reservoir engineer) found the reasoning sound. It
+          checks what the checker does not: whether the conclusion follows.
+        </p>
+      ) : (
+        <>
+          <p>
+            A reviewer (the same model, reading as a senior reservoir engineer) questioned the reasoning, which the
+            checker does not check:
+          </p>
+          <ol>
+            {review.points.map((p, i) => (
+              <li key={i}>
+                {p.point} <span className="second-opinion-check">Check: {p.check}</span>
+              </li>
+            ))}
+          </ol>
+          <p className="second-opinion-outcome">
+            {review.outcome === 'revised'
+              ? 'The agent ran the checks and revised its answer; the findings above are the revision, verified again.'
+              : review.outcome === 'kept'
+                ? 'The agent’s revision did not pass the checker, so the findings above are its checked answer from before the review.'
+                : 'The agent is answering these points.'}
+          </p>
+        </>
+      )}
+    </section>
   )
 }
 

@@ -82,7 +82,6 @@ export function HindsightView({ runId, onReady }: { runId: string; onReady?: () 
         The agent answered with the data up to <strong>{h.as_of}</strong>. Below is the data it could not see,
         set against what it said.
       </p>
-      {h.reasoning && <ReasoningLine r={h.reasoning} asOf={h.as_of} />}
       {h.forecasts.length === 0 && !h.work_next?.length && (
         <p className="empty">The agent made no forecast in this run.</p>
       )}
@@ -113,6 +112,7 @@ export function HindsightView({ runId, onReady }: { runId: string; onReady?: () 
         </details>
       )}
 
+      {h.reasoning && <ReasoningLine r={h.reasoning} asOf={h.as_of} />}
       <h4 className="case-title hindsight-wells-title">Every producing well, a year later</h4>
       <table className="case-table hindsight-wells">
         <thead>
@@ -345,6 +345,21 @@ function ForecastCase({ f }: { f: Hindsight['forecasts'][number] }) {
   return (
     <section className="case hindsight-forecast" aria-label={`${f.well} forecast against the outcome`}>
       <h4 className="case-title">{f.well}: forecast against the outcome</h4>
+      {/* The turn of the story, in three numbers before any prose. */}
+      <dl className="verdict-figures">
+        <div>
+          <dt>The agent forecast</dt>
+          <dd>{volume(agent.p50_sm3)}</dd>
+        </div>
+        <div>
+          <dt>The well produced</dt>
+          <dd>{volume(f.actual_sm3)}</dd>
+        </div>
+        <div className={Math.abs(agent.error) <= 0.15 ? 'is-close' : ''}>
+          <dt>Off by</dt>
+          <dd>{signed(agent.error)}</dd>
+        </div>
+      </dl>
       <p className="hindsight-verdict">
         The agent forecast <strong>{volume(agent.p50_sm3)}</strong>
         <span className="bbl" title={BARRELS_NOTE}> (about {barrels(agent.p50_sm3)} barrels)</span> of oil for{' '}
@@ -353,7 +368,7 @@ function ForecastCase({ f }: { f: Hindsight['forecasts'][number] }) {
         <span className="bbl" title={BARRELS_NOTE}> ({barrels(f.actual_sm3)} barrels)</span>:
         the forecast was <strong>{signed(agent.error)}</strong>.
       </p>
-      <CaseChart detail={f} />
+      <CaseChart detail={f} height={320} />
       {f.fixed_windows && f.fixed_windows.length > 0 && <ErrorBars f={f} />}
       {f.decomposition && <Decomposition d={f.decomposition} />}
       {f.fixed_windows && f.fixed_windows.length > 0 && (

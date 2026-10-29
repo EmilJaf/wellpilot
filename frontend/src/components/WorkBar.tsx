@@ -18,7 +18,7 @@ function tick(c: Call): [string, string] {
 }
 
 export function WorkBar({ state, open, onToggle, children }: { state: RunState; open: boolean; onToggle: () => void; children: ReactNode }) {
-  if (state.status === 'idle') return null
+  if (state.status === 'idle' || (state.status === 'error' && state.steps.length === 0)) return null
   const calls = state.steps.flatMap((s) => s.tool_calls)
   const tools = calls.filter((c) => c.name !== 'submit_findings')
   const checks = calls.filter((c) => c.name === 'submit_findings')

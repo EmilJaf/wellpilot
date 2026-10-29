@@ -149,13 +149,16 @@ function CodeRef({ codeRef }: { codeRef: string }) {
   }
   return (
     <>
-      <code>{codeRef}</code>{' '}
-      <button type="button" className="link-button" aria-expanded={open} onClick={toggle}>
+      {/* The code ref (function and hash) is for engineers: it shows with the source. */}
+      <button type="button" className="link-button" aria-expanded={open} onClick={toggle} title={codeRef}>
         {open ? 'Hide the code' : 'Show the code'}
       </button>
       {open &&
         (code?.value ? (
           <div className="tool-code">
+            <p className="evidence-sub">
+              <code>{codeRef}</code>
+            </p>
             <p className="evidence-sub">
               {code.value.same_as_run
                 ? 'The Python function that produced this result, exactly as it ran (its hash, taken with the analysis code it calls, matches).'

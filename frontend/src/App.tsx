@@ -194,11 +194,18 @@ export default function App() {
     return stepFromUrl() ?? (params.get('replay') === '1' ? 2 : params.get('run') ? 3 : 1)
   })
   const [logOpen, setLogOpen] = useState(false)
+  // The ask bar opens on request ("Ask your own question"); otherwise the open run's question
+  // shows as a line, and a first visit sees one thing to do: watch it work.
+  const [askOpen, setAskOpen] = useState(false)
+  // While a run plays, the data pane shows what the agent is running (its latest tool result),
+  // until the reader opens something there themselves.
+  const [paneFollows, setPaneFollows] = useState(false)
   // A step that needs the recorded run to finish loading first (the reveal, the checker).
   const [pending, setPending] = useState<Step | null>(null)
   // The reader can fold the charts away to give the evidence the whole column.
   const [chartsShown, setChartsShown] = useState(true)
   const setSelectedEvidence = (id: string | null, clicked?: Focus) => {
+    setPaneFollows(false)
     setSelected(id)
     // A clicked number or quote opens its source with the value marked, and a result that is
     // a page (the model's reading of one, a page of the plan): fold the charts away so the
@@ -232,7 +239,7 @@ export default function App() {
     if (!box) return
     box.style.height = 'auto'
     box.style.height = `${box.scrollHeight + 2}px`
-  }, [question])
+  }, [question, askOpen, state.status])
   const [wells, setWells] = useState<string[]>([])
   const [daily, setDaily] = useState<{ well: string; table: Table | null; error?: string } | null>(null)
   const [work, setWork] = useState<{ key: string; list: Marker[] }>({ key: '', list: [] })
@@ -250,6 +257,9 @@ export default function App() {
   } | null>(null)
 
   const running = state.status === 'starting' || state.status === 'running'
+  // A question the server would not start stays in its box, to try again or change.
+  const refused = state.status === 'error' && state.steps.length === 0
+  const askShown = askOpen || refused
   // The time machine: the date the agent's data stops at (the open run's, or the one in the
   // box before a run). Its data after that stays hidden until the reader asks to see it.
   const pastDate = state.id ? state.asOf : asOf || null
@@ -396,6 +406,25 @@ export default function App() {
     }
   }, [state.id, eventsEvidence])
 
+  // The latest tool result of a run in progress, for the data pane to show.
+  const latestCall = useMemo(() => {
+    const calls = state.steps.flatMap((s) => s.tool_calls)
+    return [...calls].reverse().find((c) => c.evidence_id && !['submit_findings', 'calculate', 'list_wells'].includes(c.name)) ?? null
+  }, [state.steps])
+  const [shownCall, setShownCall] = useState<string | null>(null)
+  if (paneFollows && running && latestCall?.evidence_id && latestCall.evidence_id !== shownCall) {
+    setShownCall(latestCall.evidence_id)
+    if (latestCall.name === 'field_screen') setView('screen')
+    else if (latestCall.name === 'production_log') setView('inside')
+    else {
+      setView('well')
+      setSelected(latestCall.evidence_id)
+      setFocus(null)
+      setChartsShown(!PAGE_TOOLS.has(latestCall.name))
+      setEvidenceAttempt((n) => n + 1)
+    }
+  }
+
   const finding = selectedFinding !== null ? state.final?.findings[selectedFinding] : undefined
   // Stable arrays, so the charts redraw only when a selection or the markers change.
   const highlights = useMemo(() => (finding ? datesIn(finding.claim) : []), [finding])
@@ -424,12 +453,42 @@ export default function App() {
     setMoving(true)
     setStep(2)
     setLogOpen(true)
+    setPaneFollows(true)
+    setShownCall(null)
+  }
+
+  // The answer's first finding, selected: its dates on the charts, its source in the pane.
+  const showFirstFinding = () => {
+    const first = state.final?.findings[0]?.evidence_ids[0]
+    if (!first) return
+    setSelectedFinding(0)
+    setPaneFollows(false)
+    setView('well')
+    setChartsShown(true)
+    setSelected(first)
+    setFocus(null)
+    setEvidenceAttempt((n) => n + 1)
+  }
+
+  // Trying to fool the checker: the finding being edited, its source open beside it.
+  const showFoolSource = () => {
+    const index = selectedFinding ?? 0
+    const first = state.final?.findings[index]?.evidence_ids[0]
+    if (!first) return
+    setSelectedFinding(index)
+    setPaneFollows(false)
+    setView('well')
+    setChartsShown(false)
+    setSelected(first)
+    setFocus(null)
+    setEvidenceAttempt((n) => n + 1)
   }
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault()
     if (!question.trim() || running) return
     reset()
+    setAskOpen(false)
     follow()
     await ask(question.trim(), asOf || undefined)
   }
@@ -450,7 +509,8 @@ export default function App() {
       if (state.status === 'done') {
         setStep(3)
         setLogOpen(false)
-      }
+        showFirstFinding()
+      } else if (state.steps.length === 0) setStep(1) // refused before it started: back to the question
     }
   }
 
@@ -476,8 +536,10 @@ export default function App() {
       setQuestion(EXAMPLES[0].question)
       setAsOf(EXAMPLES[0].asOf)
       setLogOpen(false)
-      scrollToId('ask')
-      ;questionBox.current?.focus({ preventScroll: true })
+      setAskOpen(false)
+      setView('well')
+      setChartsShown(true)
+      scrollToId('answer')
       return
     }
     if (target === 2) {
@@ -491,10 +553,8 @@ export default function App() {
       open(load, false)
     }
     setLogOpen(false)
-    if (target === 3) {
-      setView('well')
-      scrollToId('answer')
-    } else setPending(target) // once the run's answer is in
+    if (target === 3) scrollToId('answer')
+    setPending(target) // once the run's answer is in
   }
 
   // Steps 4 and 5 act on a finished answer: open what the agent could not see (or, for a run
@@ -502,8 +562,11 @@ export default function App() {
   const finishStep = useEffectEvent(() => {
     if (!pending || state.status !== 'done' || !state.final) return
     setPending(null)
-    if (pending === 5) scrollToId('fool')
-    else if (state.asOf) reveal()
+    if (pending === 3) showFirstFinding()
+    else if (pending === 5) {
+      showFoolSource()
+      scrollToId('fool')
+    } else if (state.asOf) reveal()
     else setView('accuracy')
   })
   // eslint-disable-next-line react/set-state-in-effect -- the answer comes in from the run's stream
@@ -545,6 +608,7 @@ export default function App() {
     lastIn.current[GROUP[view]] = view
   }, [view])
   const openGroup = (g: Group) => {
+    setPaneFollows(false)
     const last = lastIn.current[g]
     setView(last && (last !== 'hindsight' || (revealed && canReveal)) ? last : FIRST[g])
   }
@@ -590,21 +654,79 @@ export default function App() {
     input?.focus()
   }
 
+  // A recorded example opens its saved answer at once (no tokens, no wait); without one it
+  // fills the ask bar.
+  const pickExample = (e: (typeof EXAMPLES)[number]) => {
+    setQuestion(e.question)
+    setAsOf(e.asOf)
+    const saved = answered.find((r) => r.question === e.question && (r.as_of ?? '') === e.asOf)
+    if (saved) {
+      reset()
+      setAskOpen(false)
+      open(saved.id)
+      setStep(3)
+      setPending(3)
+      setView('well')
+    } else setAskOpen(true)
+  }
+  const exampleButtons = (list: typeof EXAMPLES) =>
+    list.map((e) => {
+      const saved = answered.find((r) => r.question === e.question && (r.as_of ?? '') === e.asOf)
+      return (
+        <button
+          key={e.label}
+          type="button"
+          className="suggestion"
+          disabled={running}
+          title={
+            (e.asOf ? `${e.question} (data up to ${e.asOf})` : e.question) +
+            (saved ? '. Opens its recorded answer; Ask the agent runs it live.' : '')
+          }
+          onClick={() => pickExample(e)}
+        >
+          {e.label}
+        </button>
+      )
+    })
+  // From the first screen the box starts empty, on all the data; from an open run it keeps
+  // that run's question and date to edit.
+  const openAsk = (fresh = false) => {
+    if (fresh) {
+      setQuestion('')
+      setAsOf('')
+    }
+    setAskOpen(true)
+    requestAnimationFrame(() => {
+      questionBox.current?.scrollIntoView({ block: 'center' })
+      questionBox.current?.focus()
+    })
+  }
+
   return (
     <div className="app">
       <header className="topbar">
         <h1 className="wordmark">WellPilot</h1>
         <p className="tagline">
-          An AI agent for well analysis whose every number is checked against the field data. On Meta&rsquo;s
-          open-weight Muse Spark Open.
+          An AI agent for well analysis. Every number checked against the data. On Meta&rsquo;s open-weight Muse Spark
+          Open.
         </p>
       </header>
       <StoryBar current={step} done={(s) => visited.has(s)} onStep={(s) => goToStep(s)} />
 
-      <main className="console">
+      <main className={`console${view === 'hindsight' ? ' is-wide-data' : ''}`}>
         {/* The story column: the question, the agent working on it, its checked answer. One
             boundary per part: a bad evidence render must not hide the live log. */}
         <div className="story-col">
+          {!askShown && state.id && state.question && (
+            <div id="ask" className="asked">
+              <p className="asked-label">{state.asOf ? `Asked with the data up to ${state.asOf}` : 'Asked'}</p>
+              <p className="asked-question">{state.question}</p>
+              <button type="button" className="link-button" onClick={() => openAsk()} disabled={running}>
+                Ask your own question
+              </button>
+            </div>
+          )}
+          {askShown && (
           <form id="ask" className="ask" onSubmit={submit} aria-label="Ask the agent">
             <div className="ask-row">
               <label className="sr-only" htmlFor="question">
@@ -660,40 +782,13 @@ export default function App() {
             )}
             <div className="suggestions">
               <span className="suggestions-label">Recorded answers</span>
-              {EXAMPLES.map((e) => {
-                const saved = answered.find((r) => r.question === e.question && (r.as_of ?? '') === e.asOf)
-                return (
-                  <button
-                    key={e.label}
-                    type="button"
-                    className="suggestion"
-                    disabled={running}
-                    title={
-                      (e.asOf ? `${e.question} (data up to ${e.asOf})` : e.question) +
-                      (saved ? '. Opens its recorded answer; Ask the agent runs it live.' : '')
-                    }
-                    onClick={() => {
-                      setQuestion(e.question)
-                      setAsOf(e.asOf)
-                      if (saved) {
-                        reset()
-                        open(saved.id)
-                        setStep(3)
-                        setView('well')
-                      }
-                    }}
-                  >
-                    {e.label}
-                  </button>
-                )
-              })}
-              {recorded && (
-                <button type="button" className="link-button" onClick={() => replay(recorded.id)} disabled={running}>
-                  or watch the 2010 one work
-                </button>
-              )}
+              {exampleButtons(EXAMPLES)}
+              <button type="button" className="link-button ask-close" onClick={() => setAskOpen(false)}>
+                Close
+              </button>
             </div>
           </form>
+          )}
           <ErrorBoundary>
             <WorkBar state={state} open={logOpen} onToggle={() => setLogOpen(!logOpen)}>
               <AgentLog state={state} selectedEvidence={selectedEvidence} onSelectEvidence={setSelectedEvidence} />
@@ -715,8 +810,24 @@ export default function App() {
               revealed={revealed}
               onReveal={canReveal ? reveal : undefined}
               wells={wells}
+              onAsk={() => openAsk(true)}
+              examples={
+                <details className="examples-menu">
+                  <summary>Other recorded answers ({EXAMPLES.length - 1})</summary>
+                  <div className="examples-list">{exampleButtons(EXAMPLES.slice(1))}</div>
+                </details>
+              }
             />
           </ErrorBoundary>
+          <footer className="credits">
+            Volve data by Equinor and the former Volve license partners (ExxonMobil Exploration &amp; Production Norway
+            AS, Bayerngas Norge AS) under the{' '}
+            <a href="https://www.equinor.com/content/dam/statoil/documents/what-we-do/Equinor-HRS-Terms-and-conditions-for-licence-to-data-Volve.pdf">
+              Equinor Open Data Licence
+            </a>
+            . Not affiliated with or endorsed by Equinor; analyses are generated by an AI agent and checked against the
+            data, not reviewed by Equinor.
+          </footer>
         </div>
 
         <ErrorBoundary>
@@ -762,7 +873,11 @@ export default function App() {
                       type="button"
                       role="tab"
                       aria-selected={view === t.view}
-                      onClick={() => (t.view === 'hindsight' ? reveal() : setView(t.view))}
+                      onClick={() => {
+                        setPaneFollows(false)
+                        if (t.view === 'hindsight') reveal()
+                        else setView(t.view)
+                      }}
                     >
                       {t.label}
                     </button>
@@ -849,15 +964,6 @@ export default function App() {
           </section>
         </ErrorBoundary>
       </main>
-      <footer className="credits">
-        Volve data by Equinor and the former Volve license partners (ExxonMobil Exploration &amp;
-        Production Norway AS, Bayerngas Norge AS) under the{' '}
-        <a href="https://www.equinor.com/content/dam/statoil/documents/what-we-do/Equinor-HRS-Terms-and-conditions-for-licence-to-data-Volve.pdf">
-          Equinor Open Data Licence
-        </a>
-        . Not affiliated with or endorsed by Equinor; analyses are generated by an AI agent and
-        checked against the data, not reviewed by Equinor.
-      </footer>
     </div>
   )
 }
