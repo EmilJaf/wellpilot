@@ -6,10 +6,13 @@
   "question": "F-12's water cut is near 0.97 and its oil rate has fallen below 200 Sm3/d. What would you recommend doing to the well, and why?"
  },
  "to_review": false,
- "note": "",
+ "note": "Oct 30 (tenth panel): verdict changed on purpose: a forecast or the WOR trend's oil left marked fact.",
  "expected": {
-  "accepted": true,
-  "flagged": []
+  "accepted": false,
+  "flagged": [
+   "Finding 2",
+   "Finding 3"
+  ]
  },
  "submission": {
   "summary": "F-12 now makes mostly water, a water cut of 97% at 175 Sm3/d oil with the choke fully open, so water is taking the well's liquid capacity. Its decline points to about 49,600 Sm3 next year, range 20,600 to 60,500 Sm3, and the 2010 water shut-off failed, so we recommend running a new production log before any plug; a plug in blank pipe 3180 to 3220 m on the old log would cut about 31% of the water for about 1% of the oil.",

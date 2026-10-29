@@ -6,11 +6,13 @@
   "question": "F-12's water cut is near 0.97 and its oil rate has fallen below 200 Sm3/d. What would you recommend doing to the well, and why?"
  },
  "to_review": false,
- "note": "Oct 29: its summary's '31% ... enters below 3,220 m' was tied to 3,180 m, and an at_blank_pipe share had no depth; both false rejections fixed (a depth the number points to, a gap's ends). Verdict changed on purpose.",
+ "note": "Oct 29: its summary's '31% ... enters below 3,220 m' was tied to 3,180 m, and an at_blank_pipe share had no depth; both false rejections fixed (a depth the number points to, a gap's ends). Verdict changed on purpose. Oct 30 (tenth panel): verdict changed on purpose: a forecast or the WOR trend's oil left marked fact.",
  "expected": {
   "accepted": false,
   "flagged": [
-   "Finding 3"
+   "Finding 2",
+   "Finding 3",
+   "Finding 6"
   ]
  },
  "submission": {

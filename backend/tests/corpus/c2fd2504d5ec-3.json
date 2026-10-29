@@ -6,10 +6,12 @@
   "question": "Was F-12's falling oil rate in 2011-2013 a loss of reservoir pressure or water taking over the well? How much oil was left before an uneconomic water cut?"
  },
  "to_review": false,
- "note": "",
+ "note": "Oct 30 (tenth panel): verdict changed on purpose: a forecast or the WOR trend's oil left marked fact.",
  "expected": {
-  "accepted": true,
-  "flagged": []
+  "accepted": false,
+  "flagged": [
+   "Finding 3"
+  ]
  },
  "submission": {
   "summary": "F-12's oil fall in 2011-2013 was water taking over the well, not a loss of reservoir pressure. Liquid rate stayed around 5,096 Sm3/d while the choke was opened to 100% and water cut rose to about 94%, and field voidage replacement stayed near 1.03. The well had already passed water cuts of 80% and 90% by the end of 2013, with about 189,000 Sm3 left before a 95% water cut on the WOR trend.",

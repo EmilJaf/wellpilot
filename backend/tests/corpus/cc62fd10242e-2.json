@@ -6,10 +6,11 @@
   "question": "Which wells need attention right now, and why? Forecast the next 12 months of oil for the well that needs it most."
  },
  "to_review": false,
- "note": "Outside review (Oct 28): 'field water cut 67% below the 80% design limit' reads as a difference from the limit, not the level; now sent back.",
+ "note": "Outside review (Oct 28): 'field water cut 67% below the 80% design limit' reads as a difference from the limit, not the level; now sent back. Oct 30 (tenth panel): verdict changed on purpose: a period's mean written as the level on one day.",
  "expected": {
   "accepted": false,
   "flagged": [
+   "Finding 1",
    "Finding 3"
   ]
  },

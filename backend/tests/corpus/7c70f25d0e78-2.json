@@ -6,11 +6,13 @@
   "question": "F-12's water cut is near 0.97 and its oil rate has fallen below 200 Sm3/d. What would you recommend doing to the well, and why?"
  },
  "to_review": false,
- "note": "Reviewed Oct 29, fair: '5 179' declared from production_monthly, where no liquid rate is 5179 (the waterflood result has it; the message now names that id); details from results it does not cite (173.5, 0.689, 42798); a hedged consequence ('so ... may') marked fact. The undeclared '60' in 'in the 60 days after' was false: production_log's plug window, now a window like 90 days.",
+ "note": "Reviewed Oct 29, fair: '5 179' declared from production_monthly, where no liquid rate is 5179 (the waterflood result has it; the message now names that id); details from results it does not cite (173.5, 0.689, 42798); a hedged consequence ('so ... may') marked fact. The undeclared '60' in 'in the 60 days after' was false: production_log's plug window, now a window like 90 days. Oct 30 (tenth panel): verdict changed on purpose: a forecast or the WOR trend's oil left marked fact.",
  "expected": {
   "accepted": false,
   "flagged": [
-   "Finding 1"
+   "Finding 1",
+   "Finding 2",
+   "Finding 6"
   ]
  },
  "submission": {

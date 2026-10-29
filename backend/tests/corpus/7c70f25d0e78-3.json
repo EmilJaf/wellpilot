@@ -6,10 +6,13 @@
   "question": "F-12's water cut is near 0.97 and its oil rate has fallen below 200 Sm3/d. What would you recommend doing to the well, and why?"
  },
  "to_review": false,
- "note": "",
+ "note": "Oct 30 (tenth panel): verdict changed on purpose: a forecast or the WOR trend's oil left marked fact.",
  "expected": {
-  "accepted": true,
-  "flagged": []
+  "accepted": false,
+  "flagged": [
+   "Finding 2",
+   "Finding 6"
+  ]
  },
  "submission": {
   "summary": "F-12 is watered out and on a fully open choke making about 175 Sm3/d at 97% water cut, with water taking its liquid capacity. Its WOR trend has already passed the 95% water cut limit by about 30,500 Sm3, and the next 12 months leave a central estimate of about 42,800 Sm3, range 27,000 to 50,700 Sm3, so a workover would not pay without a new production log to prove remaining oil.",

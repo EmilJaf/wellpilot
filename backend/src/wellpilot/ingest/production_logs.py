@@ -175,6 +175,15 @@ def inflow(log: pd.DataFrame, step_m: float = 5.0) -> dict:
     return result
 
 
+def water_cut_above(water_cut_at_top: float, share: dict) -> float | None:
+    """The water cut of the flow that enters above a depth (what a plug there would leave
+    flowing), from the pass's water cut at the top and the shares of each phase entering
+    below the depth."""
+    water = water_cut_at_top * (1 - share["water_share"])
+    oil = (1 - water_cut_at_top) * (1 - share["oil_share"])
+    return round(water / (water + oil), 3) if water + oil > 0 else None
+
+
 def inflow_below(log: pd.DataFrame, depth_m: float) -> dict | None:
     """The share of a flowing pass's oil and water entering below one depth, read at the
     logged depth nearest to it; None when the depth is outside the log."""

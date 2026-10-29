@@ -6,10 +6,13 @@
   "question": "Which wells need attention right now, and why?"
  },
  "to_review": false,
- "note": "",
+ "note": "Oct 30 (tenth panel): verdict changed on purpose: a period's mean written as the level on one day.",
  "expected": {
-  "accepted": true,
-  "flagged": []
+  "accepted": false,
+  "flagged": [
+   "Finding 4",
+   "Finding 6"
+  ]
  },
  "submission": {
   "summary": "P-1 needs attention first at 90% water cut and 146 Sm3/d on 100% choke with its downhole gauge dead 997 days since 2018-04-10, while water injector I-2 has been stopped since 2019-08-31 leaving 2020 voidage replacement at 0.78. P-4 is the field's biggest current producer at 795 Sm3/d but stepped down 31% around 2020-02-23 and still declines, and P-2's water cut has climbed to 31% and bears watching.",

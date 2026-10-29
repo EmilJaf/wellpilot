@@ -6,10 +6,12 @@
   "question": "Is F-12's missing downhole pressure after October 2010 a reservoir problem or a sensor problem?"
  },
  "to_review": false,
- "note": "",
+ "note": "Oct 30 (tenth panel): verdict changed on purpose: a period's mean written as the level on one day.",
  "expected": {
-  "accepted": true,
-  "flagged": []
+  "accepted": false,
+  "flagged": [
+   "Finding 4"
+  ]
  },
  "submission": {
   "summary": "F-12's missing downhole pressure after 2010-10-12 is a sensor failure, not a reservoir pressure collapse. The BHP gauge read zero from 2010-10-12 to 2016-09-17 while the well kept flowing for 1,830 days producing about 1.13 million Sm3, with wellhead pressure around 54 bar and normal choke and uptime.",

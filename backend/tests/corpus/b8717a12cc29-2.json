@@ -6,10 +6,12 @@
   "question": "Why did well F-12 decline faster after 2010? Compare with the 2005 development plan."
  },
  "to_review": false,
- "note": "",
+ "note": "Oct 30 (tenth panel): verdict changed on purpose: a period's mean written as the level on one day.",
  "expected": {
-  "accepted": true,
-  "flagged": []
+  "accepted": false,
+  "flagged": [
+   "Finding 2"
+  ]
  },
  "submission": {
   "summary": "Well F-12 most likely declined after 2010 because injected water broke through from its lower perforations and took its liquid capacity, raising water cut from about 3% to 70% and cutting oil by about 72%. The timing matches the 2005 plan's forecast of breakthrough after about 2 years [\"Vannproduksjonen kommer først og fremst fra injeksjonsvannet som bryter gjennom i brønnene etter omlag 2 år.\" - Water production comes primarily from injection water that breaks through in the wells after about 2 years.], but the field reached its design water cut of 80% in 2012 while staying below its liquid handling limit.",

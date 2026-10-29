@@ -111,7 +111,8 @@ def test_shifted_up_is_a_rise(word: str, accepted: bool) -> None:
     run = _run("69519dd0a995")
     log = EvidenceLog.restore(run["evidence"].values())
     text = (
-        f"F-12 oil rate shifted {word} 55% around 2010-05-02 to 1 888 Sm3/d, while choke was "
+        f"F-12 oil rate shifted {word} 55% around 2010-05-02, averaging 1 888 Sm3/d after it, "
+        "while choke was "
         "cut from 83% to 58%."
     )
     out = check_edits(run["question"], run["result"], log, [(2, text, "fact")], None)

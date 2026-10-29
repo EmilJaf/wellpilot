@@ -6,10 +6,12 @@
   "question": "Why did well F-12 decline faster after 2010? Compare with the 2005 development plan."
  },
  "to_review": false,
- "note": "",
+ "note": "Oct 30 (tenth panel): verdict changed on purpose: a period's mean written as the level on one day.",
  "expected": {
-  "accepted": true,
-  "flagged": []
+  "accepted": false,
+  "flagged": [
+   "Finding 2"
+  ]
  },
  "submission": {
   "summary": "F-12’s oil fell after mid-2010 most likely because injection water broke through and took the well’s liquid capacity; water cut rose from about 3% to over 80% while liquid rate held near 5 130 Sm3/d and the choke was opened to 100% to compensate. The timing matches the 2005 plan’s forecast of breakthrough after about 2 years [“Vannproduksjonen kommer først og fremst fra injeksjonsvannet som bryter gjennom i brønnene etter omlag 2 år.” [Water production comes primarily from injection water that breaks through in the wells after about 2 years.]] (E6), but the plan expected that point at about 6 MSm3 field cum [“På det tidspunkt er kumulativ oljeproduksjon omlag 6 MSm3” [At the time of water breakthrough the cumulative oil production is about 6 MSm3.]] (E6) while the field made 1.69 MSm3 in production year 3 against a central estimate of 2.96 MSm3.",

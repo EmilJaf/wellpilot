@@ -30,6 +30,10 @@ the tool result it cites, so do not question the numbers. Judge only the reasoni
 - an explanation stated while another was not ruled out (a gauge fault, a shut-in, a choke \
 change, work done on the well, a change in a neighbouring injector);
 - a conclusion that goes beyond what the evidence shows, or a cause marked as fact;
+- a period's average given as the level on one day ("to 1,890 around 2010-05-02" for the \
+mean of the months after), or a forecast stated as what will happen;
+- advice on a plug that ignores what the production log says it would leave flowing (its \
+water_cut_left_above against the well's water cut now);
 - a check the tools could have made and did not: well_operations for work on the well, \
 detect_events for shut-ins and gauge failures, waterflood for liquid and choke, a decline \
 fit on a window after the last change, the plan's limits for the whole field rather than \
@@ -135,6 +139,17 @@ def _leads(answer: Submission, log: EvidenceLog) -> list[str]:
                     f"{plug.get('depth_m')} m (set {plug.get('date')}); a new plug at or below "
                     "it, or in the blank pipe around it, shuts off nothing new"
                 )
+            # What a plug in each gap would leave flowing, on the latest log.
+            surveys = e.result.get("surveys") or []
+            for p in surveys[-1:] and surveys[-1].get("passes") or []:
+                for gap in p.get("at_blank_pipe") or []:
+                    if gap.get("already_isolated") or gap.get("water_cut_left_above") is None:
+                        continue
+                    leads.append(
+                        f"{e.id} production_log: on the {surveys[-1].get('date')} {p.get('pass')} "
+                        f"pass a plug in the {gap['blank_pipe_m']} m gap would leave a flow at "
+                        f"water cut {gap['water_cut_left_above']}"
+                    )
     for e in log:
         for day, what in _records(e.result):
             when = _days(day)

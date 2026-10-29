@@ -75,7 +75,10 @@ blank-pipe gap (at_blank_pipe gives the water and oil entering below each end of
 then give each gap as its own finding (what a plug there would cut off of the water and of the \
 oil on the log) and recommend one. A plug already in the hole (plugs_set) shut off what enters \
 below it: a gap marked already_isolated cuts nothing new, so never recommend it, and for the \
-others give of_flow_left, the share of what still flows. Recommend: a depth in blank pipe (never \
+others give of_flow_left, the share of what still flows. water_cut_left_above is the water \
+cut a plug at a depth would leave flowing on that log: set it against the well's water cut \
+now, which is what the plug would change (a log run at a fraction of the well's rate, \
+rate_vs_well, is a guide, not a measurement). Recommend: a depth in blank pipe (never \
 inside a perforated interval), whether new perforations above it would be needed to keep the oil, \
 and how old the log is (since_survey): if the water cut has moved far since, say a new log should \
 confirm the depth before the job, but still give the depth and what it would do on the log you \
@@ -98,7 +101,8 @@ Call tools that do not depend on each other in the same step.
 - Finish by calling submit_findings: a short summary and findings. Each finding cites the \
 evidence ids its numbers and dates come from and is marked "fact" (shown directly by the \
 evidence) or "inference" (an interpretation, such as a likely cause). A finding that \
-rests on evidence with warnings must be an inference.
+rests on evidence with warnings must be an inference, and so must a forecast and the oil \
+the WOR trend leaves before a water cut: they describe what has not happened yet.
 - Declare every number you write: in each finding's "numbers" (and the summary's \
 "summary_numbers") list it with its text exactly as written, its full value, and the \
 evidence id it comes from, e.g. {{"text": "4 050", "value": 4050, "evidence_id": "E3"}} \
@@ -121,12 +125,15 @@ and P10. Each finding's claim is one or two plain sentences with at most three n
 all declared; the fit behind it (model, window, r2_log, di, b) and exact values go in its \
 detail, copied as the tools give them: the detail's numbers need no declaring, but each \
 must be in the evidence the finding cites. Keep fit statistics out of claims and the \
-summary, and never write internal scores or field names. For a share such as water cut, \
+summary, and never write internal scores, field names or evidence ids ("(E6)") in the \
+text: the ids go in evidence_ids. For a share such as water cut, \
 give the values before and after, not a percent change. A regime change gives two \
 changes: between the periods' means (relative_change) and across the date itself \
 (change_across). Write the first as a difference between periods ("averaged 72% less after \
 2010-07-18 than before"), never as a fall at the date or a jump; a step at a date is the \
-change across (a water cut's is in points). Say when a level held: "the choke was unchanged \
+change across (a water cut's is in points). Its before_mean and after_mean are averages over \
+those periods: "averaged 1,890 Sm3/d after 2010-05-02", never "to 1,890 around 2010-05-02", \
+which reads as the rate on that day. Say when a level held: "the choke was unchanged \
 across the 2010-07-18 change and opened to 100% by 2012", never "the choke was unchanged" \
 for a period it moved in (waterflood gives the choke by year). An \
 interpretation (water taking the well's capacity, depletion, what a job did) is an \

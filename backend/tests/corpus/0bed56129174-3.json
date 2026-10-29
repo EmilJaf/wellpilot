@@ -6,10 +6,13 @@
   "question": "F-12's water cut is near 0.97 and its oil rate has fallen below 200 Sm3/d. What would you recommend doing to the well, and why?"
  },
  "to_review": false,
- "note": "",
+ "note": "Oct 30 (tenth panel): verdict changed on purpose: a forecast or the WOR trend's oil left marked fact.",
  "expected": {
-  "accepted": true,
-  "flagged": []
+  "accepted": false,
+  "flagged": [
+   "Finding 2",
+   "Finding 6"
+  ]
  },
  "submission": {
   "summary": "F-12 is at the end of its waterflood life with a water cut of about 97% and an oil rate of about 175 Sm3/d on a 100% choke, so its liquid capacity is taken by water. The 2010 production log shows almost all oil still enters above 3,180 m while about 31% of the water enters below 3,220 m, so a bridge plug set in blank pipe in the 3,180 to 3,220 m gap would cut that lower water with almost no oil loss, but the log is 1,500 days old and water cut has risen from 63% to 97% since, so a new log should confirm the depth before the job. Left alone the well is forecast to make about 42,800 Sm3 in the next 12 months, range 27,000 to 50,700 Sm3, falling to about 115 Sm3/d.",

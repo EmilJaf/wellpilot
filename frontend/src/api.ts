@@ -493,6 +493,8 @@ export type Hindsight = {
         depth_m: number
         water_share?: [number, number]
         oil_share?: [number, number]
+        /** The water cut of the flow a plug here would leave flowing, on that log. */
+        water_cut_left_above?: [number, number]
         // with a plug set after the log: at or below it, nothing new; above it, a share of the flow left
         already_isolated?: boolean
         of_flow_left?: { water_share?: [number, number]; oil_share?: [number, number] }

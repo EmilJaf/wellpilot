@@ -6,10 +6,13 @@
   "question": "F-12's water cut is near 0.97 and its oil rate has fallen below 200 Sm3/d. What would you recommend doing to the well, and why?"
  },
  "to_review": false,
- "note": "Reviewed Oct 29, fair: '3210' given the plug job's first day (2010-09-20) where the cited report sets it on 2010-09-23 (production_log now dates a plug by the report naming it), details from results it does not cite.",
+ "note": "Reviewed Oct 29, fair: '3210' given the plug job's first day (2010-09-20) where the cited report sets it on 2010-09-23 (production_log now dates a plug by the report naming it), details from results it does not cite. Oct 30 (tenth panel): verdict changed on purpose: a forecast or the WOR trend's oil left marked fact.",
  "expected": {
-  "accepted": true,
-  "flagged": []
+  "accepted": false,
+  "flagged": [
+   "Finding 4",
+   "Finding 5"
+  ]
  },
  "submission": {
   "summary": "F-12 makes almost all water with about 97% water cut and only about 175 Sm3/d of oil, its downhole gauge has been dead since 2010, and a water shut-off plug set in 2010 made things worse. The fit suggests the next 12 months will make about 49,600 Sm3, range 20,600 to 60,500 Sm3, and the WOR trend shows no recoverable oil left to 95% water cut. Do not set another plug now — run a new production log first to confirm where water enters, as the last log is 1,500 days old.",

@@ -156,3 +156,18 @@ def test_inside_the_well_puts_the_logs_plugs_and_response_on_one_depth_axis(proc
         "f12-2009-medium",
         "f12-2009-low",
     }
+
+
+def test_a_plug_s_water_cut_is_read_off_the_log(processed) -> None:
+    """The tenth panel's reservoir judge: on the 2010 log a plug at 3150 m left a flow at
+    about 0.19 water (low-rate pass) and about 0 (medium); the well came back at 0.21-0.34.
+    The passes ran at about a quarter and a half of the well's rate, which the result says."""
+    from wellpilot.ingest.production_logs import water_cut_above
+
+    assert water_cut_above(0.6, {"water_share": 0.0, "oil_share": 0.0}) == 0.6
+    assert water_cut_above(0.6, {"water_share": 1.0, "oil_share": 0.0}) == 0.0
+    result = call(processed, date(2014, 10, 31), well="F-12", below_m=[3150])["result"]
+    passes = survey(result, "PLT 2010-09")["passes"]
+    left = {p["pass"]: p["below"][0]["water_cut_left_above"] for p in passes}
+    assert 0.15 <= left["low rate"] <= 0.25 and left["medium rate"] <= 0.05
+    assert all(p["rate_vs_well"] < 0.7 for p in passes)

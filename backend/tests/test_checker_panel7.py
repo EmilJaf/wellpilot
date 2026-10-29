@@ -50,7 +50,8 @@ def test_a_true_version_is_accepted(probe: dict) -> None:
         ("F-12 oil rate fell 55% around mid-2010 to 1 888 Sm3/d, while choke was cut.", False),
         ("F-12 oil rate fell 55% around 2010-05-02 to 1 888 Sm3/d, while choke was cut.", False),
         (
-            "F-12 oil rate shifted down 55% around 2010-05-02 to 1 888 Sm3/d, while choke was cut.",
+            "F-12 oil rate shifted down 55% around 2010-05-02, averaging 1 888 Sm3/d after it, "
+            "while choke was cut.",
             True,
         ),
     ],
@@ -60,7 +61,10 @@ def test_a_change_between_periods_is_no_fall_at_a_date(text: str, accepted: bool
     assert _check(probe)["accepted"] is accepted
 
 
-SHIFT = "F-12 oil rate {} around 2010-05-02 to 1 888 Sm3/d, while choke was cut from 83% to 58%."
+SHIFT = (
+    "F-12 oil rate {} around 2010-05-02, averaging 1 888 Sm3/d after it, while choke was cut "
+    "from 83% to 58%."
+)
 NEEDS = (
     "F-12 needs attention most: it makes 1 551 Sm3/d oil at a water cut of {}, with its"
     " downhole gauge dead since 2010-10-12."

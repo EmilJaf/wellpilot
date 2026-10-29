@@ -6,10 +6,12 @@
   "question": "Why did well F-12 decline faster after 2010? Compare with the 2005 development plan."
  },
  "to_review": false,
- "note": "",
+ "note": "Oct 30 (tenth panel): verdict changed on purpose: a period's mean written as the level on one day.",
  "expected": {
-  "accepted": true,
-  "flagged": []
+  "accepted": false,
+  "flagged": [
+   "Finding 4"
+  ]
  },
  "submission": {
   "summary": "F-12 most likely declined faster after 2010 because injected water broke through in early 2010 and displaced oil at constant liquid rate. Water cut rose from about 3% to 51% around 2010-02-14 and oil rate fell 72% around 2010-07-18, thereafter declining at about 0.45 per year while liquid held and choke opened. This is consistent with the 2005 PUD which forecast breakthrough after about 2 years [etter omlag 2 år.] at field liquid capacity 13,000 Sm3/d and maximum water cut 80% [Maksimum vannkutt 0,80].",

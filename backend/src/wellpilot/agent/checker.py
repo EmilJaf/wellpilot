@@ -1873,7 +1873,62 @@ def _attribution(
                 f"is the change between the two periods' means, not a step at one date:"
                 f"{measured} call it a gradual shift"
             )
+        # "to 1 888 Sm3/d around 2010-05-02", "water cut to 81% around 2010-10-24": a
+        # period's mean written as the level on one day (the rate that day was another).
+        if (side := _period_mean(meant)) and (day := _level_at_day(text, start, end)):
+            return (
+                f"is the mean of the period {side} {day} in {item.id}, not the value on that "
+                f"day; write it as an average ('averaged {written} {side} {day}')"
+            )
     return None
+
+
+# Words that make a number a period's average, not a level on one day.
+AVERAGED = re.compile(
+    r"\b(?:averag\w*|means?|period|thereafter|typical\w*|from then|since then|"
+    r"over the (?:following|next|months?|weeks?))\b",
+    re.IGNORECASE,
+)
+
+
+def _period_mean(meant: list[_Leaf]) -> str | None:
+    """'after' or 'before' when every value the number reads as is a regime change's period
+    mean (its before_mean or after_mean, or the same number in the event's summary line)."""
+    sides = set()
+    for lf in meant:
+        labels = lf.labels.lower()
+        m = re.search(r"(?:^|\|)(before|after)_mean(?:\||$)", labels) or (
+            labels.startswith("summary")
+            and "regime_change" in labels
+            and re.search(r"\|(before|after)(?:\||$)", labels)
+        )
+        if not m:
+            return None
+        sides.add(m.group(1))
+    return sides.pop() if len(sides) == 1 else None
+
+
+def _level_at_day(text: str, start: int, end: int) -> str | None:
+    """The day a number is written as the level on ("to 1 888 around 2010-05-02", "around
+    2010-05-02 to 1 888", "81% on 2010-10-24"), unless its clause calls it an average."""
+    day = r"(\d{4}-\d{2}-\d{2})"
+    # The whole clause: "weekly mean oil rate fell from 2,082 to 1,142" has a comma in a
+    # number between the word and the mean.
+    if AVERAGED.search(_part(text, start, commas=False)):
+        return None
+    if m := re.search(
+        rf"\b(?:around|on|at)\s+{day}\s+(?:to|at)\s+(?:about\s+|~\s*)?$", text[:start]
+    ):
+        return m.group(1)
+    after = re.match(
+        rf"\s*(?:%|percent|[kM]?S?m3(?:\s*/\s*d(?:ay)?)?|bar)?\s*(?:\w+\s+){{0,3}}?"
+        rf"(?:around|on|at)\s+{day}",
+        text[end:],
+    )
+    reached = re.search(
+        r"\b(?:to|at|reached|was|of)\s+(?:about\s+|~\s*)?$", text[max(0, start - 20) : start]
+    )
+    return after.group(1) if after and reached else None
 
 
 def _own_stretch(text: str, start: int, end: int) -> str:
@@ -4320,6 +4375,48 @@ def _quote_neighbours(label: str, text: str) -> list[str]:
     return problems
 
 
+# What a forecast or a trend says about days not yet seen: a forecast's volumes, rates and
+# ranges (not its fit's parameters, which describe the past), and the WOR trend carried to
+# each reference water cut.
+PROJECTED_LABELS = re.compile(
+    r"(?:^|\|)(?:to_limits|cumulative_oil_sm3|calibrated_band_sm3|p50_by_model_sm3|"
+    r"monthly_rate_sm3_per_producing_day)\|(?!coverage|median_abs_error|past_forecasts)"
+)
+REMAINING_OIL = r"\b(?:remain\w*|left)\b[^.;]{0,30}\boil\b|\boil\b[^.;]{0,30}\b(?:remain\w*|left)\b"
+
+
+def _projections(finding: Finding, log: EvidenceLog, leaves_of) -> str:
+    """The forecasts and extrapolations a finding's declared numbers come from, named: a
+    forecast_production result, or values of the waterflood trend carried past the data."""
+    named = []
+    # "zero remaining oil to each reference water cut": the oil left, said in words.
+    if re.search(REMAINING_OIL, finding.claim, re.I):
+        named += [
+            f"{e.id}'s trend carried past the data"
+            for e in (log.get(i) for i in finding.evidence_ids)
+            if e is not None and e.tool == "waterflood"
+        ]
+    for d in finding.numbers or []:
+        item = log.get(d.evidence_id)
+        if item is None or not d.value:
+            continue
+        held = [
+            lf
+            for lf in leaves_of(item)
+            if lf.value is not None
+            and any(
+                abs(lf.value - x) <= 1e-9 * max(1, abs(x))
+                for x in (d.value, d.value * 100, d.value / 100)
+            )
+        ]
+        if held and all(PROJECTED_LABELS.search(lf.labels + "|") for lf in held):
+            what = (
+                "forecast" if item.tool == "forecast_production" else "trend carried past the data"
+            )
+            named.append(f"'{d.text}' is {item.id}'s {what}")
+    return "; ".join(dict.fromkeys(named))
+
+
 def _month_spans(label: str, text: str) -> list[str]:
     """A month range and a count of months in one sentence that disagree: "over 2011-01 to
     2012-12 ... across 36 months" (the range is 24), "87 months of 2011-2013" (at most 36)."""
@@ -4977,6 +5074,11 @@ def check_submission(submission: Submission, log: EvidenceLog, question: str = "
             problems.append(
                 f"Finding {n} is marked fact but rests on evidence with warnings ({reasons}). "
                 "Mark it inference, or refit and cite the new evidence."
+            )
+        elif finding.confidence == "fact" and (projected := _projections(finding, log, leaves_of)):
+            problems.append(
+                f"Finding {n} is marked fact but rests on a projection ({projected}): what "
+                "has not happened yet is a model's estimate. Mark it inference."
             )
 
     everything = _Pool(sound)

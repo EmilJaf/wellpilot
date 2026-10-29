@@ -6,11 +6,13 @@
   "question": "Which wells need attention right now, and why?"
  },
  "to_review": false,
- "note": "Fair (synthetic field): 1% written but not declared.",
+ "note": "Fair (synthetic field): 1% written but not declared. Oct 30 (tenth panel): verdict changed on purpose: a period's mean written as the level on one day.",
  "expected": {
   "accepted": false,
   "flagged": [
-   "Finding 5"
+   "Finding 4",
+   "Finding 5",
+   "Finding 6"
   ]
  },
  "submission": {

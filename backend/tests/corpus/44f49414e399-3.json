@@ -6,10 +6,11 @@
   "question": "Why did well F-12 decline faster after 2010? Compare with the 2005 development plan."
  },
  "to_review": false,
- "note": "Oct 28 night: rejected on purpose. 'liquid stayed near 5,100 Sm3/d' is declared 5105 from E4, production_monthly, which has no liquid column: 5105 is an oil rate per producing day there. Caught once 'stayed' let the name reach its number.",
+ "note": "Oct 28 night: rejected on purpose. 'liquid stayed near 5,100 Sm3/d' is declared 5105 from E4, production_monthly, which has no liquid column: 5105 is an oil rate per producing day there. Caught once 'stayed' let the name reach its number. Oct 30 (tenth panel): verdict changed on purpose: a period's mean written as the level on one day.",
  "expected": {
   "accepted": false,
   "flagged": [
+   "Finding 2",
    "Summary"
   ]
  },

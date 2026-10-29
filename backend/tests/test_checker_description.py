@@ -21,8 +21,10 @@ def d(text: str, value: float, eid: str) -> DeclaredNumber:
     return DeclaredNumber(text=text, value=value, evidence_id=eid)
 
 
-def check(claim: str, eid: str, numbers: list, log: EvidenceLog) -> list[str]:
-    finding = Finding(claim=claim, evidence_ids=[eid], confidence="fact", numbers=numbers)
+def check(
+    claim: str, eid: str, numbers: list, log: EvidenceLog, confidence: str = "fact"
+) -> list[str]:
+    finding = Finding(claim=claim, evidence_ids=[eid], confidence=confidence, numbers=numbers)
     return check_submission(Submission(summary="Done.", findings=[finding]), log)
 
 
@@ -89,8 +91,9 @@ def test_the_items_of_a_list_share_the_words_after_it() -> None:
 
     true = [d("80%", 0.8, eid), d("90%", 0.9, eid), d("95%", 0.95, eid)]
     false = [d("54%", 0.5446, eid), d("90%", 0.9, eid), d("95%", 0.95, eid)]
-    assert not check(claim("80%"), eid, true, log)
-    assert check(claim("54%"), eid, false, log)
+    # The trend's limits are a projection: an inference (Oct 30).
+    assert not check(claim("80%"), eid, true, log, "inference")
+    assert check(claim("54%"), eid, false, log, "inference")
 
 
 def test_a_bare_year_is_the_years_row_unless_an_extreme_is_named() -> None:
@@ -191,3 +194,49 @@ def test_a_count_of_months_fits_its_years() -> None:
         "Over 87 months of 2011-2013 the choke opened.", eid, [d("87", 87.4, eid)], log
     )
     assert any("at most 36 months" in p for p in problems)
+
+
+def test_a_period_mean_is_no_level_on_one_day() -> None:
+    """The tenth panel's reservoir judge: "to 1 888 around 2010-05-02" gives the May-December
+    mean as the rate that day (about 2,640)."""
+    log = EvidenceLog()
+    eid = add(
+        log,
+        "detect_events",
+        {"well": "F-12"},
+        [
+            {
+                "kind": "regime_change",
+                "signal": "oil_rate",
+                "start": "2010-05-02",
+                "details": {"before_mean": 4207, "after_mean": 1888, "relative_change": -0.5512},
+            }
+        ],
+    )
+    numbers = [d("55%", 0.5512, eid), d("1 888", 1888, eid)]
+    day = "F-12's oil rate shifted down 55% around 2010-05-02 to 1 888 Sm3/d."
+    problems = check(day, eid, numbers, log)
+    assert any("mean of the period after 2010-05-02" in p for p in problems)
+    average = (
+        "F-12's oil rate shifted down 55% around 2010-05-02 and averaged 1 888 Sm3/d after it."
+    )
+    assert not check(average, eid, numbers, log)
+
+
+def test_a_forecast_is_an_inference() -> None:
+    log = EvidenceLog()
+    eid = add(
+        log,
+        "forecast_production",
+        {"well": "F-12"},
+        {
+            "cumulative_oil_sm3": {"p50": 359007, "p90": 324192, "p10": 469712},
+            "fit": {"r2_log": 0.9},
+        },
+    )
+    claim = "F-12 should make about 359,000 Sm3 in the next 12 months."
+    numbers = [d("359,000", 359007, eid)]
+    assert any("projection" in p for p in check(claim, eid, numbers, log))
+    assert not check(claim, eid, numbers, log, "inference")
+    # The fit behind it describes the past: a fact may give it.
+    assert not check("The fit has r2 0.9.", eid, [d("0.9", 0.9, eid)], log)

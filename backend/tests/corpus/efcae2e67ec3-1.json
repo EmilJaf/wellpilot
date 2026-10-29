@@ -6,10 +6,11 @@
   "question": "Which wells need attention right now, and why? Forecast the next 12 months of oil for the well that needs it most."
  },
  "to_review": false,
- "note": "Fair rejection: '21 months after first oil' written but not declared; the model dropped it and passed.",
+ "note": "Fair rejection: '21 months after first oil' written but not declared; the model dropped it and passed. Oct 30 (tenth panel): verdict changed on purpose: a period's mean written as the level on one day.",
  "expected": {
   "accepted": false,
   "flagged": [
+   "Finding 1",
    "Finding 2"
   ]
  },

@@ -39,7 +39,13 @@ from wellpilot.analysis.decline import (
 from wellpilot.analysis.screen import screen
 from wellpilot.analysis.waterflood import waterflood
 from wellpilot.data.store import ProductionStore, QueryError
-from wellpilot.ingest.production_logs import PLOTS_FILE, SURVEYS, inflow, inflow_below
+from wellpilot.ingest.production_logs import (
+    PLOTS_FILE,
+    SURVEYS,
+    inflow,
+    inflow_below,
+    water_cut_above,
+)
 from wellpilot.ingest.report_facts import Topic
 from wellpilot.ingest.reports import REPORTS_BY_ID
 from wellpilot.llm import json_schema
@@ -1135,7 +1141,15 @@ def production_log(store: ProductionStore, args: LogArgs) -> dict:
     work = _depth_work(store, args.well, surveys)
     for survey in surveys:
         passes = survey_logs_by[survey["survey"]]
+        before = survey["production_30_days_before"]
         for p in survey["passes"]:
+            # A pass run well below the well's own rate may weight its zones differently.
+            liquid, oil = p.get("surface_liquid_sm3_per_day"), p.get("surface_oil_sm3_per_day")
+            well_oil, well_cut = before["oil_sm3_per_producing_day"], before["water_cut"]
+            if liquid and well_oil and well_cut is not None and well_cut < 1:
+                p["rate_vs_well"] = round(liquid / (well_oil / (1 - well_cut)), 2)
+            elif oil and well_oil:
+                p["rate_vs_well"] = round(oil / well_oil, 2)
             for row in p["below"]:
                 inside = next(
                     (z for z in work["perforated_m"] if z[0] < row["depth_m"] < z[1]), None
@@ -1150,6 +1164,14 @@ def production_log(store: ProductionStore, args: LogArgs) -> dict:
                 for gap in work["blank_pipe_m"]
                 if (top := inflow_below(log, gap[0])) and (bottom := inflow_below(log, gap[1]))
             ]
+            # What a plug would leave flowing: the water cut of the flow entering above it.
+            if (cut := p.get("water_cut_at_top")) is not None:
+                for row in p["below"]:
+                    if "water_share" in row:
+                        row["water_cut_left_above"] = water_cut_above(cut, row)
+                for gap in p["at_blank_pipe"]:
+                    if "water_share" in gap["below_top"]:
+                        gap["water_cut_left_above"] = water_cut_above(cut, gap["below_top"])
         _after_plugs(survey, work["plugs_set"], passes)
     return to_jsonable(
         {
@@ -1171,7 +1193,12 @@ def production_log(store: ProductionStore, args: LogArgs) -> dict:
             "after a survey (its plugs_set_since) already shut off what entered below it: on "
             "that log a depth or gap at or below it is already_isolated (a plug there cuts "
             "nothing new), and of_flow_left gives what a shallower plug would cut as a share "
-            "of the flow left above the old plug. since_survey "
+            "of the flow left above the old plug. water_cut_left_above is the water cut of the "
+            "flow entering above a depth on that pass, what a plug there would leave flowing "
+            "(for a gap, a plug anywhere in it): compare it with the well's water cut now to "
+            "say what a plug would change. rate_vs_well is the pass's surface rate over the "
+            "well's own in the month before: a pass run far below it may weight the zones "
+            "differently. since_survey "
             "says how old the latest log is and how far the "
             "water cut has moved since: an old log may no longer show where the water enters, "
             "and a new one would settle it. Each survey's passes were run at several surface "

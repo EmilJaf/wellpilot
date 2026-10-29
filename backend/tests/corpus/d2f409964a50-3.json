@@ -6,10 +6,12 @@
   "question": "Why did well F-12 decline faster after 2010? Compare with the 2005 development plan."
  },
  "to_review": false,
- "note": "Reviewed Oct 28 night: a false rejection, fixed. '4.44 MSm3' is the result of calculate('1.76+2.68'), the plan's MSm3 added: a calculation carries no unit, so its result may take a scale word. The run ended unverified on this; it was re-recorded as 85db026c4c7f.",
+ "note": "Reviewed Oct 28 night: a false rejection, fixed. '4.44 MSm3' is the result of calculate('1.76+2.68'), the plan's MSm3 added: a calculation carries no unit, so its result may take a scale word. The run ended unverified on this; it was re-recorded as 85db026c4c7f. Oct 30 (tenth panel): verdict changed on purpose: a period's mean written as the level on one day.",
  "expected": {
-  "accepted": true,
-  "flagged": []
+  "accepted": false,
+  "flagged": [
+   "Finding 4"
+  ]
  },
  "submission": {
   "findings": [

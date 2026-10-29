@@ -31,7 +31,8 @@ F1 = (
     "gauge dead since 2010-10-12 for 81 days, 123 258 Sm3 oil without pressure data."
 )
 F2 = (
-    "F-12’s oil rate fell 55% around 2010-05-02 to 1 888 Sm3/d, a gradual shift with water "
+    "F-12’s oil rate fell 55% around 2010-05-02, averaging 1 888 Sm3/d after it, a gradual "
+    "shift with water "
     "cut rising from 3% to 57% and liquid holding while choke narrowed."
 )
 F5 = (

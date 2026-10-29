@@ -187,7 +187,7 @@ function WorkNext({ w, asOf }: { w: NonNullable<Hindsight['work_next']>[number];
           )}
         </p>
       )}
-      {w.on_latest_log && <OnLatestLog log={w.on_latest_log} plug={w.plug_m} />}
+      {w.on_latest_log && <OnLatestLog log={w.on_latest_log} plug={w.plug_m} after={w.after} backOn={w.back_on} />}
       {w.depth && <DepthStrip d={w.depth} plug={w.plug_m} />}
       <p className="work-next-what">
         The daily report says: &ldquo;{w.summary}&rdquo;
@@ -262,7 +262,17 @@ function newPerforations(d: NonNullable<Hindsight['work_next']>[number]['depth']
 
 /** Each depth against the last log before the job: the share of the water and of the oil
  * entering below it, which is what a plug there shuts off. */
-function OnLatestLog({ log, plug }: { log: NonNullable<NonNullable<Hindsight['work_next']>[number]['on_latest_log']>; plug: number | null }) {
+function OnLatestLog({
+  log,
+  plug,
+  after,
+  backOn,
+}: {
+  log: NonNullable<NonNullable<Hindsight['work_next']>[number]['on_latest_log']>
+  plug: number | null
+  after: NonNullable<Hindsight['work_next']>[number]['after']
+  backOn: string
+}) {
   const pct = (r?: [number, number]) => {
     if (!r) return null
     const [a, b] = r.map((v) => Math.round(v * 100))
@@ -271,7 +281,11 @@ function OnLatestLog({ log, plug }: { log: NonNullable<NonNullable<Hindsight['wo
   // A plug set after the log already shut off what entered below it: what a new plug cuts is
   // then a share of the flow left above that one, and nothing at or below it.
   const old = log.plugs_set_since?.[0]
+  // What the log said a plug at the operator's depth would leave flowing, against what the
+  // well then made: the log's prediction, checked.
+  const operator = log.depths.find((d) => d.depth_m === plug && !d.already_isolated)
   return (
+    <>
     <table className="case-table work-next-log">
       <caption>
         On the last log before the job ({log.survey}, {log.date}), a plug shuts off what enters below it
@@ -287,6 +301,7 @@ function OnLatestLog({ log, plug }: { log: NonNullable<NonNullable<Hindsight['wo
           <th scope="col">A plug at</th>
           <th scope="col" className="num-col">Water it cuts</th>
           <th scope="col" className="num-col">Oil it cuts</th>
+          <th scope="col" className="num-col">Water cut it leaves</th>
         </tr>
       </thead>
       <tbody>
@@ -298,13 +313,14 @@ function OnLatestLog({ log, plug }: { log: NonNullable<NonNullable<Hindsight['wo
                 {d.depth_m.toLocaleString('en-US')} m, {d.depth_m === plug ? 'the operator’s' : 'the answer’s'}
               </th>
               {d.already_isolated && old ? (
-                <td className="num-col" colSpan={2}>
+                <td className="num-col" colSpan={3}>
                   nothing new: already shut off by the {old.depth_m.toLocaleString('en-US')} m plug
                 </td>
               ) : (
                 <>
                   <td className="num-col">{pct(shares.water_share) ?? 'not logged'}</td>
                   <td className="num-col">{pct(shares.oil_share) ?? 'not logged'}</td>
+                  <td className="num-col">{pct(d.water_cut_left_above) ?? 'not logged'}</td>
                 </>
               )}
             </tr>
@@ -312,6 +328,15 @@ function OnLatestLog({ log, plug }: { log: NonNullable<NonNullable<Hindsight['wo
         })}
       </tbody>
     </table>
+    {operator?.water_cut_left_above && after && (
+      <p className="work-next-field">
+        So the {log.date.slice(0, 4)} log said a plug at {operator.depth_m.toLocaleString('en-US')} m would leave a flow of
+        about {pct(operator.water_cut_left_above)} water; in the 60 days from {backOn} the well made{' '}
+        {Math.round(after.water_cut * 100)}% water. The passes ran below the well&rsquo;s own rate, so the log is a
+        guide, not a measurement of the well as it flowed.
+      </p>
+    )}
+    </>
   )
 }
 

@@ -6,10 +6,12 @@
   "question": "Which wells need attention right now, and why? Forecast the next 12 months of oil for the well that needs it most."
  },
  "to_review": false,
- "note": "",
+ "note": "Oct 30 (tenth panel): verdict changed on purpose: a period's mean written as the level on one day.",
  "expected": {
-  "accepted": true,
-  "flagged": []
+  "accepted": false,
+  "flagged": [
+   "Finding 2"
+  ]
  },
  "submission": {
   "summary": "F-12 needs attention most: it is on alarm with a dead downhole gauge and water taking capacity. F-14 is on caution with rising water cut. Field totals have not exceeded the platform’s design limits for liquid, oil or water cut. Forecast for F-12 for the next 12 months suggests about 359 thousand Sm3 oil, but the fit is poor so uncertainty is high.",

@@ -444,7 +444,8 @@ def _field_on(store: ProductionStore, well: str, start, end) -> dict | None:
 
 def _on_latest_log(log: dict | None, depths: list[float]) -> dict | None:
     """What a plug at each depth sits below on the last log before the job: the share of the
-    water and of the oil entering below it, low to high over the log's flowing passes."""
+    water and of the oil entering below it, and the water cut of the flow it would leave
+    above it, low to high over the log's flowing passes."""
     if not log or not log["surveys"] or not depths:
         return None
     survey = log["surveys"][-1]
@@ -466,8 +467,8 @@ def _on_latest_log(log: dict | None, depths: list[float]) -> dict | None:
                 "depth_m": depth,
                 **{
                     phase: span(rows, phase)
-                    for phase in ("water_share", "oil_share")
-                    if all(phase in r for r in rows)
+                    for phase in ("water_share", "oil_share", "water_cut_left_above")
+                    if all(r.get(phase) is not None for r in rows)
                 },
                 **(
                     {

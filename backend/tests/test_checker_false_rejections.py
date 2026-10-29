@@ -204,6 +204,7 @@ def test_C1_backtest_question_wording_365_days() -> None:
         "Forecast for the 365 days after 2013-01-01: P50 cumulative oil 276 078 Sm3.",
         ["E7"],
         [d("276 078", 276078, "E7")],
+        "inference",  # a forecast is an inference (Oct 30)
     )
     assert check(f, log=log) == []
 
@@ -214,6 +215,7 @@ def test_C1b_declaring_365_against_the_forecast_fails_too() -> None:
         "Forecast for the 365 days after 2013-01-01: P50 cumulative oil 276 078 Sm3.",
         ["E7"],
         [d("276 078", 276078, "E7"), d("365", 365, "E7")],
+        "inference",
     )
     assert check(f, log=log) == []
 
@@ -223,7 +225,7 @@ def test_C2_twelve_months_without_hyphen() -> None:
     s = "Over the next 12 months F-14 is forecast to produce 276 078 Sm3 (P50)."
     assert (
         check(
-            finding("P50 276 078 Sm3.", ["E7"], [d("276 078", 276078, "E7")]),
+            finding("P50 276 078 Sm3.", ["E7"], [d("276 078", 276078, "E7")], "inference"),
             summary=s,
             summary_numbers=[d("276 078", 276078, "E7")],
             log=log,
@@ -256,7 +258,12 @@ def test_C3b_dates_and_wells_with_non_breaking_hyphens() -> None:
 
 def test_C4_hyphenated_windows_control() -> None:
     log = corpus_log(F14)
-    f = finding("The 12-month forecast P50 is 276 078 Sm3.", ["E7"], [d("276 078", 276078, "E7")])
+    f = finding(
+        "The 12-month forecast P50 is 276 078 Sm3.",
+        ["E7"],
+        [d("276 078", 276078, "E7")],
+        "inference",
+    )
     assert check(f, log=log) == []
 
 
@@ -304,7 +311,7 @@ def test_D3_percent_as_a_word() -> None:
 
 def test_D4_kSm3_glued_unit() -> None:
     log = corpus_log(F14)
-    f = finding("P50 cumulative oil 276 kSm3.", ["E7"], [d("276 kSm3", 276078, "E7")])
+    f = finding("P50 cumulative oil 276 kSm3.", ["E7"], [d("276 kSm3", 276078, "E7")], "inference")
     assert check(f, log=log) == []
 
 
@@ -462,8 +469,8 @@ def test_F7_translation_inside_the_quote_marks() -> None:
 def test_G1_water_drive_is_a_recovery_mechanism_term() -> None:
     log = corpus_log(F12)
     f = finding(
-        "F-12 produces under water drive from the injectors: water cut shifted to 0.8141 "
-        "around 2010-10-24.",
+        "F-12 produces under water drive from the injectors: water cut averaged 0.8141 "
+        "after 2010-10-24.",
         ["E5"],
         [d("0.8141", 0.8141, "E5")],
     )

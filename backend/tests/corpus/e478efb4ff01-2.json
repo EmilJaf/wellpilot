@@ -6,10 +6,12 @@
   "question": "Which wells needed attention at the end of 2010, and why?"
  },
  "to_review": false,
- "note": "Oct 28 night: 'within design' while E9 has the field's water injection over its 16,000 capacity in 3 months; the design-limit rule (third panel).",
+ "note": "Oct 28 night: 'within design' while E9 has the field's water injection over its 16,000 capacity in 3 months; the design-limit rule (third panel). Oct 30 (tenth panel): verdict changed on purpose: a period's mean written as the level on one day.",
  "expected": {
   "accepted": false,
   "flagged": [
+   "Finding 2",
+   "Finding 4",
    "Finding 5"
   ]
  },

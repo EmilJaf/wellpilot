@@ -6,11 +6,13 @@
   "question": "Which wells needed attention at the end of 2010, and why?"
  },
  "to_review": false,
- "note": "Re-judged when a finding's detail numbers became looked up instead of declared (Oct 27 evening): the remaining problems are undeclared claim numbers, facts on warned evidence, causes as facts or uncited sources, all fair.",
+ "note": "Re-judged when a finding's detail numbers became looked up instead of declared (Oct 27 evening): the remaining problems are undeclared claim numbers, facts on warned evidence, causes as facts or uncited sources, all fair. Oct 30 (tenth panel): verdict changed on purpose: a period's mean written as the level on one day.",
  "expected": {
   "accepted": false,
   "flagged": [
+   "Finding 3",
    "Finding 4",
+   "Finding 5",
    "Finding 6"
   ]
  },
