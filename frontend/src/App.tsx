@@ -470,8 +470,12 @@ export default function App() {
     setSelectedFinding(0)
     setPaneFollows(false)
     setView('well')
-    setChartsShown(true)
-    setSelected(number?.evidence_id ?? first)
+    // A source that is a page (the plan's chart read by the model) shows large, with the
+    // well's charts folded away: they are not what the answer is about.
+    const source = number?.evidence_id ?? first
+    const tool = state.steps.flatMap((step) => step.tool_calls).find((c) => c.evidence_id === source)?.name
+    setChartsShown(!(tool && PAGE_TOOLS.has(tool)))
+    setSelected(source)
     setFocus(number ? { text: finding.claim.slice(number.start, number.end), value: number.value } : null)
     setEvidenceAttempt((n) => n + 1)
   }

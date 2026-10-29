@@ -48,7 +48,7 @@ export function WorkBar({ state, open, onToggle, children }: { state: RunState; 
             </>
           ) : (
             <>
-              {who} worked {seconds} s on its own: {state.steps.length} steps, {tools.length} tool calls
+              {who} worked {seconds}&nbsp;s on its own: {state.steps.length} steps, {tools.length} tool calls
               {checks.length > 0 && `, its answer checked ${checks.length === 1 ? 'once' : `${checks.length} times`}`}
             </>
           )}

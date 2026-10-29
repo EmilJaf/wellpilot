@@ -3971,3 +3971,8 @@ code,
   font-size: 13.5px;
   color: var(--ink-2, var(--ink));
 }
+
+/* Dates and well names stay on one line (a phone breaks "2010-05-02" at a hyphen). */
+.nobr {
+  white-space: nowrap;
+}

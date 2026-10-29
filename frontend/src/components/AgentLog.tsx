@@ -134,7 +134,7 @@ function Step({
       <div className="track-body">
         <p className="step-label">
           Step {step.index}
-          <span className="step-time"> {step.seconds.toFixed(1)} s</span>
+          <span className="step-time"> {step.seconds.toFixed(1)}&nbsp;s</span>
         </p>
         {step.reasoning && (
           <details className="reasoning">

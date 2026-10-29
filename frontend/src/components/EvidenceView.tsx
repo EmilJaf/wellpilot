@@ -71,6 +71,10 @@ export function EvidenceView({ runId, evidenceId, attempt, focus }: Props) {
   // match, if the match is not already in view below it.
   useEffect(() => {
     if (!evidence || !focus) return
+    // Stacked on a phone, the evidence sits below the answer: a step that opens a source
+    // (step 3's first finding) must not pull the page down to it. Scroll only when it shows.
+    const frame = host.current?.getBoundingClientRect()
+    if (window.innerWidth < 1100 && frame && (frame.top > window.innerHeight || frame.bottom < 0)) return
     const banner = host.current?.querySelector('.focus-banner')
     const hitEl = host.current?.querySelector('.hit')
     banner?.scrollIntoView({ block: 'start' })

@@ -378,12 +378,10 @@ function drawOverlay(u: uPlot, key: TrackKey, markers: Marker[], highlights: str
 
   for (const draw of later) draw()
 
-  // Dates named in the selected finding: a solid ink rule across every track. Labels
-  // only where they do not collide with the previous one.
+  // Dates named in the selected finding: a solid ink rule across every track, labelled in
+  // the same rows as the work labels, so a date never prints over one.
   ctx.strokeStyle = css('--ink')
-  ctx.fillStyle = css('--ink')
   ctx.lineWidth = 2 * ratio
-  let lastLabelEnd = -Infinity
   for (const iso of [...highlights].sort()) {
     const x0 = xAt(iso)
     if (x0 < left || x0 > left + width) continue
@@ -391,10 +389,7 @@ function drawOverlay(u: uPlot, key: TrackKey, markers: Marker[], highlights: str
     ctx.moveTo(x0, top)
     ctx.lineTo(x0, top + height)
     ctx.stroke()
-    if (key === 'oil' && x0 + 4 * ratio > lastLabelEnd) {
-      ctx.fillText(iso, x0 + 4 * ratio, top + 4 * ratio)
-      lastLabelEnd = x0 + 4 * ratio + ctx.measureText(iso).width + 8 * ratio
-    }
+    if (key === 'oil') place(iso, x0, 4 * ratio, css('--ink'))
   }
   ctx.restore()
 }

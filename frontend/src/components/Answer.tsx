@@ -33,6 +33,25 @@ type Props = {
  * numbers as buttons to their evidence, numbers inside a quote inside it. The checker owns
  * the rules; this only slices.
  */
+/** Plain text with its dates and well names kept on one line: a phone breaks
+    "2010-05-02" at a hyphen otherwise. */
+function unbroken(text: string, key: string): ReactNode[] {
+  const out: ReactNode[] = []
+  let at = 0
+  for (const m of text.matchAll(/\d{4}-\d{2}(?:-\d{2})?|\b[A-Z]{1,3}-\d+(?: [A-Z]\b)?/g)) {
+    const i = m.index ?? 0
+    out.push(text.slice(at, i))
+    out.push(
+      <span key={`${key}-${i}`} className="nobr">
+        {m[0]}
+      </span>,
+    )
+    at = i + m[0].length
+  }
+  out.push(text.slice(at))
+  return out
+}
+
 function bySpans(
   text: string,
   spans: Span[] | undefined,
@@ -55,7 +74,7 @@ function bySpans(
           ? text.slice(previous.start, previous.end)
           : null
       previous = n
-      parts.push(text.slice(at, n.start))
+      parts.push(...unbroken(text.slice(at, n.start), `t${at}`))
       parts.push(
         <button
           key={`n${n.start}`}
@@ -83,7 +102,7 @@ function bySpans(
         at += oil.length
       }
     }
-    parts.push(text.slice(at, to))
+    parts.push(...unbroken(text.slice(at, to), `t${at}`))
     return parts
   }
   const parts: ReactNode[] = []
@@ -123,9 +142,20 @@ function bySpans(
 function firstSentenceEnd(text: string, spans: Span[] | undefined): number | null {
   for (const m of text.matchAll(/[.!?][”"’)]?(?=\s+[A-Z“"(])/g)) {
     const cut = (m.index ?? 0) + m[0].length
-    if (cut < text.length && !(spans ?? []).some((s) => s.start < cut && s.end > cut)) return cut
+    if (cut < text.length && !inBrackets(text, cut) && !(spans ?? []).some((s) => s.start < cut && s.end > cut)) return cut
   }
   return null
+}
+
+/** Whether a position falls inside brackets or parentheses: "F-12 now makes mostly water
+    (water cut 97%, oil ...)" is not cut after the 97%. */
+function inBrackets(text: string, cut: number): boolean {
+  let depth = 0
+  for (const ch of text.slice(0, cut)) {
+    if (ch === '(' || ch === '[') depth += 1
+    else if ((ch === ')' || ch === ']') && depth > 0) depth -= 1
+  }
+  return depth > 0
 }
 
 /** Where the headline ends: the summary's first clause (before a dash, semicolon, colon or
@@ -139,9 +169,11 @@ function headlineEnd(text: string, spans: Span[] | undefined): number | null {
     const cut = m.index ?? 0
     const words = text.slice(0, cut).trim().split(/\s+/).length
     if (words > 24) break
-    if (words >= 3 && !inside(cut)) return cut
+    if (words >= 3 && !inside(cut) && !inBrackets(text, cut)) return cut
   }
-  return sentence
+  // A first sentence of more than 30 words is no headline: the summary reads as one paragraph.
+  const head = text.slice(0, sentence ?? text.length).trim().split(/\s+/).length
+  return head > 30 ? -1 : sentence
 }
 
 /** The summary with its first clause, the plain answer, as the headline; the rest of it reads
@@ -149,6 +181,7 @@ function headlineEnd(text: string, spans: Span[] | undefined): number | null {
     them and starts the rest with a capital. */
 function Summary({ text, spans, open, quoteSource }: { text: string; spans?: Span[]; open: Props['onSelectEvidence']; quoteSource?: string }) {
   const cut = headlineEnd(text, spans)
+  if (cut === -1) return <p className="summary">{bySpans(text, spans, open, quoteSource)}</p>
   if (cut === null) return <p className="summary-lead">{bySpans(text, spans, open, quoteSource)}</p>
   const rest = text.slice(cut).replace(/^[\s—–;:,]+/, '')
   const offset = text.length - rest.length
@@ -427,7 +460,7 @@ function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSe
       <details className="status-more">
         <summary>How this answer was checked</summary>
         <p className="status-facts">
-          {final.steps} steps and {final.evidence.length} tool results in {Math.round(seconds)} s,{' '}
+          {final.steps} steps and {final.evidence.length} tool results in {Math.round(seconds)}&nbsp;s,{' '}
           {compact(final.tokens.input + final.tokens.output)} tokens.
         </p>
         <p className="status-note">

@@ -404,10 +404,12 @@ export type Domain = { x: [number, number]; y: [number, number] }
 export function CaseChart({ detail, domain, height = 240 }: { detail: BacktestCase; domain?: Domain; height?: number }) {
   const [host, width] = useWidth(520)
   const [hover, setHover] = useState<number | null>(null)
-  const pad = { left: 44, right: 92, top: 18, bottom: 50 }
+  const shown = detail.methods.filter((m) => m.method === 'agent' || m.method === 'classic')
+  // Room on the right for the longest end label ("whole history +102%"), so a phone never cuts it.
+  const longest = Math.max(0, ...shown.map((m) => `${SHORT[m.method]} ${signed(m.error)}`.length))
+  const pad = { left: 44, right: Math.max(92, Math.ceil(longest * 6.8) + 10), top: 18, bottom: 50 }
   const plotW = width - pad.left - pad.right
   const plotH = height - pad.top - pad.bottom
-  const shown = detail.methods.filter((m) => m.method === 'agent' || m.method === 'classic')
   const t0 = domain?.x[0] ?? Math.min(time(detail.rate.date[0]), ...shown.map((m) => time(m.window_start)))
   const t1 = domain?.x[1] ?? time(detail.horizon_end) + DAY
   const cut = time(detail.cutoff) + DAY
