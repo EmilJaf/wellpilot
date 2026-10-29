@@ -78,7 +78,7 @@ def test_from_and_to_the_wrong_way_round_is_caught() -> None:
     wrong = check("F-12's weekly oil rate went from 1 888 to 4 207 Sm3/d.", ["E4"], numbers)
     right = check("F-12's weekly oil rate went from 4 207 to 1 888 Sm3/d.", ["E4"], numbers[::-1])
 
-    assert wrong and "runs the wrong way" in wrong[0]
+    assert any("runs the wrong way" in p for p in wrong)
     assert right == []
 
 

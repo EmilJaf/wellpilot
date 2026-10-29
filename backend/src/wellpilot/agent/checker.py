@@ -31,6 +31,7 @@ source.
 """
 
 import ast
+import dataclasses
 import json
 import math
 import re
@@ -1041,6 +1042,8 @@ class _Leaf:
     # A calculation's result: the (evidence id, record) of the values it was computed from,
     # so a share calculated from the 3,210 m row is still that row's.
     origin: tuple[tuple[str, int], ...] = ()
+    # A table cell's row date ("2010", "2010-07", "2010-07-18"), for _best_fit.
+    row_day: str | None = None
 
 
 # The unit a text writes right after a number: what the number is measured in. Digits that
@@ -1279,9 +1282,13 @@ def _leaves(item: Evidence) -> list[_Leaf]:
         if isinstance(node, dict) and isinstance(node.get("columns"), list):
             columns = [str(c).lower() for c in node["columns"]]
             at_well = columns.index("well") if "well" in columns else None
+            at_day = next(
+                (i for i, c in enumerate(columns) if c in DATE_COLUMNS or c == "year"), None
+            )
             for row in node.get("rows") or []:
                 row_well = str(row[at_well]) if at_well is not None and row[at_well] else well
                 rid = next(records)
+                start = len(found)
                 # A table row is no event: its date tie is _row_mismatch's, so no dates here.
                 for column, value in zip(columns, row, strict=False):
                     leaf(
@@ -1293,6 +1300,10 @@ def _leaves(item: Evidence) -> list[_Leaf]:
                         (column,),
                         True,
                     )
+                if at_day is not None and row[at_day] is not None:
+                    day = str(row[at_day])[:10]
+                    for i in range(start, len(found)):
+                        found[i] = dataclasses.replace(found[i], row_day=day)
         elif isinstance(node, dict):
             here = node["well"] if isinstance(node.get("well"), str) else well
             kinds = kinds + tuple(
@@ -1827,6 +1838,222 @@ def _steps(part: str) -> list[re.Match]:
             re.I,
         )
     ]
+
+
+# What the words around a number say it is, and how a result labels each: the side of a
+# change, the statistic, the end of a range. _best_fit reads a number's description against
+# every value of its result.
+SIDE_LEFT = {
+    "before": r"\b(?:down |up )?from\s+(?:about\s+|around\s+|roughly\s+|nearly\s+|~\s*)?$",
+    "after": r"(?<!close )(?<!up )(?<!due )(?<!compared )(?<!equal )(?<!similar )"
+    r"\bto\s+(?:about\s+|around\s+|roughly\s+|nearly\s+|~\s*)?$",
+}
+SIDE_RIGHT = {
+    "before": r"^\s*(?:[%\w/]+\s+){0,2}?(?:before|earlier)\b",
+    "after": r"^\s*(?:[%\w/]+\s+){0,2}?after\b(?!\s+(?:first|start))",
+}
+SIDE_LABEL = {"before": r"(?:^|[|_])before(?:[|_]|$)", "after": r"(?:^|[|_])after(?:[|_]|$)"}
+STAT_LABEL = {
+    "p10": r"(?:^|[|_])p10(?:[|_]|$)",
+    "p50": r"(?:^|[|_])p50(?:[|_]|$)",
+    "p90": r"(?:^|[|_])p90(?:[|_]|$)",
+}
+GRAIN_TEXT = {
+    "year": r"\b(?:yearly|annual|per year|by year|average for the year|for the year)\b",
+    "month": r"\b(?:monthly|per month|by month)\b",
+}
+GRAIN_LABEL = {"year": r"by_year|yearly|annual", "month": r"monthly|by_month"}
+# A limit or what is left before one: "the 80% and 90% water cut limits were passed",
+# "189,000 Sm3 left before a 95% water cut".
+REF_TEXT = r"\b(?:limits?|reference|threshold|thresholds|left|remain\w*)\b"
+REF_LABEL = r"to_limits|limit|threshold|remaining|design"
+# Units that make a number something other than a quantity's level: a depth, a duration.
+NOT_A_LEVEL = re.compile(
+    r"\s*(?:m\b|metres?|meters?|m\s?MD|days?|weeks?|months?|years?|bar\b|psi\b|°)", re.I
+)
+STRONG = ("side", "stat", "dates", "grain", "ref")
+
+
+def _description(text: str, blanked: str, start: int, end: int) -> dict[str, tuple[str, int]]:
+    """What the text says a number at [start, end) is, each with a weight: its side of a
+    change ("from 4 050", "to 1 146", "185 before"), its statistic (P10, P50, P90, a range's
+    low or high end), its quantity (named next to it, or between it and the number before
+    it), the dates right beside it with no other number between, and the grain its clause
+    names (yearly, monthly)."""
+    said: dict[str, tuple[str, int]] = {}
+    begin = max([0, *(m.end() for m in CLAUSE.finditer(blanked, 0, start))])
+    previous = [m.end() for m in NUMBER.finditer(blanked, begin, start)]
+    own_start = previous[-1] if previous else begin
+    following = [m.start() for m in NUMBER.finditer(blanked, end)]
+    clause_end = min([len(blanked), *(m.start() for m in CLAUSE.finditer(blanked, end))])
+    own_end = min([clause_end, *following[:1]])
+    left = blanked[max(own_start, start - 30) : start]
+    right = blanked[end:own_end]
+    for side, pattern in SIDE_LEFT.items():
+        if re.search(pattern, left, re.I):
+            said["side"] = (side, 2)
+    for side, pattern in SIDE_RIGHT.items():
+        if "side" not in said and re.search(pattern, right[:30], re.I):
+            said["side"] = (side, 2)
+    # Statistics are read in the text as written (the blanked text hides "P10").
+    head = text[max(0, start - 80) : start]
+    if m := (
+        re.search(r"\b(P10|P50|P90)\s*(?:of|at|is|was|:)?\s*(?:about\s+|around\s+|~\s*)?$", head)
+        or re.match(r"\s*(?:Sm3(?:/d)?\s*)?\(?(P10|P50|P90)\b", text[end : end + 20])
+    ):
+        said["stat"] = (m.group(1).lower(), 2)
+    elif re.search(
+        r"\brange(?:\s+(?:of|from|between|was|is|at))?\s+(?:about\s+|around\s+|~\s*)?$", head, re.I
+    ):
+        said["stat"] = ("p90", 2)  # a range's first end is its low one
+    elif re.search(
+        r"\brange\b[^.;\d]{0,12}\d[\d\s,.]*\s*(?:Sm3\s*)?(?:to|and|-)\s+(?:about\s+|~\s*)?$",
+        head,
+        re.I,
+    ):
+        said["stat"] = ("p10", 2)
+    if not NOT_A_LEVEL.match(blanked, end):
+        if name := _quantity(blanked, start, end):
+            said["quantity"] = (name, 2)
+        elif names := list(_NAMES.finditer(blanked, own_start, start)):
+            said["quantity"] = (names[-1].group(0), 1)
+    # Its dates: one written right after it with "in", "on", "at" ("31% in 2015-01"), or
+    # one before it in its own phrase ("since 2010-10-12 for 58 days", "on 2010-10-12 oil
+    # was 1 759", "around 2010-05-02 to 1 888"), with no comma, bracket, "and" or "vs" in
+    # between. "In November 2014 to 30.33%": a period before "to" is the number before's.
+    # (A range of dates, "in 2014-12-2015-01", is no one date.)
+    when = r"(\d{4}-\d{2}(?:-\d{2}(?!\d))?|(?:19|20)\d{2}(?!-\d))(?!\s*(?:-|–|to)\s*\d{4})"
+    days = []
+    if m := re.match(
+        rf"\s*(?:(?!(?:and|or|but|vs|versus|while)\b)[%\w/]+\s*){{0,2}}?\s*"
+        rf"(?:in|on|at|during|by|for|around|since)\s+{when}",
+        text[end:own_end],
+        re.I,
+    ):
+        days.append(m.group(1))
+    if m := re.search(
+        rf"(?:\b(?P<prep>on|in|at|since|around|from|during|by|of)\s+)?{when}"
+        r"(?P<tail>[^,;()]{0,30})$",
+        text[own_start:start],
+        re.I,
+    ):
+        tail = m.group("tail")
+        period_to = (m.group("prep") or "").lower() in ("in", "during", "by") and re.match(
+            r"\s*to\b", tail
+        )
+        # "A choke cut on 2018-11-07 from 70% to 40%": the date is the change's; the value
+        # it started from stands in the row before it.
+        from_value = said.get("side", ("",))[0] == "before"
+        if (
+            not re.search(r"\b(?:and|vs|versus|while|whereas|but)\b", tail)
+            and not period_to
+            and not from_value
+        ):
+            days.append(m.group(2))
+    # "Cut to 40% in 2018-11": a level reached during a month is the next month's row too.
+    if said.get("side", ("",))[0] == "after":
+        for day in list(days):
+            if re.fullmatch(r"\d{4}-\d{2}", day):
+                y, mo = int(day[:4]), int(day[5:])
+                days.append(f"{y + mo // 12}-{mo % 12 + 1:02d}")
+    if days:
+        said["dates"] = ("|".join(days), 2)
+    # The grain its own phrase names: "yearly average choke went from 77.1%", not "monthly
+    # water cut" earlier in the sentence.
+    own = blanked[own_start:own_end]
+    for grain, pattern in GRAIN_TEXT.items():
+        if re.search(pattern, own, re.I):
+            said["grain"] = (grain, 2)
+    if re.search(REF_TEXT, blanked[max(own_start, start - 40) : start], re.I) or re.match(
+        rf"[^,;]{{0,30}}?{REF_TEXT}", right, re.I
+    ):
+        said["ref"] = ("limit", 2)
+    return said
+
+
+def _fit_scores(said: dict[str, tuple[str, int]], leaf: _Leaf) -> dict[str, int]:
+    """How well a value of a result fits each part of a number's description: + where its
+    labels agree, - where they contradict, 0 where they say nothing."""
+    out: dict[str, int] = {}
+    labels = leaf.labels.lower()
+
+    def by(table: dict[str, str], key: str) -> None:
+        value, w = said[key]
+        mine = [k for k, pattern in table.items() if re.search(pattern, labels)]
+        out[key] = w if value in mine else -w if mine else 0
+
+    if "side" in said:
+        by(SIDE_LABEL, "side")
+    if "stat" in said:
+        by(STAT_LABEL, "stat")
+    if "grain" in said:
+        by(GRAIN_LABEL, "grain")
+    if "ref" in said:
+        out["ref"] = said["ref"][1] if re.search(REF_LABEL, labels) else 0
+    if "quantity" in said:
+        name, w = said["quantity"]
+        key = next((k for k, (t, _) in QUANTITIES.items() if re.fullmatch(t, name, re.I)), None)
+        if key is not None:
+            mine = [k for k, (_, lab) in QUANTITIES.items() if re.search(lab, labels)]
+            out["quantity"] = w if key in mine else -w if mine else 0
+    if "dates" in said:
+        written, w = said["dates"]
+        dates = [d for d in written.split("|") if d]
+        own = [*leaf.record_days, *([leaf.row_day] if leaf.row_day else [])]
+        if own:
+            hit = any(o.startswith(d) or d.startswith(o) for o in own for d in dates)
+            out["dates"] = w if hit else -w
+    return out
+
+
+def _best_fit(
+    text: str, blanked: str, written: str, fits: list[Reading], leaves: list[_Leaf]
+) -> str | None:
+    """A number whose description fits another value of its result clearly better than any
+    value it could be: "fell 55% around 2010-05-02 to 3 196" where 3 196 is the rate before
+    that change, "range 324,000 to 339,803" where 339,803 is the low end, "since 2010-10-12
+    for 58 days" where 58 is another event's. The value the words describe is looked up in
+    the result first, then compared with the number written. Only a precise part of the
+    description (a side, a statistic, a date) decides; quantity and grain only add."""
+    spans = _standalone(blanked, written)
+    if not spans:
+        return None
+    start, end = spans[0]
+    said = _description(text, blanked, start, end)
+    if not any(k in said for k in STRONG):
+        return None
+    held = [
+        lf for lf in leaves if lf.value is not None and any(_reads_as(r, [lf.value]) for r in fits)
+    ]
+    if not held:
+        return None
+    # Rivals of the same kind as the value written: fractions against fractions (a water
+    # cut of 0.69), levels against levels (a rate, a choke of 59%), not years or small counts.
+    fraction = all(abs(lf.value) <= 1.5 for lf in held)
+    rivals = [
+        lf
+        for lf in leaves
+        if lf.value is not None
+        and lf not in held
+        and (
+            abs(lf.value) <= 1.5
+            if fraction
+            else abs(lf.value) > 10 and not (1900 <= lf.value <= 2100 and lf.value == int(lf.value))
+        )
+    ]
+    if not rivals:
+        return None
+    mine = max((_fit_scores(said, lf) for lf in held), key=lambda f: sum(f.values()))
+    best = max(rivals, key=lambda lf: sum(_fit_scores(said, lf).values()))
+    theirs = _fit_scores(said, best)
+    strong = sum(theirs.get(k, 0) - mine.get(k, 0) for k in STRONG)
+    if sum(theirs.values()) >= sum(mine.values()) + 3 and strong >= 2:
+        what = ", ".join(f"{k} {v}" for k, (v, _) in said.items() if theirs.get(k, 0) > 0)
+        return (
+            f"is written as {what or 'that value'}, which fits {best.value:g} "
+            f"({best.labels.replace('|', ' ')}) in the result better than {written}"
+        )
+    return None
 
 
 def _part(text: str, start: int, commas: bool = True) -> str:
@@ -2749,6 +2976,8 @@ def _declared(
                 f"{label}: '{number.text}' is in {where}, but the text ties it to {record[0]}, "
                 f"and {record[1]}. Give each number the date of its own event."
             )
+        elif misfit := _best_fit(text, blanked, number.text, fits, leaves_of(item)):
+            problems.append(f"{label}: '{number.text}' {misfit}. Write what {where} says.")
 
     problems += _reversed(label, blanked, declared, unused, log, leaves_of)
     items = [i for i in (log.get(e) for e in (citable or {d.evidence_id for d in declared})) if i]

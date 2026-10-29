@@ -19,6 +19,7 @@ import random
 import re
 import sys
 from collections import Counter
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
@@ -43,10 +44,13 @@ def accepted_cases() -> dict[str, dict]:
 
 
 def _style(text: str, value: float, new: float) -> str | None:
-    """The new value written the way the old one is: its separator, decimals, percent."""
-    body = text.strip()
-    pct = body.endswith("%")
-    digits = re.sub(r"[^\d.,\s]", "", body.rstrip("%")).strip()
+    """The new value written the way the old one is: its separator, decimals, percent, and
+    any words around the number ("19 months", "about 4 050")."""
+    m = re.search(r"\d[\d,.\s\u00a0\u202f]*\d|\d", text)
+    if not m:
+        return None
+    head, digits, tail = text[: m.start()], m.group(0), text[m.end() :]
+    pct = tail.strip().startswith("%")
     if pct and abs(value) <= 1.5:
         new *= 100
     decimals = len(digits.split(".")[1]) if "." in digits else 0
@@ -55,7 +59,7 @@ def _style(text: str, value: float, new: float) -> str | None:
     else:
         n = round(new)
         out = f"{n:,}" if "," in digits else f"{n:,}".replace(",", " ") if " " in digits else str(n)
-    return out + ("%" if pct else "")
+    return head + out + tail
 
 
 def swaps(case: dict, rnd: random.Random, per_number: int = 3):
@@ -102,41 +106,56 @@ def swaps(case: dict, rnd: random.Random, per_number: int = 3):
                     m if m is not n else {"text": new_text, "value": v, "evidence_id": eid}
                     for m in numbers
                 ]
-                yield i, new_sub, f"{text} -> {new_text} ({eid})"
+                yield i, new_sub, f"{text} -> {new_text} ({eid}) ={value}>{v}"
+
+
+def _case_swaps(item: tuple[str, dict]) -> tuple[int, list]:
+    """One case's swaps: how many, and the ones the checker accepted. Seeded by the case id,
+    so a run is the same whatever the order or the number of workers."""
+    case_id, case = item
+    rnd = random.Random(f"{SEED}-{case_id}")
+    total, passes = 0, []
+    for i, new_sub, what in swaps(case, rnd):
+        problems = replay(case | {"submission": new_sub})
+        total += 1
+        if not any(p.startswith(f"Finding {i + 1}") for p in problems):
+            passes.append((case_id, i + 1, what, new_sub["findings"][i]["claim"]))
+    return total, passes
+
+
+def _case_rewordings(item: tuple[str, dict]) -> tuple[int, list]:
+    case_id, case = item
+    total, rejected = 0, []
+    for name, transform in sorted(PRESERVING.items()):
+        reworded = transform(case["submission"])
+        if reworded is None:
+            continue
+        total += 1
+        if problems := replay(case | {"submission": reworded}):
+            rejected.append((case_id, name, problems[:2]))
+    return total, rejected
+
+
+def _map(fn, cases: dict[str, dict]):
+    with ProcessPoolExecutor() as pool:
+        return list(pool.map(fn, cases.items(), chunksize=2))
 
 
 def measure_swaps(cases: dict[str, dict], show: int) -> tuple[int, int, list]:
-    rnd = random.Random(SEED)
-    total = passed = 0
-    passes = []
-    for case_id, case in cases.items():
-        for i, new_sub, what in swaps(case, rnd):
-            problems = replay(case | {"submission": new_sub})
-            total += 1
-            if not any(p.startswith(f"Finding {i + 1}") for p in problems):
-                passed += 1
-                passes.append((case_id, i + 1, what, new_sub["findings"][i]["claim"]))
+    results = _map(_case_swaps, cases)
+    total = sum(t for t, _ in results)
+    passes = [p for _, ps in results for p in ps]
     for p in passes[:show]:
         print("  PASS", *p)
-    return total, passed, passes
+    return total, len(passes), passes
 
 
 def measure_rewordings(cases: dict[str, dict], show: int) -> tuple[int, int]:
-    total = rejected = 0
-    shown = 0
-    for case_id, case in cases.items():
-        for name, transform in sorted(PRESERVING.items()):
-            reworded = transform(case["submission"])
-            if reworded is None:
-                continue
-            total += 1
-            problems = replay(case | {"submission": reworded})
-            if problems:
-                rejected += 1
-                if shown < show:
-                    print("  REJECTED", case_id, name, problems[:2])
-                    shown += 1
-    return total, rejected
+    results = _map(_case_rewordings, cases)
+    rejected = [r for _, rs in results for r in rs]
+    for r in rejected[:show]:
+        print("  REJECTED", *r)
+    return sum(t for t, _ in results), len(rejected)
 
 
 def main() -> None:
@@ -150,7 +169,7 @@ def main() -> None:
         cases = dict(list(cases.items())[: args.cases])
     total, passed, passes = measure_swaps(cases, args.show)
     print(f"swaps: {passed} of {total} accepted ({passed / max(total, 1):.0%} false passes)")
-    kinds = Counter(p[2].split(" (")[0].split(" -> ")[0] for p in passes)
+    kinds = Counter(p[2].split(" -> ")[0] for p in passes)
     print("  most passed numbers:", kinds.most_common(8))
     t, r = measure_rewordings(cases, args.show)
     print(f"rewordings: {r} of {t} rejected ({r / max(t, 1):.1%} false rejections)")

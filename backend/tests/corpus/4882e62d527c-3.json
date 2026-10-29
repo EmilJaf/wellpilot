@@ -6,10 +6,12 @@
   "question": "Forecast F-14 oil production for the next 12 months and say how confident the forecast is."
  },
  "to_review": false,
- "note": "",
+ "note": "Oct 29 night (checker bench): verdict changed on purpose. Finding 1's '1030 in January 2013 at water cut 0.7564' is wrong: E9's 2013-01 row has water cut 0.7668; 0.7564 is 2012-12's. _best_fit catches a number written with a date whose row holds another value of the same quantity.",
  "expected": {
-  "accepted": true,
-  "flagged": []
+  "accepted": false,
+  "flagged": [
+   "Finding 1"
+  ]
  },
  "submission": {
   "summary": "F-14 declined after 2010-01-24 and again after 2012-02-05. Using the post-2010-01-24 exponential fit the 12 month forecast from 2013-01-02 is 276078 P50 with 259265 P90 and 292363 P10, declining from 995.02 to 725.92 per day. Confidence is moderate as fit has 0.7747 r2.",
