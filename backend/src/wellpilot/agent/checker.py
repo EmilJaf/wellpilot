@@ -1108,6 +1108,9 @@ def _written_unit(text: str, end: int) -> str | None:
     return DURATIONS.get(word) or DURATIONS.get(word.rstrip("s"))
 
 
+DURATION_TABLES = ("days", "weeks", "months", "years")
+
+
 def _key_dim(name: str, cell: bool = False) -> str | None:
     """What a result field measures in: "oil_rate_sm3_per_day" a rate, "zero_days" days,
     "cumulative_oil_sm3" a volume. A table cell's Sm3 ("oil_sm3" in a daily or monthly
@@ -1232,7 +1235,17 @@ def _leaves(item: Evidence) -> list[_Leaf]:
             if abs(float(value)) not in typed_numbers:
                 # Its own key first ("months_at_or_above"), then its parent's
                 # ("cumulative_oil_sm3" over "p50"); a table cell has only its column.
-                dim = next((d for n in names if (d := _key_dim(n, cell))), None)
+                # A list of rows named "months" or "days" holds months' values, not
+                # numbers of months: its name gives its cells no unit.
+                dim = next(
+                    (
+                        d
+                        for i, n in enumerate(names)
+                        if not (i and record is not None and n in DURATION_TABLES)
+                        and (d := _key_dim(n, cell))
+                    ),
+                    None,
+                )
                 # A change by its own key ("relative_change"), not by its record's kind:
                 # a regime change's before_mean is a level.
                 change = any(re.search(CHANGE_LABELS, n) for n in names)
@@ -1871,7 +1884,31 @@ REF_LABEL = r"to_limits|limit|threshold|remaining|design"
 NOT_A_LEVEL = re.compile(
     r"\s*(?:m\b|metres?|meters?|m\s?MD|days?|weeks?|months?|years?|bar\b|psi\b|°)", re.I
 )
-STRONG = ("side", "stat", "dates", "grain", "ref")
+STRONG = ("side", "stat", "dates", "grain", "ref", "unit")
+# Values a result names as no physical amount: shares, ratios, fit statistics, levels. A
+# number written in Sm3/d, metres or per year is none of these.
+SHARE_KEY = re.compile(
+    r"^(?:\w+_)?(?:r2|b|aic|uptime|water_?cut|wc|shares?|ratio|pct|choke|attention|correlation|"
+    r"pearson|spearman|wor|fraction|relative_change|change_across|confidence)(?:_\w+)?$"
+)
+# Units that cannot stand for each other; within a group they may (a day's volume is a rate).
+UNIT_GROUPS = (
+    {"rate", "volume", "rate_other"},
+    {"metres", "ft"},
+    {"bar", "psi"},
+    {"days", "weeks", "months", "years"},
+    {"per_year", "per_month"},
+    {"degc", "degf"},
+)
+
+
+def _unit_kind(leaf: _Leaf) -> str | None:
+    """What a value is measured in, for the fit: its unit, "share" for a value its result
+    names as a share, ratio or statistic (or a text wrote as a percentage), else None."""
+    # The value's own name first: a choke in a table keyed "months" is no number of months.
+    if leaf.unit == "%" or any(SHARE_KEY.match(p) for p in leaf.labels.lower().split("|")[:2]):
+        return "share"
+    return leaf.dim
 
 
 def _description(text: str, blanked: str, start: int, end: int) -> dict[str, tuple[str, int]]:
@@ -1938,7 +1975,7 @@ def _description(text: str, blanked: str, start: int, end: int) -> dict[str, tup
     # between. "In November 2014 to 30.33%": a period before "to" is the number before's.
     # (A range of dates, "in 2014-12-2015-01", is no one date.)
     when = (
-        r"(?:(?:early|mid|late)[\s-]+)?"
+        r"(?<!\d[-–])(?:(?:early|mid|late)[\s-]+)?"
         r"(\d{4}-\d{2}(?!\d)(?:-\d{2}(?!\d))?|(?:19|20)\d{2}(?!-\d))(?!\s*(?:-|–|to)\s*\d{4})"
     )
     days = []
@@ -1980,8 +2017,25 @@ def _description(text: str, blanked: str, start: int, end: int) -> dict[str, tup
                 days.append(f"{y + mo // 12}-{mo % 12 + 1:02d}")
             elif re.fullmatch(r"\d{4}", day):
                 days.append(str(int(day) + 1))
+    # "November 2014 oil 185.7 Sm3/d at 0.96 water cut vs January 2015 ...": a date that
+    # opens the phrase dates every number in it, up to a comma, "vs", "and" or "to".
+    if not days:
+        breaks = list(
+            re.finditer(
+                r"[,;:()]|\b(?:vs|versus|and|while|but|whereas|to|from|then|after|before)\b|->|→",
+                text[begin:start],
+                re.I,
+            )
+        )
+        phrase = text[begin + (breaks[-1].end() if breaks else 0) : start]
+        if m := re.match(rf"\s*(?:(?:in|on|by|during|at)\s+)?{when}\b", phrase, re.I):
+            days.append(m.group(1))
     if days:
         said["dates"] = ("|".join(days), 2)
+    # The unit written right after it: a rate, a volume, metres, per year (a percent says
+    # nothing: a change in a rate is a percentage too).
+    if (unit := _written_unit(blanked, end)) and unit != "barrels":
+        said["unit"] = (unit, 2)
     # The grain its own phrase names: "yearly average choke went from 77.1%", not "monthly
     # water cut" earlier in the sentence.
     own = blanked[own_start:own_end]
@@ -2020,6 +2074,13 @@ def _fit_scores(said: dict[str, tuple[str, int]], leaf: _Leaf) -> dict[str, int]
         if key is not None:
             mine = [k for k, (_, lab) in QUANTITIES.items() if re.search(lab, labels)]
             out["quantity"] = w if key in mine else -w if mine else 0
+    if "unit" in said:
+        unit, w = said["unit"]
+        kind = _unit_kind(leaf)
+        group = next((g for g in UNIT_GROUPS if unit in g), {unit})
+        out["unit"] = (
+            w if kind == unit else -w if kind == "share" or (kind and kind not in group) else 0
+        )
     if "dates" in said:
         written, w = said["dates"]
         dates = [d for d in written.split("|") if d]
@@ -2076,7 +2137,11 @@ def _best_fit(
         key=lambda lf: (sum(_fit_scores(said, lf).values()), _family(lf) in families),
     )
     theirs = _fit_scores(said, best)
-    strong = sum(theirs.get(k, 0) - mine.get(k, 0) for k in STRONG)
+    # A unit decides only against a value it rules out (a share written in Sm3/d), not for
+    # a rival that merely names its unit where the value written has none.
+    strong = sum(
+        theirs.get(k, 0) - mine.get(k, 0) for k in STRONG if k != "unit" or mine.get(k, 0) < 0
+    )
     if sum(theirs.values()) >= sum(mine.values()) + 3 and strong >= 2:
         what = ", ".join(f"{k} {v}" for k, (v, _) in said.items() if theirs.get(k, 0) > 0)
         return (
