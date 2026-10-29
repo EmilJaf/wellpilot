@@ -31,10 +31,12 @@ type Action =
   | { type: 'reset'; id: string | null; question: string }
   | { type: 'event'; event: RunEvent }
   | { type: 'failed'; message: string }
+  | { type: 'clear' }
 
 type State = RunState & { lastSeq: number }
 
 function reducer(state: State, action: Action): State {
+  if (action.type === 'clear') return { ...initial, lastSeq: -1 }
   if (action.type === 'reset') {
     return {
       ...initial,
@@ -144,7 +146,13 @@ export function useRun() {
     [follow],
   )
 
+  // Back to no run: the screen before a question is asked.
+  const clear = useCallback(() => {
+    stop.current()
+    dispatch({ type: 'clear' })
+  }, [])
+
   useEffect(() => () => stop.current(), [])
 
-  return { state, ask, open }
+  return { state, ask, open, clear }
 }

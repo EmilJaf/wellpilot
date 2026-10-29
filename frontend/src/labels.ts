@@ -164,3 +164,39 @@ export function shortWarning(warning: string): string {
   const clause = sentence.match(/^[^:;]+/)?.[0] ?? sentence
   return clause.length <= 70 ? clause : `${clause.slice(0, 67)}…`
 }
+
+// Errors of meaning (a limit said to hold, a number given another name, unit, direction,
+// date or well, a cause stated as fact) against the bookkeeping (a number not declared,
+// not rounded): a real catch must not be lost among the paperwork.
+export const MEANING = /stayed within|is named|is written in|is written as|belongs to|wrong way|only for|dead gauge|states a cause|ties it|date|called the change|model's P50|none of its evidence|share below|survey of|calls the decline|is the fit from|rests on evidence with warnings/
+const BOOKKEEPING = /undeclared|round '|three significant|claim holds \d+ numbers/i
+
+export function isBookkeeping(problem: string): boolean {
+  return BOOKKEEPING.test(problem) && !MEANING.test(problem)
+}
+
+/** A tool's refusal in plain words: argument validation reads as what the call got wrong,
+ * without the validation library's codes and links. */
+export function plainToolError(error: string): string {
+  const invalid = error.match(/^invalid arguments for ([\w.-]+): \d+ validation errors? for \w+\n([\s\S]*)$/)
+  if (!invalid) return error
+  const [, tool, rest] = invalid
+  const said: string[] = []
+  let field = ''
+  for (const line of rest.split('\n')) {
+    if (!line.trim() || line.startsWith('    ')) continue // "For further information visit ..."
+    if (!line.startsWith(' ')) {
+      field = line.trim()
+      continue
+    }
+    const message = line
+      .trim()
+      .replace(/\s*\[type=.*$/, '')
+      .replace(/^Value error, /, '')
+      .replace(/^Extra inputs are not permitted$/, 'is not an argument it takes')
+      .replace(/^Field required$/, 'is missing')
+    said.push(field && !message.includes(field) ? `${field} ${message}` : message)
+    field = ''
+  }
+  return `${toolName(tool)} was called with arguments it does not take: ${said.join('; ')}`
+}

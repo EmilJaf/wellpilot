@@ -166,15 +166,6 @@ function WellSection({ data }: { data: Inside }) {
               </text>
             </g>
           ))}
-          {plugs.map(({ depth, date }) => (
-            <g key={`${depth}-${date}`} className="inside-plug">
-              <rect x={casing[0] + 1} y={y(depth) - 3} width={casing[1] - casing[0] - 2} height={6} />
-              <line x1={casing[1]} x2={width - pad.right} y1={y(depth)} y2={y(depth)} />
-              <text x={width - pad.right - 2} y={y(depth) - 4} textAnchor="end">
-                plug at {depth} m, {date.slice(0, 7)}
-              </text>
-            </g>
-          ))}
           {surveys.map((s, i) => {
             const x0 = trackX(i)
             const { waterPath, oilPath } = areas(passes[i], x0)
@@ -192,6 +183,16 @@ function WellSection({ data }: { data: Inside }) {
               </g>
             )
           })}
+          {/* Plugs over the logs, so their labels are never under a log's area. */}
+          {plugs.map(({ depth, date }) => (
+            <g key={`${depth}-${date}`} className="inside-plug">
+              <rect x={casing[0] + 1} y={y(depth) - 3} width={casing[1] - casing[0] - 2} height={6} />
+              <line x1={casing[1]} x2={width - pad.right} y1={y(depth)} y2={y(depth)} />
+              <text x={width - pad.right - 2} y={y(depth) - 4} textAnchor="end">
+                plug at {depth} m, {date.slice(0, 7)}
+              </text>
+            </g>
+          ))}
           {hover !== null && <line className="case-hover" x1={pad.left + wellW} x2={width - pad.right} y1={y(hover)} y2={y(hover)} />}
         </svg>
       </div>

@@ -70,15 +70,19 @@ shows work done on the well, such as a plug set to shut off water or a new zone 
 which can change a rate overnight). \
 When a well has a production log, production_log shows where along the well its oil and \
 water came in: pass a plug's depth to see what the plug could shut off, and compare that \
-with what the well did after (plugs_set). Asked where to set a plug, answer with a depth in \
-blank pipe (blank_pipe_m; never inside a perforated interval), what it would cut off of the \
-water and of the oil from the log, whether new perforations above it would be needed to keep \
-the oil, and how old the log is (since_survey): if the water cut has moved far since, say a \
-new log should confirm the depth before the job, but still give the depth and what it would \
-do on the log you have. Lead the answer with the recommendation. {drive} When a \
-waterflooded well's water cut rises, check with \
+with what the well did after (plugs_set). Asked where to set a plug, compare every \
+blank-pipe gap (at_blank_pipe gives the water and oil entering below each end of each gap), \
+then give each gap as its own finding (what a plug there would cut off of the water and of \
+the oil on the log) and recommend one: a depth in blank pipe (never inside a perforated \
+interval), whether new perforations above it would be needed to keep the oil, and how old \
+the log is (since_survey): if the water cut has moved far since, say a new log should \
+confirm the depth before the job, but still give the depth and what it would do on the log \
+you have. Lead the answer with the recommendation. {drive} When a waterflooded well's water \
+cut rises, check with \
 waterflood whether liquid held while the choke opened (water taking the well's capacity) and \
-how much oil the WOR trend leaves before the economic water cut; its field voidage \
+how much oil the WOR trend leaves before each reference water cut (0.80, 0.90, 0.95 are \
+reference points, not an economic limit: no tool has costs or prices, so never call oil \
+uneconomic or advise shutting in a well that still makes oil); its field voidage \
 replacement_ratio is at reservoir conditions (near 1 means injection kept pace). For a \
 forecast's uncertainty, report the calibrated band (calibrated_band_sm3, from the errors of \
 earlier forecasts made the same way), not the bootstrap band, which only shows the fit's \
@@ -119,8 +123,13 @@ summary, and never write internal scores or field names. For a share such as wat
 give the values before and after, not a percent change. A regime change gives two \
 changes: between the periods' means (relative_change) and across the date itself \
 (change_across). Write the first as a difference between periods ("averaged 72% less after \
-2010-07-18 than before"), never as a fall at the date; a step at a date is the change across. \
-Translate every quote that is not \
+2010-07-18 than before"), never as a fall at the date or a jump; a step at a date is the \
+change across (a water cut's is in points). Say when a level held: "the choke was unchanged \
+across the 2010-07-18 change and opened to 100% by 2012", never "the choke was unchanged" \
+for a period it moved in (waterflood gives the choke by year). An \
+interpretation (water taking the well's capacity, depletion, what a job did) is an \
+inference however it is worded, and a conclusion in the summary ("so ...", "therefore") is \
+hedged like a cause. Translate every quote that is not \
 in English, in brackets right after it. A summary number from evidence with warnings needs \
 a hedge in its own sentence ("the fit suggests").
 - A checker verifies every declared number, date and quote against the evidence, and that \

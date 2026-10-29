@@ -155,9 +155,18 @@ def regime_changes(
         across_after = float(np.median(values[b : b + ACROSS_WEEKS]))
         # A share (water cut) changes by points: 0.034 -> 0.57 is +0.54, not "+1581%".
         if signal in SHARES:
-            change = {"change": after - before}
+            step = across_after - across_before
+            change = {
+                "change": after - before,
+                "across_before": across_before,
+                "across_after": across_after,
+                "change_across": step,
+            }
             shift = f"{after - before:+.2f}"
-            across = ""
+            across = (
+                f"; across the change itself, {ACROSS_WEEKS} weeks each side, "
+                f"{across_before:.2f} -> {across_after:.2f} ({step:+.2f})"
+            )
         else:
             relative = (after - before) / abs(before) if before else float("nan")
             step = across_after / across_before - 1 if across_before else float("nan")

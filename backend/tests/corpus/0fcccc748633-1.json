@@ -6,10 +6,11 @@
   "question": "What oil plateau rate and duration does the forecast figure on page 23 of the 2005 development plan show?"
  },
  "to_review": false,
- "note": "Reviewed Oct 29 (eval), fair: an undeclared 94%; the figure's readings (warned) unhedged in the summary.",
+ "note": "Reviewed Oct 29 (eval), fair: an undeclared 94%; the figure's readings (warned) unhedged in the summary.\nOct 29 (eighth panel): verdict changed on purpose: it writes the model's '2 years' off the figure, which SAM 3.1's measurement disagrees with, without saying so.",
  "expected": {
   "accepted": false,
   "flagged": [
+   "Finding 3",
    "Summary"
   ]
  },

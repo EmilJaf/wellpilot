@@ -19,7 +19,11 @@ pytestmark = pytest.mark.slow
 FIXTURES = Path(__file__).parent / "fixtures"
 REWORDINGS = json.loads((FIXTURES / "rewordings.json").read_text())["rewordings"]
 RUNS = {
-    r: json.loads((FIXTURES / "runs" / f"{r}.json").read_text())
+    r: next(
+        json.loads(p.read_text())
+        for folder in ("runs", "retired_runs")
+        if (p := FIXTURES / folder / f"{r}.json").exists()
+    )
     for r in {x["run"] for x in REWORDINGS}
 }
 LOGS = {r: EvidenceLog.restore(run["evidence"].values()) for r, run in RUNS.items()}

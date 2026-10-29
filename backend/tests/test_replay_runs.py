@@ -18,6 +18,19 @@ from wellpilot.llm import LLM
 
 FIXTURES = Path(__file__).parent / "fixtures"
 RUNS = {p.stem: json.loads(p.read_text()) for p in sorted((FIXTURES / "runs").glob("*.json"))}
+# Evidence a later tool change altered on purpose, with why: the run's check rounds and
+# verdict must still replay exactly; only these results may differ.
+# Oct 29: detect_events gives a water-cut change's level across its date too; waterflood's
+# note says its reference water cuts are not an economic limit.
+DRIFT = {
+    "69519dd0a995": {
+        "E5": "detect_events",
+        "E6": "detect_events",
+        "E7": "waterflood",
+        "E8": "waterflood",
+    },
+    "f7d3faebb139": {"E3": "detect_events", "E4": "waterflood"},
+}
 
 
 @pytest.mark.skipif(not RUNS, reason="no frozen demo runs yet (see tests/fixtures/runs)")
@@ -27,7 +40,10 @@ async def test_a_frozen_run_replays_as_recorded(run_id: str) -> None:
 
     replayed = await replay(run, FIXTURES / "processed")
 
-    assert differences(run, replayed) == []
+    allowed = {
+        f"{e} ({tool}) returns something else now" for e, tool in DRIFT.get(run_id, {}).items()
+    }
+    assert [d for d in differences(run, replayed) if d not in allowed] == []
 
 
 CLAIM = (

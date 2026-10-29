@@ -48,8 +48,12 @@ function ReasoningLine({ r, asOf }: { r: ReasoningCheck; asOf: string }) {
  * data it could not see. Each forecast against the oil the well then produced (and against
  * the classic fit made the same day), and every well a year later.
  */
-export function HindsightView({ runId }: { runId: string }) {
+export function HindsightView({ runId, onReady }: { runId: string; onReady?: () => void }) {
   const [loaded, setLoaded] = useState<{ id: string; value?: Hindsight; error?: string } | null>(null)
+  const ready = loaded?.id === runId
+  useEffect(() => {
+    if (ready) onReady?.()
+  }, [ready, onReady])
 
   useEffect(() => {
     let current = true
@@ -82,6 +86,15 @@ export function HindsightView({ runId }: { runId: string }) {
       {h.forecasts.length === 0 && !h.work_next?.length && (
         <p className="empty">The agent made no forecast in this run.</p>
       )}
+      {h.work_next?.map((w) => (
+        <WorkNext key={`${w.well}-${w.start}`} w={w} asOf={h.as_of} />
+      ))}
+      {!!h.work_next?.length && answered.length > 0 && (
+        <p className="chart-note-line hindsight-before-job">
+          The {answered.length === 1 ? 'forecast' : 'forecasts'} below {answered.length === 1 ? 'was' : 'were'} made
+          for the well as it was, before that job.
+        </p>
+      )}
       {answered.map((f) => (
         <ForecastCase key={f.evidence_id} f={f} />
       ))}
@@ -99,10 +112,6 @@ export function HindsightView({ runId }: { runId: string }) {
           ))}
         </details>
       )}
-
-      {h.work_next?.map((w) => (
-        <WorkNext key={`${w.well}-${w.start}`} w={w} asOf={h.as_of} />
-      ))}
 
       <h4 className="case-title hindsight-wells-title">Every producing well, a year later</h4>
       <table className="case-table hindsight-wells">
@@ -155,18 +164,19 @@ function WorkNext({ w, asOf }: { w: NonNullable<Hindsight['work_next']>[number];
       <h4 className="case-title">
         What was done to {w.well} next: {w.start === w.end ? w.start : `${w.start} to ${w.end}`}
       </h4>
-      {w.plug_m !== null && pick !== undefined && (
+      {w.plug_m !== null && (
         <p className="work-next-verdict">
-          The agent pointed at a plug at about <strong>{pick.toLocaleString('en-US')} m</strong>. The operator set it at{' '}
-          <strong>{w.plug_m.toLocaleString('en-US')} m</strong>
-          {Math.abs(pick - w.plug_m) >= 1 && `, ${Math.abs(Math.round(pick - w.plug_m))} m ${w.plug_m < pick ? 'higher' : 'deeper'}`}
+          The operator set a plug at <strong>{w.plug_m.toLocaleString('en-US')} m</strong>
           {w.depth && w.depth.blank_pipe_m.some(([a, b]) => a <= w.plug_m! && w.plug_m! <= b) && ', in blank pipe'}
-          {w.depth?.new_perforations_m.length
-            ? `, and opened new perforations at ${w.depth.new_perforations_m.map(([a, b]) => `${a}-${b} m`).join(', ')} above it`
-            : ''}
-          .
+          {newPerforations(w.depth)}.{' '}
+          {pick !== undefined && (
+            <>
+              The answer&rsquo;s plug depth was about <strong>{pick.toLocaleString('en-US')} m</strong>.
+            </>
+          )}
         </p>
       )}
+      {w.on_latest_log && <OnLatestLog log={w.on_latest_log} plug={w.plug_m} />}
       {w.depth && <DepthStrip d={w.depth} plug={w.plug_m} />}
       <p className="work-next-what">
         The daily report says: &ldquo;{w.summary}&rdquo;
@@ -181,19 +191,30 @@ function WorkNext({ w, asOf }: { w: NonNullable<Hindsight['work_next']>[number];
         </thead>
         <tbody>
           <tr>
-            <th scope="row">60 days before</th>
+            <th scope="row">The 60 days before</th>
             <td className="num-col">{w.before.oil_sm3_per_day.toLocaleString('en-US')} Sm³/d</td>
             <td className="num-col">{cut(w.before.water_cut)}</td>
           </tr>
           {w.after && (
             <tr>
-              <th scope="row">Back on stream from {w.back_on}</th>
+              <th scope="row">
+                The 60 days from {w.back_on}, back on stream ({w.after.days} producing days)
+              </th>
               <td className="num-col">{w.after.oil_sm3_per_day.toLocaleString('en-US')} Sm³/d</td>
               <td className="num-col">{cut(w.after.water_cut)}</td>
             </tr>
           )}
         </tbody>
       </table>
+      {w.field_before && w.field_after && (
+        <p className="work-next-field">
+          The whole field on the same days: water {w.field_before.water_sm3_per_day.toLocaleString('en-US')} →{' '}
+          {w.field_after.water_sm3_per_day.toLocaleString('en-US')} Sm³/d, oil{' '}
+          {w.field_before.oil_sm3_per_day.toLocaleString('en-US')} →{' '}
+          {w.field_after.oil_sm3_per_day.toLocaleString('en-US')} Sm³/d. Less water to lift and treat leaves the
+          platform room for its other wells.
+        </p>
+      )}
       {range && w.trend_year_after_sm3 !== null && (
         <p className="work-next-worth">
           In the year after it the well made <strong>{volume(w.oil_year_after_sm3)}</strong> of oil. On the decline it
@@ -218,6 +239,49 @@ function WorkNext({ w, asOf }: { w: NonNullable<Hindsight['work_next']>[number];
         {w.volumes_note} The agent answered as of {asOf} and could not see this job.
       </p>
     </section>
+  )
+}
+
+/** ", and opened new perforations at A-B m, just above the top zone (C-D m)". */
+function newPerforations(d: NonNullable<Hindsight['work_next']>[number]['depth']) {
+  if (!d?.new_perforations_m.length) return ''
+  const spans = d.new_perforations_m.map(([a, b]) => `${a}-${b} m`).join(', ')
+  const top = d.perforated_m.find(([a]) => d.new_perforations_m.some(([, b]) => a - b >= 0 && a - b < 2))
+  return `, and opened new perforations at ${spans}${top ? `, just above the top zone (${top[0]}-${top[1]} m)` : ' above it'}`
+}
+
+/** Each depth against the last log before the job: the share of the water and of the oil
+ * entering below it, which is what a plug there shuts off. */
+function OnLatestLog({ log, plug }: { log: NonNullable<NonNullable<Hindsight['work_next']>[number]['on_latest_log']>; plug: number | null }) {
+  const pct = (r?: [number, number]) => {
+    if (!r) return null
+    const [a, b] = r.map((v) => Math.round(v * 100))
+    return a === b ? `${a}%` : `${a}-${b}%`
+  }
+  return (
+    <table className="case-table work-next-log">
+      <caption>
+        On the last log before the job ({log.survey}, {log.date}), a plug shuts off what enters below it
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">A plug at</th>
+          <th scope="col" className="num-col">Water below it</th>
+          <th scope="col" className="num-col">Oil below it</th>
+        </tr>
+      </thead>
+      <tbody>
+        {log.depths.map((d) => (
+          <tr key={d.depth_m}>
+            <th scope="row">
+              {d.depth_m.toLocaleString('en-US')} m, {d.depth_m === plug ? 'the operator’s' : 'the answer’s'}
+            </th>
+            <td className="num-col">{pct(d.water_share) ?? 'not logged'}</td>
+            <td className="num-col">{pct(d.oil_share) ?? 'not logged'}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   )
 }
 

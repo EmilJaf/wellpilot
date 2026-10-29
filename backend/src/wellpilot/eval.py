@@ -38,6 +38,12 @@ from wellpilot.config import get_settings
 from wellpilot.data.store import ProductionStore
 from wellpilot.llm import LLM, make_llm
 
+# A pressure said to fall where the gauge died: the misreading the demo refutes.
+PRESSURE_FELL = (
+    r"(?:reservoir |downhole |bottom-?hole )?pressure (?:fell|dropped|collapsed|declined) "
+    r"(?!.{0,30}(?:gauge|sensor|apparent))"
+)
+
 # Muse Spark Open on Baseten, USD per token (the same as Meta's hosted Muse Spark).
 PRICE_IN, PRICE_OUT = 1.25e-6, 4.25e-6
 
@@ -50,6 +56,9 @@ class Case:
     tools: tuple[str, ...] = ()  # each must be called successfully
     any_tools: tuple[str, ...] = ()  # at least one of these must be
     mentions: tuple[str, ...] = ()  # regexes the answer (summary and findings) must match
+    # Regexes it must not match: the misreadings a passing keyword would hide ("pressure"
+    # is in both "the gauge reads zero" and "the pressure collapsed").
+    avoids: tuple[str, ...] = ()
     max_steps: int = 12
     max_cost: float = 0.30
 
@@ -61,6 +70,10 @@ CASES = [
         tools=("detect_events",),
         any_tools=("search_reports", "plan_vs_actual", "read_report_page", "field_vs_design"),
         mentions=(r"2010-07-18|4,?050",),
+        avoids=(
+            r"water cut (?:jumped|spiked|stepped up)",
+            r"choke (?:was |stayed )?unchanged\b(?! across)",
+        ),
         max_steps=12,
         max_cost=0.35,
     ),
@@ -70,6 +83,7 @@ CASES = [
         "sensor problem?",
         tools=("detect_events",),
         mentions=(r"2010-10-1[12]", r"gauge|sensor"),
+        avoids=(PRESSURE_FELL,),
     ),
     Case(
         "forecast_as_of",
@@ -114,7 +128,10 @@ CASES = [
         as_of=date(2014, 10, 31),
         tools=("production_log",),
         mentions=(r"3[,\s]?1(?:4[7-9]|5\d|60)", r"3[,\s]?210|2010"),  # blank pipe
+        # No tool has costs or prices; a well making ~170 Sm3/d of oil is not shut in.
+        avoids=(r"uneconomic|no economic|economic limit|prepare\w* (?:the well )?for (?:a )?shut",),
         max_steps=10,
+        max_cost=0.50,  # three production logs, each with every gap's shares
     ),
     Case(
         "own_code_f12",
@@ -138,7 +155,7 @@ CASES = [
     Case(
         "waterflood_f12",
         "Was F-12's falling oil rate in 2011-2013 a loss of reservoir pressure or water taking "
-        "over the well? How much oil was left before an uneconomic water cut?",
+        "over the well? How much oil did its water-oil ratio trend leave before a 95% water cut?",
         as_of=date(2013, 12, 31),
         tools=("waterflood",),
         mentions=(r"liquid|choke", r"water cut|WOR"),
@@ -151,6 +168,7 @@ CASES = [
         as_of=date(2010, 12, 31),
         tools=("field_screen",),
         mentions=(r"F-12", r"gauge|pressure"),
+        avoids=(PRESSURE_FELL,),
     ),
     Case(
         "f11b_completion",
@@ -166,6 +184,7 @@ CASES = [
         as_of=date(2010, 12, 31),
         tools=("field_screen", "forecast_production"),
         mentions=(r"F-12", r"gauge|pressure"),
+        avoids=(PRESSURE_FELL,),
         max_steps=10,
         max_cost=0.30,
     ),
@@ -295,6 +314,9 @@ def score(case: Case, run: AgentRun) -> list[tuple[str, bool, str]]:
     for pattern in case.mentions:
         found = re.search(pattern, answer, re.IGNORECASE)
         checks.append((f"says /{pattern}/", bool(found), found.group(0) if found else ""))
+    for pattern in case.avoids:
+        found = re.search(pattern, answer, re.IGNORECASE)
+        checks.append((f"never says /{pattern}/", not found, found.group(0) if found else ""))
     long = unreadable_numbers(run.summary or "")
     checks.append(("summary numbers <= 3 significant digits", not long, ", ".join(long)))
     dense = dense_claims([f.claim for f in run.findings])

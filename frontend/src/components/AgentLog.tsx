@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useRef } from 'react'
 import type { StepEvent, ToolCallView } from '../api'
 import { AlarmIcon, CautionIcon, CheckIcon } from '../icons'
-import { plainProblem, compact, describeArgs, modelName, shortWarning, toolName } from '../labels'
+import { compact, describeArgs, isBookkeeping, modelName, plainProblem, plainToolError, shortWarning, toolName } from '../labels'
 import type { RunState } from '../useRun'
 
 type Props = {
@@ -173,20 +173,7 @@ function Call({
             <span>Answer accepted: every claim checked against the evidence</span>
           </div>
         ) : (
-          <div className="flag flag-alarm">
-            <AlarmIcon />
-            <span>
-              The checker sent the answer back ({call.problems?.length ?? 0}{' '}
-              {call.problems?.length === 1 ? 'problem' : 'problems'})
-              <ul>
-                {call.problems?.map((p, i) => (
-                  <li key={i} title={p}>
-                    {plainProblem(p)}
-                  </li>
-                ))}
-              </ul>
-            </span>
-          </div>
+          <Rejection problems={call.problems ?? []} />
         )}
       </li>
     )
@@ -223,11 +210,45 @@ function Call({
         </div>
       ))}
       {call.error && (
-        <div className="flag flag-alarm">
-          <AlarmIcon />
-          <span>Tool error, sent back to the model: {call.error}</span>
+        <div className="flag flag-caution" title={call.error}>
+          <CautionIcon />
+          <span>The tool refused the call and told the model why: {plainToolError(call.error)}</span>
         </div>
       )}
     </li>
+  )
+}
+
+/** The checker sending an answer back: what it got wrong in red, one per line; numbers
+ * written without naming their source (bookkeeping) in one quiet line under them. */
+function Rejection({ problems }: { problems: string[] }) {
+  const real = problems.filter((p) => !isBookkeeping(p))
+  const paperwork = problems.length - real.length
+  const tally = paperwork === 1 ? 'one number' : `${paperwork} numbers`
+  return (
+    <div className={`flag ${real.length ? 'flag-alarm' : 'flag-caution'}`}>
+      {real.length ? <AlarmIcon /> : <CautionIcon />}
+      <span>
+        {real.length
+          ? `The checker sent the answer back: ${real.length === 1 ? 'one error' : `${real.length} errors`}`
+          : 'The checker sent the answer back for its paperwork'}
+        {real.length > 0 && (
+          <ul>
+            {real.map((p, i) => (
+              <li key={i} title={p}>
+                {plainProblem(p)}
+              </li>
+            ))}
+          </ul>
+        )}
+        {paperwork > 0 && (
+          <span className="flag-paperwork">
+            {real.length ? 'Also ' : ': '}
+            {tally} written without naming the tool result {paperwork === 1 ? 'it comes' : 'they come'} from, or not
+            rounded.
+          </span>
+        )}
+      </span>
+    </div>
   )
 }

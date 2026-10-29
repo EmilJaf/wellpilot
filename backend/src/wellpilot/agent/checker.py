@@ -101,6 +101,10 @@ WRITTEN_NUMBER = re.compile(
 SUFFIX_AFTER = re.compile(
     r"\s*(?:%|percent\b|pct\b|million\b|mill\b\.?|thousand\b|M(?=Sm)|k(?=Sm)|km\b)"
 )
+# The rest of a range up to a scale word: " to 0.47" in "0.32 to 0.47 million".
+RANGE_SCALE = re.compile(
+    r"\s*(?:-|to|and)\s*(?:about\s+)?\d[\d.,]*(?=\s*(?:million\b|mill\b|thousand\b|M(?=Sm)|k(?=Sm)))"
+)
 SQL_STRING = re.compile(r"'((?:[^']|'')*)'")
 SCALES = {
     "%": (0.01, 1.0),
@@ -192,6 +196,8 @@ class _Canonical(dict):
 
 CANONICAL = _Canonical()
 WORD_APOSTROPHE = re.compile(r"(?<=\w)[\u2019\u02bc](?=[^\W\d_])")
+# "69 per cent" as " percent": the same length, so positions still hold.
+PER_CENT = re.compile(r"\bper (?=cent\b)", re.IGNORECASE)
 
 
 def canonical(text: str) -> str:
@@ -199,7 +205,8 @@ def canonical(text: str) -> str:
     indexes the text as written: "2010\u201107\u201118", "F\u201112" and "4\u202f050" read as
     "2010-07-18", "F-12" and "4 050"; "F-12\u2019s" as "F-12's". The model's typography varies
     run to run; each variant used to be a false rejection of its own."""
-    return WORD_APOSTROPHE.sub("'", text.translate(CANONICAL))
+    plain = WORD_APOSTROPHE.sub("'", text.translate(CANONICAL))
+    return PER_CENT.sub(" per", plain) if "cent" in plain else plain
 
 
 def _normalize(text: str) -> str:
@@ -657,7 +664,10 @@ def _looked_up(text: str, pool: _Pool, free: set[float]) -> list[str]:
     last digit. For a finding's detail, whose numbers are looked up rather than declared."""
     missing = []
     quotes_out = QUOTED.sub(" ", _translations_outside(_normalize(text)))
-    for match in WRITTEN_NUMBER.finditer(_mask(quotes_out)):
+    # A pair written as a list ("[3147,3161]", "3147,3161"): a comma before four digits is
+    # no thousands separator, and a 4-digit decimal comma is not how tools write.
+    listed = re.sub(r"(?<=\d),(?=\d{4}\b)", ", ", quotes_out)
+    for match in WRITTEN_NUMBER.finditer(_mask(listed)):
         written = match.group(0).strip()
         values = [n for european in (False, True) for n in _numbers_in_text(written, european)]
         if not values or all(_free(*n, pool, free) for n in values):
@@ -774,7 +784,9 @@ DOTTED_THOUSANDS = re.compile(r"[1-9]\d{0,2}(?:\.\d{3})+")
 # "Figure 4.2", "Tabell 4.5", "section 4.5.1", "§ 4.5.1", "page 23", "p. 23", "pages 23-25".
 REFERENCE = re.compile(
     r"\b(?:fig(?:ure|ur)?|tab(?:le|ell)?|sections?|chapters?|kap(?:ittel|itel)?|appendix|"
-    r"vedlegg|pages?|side|p)\.?\s*\d+(?:\.\d+)*(?:\s*[-–]\s*\d+)?\b|§\s*\d+(?:\.\d+)*",
+    r"vedlegg|pages?|side|p)\.?\s*\d+(?:\.\d+)*(?:\s*[-–]\s*\d+)?\b|§\s*\d+(?:\.\d+)*|"
+    # Model names: "SAM 3.1", "muse-spark-1.3".
+    r"\bSAM[\s-]?\d+(?:\.\d+)?\b|\bmuse[\w-]*?\d+(?:\.\d+)+\b",
     re.IGNORECASE,
 )
 
@@ -1352,7 +1364,8 @@ _NAMES = re.compile("|".join(f"(?:{t})" for t, _ in QUANTITIES.values()), re.IGN
 RISE_BEFORE = re.compile(
     # "up" only as a change ("went up 55%", "up by 55%"), not "makes up 69%"
     r"\b(?:rose|risen|rising|increased|increasing|grew|grown|jumped|climbed|gained|improved|"
-    r"(?:went|gone|goes|is|was|are|were|been)\s+up|up(?=\s+by\b))"
+    r"(?:went|gone|goes|is|was|are|were|been|shifted|moved|stepped|ticked|edged|came)\s+up|"
+    r"up(?=\s+by\b))"
     r"(?:\s+by)?(?:\s+(?:about|around|some|nearly|almost|roughly))?\s*[~≈]?\s*$",
     re.IGNORECASE,
 )
@@ -1373,7 +1386,8 @@ LEVELS = r"water_?cut|uptime|on_stream|choke"
 # A step, not a gradual shift: the words that make a change between two periods' means
 # read as a jump at one date.
 STEP_WORDS = re.compile(
-    r"\b(?:abrupt\w*|sudden\w*|overnight|sharp(?:ly)?|step(?:ped|s)?[\s-]+down|plung\w*|"
+    r"\b(?:abrupt\w*|sudden\w*|overnight|sharp(?:ly)?|step(?:ped|s)?[\s-]+(?:down|up)|plung\w*|"
+    r"jump(?:ed|s|ing)?|spik(?:e|ed|es)|"
     r"collaps\w*|within (?:a few |\d+ |two |three )?days|in (?:a single|one|a) (?:week|day)|"
     r"in (?:\d+|two|three|four|five|six) (?:weeks|days))\b",
     re.IGNORECASE,
@@ -1506,10 +1520,15 @@ def _quantity(blanked: str, start: int, end: int, after: bool = True) -> str | N
         if not (last and LINK.fullmatch(before[last.end() :])):
             return None
         name = last.group(0)
-        # "when water was 30%": a share of the stream named before it is its water cut too.
-        if re.fullmatch(r"water", name, re.I) and (
-            blanked[start:end].rstrip().endswith("%")
-            or re.match(r"\s*(?:%|percent)", blanked[end:])
+        # "when water was 30%": a share of the stream named before it is its water cut too;
+        # "oil loss ~76.8% and water ~92.5%" (no verb) is a share of the water.
+        if (
+            re.fullmatch(r"water", name, re.I)
+            and re.search(r"\b(?:was|is|were|are|at|reached|hit|stood)\b", before[last.end() :])
+            and (
+                blanked[start:end].rstrip().endswith("%")
+                or re.match(r"\s*(?:%|percent)", blanked[end:])
+            )
         ):
             return "water cut"
     return next(q for q, (text, _) in QUANTITIES.items() if re.fullmatch(text, name, re.I))
@@ -1766,7 +1785,7 @@ def _attribution(
         )
         # A number written as a duration ("flowing for about 1,830 days") is no change.
         if (
-            (_steps(_part(blanked, start, commas=False)) or at_date)
+            (_steps(_own_stretch(blanked, start, end)) or at_date)
             and not DURATION_AFTER.match(blanked[end:])
             and _gradual(held, leaves)
         ):
@@ -1777,6 +1796,18 @@ def _attribution(
                 f"{measured} call it a gradual shift"
             )
     return None
+
+
+def _own_stretch(text: str, start: int, end: int) -> str:
+    """The stretch of a number's clause its step words are read in: from the number before
+    it (or the clause's start) to the clause's end, so "water cut jumped to 0.51 ..., oil
+    rate fell 72%" gives the jump to the 0.51, not to the 72%, while "fell 55% ... and
+    liquid collapsing" still reads as a step."""
+    bounds = [0, *(m.end() for m in CLAUSE.finditer(text)), len(text)]
+    head = max(b for b in bounds if b <= start)
+    tail = min((b for b in bounds if b > start), default=len(text))
+    before = [m.end() for m in NUMBER.finditer(text, head, start)]
+    return text[(before[-1] if before else head) : tail]
 
 
 def _steps(part: str) -> list[re.Match]:
@@ -1819,10 +1850,13 @@ def _gradual(held: list[_Leaf], leaves: list[_Leaf]) -> bool:
 
 
 def _across_text(leaves: list[_Leaf], records: set) -> str:
-    """The change across a shift's date, as percents, for the records given."""
+    """The change across a shift's date, as percents (points for a share such as the water
+    cut, which changes by points), for the records given."""
     shown = sorted(
         {
-            f"{abs(lf.value) * (100 if abs(lf.value) <= 1 else 1):.0f}%"
+            f"{abs(lf.value) * 100:.0f} points"
+            if re.search(LEVELS, lf.labels, re.I) and abs(lf.value) <= 1
+            else f"{abs(lf.value) * (100 if abs(lf.value) <= 1 else 1):.0f}%"
             for lf in leaves
             if lf.record in records and _is_across(lf)
         }
@@ -2508,6 +2542,9 @@ def _moved_to(label, text, blanked, declared, unused, items, leaves_of) -> list[
                 latest = max(c[0] for c in changes)
                 changes = [c for c in changes if c[0] == latest]
             way = 1 if moved["rise"] else -1
+            own = next((item for item in items if item.id == d.evidence_id), None)
+            if not dates and _paired_move(d.value, own, leaves_of, way):
+                continue  # its own result has it as an "after" reached that way
             if changes and all(lf.sign == -way for _, lf, _ in changes):
                 when, _, item = changes[0]
                 problems.append(
@@ -2516,6 +2553,29 @@ def _moved_to(label, text, blanked, declared, unused, items, leaves_of) -> list[
                     f"change on {when} is a {'fall' if way == 1 else 'rise'}."
                 )
     return problems
+
+
+def _paired_move(value: float, item: Evidence | None, leaves_of, way: int) -> bool:
+    """Does the result hold this value as an "after" whose "before" (same record, same key)
+    lies the written way: a plug job's oil 177 -> 857 is a rise, whatever the latest
+    regime change did."""
+    if item is None:
+        return False
+    leaves = [lf for lf in leaves_of(item) if lf.value is not None]
+    for lf in leaves:
+        parts = lf.labels.split("|")
+        if "after" not in parts or abs(lf.value - value) > 1e-6 * max(1.0, abs(value)):
+            continue
+        for other in leaves:
+            mine = other.labels.split("|")
+            if (
+                other.record == lf.record
+                and "before" in mine
+                and mine[-1] == parts[-1]
+                and (lf.value - other.value) * way > 0
+            ):
+                return True
+    return False
 
 
 # Numbers written as words: fractions and tens ("two thirds" would need declaring as 67%).
@@ -2568,7 +2628,16 @@ def _declared(
     def readings_of(number: DeclaredNumber) -> list[Reading]:
         # A unit the text writes right after the declared number scales it too: "4.58"
         # declared, "4.58 MSm3" written.
-        unit = SUFFIX_AFTER.match(masked, _standalone(masked, number.text)[0][1])
+        end = _standalone(masked, number.text)[0][1]
+        unit = SUFFIX_AFTER.match(masked, end)
+        # The first end of a range takes the scale written after the second: "0.32 to 0.47
+        # million Sm3" (not "316,000 to 1.11 million", written in full).
+        if (
+            not unit
+            and (span := RANGE_SCALE.match(masked, end))
+            and all(abs(v) < 1000 for v, _, _ in _readings(number.text))
+        ):
+            unit = SUFFIX_AFTER.match(masked, span.end())
         # (+2 keeps the "Sm" that "M" and "k" need after them)
         readings = _readings(number.text + (masked[unit.start() : unit.end() + 2] if unit else ""))
         # "about 70%" for 69.39%: an approximate number is good to 1% of itself.
@@ -3600,6 +3669,68 @@ PLAN_YEAR = re.compile(
 )
 
 
+# Words that tell the reader a figure reading was not confirmed by the measurement of it.
+DISPUTE = re.compile(
+    r"\bSAM\b|measur\w*|disagree\w*|differ\w*|does not match|not confirmed|unconfirmed",
+    re.IGNORECASE,
+)
+FIGURE_WORDS = re.compile(
+    r"\b(?:figure|fig\.|figur|chart|curve|plot\w*|drawn|graph|picture|visual\w*)\b", re.I
+)
+LENGTH_UNITS = {"years": r"(?:years?|yrs?|år)", "months": r"(?:months?|måneder|mnd)"}
+
+
+def _disputed(
+    label: str, text: str, numbers: list[DeclaredNumber] | None, looks: list[Evidence]
+) -> list[str]:
+    """A number the model read off a figure that SAM 3.1's measurement of the same figure
+    disagrees with, written without saying so: the reader would take one model's estimate
+    for the page's. Declared from the page reading, or (a small length needs no declaring)
+    written as that value and unit in a sentence about the figure."""
+    problems = []
+    for item in looks:
+        result = item.result if isinstance(item.result, dict) else {}
+        for check in result.get("cross_check") or []:
+            value = check.get("muse")
+            if check.get("agree") is not False or not isinstance(value, int | float):
+                continue
+            declared = [
+                n for n in numbers or [] if n.evidence_id == item.id and abs(n.value - value) < 1e-9
+            ]
+            units = LENGTH_UNITS.get(str(check.get("unit", "")).lower().rstrip("s") + "s")
+            written = (
+                [
+                    m
+                    for sentence in SENTENCE.split(text)
+                    if FIGURE_WORDS.search(sentence)
+                    for m in re.finditer(
+                        rf"(?<![\d.,]){re.escape(f'{value:g}')}(?:\.0)?(?:\s*(?:-|to)\s*[\d.]+)?\s*"
+                        rf"{units}\b",
+                        sentence,
+                        re.I,
+                    )
+                    if not DISPUTE.search(sentence)
+                ]
+                if units
+                else []
+            )
+            shown = [
+                n.text
+                for n in declared
+                if not any(DISPUTE.search(s) for s in SENTENCE.split(text) if n.text in s)
+            ] + [m.group(0) for m in written]
+            if shown:
+                unit = check.get("sam_unit") or check.get("unit") or ""
+                problems.append(
+                    f"{label}: '{shown[0]}' is {item.id}'s reading of the figure "
+                    f"({check.get('label')}), and SAM 3.1's measurement of the same figure "
+                    f"disagrees with it (by {check.get('difference'):g} {unit}). Say so in the "
+                    "same sentence (\"the model read about 2 years; SAM's measurement "
+                    'differs"), or leave the reading out.'
+                )
+    return problems
+
+
 def _report_claims(label: str, text: str, cited: list[Evidence]) -> list[str]:
     """What a sentence gives the plan that its reports do not hold: a well the cited report
     results never name ("the plan forecast that F-12 would ...": the plan is field-level),
@@ -3735,7 +3866,13 @@ def _depth_ties(label: str, text: str, declared, log: EvidenceLog, leaves_of) ->
         if item is None:
             return set(), set(), False
         same = [lf for lf in leaves_of(item) if lf.record == record]
-        depths = {lf.value for lf in same if lf.value is not None and "depth_m" in lf.labels}
+        # A log row's depth, or a blank-pipe gap's ends (at_blank_pipe: the shares below
+        # its top and its bottom).
+        depths = {
+            lf.value
+            for lf in same
+            if lf.value is not None and ("depth_m" in lf.labels or "blank_pipe_m" in lf.labels)
+        }
         days = {d for lf in same for d in lf.record_days}
         share = any("share" in lf.labels for lf in same)
         return depths, days, share
@@ -3771,12 +3908,38 @@ def _depth_ties(label: str, text: str, declared, log: EvidenceLog, leaves_of) ->
         bounds = [0, *(m.end() for m in re.finditer(r"[.;](?=\s)", text)), len(text)]
         part_start = max(b for b in bounds if b <= start)
         part_end = min((b for b in bounds if b > start), default=len(text))
-        before = [m for m in DEPTH.finditer(text, part_start, start)]
-        after = [m for m in DEPTH.finditer(text, end, part_end)]
-        written = before[-1] if before else after[0] if after else None
+        # A depth in a clause about another plug is that plug's: "the deep plug would cut
+        # 33% ..., while a plug at 3150 m would cut 97%" (not "..., while losing 1%").
+        turns = [
+            m.start()
+            for m in re.finditer(
+                r",?\s+\b(?:while|whereas|but|and|compared with)\s+(?:a|an|the|one)\s+"
+                r"(?:[\w-]+\s+)?(?:plug|depth|log|survey|gap)\b",
+                text,
+            )
+            if part_start <= m.start() < part_end
+        ]
+        clause_start = max([part_start, *(t for t in turns if t < start)])
+        clause_end = min([part_end, *(t for t in turns if t > end)])
+        before = [m for m in DEPTH.finditer(text, clause_start, start)]
+        after = [m for m in DEPTH.finditer(text, end, clause_end)]
+        # "1% entered below 3,180 m": a depth the number points to right after it is its own.
+        pointed = after and re.fullmatch(
+            r"[^,;\d]{0,30}\b(?:below|above|under|at|from)\s+(?:about\s+|around\s+|~\s*)?",
+            text[end : after[0].start()],
+            re.I,
+        )
+        written = after[0] if pointed else before[-1] if before else after[0] if after else None
         if written is not None:
             depth = float(re.sub(r"[^\d.]", "", written.group(1)))
-            if not any(abs(depth - x) <= 1.5 for x in depths):
+            # A range ("in 3147 to 3161 m", "3,147-3,161 m") names both its ends.
+            ends = [depth]
+            if low := re.search(
+                r"(\d{1,2}[,\u00a0\u202f ]?\d{3}(?:\.\d+)?)\s*(?:m\s*)?(?:to|-|–)\s*$",
+                text[max(0, written.start() - 20) : written.start()],
+            ):
+                ends.append(float(re.sub(r"[^\d.]", "", low.group(1))))
+            if not any(abs(e - x) <= 1.5 for e in ends for x in depths):
                 shown = ", ".join(f"{x:g}" for x in sorted(depths))
                 problems.append(
                     f"{label}: '{d.text}' is the share below {shown} m in {item.id}, not below "
@@ -4071,6 +4234,9 @@ def check_submission(submission: Submission, log: EvidenceLog, question: str = "
         problems += _within_limits(f"Finding {n}", own, cited)
         problems += _month_spans(f"Finding {n}", own)
         problems += _report_claims(f"Finding {n}", own, cited)
+        looks = [e for e in cited if e.tool == "look_at_page"]
+        problems += _disputed(f"Finding {n}", finding.claim, finding.numbers, looks)
+        problems += _disputed(f"Finding {n} (its detail)", finding.detail or "", None, looks)
         problems += _trends(f"Finding {n}", own, cited, leaves_of)
         problems += _model_names(f"Finding {n}", own, cited)
         problems += _gauge_claims(f"Finding {n}", own, dead)
@@ -4149,6 +4315,12 @@ def check_submission(submission: Submission, log: EvidenceLog, question: str = "
         problems.append(f"Summary: {'; '.join(misperiod)}. Give each event its own date.")
     problems += _month_spans("Summary", own)
     problems += _report_claims("Summary", own, sound)
+    problems += _disputed(
+        "Summary",
+        submission.summary,
+        submission.summary_numbers,
+        [e for e in log if e.tool == "look_at_page"],
+    )
     problems += _trends("Summary", own, sound, leaves_of)
     problems += _gauge_claims("Summary", own, dead)
     problems += _durations(

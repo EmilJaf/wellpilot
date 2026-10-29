@@ -6,8 +6,10 @@ because the reservoir runs out of pressure. Three classic views show that:
 
 - WOR against cumulative oil. Late in a waterflooded well's life log10(WOR) rises about
   linearly with cumulative oil (Np). Fitted on the recent months and extended to an
-  economic water cut (0.80, 0.90, 0.95; WOR 4, 9, 19), it estimates the oil left before
-  the well is uneconomic: remaining oil = Np at the limit minus Np now.
+  reference water cut (0.80, 0.90, 0.95; WOR 4, 9, 19), it estimates the oil left before
+  each: remaining oil = Np at the limit minus Np now. Where a well stops paying depends on
+  costs and prices the data does not hold, so these are reference points, not an economic
+  limit.
 - Liquid rate and choke by year. Liquid held while the choke opens and oil falls means
   water is taking the well's capacity (fractional flow); liquid falling too would point
   at pressure support.
@@ -160,7 +162,10 @@ def waterflood(store: ProductionStore, well: str, start=None, end=None) -> dict:
         "field_voidage": _field_voidage(store),
         "notes": (
             "WOR = water/oil by month; the trend is log10(WOR) against cumulative oil, fitted "
-            f"on up to {FIT_MONTHS} recent months with WOR >= {MIN_WOR:g}. field_voidage: "
+            f"on up to {FIT_MONTHS} recent months with WOR >= {MIN_WOR:g}. The water cuts in "
+            "to_limits are reference points, not an economic limit: the data holds no costs or "
+            "prices, so remaining_oil_sm3 says how much oil is left before each, not whether "
+            "it pays. field_voidage: "
             f"replacement_ratio is injection over voidage at reservoir conditions (Bo {BO} "
             f"m3/Sm3 from PUD p.20, low/high with Bo {BO_RANGE[1]}/{BO_RANGE[0]}; Bw {BW:g}; "
             "above the bubble point, so no free gas); surface_ratio is the same in surface "

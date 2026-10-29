@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState } from 'react'
+import { createContext, Fragment, useContext, useEffect, useRef, useState } from 'react'
 import { api, type Evidence, type Table, type ToolCode } from '../api'
 import { CautionIcon, CheckIcon } from '../icons'
 import { describeArgs, sameQuote, toolName } from '../labels'
@@ -27,6 +27,11 @@ function matcher(focus: Focus | null | undefined): (v: unknown) => boolean {
 }
 
 const HitContext = createContext<(v: unknown) => boolean>(() => false)
+
+/** The field screen as the app shows it, with the clicked number marked. */
+function ScreenEvidence({ result }: { result: ScreenResult }) {
+  return <ScreenList result={result} hit={useContext(HitContext)} />
+}
 
 function countHits(value: unknown, hit: (v: unknown) => boolean): number {
   if (Array.isArray(value)) return value.reduce((n: number, v) => n + countHits(v, hit), 0)
@@ -173,6 +178,17 @@ function CodeRef({ codeRef }: { codeRef: string }) {
               ) : null}
             </p>
             <pre className="code">{code.value.source}</pre>
+            {code.value.called?.map((c) => (
+              <Fragment key={c.name}>
+                <p className="evidence-sub">
+                  It calls <code>{c.name}</code>, which computes the result:{' '}
+                  <a href={`${REPO}/${c.file}#L${c.line}`} target="_blank" rel="noreferrer">
+                    {c.file.split('/').pop()}, line {c.line}
+                  </a>
+                </p>
+                <pre className="code">{c.source}</pre>
+              </Fragment>
+            ))}
           </div>
         ) : (
           <p className="evidence-sub">{code?.error ? `The code could not load: ${code.error}` : 'Loading the code'}</p>
@@ -203,7 +219,7 @@ function Result({
   if (tool === 'detect_events') return <Events events={result as EventRow[]} />
   if (tool === 'plan_vs_actual') return <PlanEvidence result={result as PlanResult} />
   if (tool === 'look_at_page') return <PageReading result={result as ReadingResult} />
-  if (tool === 'field_screen') return <ScreenList result={result as ScreenResult} />
+  if (tool === 'field_screen') return <ScreenEvidence result={result as ScreenResult} />
   if (tool === 'waterflood') {
     const wf = result as WaterfloodResult
     return (

@@ -6,10 +6,12 @@
   "question": "What oil plateau rate and duration does the forecast figure on page 23 of the 2005 development plan show?"
  },
  "to_review": false,
- "note": "",
+ "note": "Oct 29 (eighth panel): verdict changed on purpose: its detail gives the model's 2.0 years off the figure, which SAM 3.1's measurement disagrees with, without saying so.",
  "expected": {
-  "accepted": true,
-  "flagged": []
+  "accepted": false,
+  "flagged": [
+   "Finding 2"
+  ]
  },
  "submission": {
   "summary": "The 2005 plan text forecasts a plateau oil rate of 9,000 Sm3/d lasting about 19 months (about 1.58 years); the same 9,000 Sm3/d is listed as the field oil capacity. The figure visually suggests a slightly lower flat level around 2008 to 2010, but the figure has no numeric labels for rate or duration.",

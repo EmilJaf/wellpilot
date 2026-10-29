@@ -1047,8 +1047,9 @@ def production_log(store: ProductionStore, args: LogArgs) -> dict:
         if plots.exists()
         else {}
     )
-    surveys = []
+    surveys, survey_logs_by = [], {}
     for name, survey_logs in logs.groupby("survey", sort=False):
+        survey_logs_by[name] = dict(tuple(survey_logs.groupby("pass", sort=False)))
         day = survey_logs["date"].iloc[0]
         las = next((s for s in SURVEYS if s.survey == name), None)
         passes, profiles = [], {}  # flowing passes, logged at the well's surface rates
@@ -1094,6 +1095,7 @@ def production_log(store: ProductionStore, args: LogArgs) -> dict:
         )
     work = _depth_work(store, args.well, surveys)
     for survey in surveys:
+        passes = survey_logs_by[survey["survey"]]
         for p in survey["passes"]:
             for row in p["below"]:
                 inside = next(
@@ -1101,6 +1103,14 @@ def production_log(store: ProductionStore, args: LogArgs) -> dict:
                 )
                 if inside:
                     row["inside_perforation_m"] = inside
+            # Where a bridge plug can go: the shares below each end of every blank-pipe gap,
+            # whether or not the model asked for those depths.
+            log = passes[p["pass"]]
+            p["at_blank_pipe"] = [
+                {"blank_pipe_m": gap, "below_top": top, "below_bottom": bottom}
+                for gap in work["blank_pipe_m"]
+                if (top := inflow_below(log, gap[0])) and (bottom := inflow_below(log, gap[1]))
+            ]
     return to_jsonable(
         {
             "well": args.well,
@@ -1116,7 +1126,9 @@ def production_log(store: ProductionStore, args: LogArgs) -> dict:
             "plugs_set gives what each plug already set did to the well (water cut and oil "
             "before and after). A bridge plug is set in blank pipe, never inside a perforated "
             "interval (inside_perforation_m names the interval a depth falls in; blank_pipe_m "
-            "lists the gaps). since_survey says how old the latest log is and how far the "
+            "lists the gaps, and each pass's at_blank_pipe gives the shares below the top and "
+            "the bottom of every gap: the depths a plug can actually be set at). since_survey "
+            "says how old the latest log is and how far the "
             "water cut has moved since: an old log may no longer show where the water enters, "
             "and a new one would settle it. Each survey's passes were run at several surface "
             "rates. A survey read off pictures carries the checks of that reading.",

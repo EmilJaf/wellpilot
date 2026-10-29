@@ -6,10 +6,13 @@
   "question": "What oil plateau rate and duration does the forecast figure on page 23 of the 2005 development plan show?"
  },
  "to_review": false,
- "note": "",
+ "note": "Oct 29 (eighth panel): verdict changed on purpose: it writes the model's '2 years' off the figure, which SAM 3.1's measurement disagrees with, without saying so.",
  "expected": {
-  "accepted": true,
-  "flagged": []
+  "accepted": false,
+  "flagged": [
+   "Finding 3",
+   "Summary"
+  ]
  },
  "submission": {
   "summary": "The plan's text on page 23 states the oil plateau rate is 9,000 Sm3/d for about 19 months at 94% regularity after about 1 year start-up, and Figure 4.2 visually suggests the plateau curve is flat at about 8,500 Sm3/d just below the 9,000 line for visually about 2 years from about 2008 to about 2010.",

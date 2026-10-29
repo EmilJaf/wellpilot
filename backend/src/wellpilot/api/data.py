@@ -149,6 +149,18 @@ def field_design(request: Request, end: date | None = None) -> dict:
         raise HTTPException(404, str(e)) from None
 
 
+def _callees(fn) -> list:
+    """The wellpilot analysis functions a tool function calls by name (not its own module's
+    helpers, nor serialisers such as to_jsonable)."""
+    found = []
+    for name in fn.__code__.co_names:
+        obj = fn.__globals__.get(name)
+        module = getattr(obj, "__module__", "") or ""
+        if inspect.isfunction(obj) and module.startswith("wellpilot.analysis") and obj not in found:
+            found.append(obj)
+    return found
+
+
 @router.get("/code/{ref}")
 def tool_code(ref: str) -> dict:
     """The source of the tool function an evidence item's code ref names, and whether it is
@@ -158,7 +170,22 @@ def tool_code(ref: str) -> dict:
         fn = tool.run
         if f"{fn.__module__}.{fn.__qualname__}" == name:
             lines, first = inspect.getsourcelines(fn)
+            # A short wrapper ("return to_jsonable(screen(store))") shows the analysis
+            # function it calls too: that is the code that computed the numbers.
+            called = []
+            if len(lines) <= 8:
+                for callee in _callees(fn):
+                    body, at = inspect.getsourcelines(callee)
+                    called.append(
+                        {
+                            "name": callee.__qualname__,
+                            "file": "backend/src/" + callee.__module__.replace(".", "/") + ".py",
+                            "line": at,
+                            "source": "".join(body),
+                        }
+                    )
             return {
+                "called": called,
                 "ref": code_ref(fn),
                 "same_as_run": code_ref(fn) == ref,
                 # Hashed with the tool: the analysis modules it calls into.

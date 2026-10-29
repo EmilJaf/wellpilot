@@ -87,7 +87,17 @@ export function FieldScreen({ asOf, onOpenWell }: { asOf: string; onOpenWell: (w
 }
 
 /** The ranked wells; also how a field_screen result shows as evidence. */
-export function ScreenList({ result, onOpenWell }: { result: ScreenResult; onOpenWell?: (well: string) => void }) {
+export function ScreenList({
+  result,
+  onOpenWell,
+  hit = () => false,
+}: {
+  result: ScreenResult
+  onOpenWell?: (well: string) => void
+  /** Marks the value a clicked number in the answer stands for (in the evidence view). */
+  hit?: (v: unknown) => boolean
+}) {
+  const mark = (v: unknown) => (hit(v) ? 'hit' : undefined)
   return (
     <>
       <ol className="screen-list">
@@ -111,26 +121,26 @@ export function ScreenList({ result, onOpenWell }: { result: ScreenResult; onOpe
               <dl className="screen-metrics">
                 <div>
                   <dt>Oil, Sm³/d</dt>
-                  <dd>{rate(w.oil_rate_sm3_per_day)}</dd>
+                  <dd className={mark(w.oil_rate_sm3_per_day)}>{rate(w.oil_rate_sm3_per_day)}</dd>
                 </div>
                 <div>
                   <dt>Water cut</dt>
-                  <dd>{w.water_cut === null || w.water_cut === undefined ? '–' : w.water_cut.toFixed(2)}</dd>
+                  <dd className={mark(w.water_cut)}>{w.water_cut === null || w.water_cut === undefined ? '–' : w.water_cut.toFixed(2)}</dd>
                 </div>
                 <div>
                   <dt>Uptime</dt>
-                  <dd>{pct(w.uptime)}</dd>
+                  <dd className={mark(w.uptime)}>{pct(w.uptime)}</dd>
                 </div>
                 <div>
                   <dt>Oil, 90 days</dt>
-                  <dd>{signed(w.oil_rate_change_90d)}</dd>
+                  <dd className={mark(w.oil_rate_change_90d)}>{signed(w.oil_rate_change_90d)}</dd>
                 </div>
               </dl>
             ) : (
               <dl className="screen-metrics">
                 <div>
                   <dt>Injection, Sm³/d</dt>
-                  <dd>{rate(w.water_inj_sm3_per_day)}</dd>
+                  <dd className={mark(w.water_inj_sm3_per_day)}>{rate(w.water_inj_sm3_per_day)}</dd>
                 </div>
               </dl>
             )}
@@ -139,7 +149,7 @@ export function ScreenList({ result, onOpenWell }: { result: ScreenResult; onOpe
                 {w.issues.map((i, n) => (
                   <li key={n} className={`issue issue-${i.level}`}>
                     {i.level === 'alarm' ? <AlarmIcon /> : i.level === 'caution' ? <CautionIcon /> : <span className="issue-dot" />}
-                    <span>
+                    <span className={mark(i.text)}>
                       {i.text}
                       {i.since && <span className="issue-since"> since {i.since}</span>}
                     </span>

@@ -328,13 +328,19 @@ def _work_next(
             extras = [actual - t for _, _, t in trends]
             text = " ".join(s["summary"] for s in job["summaries"])
             plug = PLUG.search(text)
+            plug_m = float(plug.group(1).replace(",", ".")) if plug else None
+            asked = [d for d in _answer_depths(answer) if plug_m is None or abs(d - plug_m) > 0.5]
             try:  # the well along its depth, from its logs and reports up to the job
                 log = production_log(
-                    full.__class__(full.processed_dir, as_of=start.date()), LogArgs(well=well)
+                    full.__class__(full.processed_dir, as_of=start.date()),
+                    LogArgs(
+                        well=well, below_m=([plug_m] if plug_m is not None else []) + asked[:5]
+                    ),
                 )
                 zones, blank, earlier = log["perforated_m"], log["blank_pipe_m"], log["plugs_set"]
             except ValueError:
-                zones, blank, earlier = [], [], []
+                log, zones, blank, earlier = None, [], [], []
+            answer_plug_m = [d for d in asked if all(abs(d - p["depth_m"]) > 2 for p in earlier)]
             found.append(
                 {
                     "well": well,
@@ -346,7 +352,7 @@ def _work_next(
                         (s["summary"] for s in job["summaries"] if PLUG.search(s["summary"])),
                         next((s["summary"] for s in job["summaries"]), ""),
                     ),
-                    "plug_m": float(plug.group(1).replace(",", ".")) if plug else None,
+                    "plug_m": plug_m,
                     "perforations": job["perforations"],
                     "before": before,
                     "back_on": back.date().isoformat(),
@@ -397,20 +403,67 @@ def _work_next(
                         "blank_pipe_m": blank,
                         "earlier_plugs_m": [p["depth_m"] for p in earlier],
                         # The depth the answer recommends, not the earlier plugs it recalls.
-                        "answer_plug_m": [
-                            d
-                            for d in _answer_depths(answer)
-                            if all(abs(d - p["depth_m"]) > 2 for p in earlier)
-                        ],
+                        "answer_plug_m": answer_plug_m,
                         "new_perforations_m": [
                             [float(a), float(b)]
                             for interval in job["perforations"]
                             for a, b in re.findall(r"(\d{4}(?:\.\d+)?)-(\d{4}(?:\.\d+)?)", interval)
                         ],
                     },
+                    "field_before": _field_on(
+                        full, well, start - pd.Timedelta(days=RATE_DAYS), start
+                    ),
+                    "field_after": _field_on(full, well, back, back + pd.Timedelta(days=RATE_DAYS)),
+                    "on_latest_log": _on_latest_log(
+                        log, ([plug_m] if plug_m is not None else []) + answer_plug_m
+                    ),
                 }
             )
     return found
+
+
+def _field_on(store: ProductionStore, well: str, start, end) -> dict | None:
+    """The field's water and oil per day (median over the days the well flowed 12 h or more
+    in the window): what the platform handled around a job on one well."""
+    row = store.query(
+        "WITH days AS (SELECT date FROM production_daily WHERE well = ? AND date BETWEEN ? AND ? "
+        "AND on_stream_hrs >= 12 AND oil_sm3 > 0), field AS (SELECT p.date, sum(p.water_sm3) "
+        "AS water, sum(p.oil_sm3) AS oil FROM production_daily p JOIN days USING (date) "
+        "WHERE p.flow_kind = 'production' GROUP BY p.date) "
+        "SELECT median(water) AS water, median(oil) AS oil, count(*) AS days FROM field",
+        [well, start, end],
+    ).rows.iloc[0]
+    if not row["days"]:
+        return None
+    return {
+        "water_sm3_per_day": round(float(row["water"])),
+        "oil_sm3_per_day": round(float(row["oil"])),
+        "days": int(row["days"]),
+    }
+
+
+def _on_latest_log(log: dict | None, depths: list[float]) -> dict | None:
+    """What a plug at each depth sits below on the last log before the job: the share of the
+    water and of the oil entering below it, low to high over the log's flowing passes."""
+    if not log or not log["surveys"] or not depths:
+        return None
+    survey = log["surveys"][-1]
+    out = []
+    for depth in depths:
+        rows = [r for p in survey["passes"] for r in p["below"] if r["depth_m"] == depth]
+        if not rows:
+            continue
+        out.append(
+            {
+                "depth_m": depth,
+                **{
+                    phase: [min(r[phase] for r in rows), max(r[phase] for r in rows)]
+                    for phase in ("water_share", "oil_share")
+                    if all(phase in r for r in rows)
+                },
+            }
+        )
+    return {"survey": survey["survey"], "date": survey["date"], "depths": out} if out else None
 
 
 def _named_wells(run: dict, full: ProductionStore) -> list[str]:

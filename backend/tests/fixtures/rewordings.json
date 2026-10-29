@@ -2363,7 +2363,8 @@
      "evidence_id": "E3"
     }
    ],
-   "accepted": true
+   "accepted": false,
+   "why": "rejected since Oct 29 by design: it writes the model's 'about 2 years' off the figure, which SAM 3.1's measurement disagrees with, without saying so (the original answer did the same)."
   },
   {
    "run": "063034849654",
@@ -2387,7 +2388,8 @@
      "evidence_id": "E3"
     }
    ],
-   "accepted": true
+   "accepted": false,
+   "why": "rejected since Oct 29 by design: it writes the model's 'about 2 years' off the figure, which SAM 3.1's measurement disagrees with, without saying so (the original answer did the same)."
   },
   {
    "run": "063034849654",
@@ -2411,7 +2413,8 @@
      "evidence_id": "E3"
     }
    ],
-   "accepted": true
+   "accepted": false,
+   "why": "rejected since Oct 29 by design: it writes the model's 'about 2 years' off the figure, which SAM 3.1's measurement disagrees with, without saying so (the original answer did the same)."
   },
   {
    "run": "063034849654",
@@ -2435,7 +2438,8 @@
      "evidence_id": "E3"
     }
    ],
-   "accepted": true
+   "accepted": false,
+   "why": "rejected since Oct 29 by design: it writes the model's 'about 2 years' off the figure, which SAM 3.1's measurement disagrees with, without saying so (the original answer did the same)."
   },
   {
    "run": "063034849654",
@@ -2474,7 +2478,8 @@
      "evidence_id": "E3"
     }
    ],
-   "accepted": true
+   "accepted": false,
+   "why": "rejected since Oct 29 by design: it writes the model's 'about 2 years' off the figure, which SAM 3.1's measurement disagrees with, without saying so (the original answer did the same)."
   },
   {
    "run": "063034849654",
@@ -2553,7 +2558,8 @@
      "evidence_id": "E1"
     }
    ],
-   "accepted": true
+   "accepted": false,
+   "why": "rejected since Oct 29 by design: it writes the model's 'about 2 years' off the figure, which SAM 3.1's measurement disagrees with, without saying so (the original answer did the same)."
   },
   {
    "run": "063034849654",

@@ -334,6 +334,8 @@ export type ToolCode = {
   line: number
   source: string
   depends_on?: string[]
+  /** For a short wrapper: the analysis functions it calls, which computed the numbers. */
+  called?: { name: string; file: string; line: number; source: string }[]
 }
 
 export type MethodSummary = {
@@ -478,6 +480,16 @@ export type Hindsight = {
       answer_plug_m: number[]
       new_perforations_m: [number, number][]
     }
+    /** The field's water and oil per day on the days the well flowed, before and after. */
+    field_before?: { water_sm3_per_day: number; oil_sm3_per_day: number; days: number } | null
+    field_after?: { water_sm3_per_day: number; oil_sm3_per_day: number; days: number } | null
+    /** What a plug at the operator's depth and at the answer's sits below on the last log
+     * before the job: shares of the water and the oil, low to high over its passes. */
+    on_latest_log?: {
+      survey: string
+      date: string
+      depths: { depth_m: number; water_share?: [number, number]; oil_share?: [number, number] }[]
+    } | null
   }[]
 }
 

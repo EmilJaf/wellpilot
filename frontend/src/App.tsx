@@ -97,8 +97,20 @@ const stepFromUrl = (): Step | null => {
 }
 
 /** Bring a part of the story column into view, once it has rendered. */
-const scrollToId = (id: string) =>
-  requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ block: 'start', behavior: 'smooth' }))
+// Retried for a moment: the target may render a frame or two after the step changes (the
+// checker panel under a just-finished answer), and a page opened at an address keeps laying
+// out (charts, evidence) after the first scroll, which can put the page back at the top. So
+// it scrolls, looks again a moment later, and scrolls again if the page went back to the
+// top; a reader who scrolled meanwhile is left where they are. Instant, not smooth: a smooth
+// scroll is cut short by that layout.
+const scrollToId = (id: string, tries = 20, at: number | null = null): void => {
+  requestAnimationFrame(() => {
+    const el = document.getElementById(id)
+    if (at !== null && window.scrollY > 0) return // in place, or the reader moved on
+    if (el) el.scrollIntoView({ block: 'start' })
+    if (tries > 0) window.setTimeout(() => scrollToId(id, tries - 1, el ? window.scrollY : null), el ? 250 : 100)
+  })
+}
 
 /** A date typed as YYYY-MM-DD, the way the data and the answers write it (a browser's date
  * picker shows the reader's locale, 31.12.2010 or 12/31/2010). Empty means all the data. */
@@ -154,7 +166,7 @@ function toMarkers(events: EventRow[]): Marker[] {
 }
 
 export default function App() {
-  const { state, ask, open } = useRun()
+  const { state, ask, open, clear } = useRun()
   const [question, setQuestion] = useState(EXAMPLES[0].question)
   const [asOf, setAsOf] = useState(EXAMPLES[0].asOf)
   const [selectedEvidence, setSelected] = useState<string | null>(null)
@@ -248,10 +260,15 @@ export default function App() {
     setSelected(null)
     setView('hindsight')
     setStep(4)
-    // On a narrow screen the data panel sits below the answer: bring it into view.
-    if (window.innerWidth < 1100) {
-      requestAnimationFrame(() => evidencePanel.current?.scrollIntoView({ block: 'start', behavior: 'smooth' }))
-    }
+    // On a narrow screen the data panel sits below the answer: bring it into view once the
+    // reveal has loaded (scrolled earlier, the answer above it was still changing height).
+    scrollOnReveal.current = window.innerWidth < 1100
+  }
+  const scrollOnReveal = useRef(false)
+  const revealReady = () => {
+    if (!scrollOnReveal.current) return
+    scrollOnReveal.current = false
+    requestAnimationFrame(() => evidencePanel.current?.scrollIntoView({ block: 'start' }))
   }
   // What the field views may show: before the reveal, nothing after the time machine's date.
   const shownEnd = pastDate && !revealed ? pastDate : null
@@ -451,6 +468,11 @@ export default function App() {
     setStep(target)
     const load = !state.id && !named && recorded ? recorded.id : null
     if (target === 1) {
+      // The screen before the question: a finished answer would make step 1 look like step 3.
+      if (state.status !== 'running' && state.status !== 'starting') {
+        reset()
+        clear()
+      }
       setQuestion(EXAMPLES[0].question)
       setAsOf(EXAMPLES[0].asOf)
       setLogOpen(false)
@@ -796,7 +818,7 @@ export default function App() {
               ) : view === 'accuracy' ? (
                 <AccuracyView />
               ) : view === 'hindsight' && state.id ? (
-                <HindsightView runId={state.id} />
+                <HindsightView runId={state.id} onReady={revealReady} />
               ) : view === 'plan' ? (
                 <div className="charts field-view">
                   {plan?.result ? (

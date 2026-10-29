@@ -279,16 +279,31 @@ function drawOverlay(u: uPlot, key: TrackKey, markers: Marker[], highlights: str
   // Labels along the top edge: each takes the first of three rows where it overlaps no
   // other, and goes to the left of its mark where the right edge would cut it. A label
   // with no room is left out (the key and the hover readout still say what the mark is).
+  // Labels are drawn after every mark, so a later mark never covers an earlier label, and
+  // the top row keeps clear of the other work marks' triangles.
   const rows: [number, number][][] = [[], [], []]
+  const triangles =
+    key === 'oil'
+      ? markers.filter((m) => m.kind === 'work' && (m.track === 'all' || m.track === key)).map((m) => xAt(m.at))
+      : []
+  const later: (() => void)[] = []
   const label = (text: string, x: number, beside = 7 * ratio) => {
+    const ink = ctx.fillStyle
+    later.push(() => place(text, x, beside, ink))
+  }
+  const place = (text: string, x: number, beside: number, ink: string | CanvasGradient | CanvasPattern) => {
     const w = ctx.measureText(text).width
     const right = left + width
     const start = x + beside + w <= right ? x + beside : Math.max(left + 2 * ratio, x - beside - w)
-    const row = rows.findIndex((taken) => taken.every(([a, b]) => start + w + 6 * ratio < a || start > b + 6 * ratio))
+    const clear = (a: number, b: number) => start + w + 6 * ratio < a || start > b + 6 * ratio
+    const row = rows.findIndex(
+      (taken, i) =>
+        taken.every(([a, b]) => clear(a, b)) &&
+        (i > 0 || triangles.every((t) => Math.abs(t - x) < ratio || clear(t - 6 * ratio, t + 6 * ratio))),
+    )
     if (row < 0) return
     rows[row].push([start, start + w])
     // A wash behind the text, so a label over the data stays legible.
-    const ink = ctx.fillStyle
     ctx.fillStyle = css('--panel')
     ctx.globalAlpha = 0.85
     ctx.fillRect(start - 2 * ratio, top + (1 + row * 13) * ratio, w + 4 * ratio, 13 * ratio)
@@ -357,6 +372,8 @@ function drawOverlay(u: uPlot, key: TrackKey, markers: Marker[], highlights: str
       ctx.stroke()
     }
   }
+
+  for (const draw of later) draw()
 
   // Dates named in the selected finding: a solid ink rule across every track. Labels
   // only where they do not collide with the previous one.

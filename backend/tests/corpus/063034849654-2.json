@@ -6,10 +6,13 @@
   "question": "What oil plateau rate and duration does the forecast figure on page 23 of the 2005 development plan show?"
  },
  "to_review": false,
- "note": "",
+ "note": "Oct 29 (eighth panel): verdict changed on purpose: it writes the model's '2 years' off the figure, which SAM 3.1's measurement disagrees with, without saying so.",
  "expected": {
-  "accepted": true,
-  "flagged": []
+  "accepted": false,
+  "flagged": [
+   "Finding 2",
+   "Summary"
+  ]
  },
  "submission": {
   "summary": "The 2005 plan text on page 23 forecasts an oil plateau of 9,000 Sm3/d for about 19 months after about 1 year of start-up, and the forecast figure on the same page appears to show a similar plateau slightly below 9,000 Sm3/d at about 8,400 Sm3/d for about 2 years.",
