@@ -1062,7 +1062,9 @@ UNIT_AFTER = re.compile(
     r"|(?P<dur>days?|dager|weeks?|uker|months?|måneder|mnd|years?|år)\b"
     r"|(?P<pert>(?:per|a)\s+(?:month|year|annum)|/\s*(?:month|mo|year|yr))\b"
     r"|(?P<psi>psi[ag]?)\b|(?P<bar>bar[ag]?)\b|(?P<ft>ft|feet|foot)\b"
-    r"|(?P<metres>m|metres?|meters?|m\s?MD|m\s?TVD)\b|(?P<degc>°\s?C|deg\s?C)\b|(?P<degf>°\s?F|deg\s?F)\b)",
+    r"|(?P<metres>m|metres?|meters?|m\s?MD|m\s?TVD)\b|(?P<degc>°\s?C|deg\s?C)\b|(?P<degf>°\s?F|deg\s?F)\b"
+    # A weight on the string ("2500 m 4400 lbs" in a drilling report) is no depth.
+    r"|(?P<weight>k?lbs?|kg|tonnes?|tons?)\b)",
     re.IGNORECASE,
 )
 DURATIONS = {
@@ -1084,6 +1086,7 @@ UNIT_NAMES = {
     "metres": "metres",
     "degc": "°C",
     "degf": "°F",
+    "weight": "a weight (lbs, kg, tonnes)",
     "per_month": "a rate per month",
     "per_year": "a rate per year",
 }
@@ -1101,7 +1104,7 @@ def _written_unit(text: str, end: int) -> str | None:
         return "rate" if m["per"] else "rate_other" if m["other"] else "volume"
     if m["pert"]:
         return "per_month" if re.search(r"month|mo\b", m["pert"]) else "per_year"
-    for unit in ("psi", "bar", "ft", "metres", "degc", "degf"):
+    for unit in ("psi", "bar", "ft", "metres", "degc", "degf", "weight"):
         if m[unit]:
             return unit
     word = m["dur"].lower()
@@ -1166,6 +1169,13 @@ RISE_WORDS = (
 # Words before a number in a tool's text that say which of a record's numbers it is: the
 # change across a shift or between its periods, the calibrated range or the bootstrap one.
 CONTEXT_WORDS = ("across", "between", "calibrated", "bootstrap")
+# What a depth in well work is: a plug's, a perforation's, a packer's, a gauge's. Read from
+# the words between a number and the one before it, in the tools' text and in claims alike.
+WORK_WORDS = {"plug": r"plug", "perforation": r"perforat", "packer": r"packer", "gauge": r"gauge"}
+
+
+def _work(between: str) -> list[str]:
+    return [w for w, pattern in WORK_WORDS.items() if re.search(pattern, between[-40:], re.I)]
 
 
 @lru_cache(maxsize=4096)
@@ -1200,7 +1210,13 @@ def _string_marks(text: str) -> dict[float, tuple[str | None, int | None, str]]:
             labels.append("after")
         near = blanked[max(0, start - 60) : start].lower() + blanked[end : end + 12].lower()
         labels += [f"ctx_{w}" for w in CONTEXT_WORDS if w in near]
-        marks.setdefault(value, (_written_unit(blanked, end), sign, "|".join(labels)))
+        previous = [n.end() for n in RAW_NUMBER.finditer(blanked, 0, start)]
+        labels += [f"work_{w}" for w in _work(blanked[previous[-1] if previous else 0 : start])]
+        mark = (_written_unit(blanked, end), sign, "|".join(labels))
+        marks.setdefault(value, mark)
+        # The plan's and the reports' Norwegian decimals: "3126,2" is 3126.2 too.
+        if re.fullmatch(r"-?\d+,\d{1,2}", raw):
+            marks.setdefault(abs(float(raw.replace(",", "."))), mark)
     return marks
 
 
@@ -1903,7 +1919,7 @@ REF_LABEL = r"to_limits|limit|threshold|remaining|design"
 NOT_A_LEVEL = re.compile(
     r"\s*(?:m\b|metres?|meters?|m\s?MD|days?|weeks?|months?|years?|bar\b|psi\b|°)", re.I
 )
-STRONG = ("side", "stat", "dates", "grain", "ref", "unit")
+STRONG = ("side", "stat", "dates", "grain", "ref", "unit", "work")
 # Values a result names as no physical amount: shares, ratios, fit statistics, levels. A
 # number written in Sm3/d, metres or per year is none of these.
 SHARE_KEY = re.compile(
@@ -2091,6 +2107,8 @@ def _description(text: str, blanked: str, start: int, end: int) -> dict[str, tup
             days.append(found[0])
     if days:
         said["dates"] = ("|".join(days), 2)
+    if work := _work(blanked[own_start:start]):
+        said["work"] = ("|".join(work), 2)
     # The unit written right after it: a rate, a volume, metres, per year (a percent says
     # nothing: a change in a rate is a percentage too).
     if (unit := _written_unit(blanked, end)) and unit != "barrels":
@@ -2148,6 +2166,11 @@ def _fit_scores(said: dict[str, tuple[str, int]], leaf: _Leaf) -> dict[str, int]
         if key is not None:
             mine = [k for k, (_, lab) in QUANTITIES.items() if re.search(lab, labels)]
             out["quantity"] = w if key in mine else -w if mine else 0
+    if "work" in said:
+        # A depth the text calls a plug's, read against what the tool's text calls it.
+        words, w = said["work"]
+        mine = re.findall(r"work_(\w+)", labels)
+        out["work"] = w if set(words.split("|")) & set(mine) else -w if mine else 0
     if "unit" in said:
         unit, w = said["unit"]
         kind = _unit_kind(leaf)
@@ -2221,11 +2244,13 @@ def _best_fit(
         key=lambda lf: (sum(_fit_scores(said, lf).values()), _family(lf) in families),
     )
     theirs = _fit_scores(said, best)
-    # A unit decides only against a value it rules out (a share written in Sm3/d), not for
-    # a rival that merely names its unit where the value written has none.
-    strong = sum(
-        theirs.get(k, 0) - mine.get(k, 0) for k in STRONG if k != "unit" or mine.get(k, 0) < 0
-    )
+    # A unit or a well-work word decides only against a value it rules out (a share written
+    # in Sm3/d, a weight written as a plug's depth), not for a rival that merely names it
+    # where the value written has nothing said about it.
+    weak = [k for k in ("unit", "work") if mine.get(k, 0) >= 0]
+    theirs = {k: v for k, v in theirs.items() if k not in weak}
+    mine = {k: v for k, v in mine.items() if k not in weak}
+    strong = sum(theirs.get(k, 0) - mine.get(k, 0) for k in STRONG)
     if sum(theirs.values()) >= sum(mine.values()) + 3 and strong >= 2:
         what = ", ".join(f"{k} {v}" for k, (v, _) in said.items() if theirs.get(k, 0) > 0)
         return (
