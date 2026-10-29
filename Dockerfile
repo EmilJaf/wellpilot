@@ -1,6 +1,6 @@
 # WellPilot: one image, the API serving the built frontend and the processed Volve data.
-# Build from the repo root (the context needs data/processed):
-#   docker build -t wellpilot .
+# Build from the repo root (the context needs data/processed: scripts/fetch_data.sh):
+#   docker build --build-arg GIT_COMMIT=$(git rev-parse HEAD) -t wellpilot .
 # Keys are never baked in: pass them at run time (fly secrets set ...).
 
 FROM node:24-slim AS web
@@ -34,9 +34,12 @@ COPY --from=web /web/dist /app/frontend/dist
 
 RUN useradd --create-home --uid 10001 wellpilot && chown -R wellpilot /app/data
 USER wellpilot
+# Last, so a new commit rebuilds only this layer: /api/health reports it.
+ARG GIT_COMMIT=""
 ENV DATA_DIR=/app/data \
     FRONTEND_DIR=/app/frontend/dist \
-    PUBLIC=true
+    PUBLIC=true \
+    GIT_COMMIT=$GIT_COMMIT
 EXPOSE 8080
 # One worker: runs, the token budget and rate limits live in this process. A short
 # graceful shutdown leaves the lifespan hook time to save runs in flight before Fly's kill.

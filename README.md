@@ -220,7 +220,7 @@ pnpm install
 pnpm dev                                     # UI on :5173, proxies /api to :8000
 ```
 
-Data: download these files from the Volve dataset:
+Data: `scripts/fetch_data.sh` downloads the processed data the live site runs on (a release asset of this repository, 46 MB, checked against the sha256 pinned in `deploy/data.env`) into `data/processed`. To build it yourself instead, download these files from the Volve dataset:
 - `Production_data/Volve production data.xlsx` into `data/raw/production/`;
 - `Reports/Volve PUD .pdf` into `data/raw/reports/Volve_PUD.pdf`;
 - `Well_logs/14.DIV. REPORTS/15_9-F-12/COMPLETION_REPORT_3.PDF` (F-11 B's completion report) into `data/raw/reports/F11B_Completion_FWR.pdf`.
@@ -245,14 +245,19 @@ cd frontend && pnpm lint && pnpm build
 
 One Docker image: the API serves the built frontend and the processed data, so the app runs as one process on one machine (runs, the token budget and the rate limits live in its memory). The configuration targets [Fly.io](https://fly.io).
 
-Build and smoke-test the image locally first. No API key goes in, so no tokens are spent:
+Every push to `main` that passes CI deploys itself (the `deploy` job in `.github/workflows/ci.yml`): it downloads the pinned data, builds the image, runs `scripts/smoke_image.sh` on it (no API key, so no tokens), deploys that same image with `flyctl deploy --local-only --image`, and checks the live site with `scripts/smoke_live.sh` (it runs the new commit, lists and replays the featured runs). It compares the commit that is live (`/api/health` reports it) with the new one and skips the deploy when only docs or tests changed: a restart cuts runs in flight. Actions → CI → Run workflow deploys `main` again by hand.
+
+After an ingest change, `scripts/publish_data.sh` uploads `data/processed` as a new release asset and pins it in `deploy/data.env`; commit that file and push. The featured runs are `FEATURED_RUNS` in `fly.toml`, and each must be frozen in `backend/tests/fixtures/runs` (a test checks).
+
+By hand, build and smoke-test the image first:
 
 ```bash
-docker build -t wellpilot:smoke .
+scripts/fetch_data.sh                 # or run the ingest
+docker build --build-arg GIT_COMMIT=$(git rev-parse HEAD) -t wellpilot:smoke .
 scripts/smoke_image.sh
 ```
 
-The image is built from the repository root and copies `data/processed`, so run the ingest first; the featured runs it replays come from `backend/tests/fixtures/runs`. Then, once:
+Setting up a new app, once:
 
 ```bash
 brew install flyctl
@@ -260,9 +265,9 @@ fly auth login
 fly launch --copy-config --no-deploy        # creates the app; it may pick another name
 fly secrets set BASETEN_API_KEY=...          # the model key, never committed
 fly secrets set OPERATOR_KEY=$(openssl rand -hex 24)   # lifts the public limits for you
-fly secrets set FEATURED_RUNS=69519dd0a995,dca494b07eb4,c6b4a6b047a8,c8501c918af6,485c17df2acb,f7d3faebb139   # the runs the public site lists and replays
 fly secrets set MODAL_TOKEN_ID=... MODAL_TOKEN_SECRET=...   # run_python in Modal Sandboxes (optional)
-fly deploy
+fly deploy --ha=false
+gh secret set FLY_API_TOKEN --body "$(fly tokens create deploy)"   # for the deploy job
 ```
 
 In the browser console of the deployed site, `localStorage.operatorKey = '<the operator key>'` lets your own runs skip the per-visitor and daily limits.

@@ -72,6 +72,7 @@ def create_app(
         return {
             "status": "ok",
             "version": __version__,
+            "commit": settings.git_commit or None,
             "llm_provider": settings.llm_provider,
             "llm_configured": bool(key),
             # Audio input is a Muse Spark Open on Baseten feature; the mic hides otherwise.

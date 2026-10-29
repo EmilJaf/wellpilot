@@ -81,6 +81,9 @@ class Settings(BaseSettings):
     # Comma-separated run ids listed by GET /api/runs. Empty lists every saved run, which
     # is for development only: in public it would show every visitor's question.
     featured_runs: str = ""
+    # The commit the image was built from (Dockerfile build arg); the deploy job checks the
+    # live site reports the commit it deployed.
+    git_commit: str = ""
 
     @property
     def raw_dir(self) -> Path:

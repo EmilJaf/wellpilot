@@ -4,17 +4,19 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:  # deploy main again by hand; the checks run first
 
 permissions:
   contents: read
 
+# Actions are pinned to commits: the deploy job holds the Fly token.
 jobs:
   secrets:
     # The whole history, with the project's key shapes: it goes public on Nov 3.
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
         with:
           fetch-depth: 0
       - name: gitleaks
@@ -29,8 +31,8 @@ jobs:
       run:
         working-directory: backend
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e  # v6
       - run: uv sync --locked
       - run: uv run ruff format --check .
       - run: uv run ruff check .
@@ -43,11 +45,11 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1  # v4
         with:
           version: 10
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020  # v4
         with:
           node-version: 24
           cache: pnpm
@@ -55,3 +57,72 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm build
+
+  deploy:
+    # main only, after every check above passed. The image is built and smoke-tested here,
+    # and that same image goes to Fly. What is live is compared with this commit: a push of
+    # docs or tests alone restarts nothing (a restart cuts runs in flight and resets the
+    # day's token budget).
+    needs: [secrets, backend, frontend]
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: production
+      url: https://wellpilot.fly.dev
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false  # never stop a deploy halfway
+    env:
+      SITE: https://wellpilot.fly.dev
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+        with:
+          fetch-depth: 0  # to compare with the commit that is live
+      - name: Does the live site need this commit?
+        id: plan
+        run: |
+          head=$(git ls-remote origin refs/heads/main | cut -f1)
+          if [ "$head" != "$GITHUB_SHA" ]; then
+            echo "main has moved on to $head; that commit's run deploys"
+            exit 0
+          fi
+          live=$(curl -sf -m 10 "$SITE/api/health" \
+            | python3 -c 'import json, sys; print(json.load(sys.stdin).get("commit") or "")' || true)
+          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ] || [ -z "$live" ] \
+            || ! git cat-file -e "$live^{commit}" 2>/dev/null; then
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Docs, notes and tests are not what the server runs; the frozen runs are.
+          changed=$(git diff --name-only "$live" "$GITHUB_SHA")
+          runtime=$(echo "$changed" | grep -Ev '\.md$|^docs/|^\.claude/|^\.githooks/|^\.gitleaks\.toml$|^backend/tests/' || true)
+          runs=$(echo "$changed" | grep -E '^backend/tests/fixtures/runs/.+\.json$' || true)
+          if [ -n "$runtime$runs" ]; then
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "nothing the server runs changed since ${live}"
+          fi
+      - name: Fetch the processed data
+        if: steps.plan.outputs.deploy == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: scripts/fetch_data.sh
+      - name: Build the image
+        if: steps.plan.outputs.deploy == 'true'
+        run: docker build --build-arg GIT_COMMIT="$GITHUB_SHA" -t wellpilot:ci .
+      - name: Smoke-test it (no key, no tokens)
+        if: steps.plan.outputs.deploy == 'true'
+        run: scripts/smoke_image.sh wellpilot:ci
+      - uses: superfly/flyctl-actions/setup-flyctl@fc53c09e1bc3be6f54706524e3b82c4f462f77be  # 1.5
+        if: steps.plan.outputs.deploy == 'true'
+        with:
+          version: 0.4.123
+      - name: Deploy the tested image
+        if: steps.plan.outputs.deploy == 'true'
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: flyctl deploy --local-only --image wellpilot:ci --ha=false
+      - name: Check the live site
+        if: steps.plan.outputs.deploy == 'true'
+        run: scripts/smoke_live.sh "$SITE" "$GITHUB_SHA"
