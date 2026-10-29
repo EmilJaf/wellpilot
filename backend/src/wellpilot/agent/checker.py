@@ -1109,6 +1109,11 @@ def _written_unit(text: str, end: int) -> str | None:
 
 
 DURATION_TABLES = ("days", "weeks", "months", "years")
+# Words that name an extreme: a single month's or day's value, whatever the grain.
+EXTREME = (
+    r"\b(?:peak\w*|maxim\w*|max|minim\w*|min|highest|lowest|top(?:ped)?|record|worst|best|"
+    r"as\s+(?:high|low)\s+as)\b"
+)
 # Between two items of a list: "80%, 90% and 95%", "3% or 5%".
 LIST_JOIN = re.compile(
     r"\s*(?:%|percent)?\s*(?:,\s*(?:and\s+|or\s+)?|\s+(?:and|or)\s+)(?:about\s+|~\s*)?"
@@ -2014,11 +2019,21 @@ def _description(text: str, blanked: str, start: int, end: int) -> dict[str, tup
         days.append(m.group(1))
     if m := re.search(
         rf"(?:\b(?P<prep>on|in|at|since|around|from|during|by|of)\s+)?{when}"
-        r"(?P<tail>[^,;()]{0,30})$",
+        # "stepped down 55% on 2010-05-02 (weekly mean 4 207": a bracket right after the date
+        # spells out that date's event.
+        r"(?P<tail>(?:\s*\()?[^,;()]{0,30})$",
         text[own_start:start],
         re.I,
     ):
         tail = m.group("tail")
+        # Only an event's own day opens a bracket on it ("on 2010-05-02 (weekly mean"), not
+        # a period's end ("through 2012-12 (water cut 0.64 to 0.76").
+        bracketed = tail.lstrip().startswith("(") and (m.group("prep") or "").lower() not in (
+            "on",
+            "around",
+            "at",
+            "since",
+        )
         # A period before "to X" is the start's ("from 97% in late 2014 to about 31%", "the
         # late-2014 drop to about 0.31"), but an event's own date is its ("fell 55% around
         # 2010-05-02 to 1 888").
@@ -2032,6 +2047,7 @@ def _description(text: str, blanked: str, start: int, end: int) -> dict[str, tup
             not re.search(r"\b(?:and|vs|versus|while|whereas|but)\b", tail)
             and not period_to
             and not from_value
+            and not bracketed
         ):
             days.append(m.group(2))
     # "Cut to 40% in 2018-11": a level reached during a month (a year) is the next month's
@@ -2056,6 +2072,23 @@ def _description(text: str, blanked: str, start: int, end: int) -> dict[str, tup
         phrase = text[begin + (breaks[-1].end() if breaks else 0) : start]
         if m := re.match(rf"\s*(?:(?:in|on|by|during|at)\s+)?{when}\b", phrase, re.I):
             days.append(m.group(1))
+    # "to 35.12% at 70.96 bar WHP in January 2015, with ...": a phrase with one date, after
+    # its numbers, dates them all.
+    if not days:
+        stop = re.search(
+            r"[,;:()]|\b(?:vs|versus|and|while|but|whereas|to|from|then|after|before|since)\b"
+            r"|->|→",
+            text[end:clause_end],
+            re.I,
+        )
+        # (Read to the clause's end, so a range of dates "2009-06 to 2012-06" stays one.)
+        found = [
+            m.group(1)
+            for m in re.finditer(rf"\b(?:in|on|during|at)\s+{when}", text[end:clause_end], re.I)
+            if not stop or m.start() < stop.start()
+        ]
+        if len(found) == 1:
+            days.append(found[0])
     if days:
         said["dates"] = ("|".join(days), 2)
     # The unit written right after it: a rate, a volume, metres, per year (a percent says
@@ -2068,6 +2101,17 @@ def _description(text: str, blanked: str, start: int, end: int) -> dict[str, tup
     for grain, pattern in GRAIN_TEXT.items():
         if re.search(pattern, own, re.I):
             said["grain"] = (grain, 2)
+    # A month's extreme is a month's value whatever grain the sentence names ("peaked at
+    # 5 817 Sm3/d in 2010").
+    extreme = re.search(EXTREME, own, re.I)
+    if extreme:
+        said["extreme"] = ("", 0)
+    elif "grain" not in said:
+        # "yearly water cut was 57% in 2010 ..., while liquid held at 5 130 Sm3/d in 2010":
+        # the grain the clause named earlier, weakly.
+        for grain, pattern in GRAIN_TEXT.items():
+            if re.search(pattern, blanked[begin:start], re.I):
+                said["grain"] = (grain, 1)
     if (
         re.search(REF_TEXT, blanked[max(own_start, start - 40) : start], re.I)
         or re.match(rf"[^,;]{{0,30}}?{REF_TEXT}", right, re.I)
@@ -2117,7 +2161,17 @@ def _fit_scores(said: dict[str, tuple[str, int]], leaf: _Leaf) -> dict[str, int]
         own = [*leaf.record_days, *([leaf.row_day] if leaf.row_day else [])]
         if own:
             hit = any(o.startswith(d) or d.startswith(o) for o in own for d in dates)
-            out["dates"] = w if hit else -w
+            # "in 2010" fits the 2010 row of a yearly table better than one of its months
+            # (unless the text names an extreme: a month's peak in 2010).
+            month_of_year = (
+                hit
+                and "extreme" not in said
+                and leaf.row_day is not None
+                and not leaf.record_days
+                and all(len(d) == 4 for d in dates)
+                and len(leaf.row_day) > 4
+            )
+            out["dates"] = w - 1 if month_of_year else w if hit else -w
     return out
 
 
