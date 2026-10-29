@@ -78,6 +78,14 @@ Check on it with `firectl sftj get <job id>` (the id is printed by the command a
 says examples were cut at the context limit, start it again with `--max-context-length 65536`.
 Training is free for Glimmer until Nov 30.
 
+If `firectl dataset create` says dataset uploads are disabled for the account (it did on
+Oct 30), use the console's training form instead (Fine-tuning -> new job): model Muse Glimmer
+30B, method SFT, upload `train.jsonl` as the dataset; for evaluation upload
+`data/training/writer/validation.jsonl` (the held-out questions' accepted answers) rather
+than splitting 20% off the 73 training examples; epochs 2, LoRA rank 16, max context 32768
+(the others as they are). The estimate must show the training as free; if it shows a cost,
+stop and check.
+
 **3. While it trains: the reference on Muse Spark Open (Baseten, about $0.5-0.8).**
 
 ```bash

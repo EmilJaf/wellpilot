@@ -112,9 +112,21 @@ def _as_of(run: str) -> str | None:
     return None
 
 
+def _example(question: str, evidence: list[dict], answer: dict, as_of: str | None) -> dict:
+    return {
+        "messages": [
+            {"role": "system", "content": system_prompt(as_of)},
+            {"role": "user", "content": user_message(question, evidence)},
+            {"role": "assistant", "content": json.dumps(answer, ensure_ascii=False)},
+        ]
+    }
+
+
 def build(corpus: Path = CORPUS_DIR, out: Path | None = None) -> dict:
-    """train.jsonl (chat examples) and test.jsonl (inputs, with the run's accepted answer as
-    gold where it has one), split by question."""
+    """train.jsonl (chat examples), test.jsonl (inputs, with the run's accepted answer as
+    gold where it has one), split by question, and validation.jsonl: the test's gold answers
+    as chat examples, for a trainer's validation loss on questions it never trains on (a
+    monitor only: nothing is chosen by it)."""
     out = out or _out()
     out.mkdir(parents=True, exist_ok=True)
     runs: dict[str, list[dict]] = {}
@@ -141,19 +153,11 @@ def build(corpus: Path = CORPUS_DIR, out: Path | None = None) -> dict:
         elif accepted:
             # The run's last accepted answer, with the evidence it was written from.
             case = accepted[-1]
-            train.append(
-                {
-                    "messages": [
-                        {"role": "system", "content": system_prompt(as_of)},
-                        {"role": "user", "content": user_message(question, case["evidence"])},
-                        {
-                            "role": "assistant",
-                            "content": json.dumps(case["submission"], ensure_ascii=False),
-                        },
-                    ]
-                }
-            )
-    for name, rows in (("train", train), ("test", test)):
+            train.append(_example(question, case["evidence"], case["submission"], as_of))
+    validation = [
+        _example(t["question"], t["evidence"], t["gold"], t["as_of"]) for t in test if t["gold"]
+    ]
+    for name, rows in (("train", train), ("test", test), ("validation", validation)):
         (out / f"{name}.jsonl").write_text(
             "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows)
         )
@@ -164,6 +168,7 @@ def build(corpus: Path = CORPUS_DIR, out: Path | None = None) -> dict:
         "test_runs": len(test),
         "test_questions": len({t["question"] for t in test}),
         "test_with_gold": sum(t["gold"] is not None for t in test),
+        "validation_examples": len(validation),
         "held_out": list(HOLDOUT),
         # About 3.5 characters a token for this mix of JSON and English.
         "train_tokens_estimate": round(sum(chars) / 3.5),
