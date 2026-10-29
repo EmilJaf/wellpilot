@@ -228,6 +228,12 @@ button {
   }
 }
 
+@media (max-width: 700px) {
+  .tagline {
+    display: none; /* the first screen says it; a phone needs the height for the answer */
+  }
+}
+
 /* ---------- the story in five steps ---------- */
 
 .story {
@@ -1308,6 +1314,13 @@ button.evidence-chip[aria-pressed="true"] {
   font-weight: 600;
 }
 
+/* a tool that said no and why: part of the work, not a warning for the reader */
+.flag-note {
+  display: block;
+  background: var(--panel);
+  color: var(--ink-2);
+}
+
 .flag ul {
   margin: 4px 0 0;
   padding-left: 16px;
@@ -1405,6 +1418,32 @@ button.evidence-chip[aria-pressed="true"] {
 
 .charts {
   padding: 10px 18px 6px;
+}
+
+/* the first screen's puzzle, over the charts it is about */
+.chart-caption {
+  margin: 12px 18px 0;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--ink-2);
+  max-width: 62ch;
+}
+
+.chart-caption strong {
+  color: var(--ink);
+}
+
+.hindsight-more {
+  margin: 10px 0 0;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.hindsight-more summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--ink);
+  width: fit-content;
 }
 
 .readout {
@@ -3586,6 +3625,12 @@ code,
   margin-top: 28px;
   padding-top: 16px;
   border-top: 1px solid var(--rule);
+}
+
+.fool-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
 }
 
 .fool-lead {

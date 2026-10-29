@@ -141,12 +141,11 @@ export function FoolChecker({
 
   return (
     <section id="fool" className="fool" aria-label="Try to fool the checker">
-      <h3 className="section-label">Try to slip a wrong number past the checker</h3>
+      <h3 className="fool-title">Try to fool the checker</h3>
       <p className="fool-lead">
-        Change a finding and press Check again. The checker runs on this run's saved tool results; no model is
-        involved. It judges numbers and their units, dates, which well and which quantity, which way a change ran,
-        quotes, and causes stated as facts. It does not judge meaning in words alone: &ldquo;most&rdquo; for
-        &ldquo;least&rdquo; passes.
+        Edit a finding below, or pick a trick, then check it. The checker is plain code, no AI: it compares the text
+        with this run&rsquo;s saved results, so it catches wrong numbers, units, dates, wells, directions, quotes and
+        causes stated as facts. It does not judge meaning in words (&ldquo;most&rdquo; for &ldquo;least&rdquo; passes).
       </p>
       <div className="fool-pick">
         <label>
@@ -191,7 +190,7 @@ export function FoolChecker({
       </p>
       <div className="fool-actions">
         <button type="button" className="primary-button" onClick={check} disabled={checking || !claim.trim()}>
-          {checking ? 'Checking' : 'Check again'}
+          {checking ? 'Checking' : 'Check this version'}
         </button>
         {modelOn && (
           <button type="button" className="secondary-button" onClick={letTheModelTry} disabled={attacking}>
@@ -219,11 +218,11 @@ export function FoolChecker({
             <div className="flag flag-alarm">
               <AlarmIcon />
               <div>
-                <strong>Sent back with {result.value!.problems.length === 1 ? 'one problem' : `${result.value!.problems.length} problems`}.</strong>
+                <strong>Caught: sent back with {result.value!.problems.length === 1 ? 'one problem' : `${result.value!.problems.length} problems`}.</strong>
                 <ul>
                   {result.value!.problems.map((p, i) => (
                     <li key={i}>
-                      {plainProblem(p).replace(/^Finding \d+:?\s*/, '')}
+                      {sentence(plainProblem(p).replace(/^Finding \d+:?\s*/, ''))}
                       {closest(p) && <span className="fool-closest"> {closest(p)}</span>}
                     </li>
                   ))}
@@ -278,6 +277,14 @@ function Attempts({ result }: { result: { value?: AttackResult; error?: string }
       </ol>
     </div>
   )
+}
+
+/** A problem as a sentence: a capital first, and a cause the checker names in plain words. */
+function sentence(problem: string): string {
+  const plain = problem.replace(/^states a cause \('([^']+)'\) as a fact; causes are inferences\.?$/, (_, word) =>
+    `"${word}" states a cause, and a cause is an interpretation: the finding must be marked Inference.`,
+  )
+  return plain.charAt(0).toUpperCase() + plain.slice(1)
 }
 
 /** The checker's hint on a number that is not in its source: the nearest values there. */

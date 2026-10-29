@@ -1,5 +1,5 @@
 import { useEffect, useEffectEvent, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { api, type OperationJob, type RunSummary, type Table } from './api'
+import { api, type OperationJob, type RunSummary, type Span as TextSpan, type Table } from './api'
 import { AgentLog } from './components/AgentLog'
 import { StoryBar } from './components/StoryBar'
 import { STEPS, type Step } from './story'
@@ -25,26 +25,26 @@ import { useRun } from './useRun'
 // agent's data stops at (none: all of it).
 const EXAMPLES = [
   {
-    label: 'Back to the end of 2010',
+    label: 'Back to the end of 2010: which well needs attention, and its next year',
     question: 'Which wells need attention right now, and why? Forecast the next 12 months of oil for the well that needs it most.',
     asOf: '2010-12-31',
   },
   {
-    label: 'What to do with F-12 (2014)',
+    label: 'F-12 in 2014, nearly all water: what work to do on it, then what the operator did',
     question:
       "F-12's water cut is near 0.97 and its oil rate has fallen below 200 Sm3/d. What would you recommend doing to the well, and why?",
     asOf: '2014-10-31',
   },
-  { label: 'F-12 decline vs the 2005 plan', question: 'Why did well F-12 decline faster after 2010? Compare with the 2005 development plan.', asOf: '' },
-  { label: "Read the plan's forecast chart", question: 'What oil plateau rate and duration does the forecast figure on page 23 of the 2005 development plan show?', asOf: '' },
+  { label: 'Why F-12 declined faster than the 2005 plan expected', question: 'Why did well F-12 decline faster after 2010? Compare with the 2005 development plan.', asOf: '' },
+  { label: "Read a chart in the 2005 plan, cross-checked by a second Meta model (SAM 3.1)", question: 'What oil plateau rate and duration does the forecast figure on page 23 of the 2005 development plan show?', asOf: '' },
   {
-    label: "F-12's 2014 water shut-off",
+    label: 'Why the 2014 plug cut F-12\'s water and the 2010 one did not, from production logs',
     question:
       "F-12's water cut fell from about 0.97 to about 0.3 at the end of 2014. What was done to the well, and why did the plug set in 2010 not do the same?",
     asOf: '',
   },
   {
-    label: 'Its own Python',
+    label: 'Water cut against choke on F-12: the agent writes and runs its own Python',
     question:
       "Over 2011 to 2013, how closely did F-12's monthly water cut follow its choke opening? Give the correlation and what it suggests.",
     asOf: '',
@@ -194,6 +194,8 @@ export default function App() {
     return stepFromUrl() ?? (params.get('replay') === '1' ? 2 : params.get('run') ? 3 : 1)
   })
   const [logOpen, setLogOpen] = useState(false)
+  // Set by Back: the address it lands on replaces the history entry instead of adding one.
+  const replaceNext = useRef(false)
   // The ask bar opens on request ("Ask your own question"); otherwise the open run's question
   // shows as a line, and a first visit sees one thing to do: watch it work.
   const [askOpen, setAskOpen] = useState(false)
@@ -458,15 +460,19 @@ export default function App() {
   }
 
   // The answer's first finding, selected: its dates on the charts, its source in the pane.
+  // The first number in it is marked there, so the reader sees where an answer's number comes
+  // from before trying it.
   const showFirstFinding = () => {
-    const first = state.final?.findings[0]?.evidence_ids[0]
-    if (!first) return
+    const finding = state.final?.findings[0]
+    const first = finding?.evidence_ids[0]
+    if (!finding || !first) return
+    const number = finding.spans?.find((sp): sp is Extract<TextSpan, { kind: 'number' }> => sp.kind === 'number')
     setSelectedFinding(0)
     setPaneFollows(false)
     setView('well')
     setChartsShown(true)
-    setSelected(first)
-    setFocus(null)
+    setSelected(number?.evidence_id ?? first)
+    setFocus(number ? { text: finding.claim.slice(number.start, number.end), value: number.value } : null)
     setEvidenceAttempt((n) => n + 1)
   }
 
@@ -595,12 +601,41 @@ export default function App() {
   // eslint-disable-next-line react/set-state-in-effect -- the address is outside React
   useEffect(() => stepFromUrlOnRecorded(), [runsLoaded])
 
-  // ...and keeps saying where the reader is, so a reload or a shared link lands there.
+  // ...and keeps saying where the reader is, so a reload or a shared link lands there. Each step
+  // the reader moves to is a history entry, so Back returns to the step before; a step the page
+  // moves to by itself (a run finishing) and a step reached by Back replace the entry instead.
   useEffect(() => {
     if (!state.id && new URLSearchParams(window.location.search).get('run')) return // still loading it
     const search = state.id ? `?run=${state.id}&step=${step}` : step > 1 ? `?step=${step}` : ''
-    if (search !== window.location.search) window.history.replaceState(null, '', search || window.location.pathname)
+    if (search !== window.location.search) {
+      const url = search || window.location.pathname
+      // A run that finishes moves from step 2 to 3 by itself.
+      const finished = state.id && window.location.search === `?run=${state.id}&step=2` && step === 3
+      if (replaceNext.current || finished) window.history.replaceState(null, '', url)
+      else window.history.pushState(null, '', url)
+    }
+    replaceNext.current = false
   }, [state.id, step])
+  const onBack = useEffectEvent(() => {
+    replaceNext.current = true
+    const params = new URLSearchParams(window.location.search)
+    const runId = params.get('run')
+    const target = stepFromUrl() ?? (runId ? 3 : 1)
+    if (target === 1 || !runId) {
+      goToStep(target)
+      return
+    }
+    if (runId !== state.id) {
+      reset()
+      open(runId, false)
+    }
+    goToStep(target, runId)
+  })
+  useEffect(() => {
+    const back = () => onBack()
+    window.addEventListener('popstate', back)
+    return () => window.removeEventListener('popstate', back)
+  }, [])
 
   // Seven views under four tabs; a tab reopens the view last seen under it.
   const lastIn = useRef<Partial<Record<Group, View>>>({})
@@ -811,6 +846,8 @@ export default function App() {
               onReveal={canReveal ? reveal : undefined}
               wells={wells}
               onAsk={() => openAsk(true)}
+              featured={{ question: EXAMPLES[0].question, asOf: EXAMPLES[0].asOf }}
+              runsLoaded={runsLoaded}
               examples={
                 <details className="examples-menu">
                   <summary>Other recorded answers ({EXAMPLES.length - 1})</summary>
@@ -893,6 +930,12 @@ export default function App() {
                 <button type="button" className="link-button" onClick={() => setSpan(null)} aria-label="Dismiss">
                   &times;
                 </button>
+              </p>
+            )}
+            {view === 'well' && chartsShown && !state.id && well === 'F-12' && pastDate === '2010-12-31' && (
+              <p className="chart-caption">
+                <strong>F-12, the field&rsquo;s biggest well, up to 2010-12-31.</strong> Its oil is falling, its water
+                rising, and in October the pressure line stops. What is going on, and what will next year bring?
               </p>
             )}
             {view === 'well' && chartsShown && (

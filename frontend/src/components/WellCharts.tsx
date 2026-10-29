@@ -91,7 +91,7 @@ export function WellCharts({ table, error, markers, highlights, onSelect }: Prop
     <div className="charts">
       <p className="readout" aria-live="off">
         {at === null ? (
-          'Hover a chart to read the values; drag across one to zoom in and ask about that span, double-click to zoom out.'
+          'Hover to read the values; drag across a chart to zoom in, double-click to zoom out.'
         ) : (
           <>
             <strong>{new Date(data.x[at] * 1000).toISOString().slice(0, 10)}</strong>
@@ -132,14 +132,17 @@ export function WellCharts({ table, error, markers, highlights, onSelect }: Prop
           }}
         />
       ))}
+      {/* The key names only what is on the charts: before a run, the work on the well. */}
       <p className="chart-key">
-        <span><i className="key-line" /> step change or threshold the agent found</span>
-        <span><i className="key-band key-shut" /> well shut in</span>
+        {markers.some((m) => m.kind === 'regime' || m.kind === 'crossing') && (
+          <span><i className="key-line" /> step change or threshold the agent found</span>
+        )}
+        {markers.some((m) => m.kind === 'shut_in') && <span><i className="key-band key-shut" /> well shut in</span>}
         {markers.some((m) => m.kind === 'work') && (
           <span><i className="key-work" /> work on the well, from its daily reports</span>
         )}
-        <span><i className="key-band key-gauge" /> dead pressure gauge</span>
-        <span><i className="key-rule" /> date in the selected finding</span>
+        {markers.some((m) => m.kind === 'gauge') && <span><i className="key-band key-gauge" /> dead pressure gauge</span>}
+        {highlights.length > 0 && <span><i className="key-rule" /> date in the selected finding</span>}
         {markers.some((m) => m.kind === 'hidden') && (
           <span><i className="key-band key-future" /> after the agent&rsquo;s date: data it never saw</span>
         )}

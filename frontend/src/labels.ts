@@ -101,7 +101,7 @@ export function sameQuote(a: string, b: string): boolean {
 /** Forecast methods by their short names, as the backtest and the time machine show them. */
 export const SHORT: Record<string, string> = {
   agent: 'agent',
-  classic: 'classic',
+  classic: 'whole history',
   after_change: 'after the last change (rule)',
   recent_3m: 'last 3 months',
   recent_6m: 'last 6 months',

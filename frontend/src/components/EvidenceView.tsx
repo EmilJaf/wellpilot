@@ -81,6 +81,7 @@ export function EvidenceView({ runId, evidenceId, attempt, focus }: Props) {
   }, [evidence, focus])
 
   if (!evidenceId) {
+    if (!runId) return null
     return (
       <div className="panel-body evidence">
         <p className="empty">
@@ -111,14 +112,16 @@ export function EvidenceView({ runId, evidenceId, attempt, focus }: Props) {
         {evidence.id}: {toolName(evidence.tool)}
       </h3>
       <dl className="evidence-meta">
-        <dt>Asked for</dt>
-        <dd>{describeArgs(evidence.tool, evidence.arguments) || 'no arguments'}</dd>
+        {describeArgs(evidence.tool, evidence.arguments) && (
+          <>
+            <dt>Asked for</dt>
+            <dd>{describeArgs(evidence.tool, evidence.arguments)}</dd>
+          </>
+        )}
         <dt>Code</dt>
-        <dd>
+        <dd title={`Ran at ${evidence.created_at.replace('T', ' ').replace('+00:00', ' UTC')}`}>
           <CodeRef key={evidence.code} codeRef={evidence.code} />
         </dd>
-        <dt>Ran at</dt>
-        <dd>{evidence.created_at.replace('T', ' ').replace('+00:00', ' UTC')}</dd>
       </dl>
       {evidence.warnings.map((w, i) => (
         <div key={i} className="flag flag-caution">

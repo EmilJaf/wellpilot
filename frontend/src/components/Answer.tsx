@@ -3,7 +3,7 @@ import type { MetaModels, RunSummary, Span, StepEvent } from '../api'
 import { AlarmIcon, CheckIcon, RedoIcon } from '../icons'
 import { BARRELS_NOTE, barrels, plainProblem, compact, describeArgs, modelName, toolName, volumeAt } from '../labels'
 import type { RunState } from '../useRun'
-import { corrections } from '../corrections'
+import { caught, corrections } from '../corrections'
 import { CaughtList, CorrectionList } from './Corrections'
 import { FoolChecker } from './FoolChecker'
 
@@ -24,6 +24,8 @@ type Props = {
   wells: string[] // the field's wells, for the editor's "name another well" trick
   onAsk: () => void // open the ask bar for a question of one's own
   examples: ReactNode // the other recorded answers, for the first screen
+  featured: { question: string; asOf: string } // the first screen's question, known before the runs load
+  runsLoaded: boolean
 }
 
 /**
@@ -176,7 +178,14 @@ export function Answer(props: Props) {
         {final ? (
           <Final {...props} />
         ) : state.status === 'idle' ? (
-          <Intro recorded={props.recorded} onReplay={props.onReplay} onAsk={props.onAsk} examples={props.examples} />
+          <Intro
+            recorded={props.recorded}
+            featured={props.featured}
+            runsLoaded={props.runsLoaded}
+            onReplay={props.onReplay}
+            onAsk={props.onAsk}
+            examples={props.examples}
+          />
         ) : state.status === 'error' ? (
           <div className="empty">
             <p>
@@ -191,7 +200,7 @@ export function Answer(props: Props) {
             )}
           </div>
         ) : (
-          <Live steps={state.steps} thinking={state.thinking} asOf={state.asOf} />
+          <Live steps={state.steps} thinking={state.thinking} />
         )}
       </div>
     </section>
@@ -202,15 +211,23 @@ export function Answer(props: Props) {
     the other recorded answers come after it. */
 function Intro({
   recorded,
+  featured,
+  runsLoaded,
   onReplay,
   onAsk,
   examples,
 }: {
   recorded: RunSummary | null
+  featured: { question: string; asOf: string }
+  runsLoaded: boolean
   onReplay: (id: string) => void
   onAsk: () => void
   examples: ReactNode
 }) {
+  // The question is known before the list of runs loads, so the card does not jump in; with
+  // no recorded run at all (a server without one) there is nothing to watch.
+  const question = recorded?.question ?? featured.question
+  const asOf = recorded ? recorded.as_of : featured.asOf
   return (
     <div className="intro">
       <h3 className="intro-title">Ask why a well changed.</h3>
@@ -218,19 +235,22 @@ function Intro({
         An AI agent on Meta&rsquo;s open-weight Muse Spark Open works it out from the field&rsquo;s own data and
         reports, and a checker verifies every number before you see it.
       </p>
-      {recorded && (
+      {(recorded || !runsLoaded) && (
         <div className="intro-case">
           <p className="intro-case-label">
-            {recorded.as_of
-              ? `It is ${recorded.as_of}. The agent sees no data after that day, and is asked:`
-              : 'The agent is asked:'}
+            {asOf ? `It is ${asOf}. The agent sees no data after that day, and is asked:` : 'The agent is asked:'}
           </p>
-          <p className="intro-question">{recorded.question}</p>
-          <button type="button" className="primary-button intro-cta" onClick={() => onReplay(recorded.id)}>
+          <p className="intro-question">{question}</p>
+          <button
+            type="button"
+            className="primary-button intro-cta"
+            disabled={!recorded}
+            onClick={() => recorded && onReplay(recorded.id)}
+          >
             Watch it work
           </button>
           <p className="intro-after">
-            A recording of a real run, so no wait and no cost.{recorded.as_of && ' Afterwards, see whether its forecast came true.'}
+            A recording of a real run, so no wait and no cost.{asOf && ' Afterwards, see whether its forecast came true.'}
           </p>
         </div>
       )}
@@ -244,15 +264,15 @@ function Intro({
       <ol className="intro-steps">
         <li>
           <strong>Runs real analysis</strong>
-          <span>Decline fits, event detection, SQL and the 2005 plan, a Norwegian PDF read page by page.</span>
+          <span>Fits decline curves, finds events in the data, reads the 2005 plan (a Norwegian PDF) and the well reports.</span>
         </li>
         <li>
           <strong>Checks every number</strong>
-          <span>A deterministic checker sends a wrong answer back to the agent to fix.</span>
+          <span>A separate program, not an AI, compares each number with the result it came from and sends a wrong answer back.</span>
         </li>
         <li>
           <strong>Shows its sources</strong>
-          <span>Any number opens the tool result and the code that produced it.</span>
+          <span>Click any number to see the calculation behind it and the code that ran.</span>
         </li>
       </ol>
       <p className="intro-who">
@@ -266,7 +286,7 @@ function Intro({
 }
 
 /** While the agent works: what it is doing now, and the checker's verdicts as they come. */
-function Live({ steps, thinking, asOf }: { steps: StepEvent[]; thinking: number | null; asOf: string | null }) {
+function Live({ steps, thinking }: { steps: StepEvent[]; thinking: number | null }) {
   const calls = steps.flatMap((s) => s.tool_calls)
   const results = calls.filter((c) => c.evidence_id).length
   const submissions = calls.filter((c) => c.name === 'submit_findings')
@@ -278,7 +298,6 @@ function Live({ steps, thinking, asOf }: { steps: StepEvent[]; thinking: number 
         <span className="pulse" aria-hidden />
         {thinking !== null ? `Step ${thinking}: the model is deciding what to do next` : 'Starting the run'}
       </p>
-      {asOf && <p className="live-last">The agent sees the data up to {asOf} only, as if it were that day.</p>}
       {latest && (
         <p className="live-last">
           Last tool run: <strong>{toolName(latest.name)}</strong>
@@ -369,6 +388,13 @@ function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSe
   const history = fixes.length ? <CorrectionList items={fixes} bare /> : <Rounds rounds={rounds} />
   const seconds = state.steps.reduce((t, step) => t + step.seconds, 0)
   const sam = final.meta_models && (final.meta_models.sam.figures.length > 0 || final.meta_models.sam.logs.length > 0)
+  const { errors, paperwork } = caught(fixes)
+  const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
+  const caughtLine = fixes.length
+    ? errors.length
+      ? `Before you saw it, the checker caught ${plural(errors.length, 'error', 'errors')}${paperwork.length ? ` and ${plural(paperwork.length, 'number', 'numbers')} without a source` : ''}; the agent fixed them.`
+      : `Before you saw it, the checker sent back ${plural(paperwork.length, 'number', 'numbers')} without a source; the agent added them.`
+    : `The checker sent the answer back ${sentBack.length === 1 ? 'once' : sentBack.length === 2 ? 'twice' : `${sentBack.length} times`}, with ${plural(problems, 'issue', 'issues')}, and the agent fixed ${problems === 1 ? 'it' : 'them'}.`
 
   // The answer first, then one line on how it was checked; the checker's rounds, the models'
   // parts and the second opinion fold under it. An answer that did not pass says so first.
@@ -381,8 +407,7 @@ function Final({ state, selectedFinding, selectedEvidence, onSelectFinding, onSe
             {final.verified ? 'Every number, date and quote matches its source.' : 'Not every number could be checked.'}
           </strong>{' '}
           {final.verified
-            ? sentBack.length > 0 &&
-              `The checker sent the answer back ${sentBack.length === 1 ? 'once' : sentBack.length === 2 ? 'twice' : `${sentBack.length} times`}, with ${problems} ${problems === 1 ? 'issue' : 'issues'}, and the agent fixed ${problems === 1 ? 'it' : 'them'}.`
+            ? sentBack.length > 0 && caughtLine
             : final.finished
               ? final.findings.length
                 ? 'Problems remained after the last correction round.'

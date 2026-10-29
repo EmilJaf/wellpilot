@@ -1,6 +1,6 @@
-import { type Correction, type Piece } from '../corrections'
+import { caught, type Correction, type Piece } from '../corrections'
 import { AlarmIcon } from '../icons'
-import { isBookkeeping, MEANING, plainProblem } from '../labels'
+import { plainProblem } from '../labels'
 
 /** The problem as one plain sentence, without the "Finding 3" the list already shows. */
 function problemText(c: Correction): string {
@@ -45,16 +45,9 @@ export function Diff({ pieces }: { pieces: Piece[] }) {
 
 
 export function CaughtList({ items: all, max = 4 }: { items: Correction[]; max?: number }) {
-  // The same problem raised twice in one answer (a number written twice) is listed once.
-  const items = all.filter(
-    (c, i) => all.findIndex((d) => d.target === c.target && problemText(d) === problemText(c)) === i,
-  )
   // Bookkeeping (a number written without naming its source, a rounding) is one line; what
   // the answer got wrong is listed, so a real catch is not lost among the paperwork.
-  const bookkeeping = items.filter((c) => isBookkeeping(c.problem))
-  const ranked = items
-    .filter((c) => !bookkeeping.includes(c))
-    .sort((a, b) => Number(!MEANING.test(a.problem)) - Number(!MEANING.test(b.problem)))
+  const { errors: ranked, paperwork: bookkeeping } = caught(all)
   const shown = ranked.slice(0, max)
   return (
     <div className="caught">
@@ -65,8 +58,10 @@ export function CaughtList({ items: all, max = 4 }: { items: Correction[]; max?:
       </p>
       {bookkeeping.length > 0 && (
         <p className="caught-paperwork">
-          {bookkeeping.length === 1 ? 'One number was' : `${bookkeeping.length} numbers were`} written without naming
-          the result it comes from, or not rounded; the agent added the sources.
+          {bookkeeping.length === 1
+            ? 'One number was written without naming the result it comes from, or not rounded'
+            : `${bookkeeping.length} numbers were written without naming the result they come from, or not rounded`}
+          ; the agent added the sources.
         </p>
       )}
       <ul>

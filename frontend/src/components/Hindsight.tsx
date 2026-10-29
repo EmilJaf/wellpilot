@@ -361,64 +361,71 @@ function ForecastCase({ f }: { f: Hindsight['forecasts'][number] }) {
         </div>
       </dl>
       <p className="hindsight-verdict">
-        The agent forecast <strong>{volume(agent.p50_sm3)}</strong>
-        <span className="bbl" title={BARRELS_NOTE}> (about {barrels(agent.p50_sm3)} barrels)</span> of oil for{' '}
-        {f.forecast_from} to {f.horizon_end}
-        {f.data_ends && ` (the data ends on ${f.data_ends})`}. The well produced <strong>{volume(f.actual_sm3)}</strong>
-        <span className="bbl" title={BARRELS_NOTE}> ({barrels(f.actual_sm3)} barrels)</span>:
-        the forecast was <strong>{signed(agent.error)}</strong>.
+        Oil from {f.forecast_from} to {f.horizon_end}
+        {f.data_ends && ` (the data ends on ${f.data_ends})`}
+        <span className="bbl" title={BARRELS_NOTE}>
+          : about {barrels(agent.p50_sm3)} barrels forecast, {barrels(f.actual_sm3)} produced
+        </span>
+        .
       </p>
       <CaseChart detail={f} height={320} />
       {f.fixed_windows && f.fixed_windows.length > 0 && <ErrorBars f={f} />}
-      {f.decomposition && <Decomposition d={f.decomposition} />}
-      {f.fixed_windows && f.fixed_windows.length > 0 && (
-        <p className="hindsight-fixed">
-          {f.window_from_change ? (
-            <>
-              <strong>It chose its own window:</strong> it fitted from {f.window_from_change.date},{' '}
-              {f.window_from_change.kind === 'work'
-                ? `after the work on the well it had found (${f.window_from_change.text}, ${f.window_from_change.evidence_id})`
-                : `where it had found ${f.well}’s rate shifting (${f.window_from_change.evidence_id})`}
-              , not a fixed length of history.{' '}
-            </>
-          ) : (
-            <>It fitted from {agent.window_start}, a window it chose itself. </>
+      {/* What made the difference, in one sentence; the rest folds for engineers. */}
+      <p className="hindsight-fixed">
+        {f.window_from_change ? (
+          <>
+            <strong>It chose its own window:</strong> it fitted from {f.window_from_change.date},{' '}
+            {f.window_from_change.kind === 'work'
+              ? `after the work on the well it had found (${f.window_from_change.text})`
+              : `where it had found ${f.well}’s rate shifting`}
+            .{' '}
+          </>
+        ) : (
+          <>It fitted from {agent.window_start}, a window it chose itself. </>
+        )}
+        The textbook fit on the whole history said {signed(classic.error)}
+        {f.fixed_windows && f.fixed_windows.length > 0 && (
+          <>
+            ; fixed recent windows said {fixedRange(f.fixed_windows)}, and which of them was best showed only afterwards
+          </>
+        )}
+        .
+      </p>
+      {(f.decomposition || (f.p50_by_model && Object.keys(f.p50_by_model).length > 1) || band) && (
+        <details className="hindsight-more">
+          <summary>More on this forecast</summary>
+          {f.decomposition && <Decomposition d={f.decomposition} />}
+          {f.p50_by_model && Object.keys(f.p50_by_model).length > 1 && (
+            <p className="hindsight-models">
+              On the same window the three Arps models said{' '}
+              {Object.entries(f.p50_by_model)
+                .map(([model, p50]) => `${volume(p50)} (${model}, ${signed(p50 / f.actual_sm3 - 1)})`)
+                .join(', ')}
+              : the choice of model is part of the uncertainty.
+            </p>
           )}
-          Fits made the same day on fixed windows said{' '}
-          {f.fixed_windows
-            .filter((w) => w.error !== null)
-            .map((w) => `${signed(w.error!)} (last ${w.months} months)`)
-            .join(', ')}
-          : one of them came closer, but which one was known only afterwards. The textbook fit on the whole history, which
-          averages in the years before the change, said {signed(classic.error)}.
-        </p>
-      )}
-      {!f.fixed_windows?.length && (
-        <p className="hindsight-fixed">
-          The decline fit over the whole history, made the same day, said {volume(classic.p50_sm3)} (
-          {signed(classic.error)}).
-        </p>
-      )}
-      {f.p50_by_model && Object.keys(f.p50_by_model).length > 1 && (
-        <p className="hindsight-models">
-          On the same window the three Arps models said{' '}
-          {Object.entries(f.p50_by_model)
-            .map(([model, p50]) => `${volume(p50)} (${model}, ${signed(p50 / f.actual_sm3 - 1)})`)
-            .join(', ')}
-          : the choice of model is part of the uncertainty.
-        </p>
-      )}
-      {band && (
-        <p className={`hindsight-band${band.holds_actual ? '' : ' is-miss'}`}>
-          {band.holds_actual && <CheckIcon />}
-          Its range from {band.past_forecasts ? `${band.past_forecasts} ` : ''}past forecast errors
-          {band.coverage ? ` (a range that holds about ${Math.round(band.coverage * 100)}% of outcomes)` : ''},{' '}
-          {volume(band.p90)} to {volume(band.p10)},{' '}
-          {band.holds_actual ? 'held the outcome' : 'missed the outcome'}.
-        </p>
+          {band && (
+            <p className={`hindsight-band${band.holds_actual ? '' : ' is-miss'}`}>
+              {band.holds_actual && <CheckIcon />}
+              Its range from {band.past_forecasts ? `${band.past_forecasts} ` : ''}past forecast errors
+              {band.coverage ? ` (a range that holds about ${Math.round(band.coverage * 100)}% of outcomes)` : ''},{' '}
+              {volume(band.p90)} to {volume(band.p10)}, {band.holds_actual ? 'held the outcome' : 'missed the outcome'}.
+            </p>
+          )}
+          <p className="chart-note-line">Its source: {f.evidence_id}{f.window_from_change ? `; the change it fitted from: ${f.window_from_change.evidence_id}` : ''}.</p>
+        </details>
       )}
     </section>
   )
+}
+
+/** The fixed windows' errors as a range, "+2% to +24%". */
+function fixedRange(windows: NonNullable<Hindsight['forecasts'][number]['fixed_windows']>): string {
+  const errors = windows.map((w) => w.error).filter((e): e is number => e !== null)
+  if (!errors.length) return 'nothing'
+  const low = Math.min(...errors)
+  const high = Math.max(...errors)
+  return low === high ? signed(low) : `${signed(low)} to ${signed(high)}`
 }
 
 /** Every forecast made the same day, as its error against the outcome: the agent's own

@@ -1,6 +1,7 @@
 // What the checker sent back, paired with what the agent changed in its next attempt.
 
 import type { DeclaredNumber, Finding, StepEvent } from './api'
+import { isBookkeeping, MEANING } from './labels'
 
 /** One submit_findings call as the agent sent it, with the checker's verdict. */
 type Submission = {
@@ -153,4 +154,17 @@ export function corrections(steps: StepEvent[], final: Finding[]): Correction[] 
       }
     }),
   )
+}
+
+/** What the checker caught, as the reader counts it: errors, and numbers sent back for their
+    paperwork (no source named, not rounded). A problem raised twice in one answer counts once. */
+export function caught(all: Correction[]): { errors: Correction[]; paperwork: Correction[] } {
+  const items = all.filter(
+    (c, i) => all.findIndex((d) => d.target === c.target && d.problem === c.problem) === i,
+  )
+  const paperwork = items.filter((c) => isBookkeeping(c.problem))
+  const errors = items
+    .filter((c) => !paperwork.includes(c))
+    .sort((a, b) => Number(!MEANING.test(a.problem)) - Number(!MEANING.test(b.problem)))
+  return { errors, paperwork }
 }

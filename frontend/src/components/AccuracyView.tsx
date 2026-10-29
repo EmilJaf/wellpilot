@@ -234,7 +234,7 @@ function ErrorStrip({ cases, selected, onSelect }: { cases: Case[]; selected: st
   return (
     <div className="error-strip" ref={host}>
       <p className="readout">{shown ? caseLine(shown) : 'Hover a forecast to read it; click to see it up close.'}</p>
-      <svg width={width} height={height} role="img" aria-label="Forecast error of every backtest case, agent against the classic fit">
+      <svg width={width} height={height} role="img" aria-label="Forecast error of every backtest case, agent against the whole-history fit">
         {ticks.map((v) => (
           <g key={v}>
             <line className={v === 0 ? 'strip-zero' : 'plan-grid'} x1={pad.left} x2={width - pad.right} y1={yAt(v)} y2={yAt(v)} />
@@ -300,7 +300,7 @@ function ErrorStrip({ cases, selected, onSelect }: { cases: Case[]; selected: st
       </svg>
       <p className="chart-key">
         <span><i className="strip-key strip-key-agent" /> agent</span>
-        <span><i className="strip-key strip-key-classic" /> classic decline fit</span>
+        <span><i className="strip-key strip-key-classic" /> whole-history decline fit</span>
         <span>above the line: forecast too high; below: too low</span>
       </p>
     </div>
@@ -532,7 +532,7 @@ export function CaseChart({ detail, domain, height = 240 }: { detail: BacktestCa
       <p className="chart-key">
         <span><i className="case-key case-key-actual" /> actual oil, from the data</span>
         <span><i className="case-key case-key-agent" /> agent's fit and forecast</span>
-        <span><i className="case-key case-key-classic" /> classic fit and forecast</span>
+        <span><i className="case-key case-key-classic" /> whole-history fit and forecast</span>
         <span><i className="key-band case-key-hidden" /> the 12 months forecast</span>
       </p>
     </div>

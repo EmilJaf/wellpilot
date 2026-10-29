@@ -52,8 +52,6 @@ export function AgentLog({ state, selectedEvidence, onSelectEvidence }: Props) {
             return, its own reasoning, and the checker's verdicts.
           </p>
         )}
-        {state.question && <p className="question">{state.question}</p>}
-        {state.asOf && <p className="narration">Data after {state.asOf} is hidden from the agent.</p>}
         <ol className="track" aria-live="polite" aria-label="Agent steps">
           {state.steps.map((step, i) => (
             <Fragment key={step.index}>
@@ -210,9 +208,9 @@ function Call({
         </div>
       ))}
       {call.error && (
-        <div className="flag flag-caution" title={call.error}>
-          <CautionIcon />
-          <span>The tool refused the call and told the model why: {plainToolError(call.error)}</span>
+        // Not a failure the reader must weigh: the tool said no, and the agent reads why.
+        <div className="flag flag-note" title={call.error}>
+          <span>The tool turned this call down and told the agent why: {plainToolError(call.error)}</span>
         </div>
       )}
     </li>

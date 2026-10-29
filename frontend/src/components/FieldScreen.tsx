@@ -50,7 +50,7 @@ function Level({ issues }: { issues: Issue[] }) {
 
 /**
  * Every well at once, ranked by what needs attention: the view an engineer looking after a
- * field starts from. Deterministic detectors, no model; the date box above sets the day.
+ * field starts from. Deterministic detectors, no model; the open run's date sets the day.
  */
 export function FieldScreen({ asOf, onOpenWell }: { asOf: string; onOpenWell: (well: string) => void }) {
   const [loaded, setLoaded] = useState<{ key: string; result?: ScreenResult; error?: string } | null>(null)
@@ -77,7 +77,7 @@ export function FieldScreen({ asOf, onOpenWell }: { asOf: string; onOpenWell: (w
       <h3 className="accuracy-title">Which wells need a look</h3>
       <p className="accuracy-lead">
         Every well as of <strong>{result.as_of}</strong>
-        {asOf ? ' (the date in the box above)' : ', the last day the field produced; set a date above to screen another day'}.
+        {asOf ? ', the day the agent’s data stops' : ', the last day the field produced'}.
         The detectors that the agent uses run over each one: dead gauges, high water cut (0.80 and 0.90), steep
         declines, shut-ins, steps in rate. {flagged} of {result.wells.length} wells have something to look at.
       </p>
