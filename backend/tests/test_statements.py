@@ -71,10 +71,18 @@ def test_a_regime_change_prints_as_averages_and_the_choke_across_it(log):
         ],
     )
     assert out.problems == []
+    # Six numbers in one claim: the oil rate's averages move to the detail.
     assert out.texts[1] == (
+        "F-12's oil rate averaged 55% less after 2010-05-02 than before, while its choke "
+        "opening fell from 83% to 58% over the 4 weeks either side of 2010-05-02."
+    )
+    assert "4,207 Sm3/d before and 1,888 Sm3/d after" in out.submission.findings[0].detail
+    alone = printed(
+        log, [{"kind": "change", "ref": f"{REGIME}/before_mean", "to": f"{REGIME}/after_mean"}]
+    )
+    assert alone.texts[1] == (
         "F-12's oil rate averaged 55% less after 2010-05-02 than before (4,207 Sm3/d before, "
-        "1,888 Sm3/d after), while its choke opening fell from 83% to 58% over the 4 weeks "
-        "either side of 2010-05-02."
+        "1,888 Sm3/d after)."
     )
 
 
@@ -134,6 +142,8 @@ def test_a_quote_is_the_fact_s_exact_words():
         ("E1/wells[well=F-12]/watercut", "has no field 'watercut'; its fields: well, role"),
         ("E5[kind=regime_change]", "2 rows of E5 match [kind=regime_change]"),
         ("E1/wells[well=F-12]", "is a record, not a number"),
+        ("E2/monthly", "E2 is a table (it has no field 'monthly'): pick its row first"),
+        ("E2/first_oil", "e.g. 'E2[well=F-12]/first_oil'"),
         ("E99/x", "there is no evidence E99"),
         ("F-12 water cut", "a reference starts with an evidence id"),
     ],
@@ -155,11 +165,139 @@ def test_free_words_hold_nothing_a_reference_should(log):
         ("in barrels", "a unit"),
         ("nearly half", "an amount in words"),
         ("“maksimum vannkutt”", "a quote mark"),
-        ("as F-14 did", "a digit"),
+        ("as F-14 did", "none of its statements is about F-14"),
     ]:
         out = printed(log, [value, {"say": words}])
         assert any(what in p for p in out.problems), (words, out.problems)
     assert printed(log, [value, {"say": ", which may well be the gauge"}]).problems == []
+
+
+def test_free_words_may_name_the_well_their_statements_are_about(log):
+    """The trial run (9ca1f130efea) lost every well name to the digit rule and wrote
+    headings like 'downhole gauge reads zero'. A name its statements back is allowed, and
+    words that start with it make the next statement say 'its'."""
+    out = printed(
+        log,
+        [
+            {"say": "F-12 needs attention most"},
+            {"kind": "value", "ref": "E1/wells[well=F-12]/water_cut"},
+            {"say": "and"},
+            {"kind": "value", "ref": "E1/wells[well=F-14]/water_cut"},
+        ],
+    )
+    assert out.problems == []
+    assert out.texts[1] == (
+        "F-12 needs attention most: its median water cut over the 90 days to 2010-12-31 was "
+        "69% and F-14's median water cut over the same 90 days was 61%."
+    )
+    # Two wells in the words: the statement names its own.
+    both = printed(
+        log,
+        [
+            {"say": "F-12 and F-14 both water out"},
+            {"kind": "value", "ref": "E1/wells[well=F-12]/water_cut"},
+        ],
+    )
+    assert both.texts[1].startswith("F-12 and F-14 both water out: F-12's median")
+
+
+@pytest.mark.parametrize(
+    "parts, text",
+    [
+        # A statement after a statement, then words that do not continue it.
+        (
+            [
+                {"kind": "event", "ref": "E5[kind=gauge_failure]"},
+                {"kind": "value", "ref": "E1/wells[well=F-12]/water_cut"},
+                {"say": "even as the well kept flowing"},
+            ],
+            "F-12's downhole gauge read zero from 2010-10-12 to 2010-12-31; its median water "
+            "cut over the 90 days to 2010-12-31 was 69%, even as the well kept flowing.",
+        ),
+        # Words that lead into a statement take no colon; the model's own punctuation stays.
+        (
+            [
+                {"say": "the gauge is dead."},
+                {"kind": "event", "ref": "E5[kind=gauge_failure]"},
+                {"say": "while"},
+                {"kind": "value", "ref": "E1/wells[well=F-12]/water_cut"},
+            ],
+            "The gauge is dead. F-12's downhole gauge read zero from 2010-10-12 to "
+            "2010-12-31, while its median water cut over the 90 days to 2010-12-31 was 69%.",
+        ),
+        # "than before" ends a phrase: the statement after it is a new clause.
+        (
+            [
+                {"say": "water came in faster than before"},
+                {"kind": "value", "ref": "E1/wells[well=F-12]/water_cut"},
+            ],
+            "Water came in faster than before: F-12's median water cut over the 90 days to "
+            "2010-12-31 was 69%.",
+        ),
+    ],
+)
+def test_free_words_and_statements_join_into_sentences(log, parts, text):
+    out = printed(log, parts)
+    assert out.problems == [] and out.texts[1] == text
+
+
+def test_a_plug_s_windows_print_as_the_job_and_the_return_not_one_day():
+    """production_log's plugs_set: the windows are the 60 days before the job and the first
+    60 back on stream. The trial printed both ends 'on 2010-09-23'."""
+    run = json.loads((FIXTURES / "runs" / "83a3114d185f.json").read_text())
+    log = EvidenceLog.restore(run["evidence"].values())
+    plt = next(e for e in log if e.tool == "production_log" and e.result.get("plugs_set"))
+    plug = plt.result["plugs_set"][0]
+    out = printed(
+        log,
+        [
+            {
+                "kind": "change",
+                "ref": f"{plt.id}/plugs_set[0]/before/water_cut",
+                "to": f"{plt.id}/plugs_set[0]/after/water_cut",
+            },
+            {"say": ", while"},
+            {
+                "kind": "change",
+                "ref": f"{plt.id}/plugs_set[0]/before/oil_sm3_per_day",
+                "to": f"{plt.id}/plugs_set[0]/after/oil_sm3_per_day",
+            },
+        ],
+    )
+    assert out.problems == []
+    claim = out.submission.findings[0].claim
+    depth = f"{plug['depth_m']:,.0f}"
+    assert f"before the job that set the plug at {depth} m on {plug['date']}" in claim
+    assert "the first 60 days back on stream" in claim and "over the same days" in claim
+    assert claim.count(plug["date"]) == 1
+    declared = {n.text: n.value for n in out.submission.findings[0].numbers}
+    assert declared[depth] == plug["depth_m"]
+
+
+def test_a_claim_with_too_many_numbers_moves_values_to_its_detail(log):
+    """Two regime-change statements print five numbers; the claim keeps the percentage
+    and the choke, the oil rate's averages go to the detail (still printed by code)."""
+    out = printed(
+        log,
+        [
+            {"kind": "change", "ref": f"{REGIME}/before_mean", "to": f"{REGIME}/after_mean"},
+            {"say": ", while"},
+            {
+                "kind": "change",
+                "ref": f"{REGIME}/choke_before_pct",
+                "to": f"{REGIME}/choke_after_pct",
+            },
+            {"say": "and"},
+            {"kind": "value", "ref": "E1/wells[well=F-12]/water_cut"},
+        ],
+    )
+    finding = out.submission.findings[0]
+    assert out.problems == []
+    assert "4,207" not in finding.claim and "averaged 55% less after 2010-05-02" in finding.claim
+    assert finding.detail == (
+        "F-12 oil rate: 4,207 Sm3/d before and 1,888 Sm3/d after 2010-05-02, the periods' averages."
+    )
+    assert {n.text for n in finding.numbers} == {"83%", "58%", "69%"}
 
 
 def test_a_fact_cannot_rest_on_warnings_a_forecast_or_a_cause(log):

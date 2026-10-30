@@ -1,10 +1,10 @@
 """Answers written as statements, not prose (design D in docs/checker-redesign.md).
 
-The model never types a number, a date, a well name or a unit. It picks values out of
-the tool results by reference ("E1/wells[well=F-12]/water_cut") and a statement kind;
-code prints the sentence from the values and their own labels. A wrong pick is then a
-true sentence about another value, never a false one. Free words join the statements and
-may hold no digits, dates, units, well names or quote marks.
+The model never types a number, a date or a unit. It picks values out of the tool
+results by reference ("E1/wells[well=F-12]/water_cut") and a statement kind; code prints
+the sentence from the values and their own labels. A wrong pick is then a true sentence
+about another value, never a false one. Free words join the statements and may hold no
+digits, dates, units or quote marks; a well name only of a well the statements are about.
 
 Behind a flag (run_agent(statements=True), eval --statements) for a feasibility run: the
 rendered answer becomes an ordinary Submission, so the answer panel, the second opinion
@@ -18,7 +18,17 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
-from wellpilot.agent.checker import CAUSAL, HEDGE, DeclaredNumber, Finding, Submission
+from wellpilot.agent.checker import (
+    CAUSAL,
+    HEDGE,
+    MAX_CLAIM_NUMBERS,
+    WELL,
+    DeclaredNumber,
+    Finding,
+    Submission,
+    _well_key,
+    claim_numbers,
+)
 from wellpilot.agent.evidence import Evidence, EvidenceLog
 
 Kind = Literal["value", "change", "compare", "event", "forecast", "quote"]
@@ -27,8 +37,9 @@ Kind = Literal["value", "change", "compare", "event", "forecast", "quote"]
 class Part(BaseModel):
     say: str | None = Field(
         None,
-        description="Free words joining statements ('needs attention most:', 'while'). No "
-        "digits, dates, month names, units, well names or quote marks: those come from refs.",
+        description="Free words joining statements and saying what they mean ('P-2 needs "
+        "attention most:', ', while'). No digits, dates, month names, units or quote marks: "
+        "those come from refs. A well name only of a well a statement here is about.",
     )
     kind: Kind | None = Field(
         None,
@@ -92,6 +103,7 @@ class Cell:
     value: Any
     keys: list[str] = field(default_factory=list)  # field names walked, in order
     rows: list[dict] = field(default_factory=list)  # each record or row the path selected
+    parent: Any = None  # the record the last field was read from
 
     @property
     def key(self) -> str:
@@ -190,9 +202,12 @@ def resolve(ref: str, log: EvidenceLog) -> Cell:
         if name:
             if not isinstance(node, dict):
                 raise BadRef(f"{where} is not a record, so it has no field '{name}'")
+            if name not in node and isinstance(node.get("columns"), list) and "rows" in node:
+                raise BadRef(_table_hint(node, where, name))
             if name not in node:
                 fields = ", ".join(k for k in node if not k.endswith("note"))
                 raise BadRef(f"{where} has no field '{name}'; its fields: {fields}")
+            cell.parent = node
             cell.value = node[name]
             cell.keys.append(name)
             where = f"{where}/{name}"
@@ -202,6 +217,24 @@ def resolve(ref: str, log: EvidenceLog) -> Cell:
             cell.value = row
             where = f"{where}[{selector}]"
     return cell
+
+
+def _table_hint(node: dict, where: str, name: str) -> str:
+    """A table is read a row first: say so with an example made of its own first row."""
+    columns = [str(c) for c in node["columns"]]
+    first = (node["rows"] or [[None]])[0]
+    key, column = (
+        columns[0],
+        name
+        if name in columns
+        else next((c for c in columns[1:] if c not in ("days", "producing_days")), columns[-1]),
+    )
+    example = f"{where}[{key}={first[0]}]/{column}"
+    told = f"'{name}' is one of its columns" if name in columns else f"it has no field '{name}'"
+    return (
+        f"{where} is a table ({told}): pick its row first, then the column, e.g. "
+        f"'{example}'. Its columns: {', '.join(columns)}"
+    )
 
 
 def number(cell: Cell) -> float:
@@ -247,6 +280,9 @@ NAMES = {
     "cum_water_injected_sm3": ("cumulative water injected", "Sm3"),
     "field_oil_sm3": ("the field's cumulative oil", "Sm3"),
     "oil_rate_per_producing_day": ("oil rate per producing day", "rate"),
+    "oil_sm3_per_day": ("oil rate", "rate"),
+    "water_sm3_per_day": ("water rate", "rate"),
+    "liquid_sm3_per_day": ("liquid rate", "rate"),
     "liquid_rate_sm3_per_day": ("liquid rate", "rate"),
     "choke_pct": ("choke opening", "pct"),
     "wor": ("water-oil ratio", "ratio"),
@@ -270,6 +306,7 @@ class Meaning:
     words: str  # what the value is, without the well: "median water cut over the 90 days to ..."
     unit: str  # share, pct, rate, Sm3, MSm3, days, months, hours, bar, per_year, ratio, plain
     when: str = ""  # " in 2010-12", " on 2010-12-31", "" when the words hold the date
+    declares: list[tuple[str, float]] = field(default_factory=list)  # numbers `when` holds
     field: bool = False  # a field-wide value
 
 
@@ -303,6 +340,18 @@ def _when(cell: Cell) -> str:
             if row.get(k) is not None:
                 return f" on {row[k]}" if k == "date" else f" in {row[k]}"
     return ""
+
+
+def _around(cell: Cell) -> tuple[str, list[tuple[str, float]]]:
+    """What a record's before and after windows lie around: a plug's job (production_log's
+    plugs_set: before the job, and from the well's return) or the record's date."""
+    row = cell.rows[-1]
+    date = row.get("date") or row.get("start") or ""
+    depth = row.get("depth_m")
+    if isinstance(depth, int | float) and not isinstance(depth, bool):
+        shown = _round(float(depth))
+        return f"the job that set the plug at {shown} m on {date}", [(shown, float(depth))]
+    return str(date), []
 
 
 def meaning(cell: Cell) -> Meaning:
@@ -363,6 +412,17 @@ def meaning(cell: Cell) -> Meaning:
         span = f" of the fit over {fit.get('window_start')} to {fit.get('window_end')}"
         words, unit = NAMES.get(key, (_plain(key), _unit_of(key)))
         return Meaning(words.replace(" of the fit", "") + span, unit)
+    if parent in ("before", "after") and cell.rows and isinstance(cell.parent, dict):
+        words, unit = NAMES.get(key, (_plain(key), _unit_of(key)))
+        around, declares = _around(cell)
+        days = cell.rows[-1].get("window_days")
+        if not days:
+            span = f" from {cell.parent.get('from')} to {cell.parent.get('to')}"
+        elif parent == "before":
+            span = f" in the {days} days before {around}"
+        else:
+            span = f" in the first {days} days back on stream after {around}"
+        return Meaning(words, unit, span, declares=declares)
     limits = top.get("design_limits", {}) if isinstance(top, dict) else {}
     if tool == "field_vs_design" and len(cell.keys) == 3 and parent in limits and key == "value":
         limit = limits[parent]
@@ -372,7 +432,7 @@ def meaning(cell: Cell) -> Meaning:
     if record and not when and record.get("start"):
         when = f" ({record.get('kind', '').replace('_', ' ')} from {record['start']})"
     field_wide = tool in ("plan_vs_actual", "field_vs_design") or key.startswith("field")
-    return Meaning(words, unit, when, field_wide)
+    return Meaning(words, unit, when, field=field_wide)
 
 
 # ---- printing numbers ---------------------------------------------------------------------
@@ -432,34 +492,58 @@ class Printed:
     numbers: list[DeclaredNumber] = field(default_factory=list)
     evidence: list[str] = field(default_factory=list)
     projection: bool = False  # what has not happened yet: never a fact
+    wells: set[str] = field(default_factory=set)  # the wells it is about
+    # The statement with fewer numbers, for a claim that would hold too many; the values
+    # it leaves out go to the finding's detail.
+    short: str | None = None
+    short_numbers: list[DeclaredNumber] = field(default_factory=list)
+    detail: str = ""
 
 
-def _owner(cell: Cell, m: Meaning, last_well: list[str | None]) -> str:
-    well = None if m.field else cell.well
+@dataclass
+class Context:
+    """What the sentence so far has said: the well "its" stands for, windows spelled out."""
+
+    well: str | None = None
+    said: set[str] = field(default_factory=set)
+
+    def owns(self, well: str | None) -> bool:
+        return bool(well and self.well and _well_key(self.well) == _well_key(well))
+
+
+def _owner(cell: Cell, m: Meaning, ctx: Context) -> str:
     if m.field or m.words.startswith("the field") or m.words.startswith("plan"):
         return "the " if not m.words.startswith("the ") else ""
+    well = cell.well
     if not well:
         return "the "
-    if last_well[0] == well:
+    if ctx.owns(well):
         return "its "
-    last_well[0] = well
+    ctx.well = well
     return f"{well}'s "
 
 
-def _declare(out: Printed, shown: str, cell: Cell) -> None:
-    out.numbers.append(
-        DeclaredNumber(text=_lead(shown), value=number(cell), evidence_id=cell.evidence.id)
-    )
+def _about(cell: Cell, m: Meaning) -> set[str]:
+    return set() if m.field or not cell.well else {cell.well}
 
 
-def _value(part: Part, log: EvidenceLog, last: list) -> Printed:
+def _number(shown: str, value: float, cell: Cell) -> DeclaredNumber:
+    return DeclaredNumber(text=_lead(shown), value=value, evidence_id=cell.evidence.id)
+
+
+def _extra(m: Meaning, cell: Cell) -> list[DeclaredNumber]:
+    return [DeclaredNumber(text=t, value=v, evidence_id=cell.evidence.id) for t, v in m.declares]
+
+
+def _value(part: Part, log: EvidenceLog, ctx: Context) -> Printed:
     cell = resolve(part.ref or "", log)
     v = number(cell)
     m = meaning(cell)
-    out = Printed("", evidence=[cell.evidence.id])
-    owner = _owner(cell, m, last)
+    owner = _owner(cell, m, ctx)
     shown = fmt(v, m.unit)
-    _declare(out, shown, cell)
+    out = Printed(
+        "", [_number(shown, v, cell), *_extra(m, cell)], [cell.evidence.id], wells=_about(cell, m)
+    )
     if m.unit in ("change", "points"):
         verb = "down" if v < 0 else "up"
         out.text = f"{owner}{m.words} was {verb} {shown}{m.when}"
@@ -470,12 +554,25 @@ def _value(part: Part, log: EvidenceLog, last: list) -> Printed:
     return out
 
 
-def _change(part: Part, log: EvidenceLog, last: list) -> Printed:
+def _windows(a: Cell, b: Cell) -> bool:
+    """Two ends that are one record's before and after windows (production_log's plugs)."""
+    return (
+        a.key == b.key
+        and a.keys[-2:-1] == ["before"]
+        and b.keys[-2:-1] == ["after"]
+        and bool(a.rows and b.rows)
+        and a.rows[-1] == b.rows[-1]
+        and bool(a.rows[-1].get("window_days"))
+    )
+
+
+def _change(part: Part, log: EvidenceLog, ctx: Context) -> Printed:
     a, b = resolve(part.ref or "", log), resolve(part.to or "", log)
     va, vb = number(a), number(b)
     ma, mb = meaning(a), meaning(b)
     paired = PAIRS.get(a.key) == b.key and a.record is not None and a.record is b.record
-    if not paired and (a.key != b.key or ma.unit != mb.unit):
+    windows = _windows(a, b)
+    if not (paired or windows) and (a.key != b.key or ma.unit != mb.unit):
         raise BadRef(
             f"change: {a.ref} ({ma.words}) and {b.ref} ({mb.words}) are not the same quantity; "
             "a change runs between two values of one field (two rows, or a record's before "
@@ -483,37 +580,58 @@ def _change(part: Part, log: EvidenceLog, last: list) -> Printed:
         )
     if a.well != b.well:
         raise BadRef(f"change: {a.ref} is {a.well}'s and {b.ref} is {b.well}'s")
-    out = Printed("", evidence=list(dict.fromkeys([a.evidence.id, b.evidence.id])))
-    owner = _owner(a, ma, last)
+    out = Printed(
+        "",
+        evidence=list(dict.fromkeys([a.evidence.id, b.evidence.id])),
+        wells=_about(a, ma) | _about(b, mb),
+    )
+    owner = _owner(a, ma, ctx)
     sa, sb = fmt(va, ma.unit), fmt(vb, mb.unit)
+    ends = [_number(sa, va, a), _number(sb, vb, b)]
     verb = "stayed at" if vb == va else "rose" if vb > va else "fell"
+    level = ma.unit in ("share", "pct", "change", "points")
+    pct = _percent(abs(vb / va - 1) * 100) if va and not level else ""
+    who = a.well or "the field"
     if paired:
-        q, unit = SIGNALS.get(a.record.get("signal", ""), ("", ma.unit))
+        q = SIGNALS.get(a.record.get("signal", ""), ("",))[0]
         q = "choke opening" if a.key.startswith("choke") else q or "oil rate"
         d = a.record.get("start", "")
-        if a.key == "before_mean" and ma.unit not in ("share", "pct") and va:
-            pct = _percent(abs(vb / va - 1) * 100)
+        if a.key == "before_mean" and pct:
             less = "less" if vb < va else "more"
-            text = (
-                f"{owner}{q} averaged {pct} {less} after {d} than before ({sa} before, {sb} after)"
-            )
+            out.short = f"{owner}{q} averaged {pct} {less} after {d} than before"
+            out.text = f"{out.short} ({sa} before, {sb} after)"
+            out.detail = f"{who} {q}: {sa} before and {sb} after {d}, the periods' averages."
         else:
             span = (
                 "over the 4 weeks either side of"
                 if a.key != "before_mean"
                 else "between the periods before and after"
             )
-            text = f"{owner}{q} {verb} from {sa} to {sb} {span} {d}"
+            out.text = f"{owner}{q} {verb} from {sa} to {sb} {span} {d}"
+        out.numbers = ends
+    elif windows:
+        around, declares = _around(a)
+        days = a.rows[-1]["window_days"]
+        seen = f"{a.evidence.id}:{around}"
+        if seen in ctx.said:
+            span, extra = "over the same days", []
+        else:
+            ctx.said.add(seen)
+            span = (
+                f"between the {days} days before {around} and the first {days} days back on stream"
+            )
+            extra = [_number(t, v, a) for t, v in declares]
+        if pct:
+            out.short = f"{owner}{ma.words} {verb} {pct} {span}"
+            out.text = f"{owner}{ma.words} {verb} {pct} from {sa} to {sb} {span}"
+            out.detail = f"{who} {ma.words}: {sa} before, {sb} after."
+        else:
+            out.text = f"{owner}{ma.words} {verb} from {sa} to {sb} {span}"
+        out.numbers, out.short_numbers = ends + extra, extra
     else:
-        pct = ""
-        if ma.unit not in ("share", "pct", "change", "points") and va:
-            pct = f" {_percent(abs(vb / va - 1) * 100)}"
-        text = f"{owner}{ma.words} {verb}{pct} from {sa}{ma.when} to {sb}{mb.when}"
-    out.text = text
-    out.numbers += [
-        DeclaredNumber(text=_lead(sa), value=va, evidence_id=a.evidence.id),
-        DeclaredNumber(text=_lead(sb), value=vb, evidence_id=b.evidence.id),
-    ]
+        by = f" {pct}" if pct else ""
+        out.text = f"{owner}{ma.words} {verb}{by} from {sa}{ma.when} to {sb}{mb.when}"
+        out.numbers = ends + _extra(ma, a) + _extra(mb, b)
     return out
 
 
@@ -523,15 +641,19 @@ def _lead(text: str) -> str:
     return m[0] if m else text
 
 
-def _compare(part: Part, log: EvidenceLog, last: list) -> Printed:
+def _compare(part: Part, log: EvidenceLog, ctx: Context) -> Printed:
     a, b = resolve(part.ref or "", log), resolve(part.against or "", log)
     va, vb = number(a), number(b)
     ma, mb = meaning(a), meaning(b)
     if ma.unit != mb.unit:
         raise BadRef(f"compare: {a.ref} is in {ma.unit} and {b.ref} in {mb.unit}")
-    out = Printed("", evidence=list(dict.fromkeys([a.evidence.id, b.evidence.id])))
-    left = f"{_owner(a, ma, last)}{ma.words} of {fmt(va, ma.unit)}{ma.when}"
-    right = f"{_owner(b, mb, last)}{mb.words} of {fmt(vb, mb.unit)}{mb.when}"
+    out = Printed(
+        "",
+        evidence=list(dict.fromkeys([a.evidence.id, b.evidence.id])),
+        wells=_about(a, ma) | _about(b, mb),
+    )
+    left = f"{_owner(a, ma, ctx)}{ma.words} of {fmt(va, ma.unit)}{ma.when}"
+    right = f"{_owner(b, mb, ctx)}{mb.words} of {fmt(vb, mb.unit)}{mb.when}"
     if (part.how or "ratio") == "ratio":
         if not vb:
             raise BadRef(f"compare: {b.ref} is zero, so there is no ratio")
@@ -551,8 +673,10 @@ def _compare(part: Part, log: EvidenceLog, last: list) -> Printed:
         )
     out.text = text
     out.numbers += [
-        DeclaredNumber(text=_lead(fmt(va, ma.unit)), value=va, evidence_id=a.evidence.id),
-        DeclaredNumber(text=_lead(fmt(vb, mb.unit)), value=vb, evidence_id=b.evidence.id),
+        _number(fmt(va, ma.unit), va, a),
+        _number(fmt(vb, mb.unit), vb, b),
+        *_extra(ma, a),
+        *_extra(mb, b),
     ]
     return out
 
@@ -570,14 +694,14 @@ EVENT_WORDS = {
 }
 
 
-def _event(part: Part, log: EvidenceLog, last: list) -> Printed:
+def _event(part: Part, log: EvidenceLog, ctx: Context) -> Printed:
     cell = resolve(part.ref or "", log)
     record = cell.value
     if not isinstance(record, dict) or not ({"kind", "start", "since"} & record.keys()):
         raise BadRef(f"{cell.ref} is not a record of an event or job (it has no kind or dates)")
     well = cell.well
-    owner = "the field's" if not well else ("its" if last[0] == well else f"{well}'s")
-    last[0] = well or last[0]
+    owner = "the field's" if not well else ("its" if ctx.owns(well) else f"{well}'s")
+    ctx.well = well or ctx.well
     kind = record.get("kind", "")
     details = record.get("details") or {}
     signal = SIGNALS.get(
@@ -615,10 +739,12 @@ def _event(part: Part, log: EvidenceLog, last: list) -> Printed:
     else:
         start = record.get("start") or record.get("since")
         text = f"{owner} {kind.replace('_', ' ')} from {start}"
-    return Printed(text.replace("  ", " "), evidence=[cell.evidence.id])
+    return Printed(
+        text.replace("  ", " "), evidence=[cell.evidence.id], wells={well} if well else set()
+    )
 
 
-def _forecast(part: Part, log: EvidenceLog, last: list) -> Printed:
+def _forecast(part: Part, log: EvidenceLog, ctx: Context) -> Printed:
     cell = resolve(part.ref or "", log)
     item = cell.evidence
     top = item.result
@@ -627,10 +753,10 @@ def _forecast(part: Part, log: EvidenceLog, last: list) -> Printed:
             f"forecast: {cell.ref} must be a forecast_production result itself, e.g. '{item.id}'"
         )
     well = item.arguments.get("well") or top.get("well")
-    owner = "it" if last[0] == well else str(well)
-    last[0] = well
+    owner = "it" if ctx.owns(well) else str(well)
+    ctx.well = well
     p50 = top["cumulative_oil_sm3"]["p50"]
-    out = Printed("", evidence=[item.id], projection=True)
+    out = Printed("", evidence=[item.id], projection=True, wells={well} if well else set())
     out.numbers.append(DeclaredNumber(text=_lead(fmt(p50, "Sm3")), value=p50, evidence_id=item.id))
     text = (
         f"{owner} is forecast to make about {fmt(p50, 'Sm3')} of oil from "
@@ -656,7 +782,7 @@ def _forecast(part: Part, log: EvidenceLog, last: list) -> Printed:
 DOC_NAMES = {"volve_pud": "the development plan", "f11b_completion": "F-11 B's completion report"}
 
 
-def _quote(part: Part, log: EvidenceLog, last: list) -> Printed:
+def _quote(part: Part, log: EvidenceLog, ctx: Context) -> Printed:
     cell = resolve(part.ref or "", log)
     fact = cell.value
     if not isinstance(fact, dict) or not fact.get("quote"):
@@ -715,39 +841,76 @@ class Rendered:
     texts: list[str]  # the summary and each finding, as printed (for the model and the log)
 
 
-def _join(chunks: list[str]) -> str:
-    text = ""
-    for chunk in chunks:
+# Words after a statement that continue it with no comma ("and F-14's ...", "than ..."),
+# and words a statement can follow with no colon ("while", "with", "than"); not "before"
+# or "after", which end a phrase as often as they lead into one ("than before").
+CONTINUES = re.compile(r"(?:and|or|nor|than|to|of|in|on|at|for|from|by|as)\b", re.I)
+LEADS_IN = re.compile(
+    r"\b(?:and|or|nor|but|yet|so|while|whereas|though|although|because|since|as|with|"
+    r"without|of|at|to|than|when|which|that|by|from|in|on|for|where|whose|"
+    r"plus|including|like|unlike|versus|against|is|was|were|are|also|then|both|even|only)$",
+    re.I,
+)
+
+
+def _join(chunks: list[tuple[bool, str]]) -> str:
+    """Free words (True) and printed statements (False) as sentences. Free words keep
+    their own punctuation; without it, a statement after words that do not lead into it
+    ("F-12 needs attention most") takes a colon, or a semicolon once its sentence has
+    one, and words after a statement take a comma unless they continue it ("and")."""
+    text, last_said = "", False
+    for said, chunk in chunks:
         chunk = chunk.strip()
         if not chunk:
             continue
-        if text and not re.match(r"[,.;:)]", chunk):
-            text += " "
-        text += chunk
-    text = re.sub(r"\s+", " ", text).strip()
-    text = text[:1].upper() + text[1:]
-    return text if re.search(r"[.!?)]$", text) else text + "."
+        if not text or re.match(r"[,.;:)]", chunk):
+            sep = ""
+        elif re.search(r"[.!?,;:(]$", text):
+            sep = " "
+        elif said:
+            sep = " " if last_said or CONTINUES.match(chunk) else ", "
+        elif not last_said:
+            sep = "; "
+        elif LEADS_IN.search(text):
+            sep = " "
+        else:
+            sep = "; " if ":" in re.split(r"[.!?]\s+", text)[-1] else ": "
+        text += sep + chunk
+        last_said = said
+    text = re.sub(r"\s+", " ", text).strip().rstrip(",;:").rstrip()
+    text = re.sub(r"(^|[.!?]\s+)([a-z])", lambda m: m[1] + m[2].upper(), text)
+    return text if re.search(r"[.!?]$", text) else text + "."
 
 
 def _print(where: str, parts: list[Part], log: EvidenceLog, problems: list[str]) -> Printed:
-    out = Printed("")
-    chunks: list[str] = []
-    last: list[str | None] = [None]
+    pieces: list[tuple[bool, Printed]] = []
+    ctx = Context()
+    named: dict[str, str] = {}  # wells the free words name, by key
     for n, part in enumerate(parts, start=1):
         if part.kind is None:
-            if not (part.say or "").strip():
+            words = part.say or ""
+            if not words.strip():
                 problems.append(f"{where}, part {n}: give either 'say' (free words) or a 'kind'")
                 continue
-            if bad := _lint(part.say or ""):
+            if bad := _lint(WELL.sub(" ", words)):
                 problems.append(
-                    f"{where}, part {n}: free words may not hold numbers, dates, units, well "
-                    f"names, amounts in words or quotes: {bad}. Take it from a tool result "
-                    "with a statement instead."
+                    f"{where}, part {n}: free words may not hold numbers, dates, units, "
+                    f"amounts in words or quotes: {bad}. Take it from a tool result with a "
+                    "statement instead."
                 )
-            chunks.append(part.say or "")
+            wells = [w.strip() for w in WELL.findall(words)]
+            for w in wells:
+                named.setdefault(_well_key(w), w)
+            # Words that start with their one well make it the subject: the next statement
+            # about it says "its". Words naming another well, or two, leave the next
+            # statement to name its own.
+            if wells:
+                one = len({_well_key(w) for w in wells}) == 1
+                ctx.well = wells[0] if one and words.lstrip().startswith(wells[0]) else None
+            pieces.append((True, Printed(words)))
             continue
         try:
-            printed = RENDER[part.kind](part, log, last)
+            printed = RENDER[part.kind](part, log, ctx)
         except BadRef as e:
             problems.append(f"{where}, part {n} ({part.kind}): {e}")
             continue
@@ -758,11 +921,42 @@ def _print(where: str, parts: list[Part], log: EvidenceLog, problems: list[str])
             problems.append(
                 f"{where}, part {n}: a part is either free words or a statement, not both"
             )
-        chunks.append(printed.text)
-        out.numbers += printed.numbers
-        out.evidence += printed.evidence
-        out.projection |= printed.projection
-    out.text = _same_window(_join(chunks))
+        pieces.append((False, printed))
+    statements = [p for said, p in pieces if not said]
+    about = {_well_key(w) for p in statements for w in p.wells}
+    for key, name in named.items():
+        if key not in about:
+            problems.append(
+                f"{where}: the free words name {name}, but none of its statements is about "
+                f"{name}: add one, or leave the name out."
+            )
+    # A claim a reader takes in at once: past MAX_CLAIM_NUMBERS numbers, the statements
+    # that have a shorter form print it, from the last one back, and their values go to
+    # the detail.
+    short: set[int] = set()
+
+    def joined() -> str:
+        chunks = [(said, p.short if id(p) in short else p.text) for said, p in pieces]
+        return _same_window(_join(chunks))
+
+    text = joined()
+    for p in reversed(statements):
+        if len(claim_numbers(text)) <= MAX_CLAIM_NUMBERS:
+            break
+        if p.short is not None:
+            short.add(id(p))
+            text = joined()
+    out = Printed(text)
+    details = []
+    for p in statements:
+        cut = id(p) in short
+        out.numbers += p.short_numbers if cut else p.numbers
+        if cut:
+            details.append(p.detail)
+        out.evidence += p.evidence
+        out.projection |= p.projection
+        out.wells |= p.wells
+    out.detail = " ".join(details)
     out.evidence = list(dict.fromkeys(out.evidence))
     return out
 
@@ -827,6 +1021,7 @@ def render(submission: StatementSubmission, log: EvidenceLog) -> Rendered:
         findings.append(
             Finding(
                 claim=printed.text,
+                detail=printed.detail or None,
                 evidence_ids=printed.evidence or ["E1"],
                 confidence=item.confidence,
                 numbers=_unique(printed.numbers),

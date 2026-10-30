@@ -189,11 +189,13 @@ FENCE = re.compile(r"^```(?:json)?\s*|\s*```$")
 # the checker.
 STATEMENTS_RULES = """\
 - Changes, ratios and differences are computed when the answer is printed (the change and \
-compare statements below), so calculate is only for numbers you need to reason with. Call \
-tools that do not depend on each other in the same step.
+compare statements below), and every value prints rounded with its unit: never call \
+calculate or run_python to turn a share into a percent, round a value or work out a change \
+for the answer, and never call a tool to draft or test the answer. Submit it: the checker's \
+reply shows how it printed. Call tools that do not depend on each other in the same step.
 - Finish by calling submit_findings. Write the answer as statements, not prose: you never \
-type a number, a date, a well name or a unit. submit_findings takes a summary and findings; \
-each is a list of parts. A part is either free words ({{"say": "needs attention most:"}}) \
+type a number, a date or a unit. submit_findings takes a summary and findings; each is a \
+list of parts. A part is either free words ({{"say": "P-2 needs attention most:"}}) \
 or a statement that points at values in the tool results, and code prints the sentence from \
 those values and their own labels:
   value: {{"kind": "value", "ref": "E1/wells[well=P-2]/water_cut"}} prints "P-2's median \
@@ -216,10 +218,16 @@ English statement.
 - A reference is an evidence id, then field names and row selectors: "/name" a field, \
 "[field=value,field=value]" the one row or record whose fields match (in lists of records \
 and in tables with columns and rows alike), "[n]" the row at place n, counting from 0. A \
-reference that does not resolve comes back with what is there instead.
-- Free words may hold no digits, dates, month names, units, well names, amounts in words \
-(half, twice, ten) or quote marks: everything a reader could check comes from a reference. \
-The first statement about a well names it; later ones say "its". A finding is one or two \
+result that is itself a table (columns and rows, as production_monthly gives) is read row \
+first: "E13[month=2010-12]/water_cut". A reference that does not resolve comes back with \
+what is there instead.
+- Free words may hold no digits, dates, month names, units, amounts in words (half, twice, \
+ten) or quote marks: everything a reader could check comes from a reference. They may name \
+a well that one of the same finding's statements is about. Free words say what the values \
+mean or link them ("P-2 needs attention most:", ", while", "consistent with water from the \
+injectors"); they never repeat what a statement prints (free words "oil rate fell" before a \
+change statement of the oil rate say it twice). Give them their own punctuation. The first \
+statement about a well names it; later ones say "its". A finding is one or two \
 sentences with at most three statements of values. Write for an engineer and their manager: \
 the summary's first sentence says in plain words what is wrong with what ("its downhole \
 gauge is dead; water is now most of what the well makes"), not the tools' labels.
