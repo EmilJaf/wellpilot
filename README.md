@@ -222,6 +222,20 @@ pnpm install
 pnpm dev                                     # UI on :5173, proxies /api to :8000
 ```
 
+**Without any API key.** The app runs with the keys in `.env` left empty: the recorded answers replay step by step with their checks, reveals and evidence, every data view works, and only a new question is refused (503) until a key is set. After fetching the data (below), copy the recorded runs in:
+
+```bash
+mkdir -p data/runs && cp backend/tests/fixtures/runs/*.json data/runs/
+```
+
+Or the image the live site runs, in Docker with no key (the recorded runs are inside it), on http://localhost:8080:
+
+```bash
+scripts/fetch_data.sh && docker build -t wellpilot . && docker run --rm -p 8080:8080 wellpilot
+```
+
+`scripts/smoke_image.sh wellpilot` checks such an image the way CI does (health, the page, the recorded runs replay, a new question refused without a key, a clean stop).
+
 Data: `scripts/fetch_data.sh` downloads the processed data the live site runs on (a release asset of this repository, 46 MB, checked against the sha256 pinned in `deploy/data.env`) into `data/processed`. To build it yourself instead, download these files from the Volve dataset:
 - `Production_data/Volve production data.xlsx` into `data/raw/production/`;
 - `Reports/Volve PUD .pdf` into `data/raw/reports/Volve_PUD.pdf`;
