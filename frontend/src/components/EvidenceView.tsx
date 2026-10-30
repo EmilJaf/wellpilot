@@ -292,7 +292,7 @@ function PythonRun({ result, code }: { result: PythonResult; code: string }) {
               <tr key={k}>
                 <th scope="row">{k.replace(/_/g, ' ')}</th>
                 <td className={`${typeof v === 'number' ? 'num' : ''}${hit(v) ? ' hit' : ''}`}>
-                  {typeof v === 'object' ? JSON.stringify(v) : String(v)}
+                  {typeof v === 'object' && v !== null ? <Nested value={v} /> : String(v)}
                 </td>
               </tr>
             ))}
@@ -308,6 +308,21 @@ function PythonRun({ result, code }: { result: PythonResult; code: string }) {
         </>
       )}
     </>
+  )
+}
+
+/** A list or record inside a returned value, laid out one field a line: written on one line
+    it has no place to break and pushes the evidence pane thousands of pixels wide. */
+function Nested({ value }: { value: object }) {
+  const text = JSON.stringify(value, null, 1)
+  if (!Array.isArray(value)) return <pre className="code nested-json">{text}</pre>
+  return (
+    <details>
+      <summary>
+        {value.length} {value.length === 1 ? 'row' : 'rows'}
+      </summary>
+      <pre className="code nested-json">{text}</pre>
+    </details>
   )
 }
 

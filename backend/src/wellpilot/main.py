@@ -75,6 +75,10 @@ def create_app(
             "commit": settings.git_commit or None,
             "llm_provider": settings.llm_provider,
             "llm_configured": bool(key),
+            # Muse Spark Open on Fireworks answers when Baseten cannot (llm.make_llm).
+            "llm_fallback": settings.llm_fallback
+            if settings.llm_provider == "baseten" and settings.fireworks_api_key
+            else None,
             # Audio input is a Muse Spark Open on Baseten feature; the mic hides otherwise.
             "voice": bool(key) and settings.llm_provider == "baseten",
             # The agent can run its own Python (Modal Sandboxes are set up).

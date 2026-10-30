@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     fireworks_base_url: str = "https://api.fireworks.ai/inference/v1"
     fireworks_model: str = "accounts/fireworks/models/muse-spark-open"
     fireworks_reasoning_effort: str = ""
+    # Who answers when Baseten refuses the key, wants payment or is down: "fireworks" (the
+    # same Muse Spark Open, when FIREWORKS_API_KEY is set) or "" for none.
+    llm_fallback: str = "fireworks"
 
     # Reasoning tokens are billed as output. Page extraction is transcription, so "low"
     # saves most of its output tokens; the agent keeps the model's default unless set.

@@ -51,6 +51,28 @@ const EXAMPLES = [
   },
 ]
 
+// Questions to run live that the agent answered verified on its first or second check in the
+// latest eval (Oct 31), so a visitor's first live run is likely to end checked. A click fills
+// the box; Ask the agent runs it (tokens, about a minute).
+const LIVE = [
+  {
+    label: "Dead gauge or dying reservoir? F-12's pressure after October 2010",
+    question: "Is F-12's missing downhole pressure after October 2010 a reservoir problem or a sensor problem?",
+    asOf: '',
+  },
+  {
+    label: "When the field reached the water cut the 2005 plan designed it for",
+    question: 'When did the Volve field reach the maximum water cut the 2005 plan designed the platform for?',
+    asOf: '',
+  },
+  {
+    label: 'F-12 in 2011-2013: pressure loss or water taking over? (data up to 2013)',
+    question:
+      "Was F-12's falling oil rate in 2011-2013 a loss of reservoir pressure or water taking over the well? How much oil did its water-oil ratio trend leave before a 95% water cut?",
+    asOf: '2013-12-31',
+  },
+]
+
 type EventRow = { kind: string; signal: string; start: string; end: string | null; details: Record<string, unknown> }
 
 const NO_MARKERS: Marker[] = []
@@ -727,6 +749,22 @@ export default function App() {
         </button>
       )
     })
+  const liveButtons = LIVE.map((e) => (
+    <button
+      key={e.label}
+      type="button"
+      className="suggestion is-live"
+      disabled={running}
+      title={`${e.asOf ? `${e.question} (data up to ${e.asOf})` : e.question}. Fills the box; Ask the agent runs it live, in about a minute.`}
+      onClick={() => {
+        setQuestion(e.question)
+        setAsOf(e.asOf)
+        requestAnimationFrame(() => questionBox.current?.focus())
+      }}
+    >
+      {e.label}
+    </button>
+  ))
   // From the first screen the box starts empty, on all the data; from an open run it keeps
   // that run's question and date to edit.
   const openAsk = (fresh = false) => {
@@ -833,6 +871,10 @@ export default function App() {
                 {voice.note}
               </p>
             )}
+            <div className="suggestions">
+              <span className="suggestions-label">Run live, about a minute</span>
+              {liveButtons}
+            </div>
             <div className="suggestions">
               <span className="suggestions-label">Recorded answers</span>
               {exampleButtons(EXAMPLES)}

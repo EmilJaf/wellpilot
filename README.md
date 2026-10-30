@@ -282,13 +282,14 @@ fly launch --copy-config --no-deploy        # creates the app; it may pick anoth
 fly secrets set BASETEN_API_KEY=...          # the model key, never committed
 fly secrets set OPERATOR_KEY=$(openssl rand -hex 24)   # lifts the public limits for you
 fly secrets set MODAL_TOKEN_ID=... MODAL_TOKEN_SECRET=...   # run_python in Modal Sandboxes (optional)
+fly secrets set FIREWORKS_API_KEY=...        # Muse Spark Open on Fireworks takes over when Baseten's key or credits stop
 fly deploy --ha=false
 gh secret set FLY_API_TOKEN --body "$(fly tokens create deploy)"   # for the deploy job
 ```
 
 In the browser console of the deployed site, `localStorage.operatorKey = '<the operator key>'` lets your own runs skip the per-visitor and daily limits.
 
-Public limits (settings in `backend/src/wellpilot/config.py`, overridable with Fly secrets): 3 runs at once, 6 runs per visitor per hour, 3M tokens per day, 600 s per run, 14 steps per run. Agent-written SQL is checked before it runs and runs in its own process, capped at 768 MB of memory (DuckDB's own limit does not bound lists built in one call), and the list of runs shows only `FEATURED_RUNS`.
+Public limits (settings in `backend/src/wellpilot/config.py`, overridable with Fly secrets): 3 runs at once, 6 runs per visitor per hour, 6M tokens per day on the live site (`DAILY_TOKEN_BUDGET` in `fly.toml`; 3M by default), 600 s per run, 14 steps per run. Agent-written SQL is checked before it runs and runs in its own process, capped at 768 MB of memory (DuckDB's own limit does not bound lists built in one call), and the list of runs shows only `FEATURED_RUNS`.
 
 ## License
 

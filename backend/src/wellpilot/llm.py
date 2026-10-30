@@ -6,13 +6,18 @@ the agent has one code path. Note: the Meta Model API accepts only tool_choice="
 never send another value.
 """
 
+import logging
+import time
 from dataclasses import dataclass
 from typing import Any
 
+import openai
 from openai import AsyncOpenAI
 from pydantic import BaseModel
 
 from wellpilot.config import Settings
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -21,6 +26,67 @@ class LLM:
     model: str
     provider: str
     default_reasoning: str = ""  # used when a caller asks for no particular effort
+    fallback: str = ""  # the provider that answers when this one cannot
+
+
+# A provider that refused the key (401, 403), wants payment (402), no longer serves the model
+# (404) or is down (5xx or no connection, after the client's own retries) is passed over for
+# a while, so a run in the middle of a step and the runs after it go to the fallback.
+FALLBACK_STATUS = (401, 402, 403, 404)
+DOWN_FOR_S = 15 * 60
+_down_until: dict[str, float] = {}
+
+
+def _unusable(error: Exception) -> bool:
+    if isinstance(error, openai.APITimeoutError):
+        return False  # slow, not down: the run's own time limit handles it
+    if isinstance(error, openai.APIConnectionError):
+        return True
+    status = getattr(error, "status_code", None)
+    return isinstance(error, openai.APIStatusError) and (
+        status in FALLBACK_STATUS or (status is not None and status >= 500)
+    )
+
+
+class _Completions:
+    def __init__(self, routes: list[tuple[str, AsyncOpenAI, str]]):
+        self._routes = routes
+
+    async def create(self, **kwargs: Any) -> Any:
+        now = time.monotonic()
+        routes = [r for r in self._routes if _down_until.get(r[0], 0.0) <= now]
+        routes = routes or self._routes[-1:]
+        for i, (provider, client, model) in enumerate(routes):
+            try:
+                return await client.chat.completions.create(**{**kwargs, "model": model})
+            except openai.APIError as e:
+                if i == len(routes) - 1 or not _unusable(e):
+                    raise
+                _down_until[provider] = time.monotonic() + DOWN_FOR_S
+                status = getattr(e, "status_code", None)
+                logger.warning(
+                    "%s failed (%s%s); using %s for %d min",
+                    provider,
+                    type(e).__name__,
+                    f" {status}" if status else "",
+                    routes[i + 1][0],
+                    DOWN_FOR_S // 60,
+                )
+        raise AssertionError("unreachable")
+
+
+class _Chat:
+    def __init__(self, completions: _Completions):
+        self.completions = completions
+
+
+class FallbackClient:
+    """The client the agent calls, `chat.completions.create` only: the primary provider,
+    and on a key, payment or outage error the next one, with its own model id. Both serve
+    the same open-weight model (Muse Spark Open on Baseten, then on Fireworks)."""
+
+    def __init__(self, routes: list[tuple[str, AsyncOpenAI, str]]):
+        self.chat = _Chat(_Completions(routes))
 
 
 def provider_key(settings: Settings) -> tuple[str, str]:
@@ -46,6 +112,27 @@ def make_llm(settings: Settings, *, timeout: float = 90.0) -> LLM:
     if not key:
         raise RuntimeError(f"{key_name} is not set; add it to .env (see .env.example)")
     client = AsyncOpenAI(api_key=key, base_url=base_url, timeout=timeout, max_retries=2)
+    # Muse Spark Open on Fireworks takes over from Baseten when its key or credits stop
+    # (judging week runs past the hackathon's credits). No audio there: voice stays Baseten's.
+    if (
+        settings.llm_provider == "baseten"
+        and settings.llm_fallback == "fireworks"
+        and settings.fireworks_api_key
+    ):
+        backup = AsyncOpenAI(
+            api_key=settings.fireworks_api_key,
+            base_url=settings.fireworks_base_url,
+            timeout=timeout,
+            max_retries=2,
+        )
+        routes = [("baseten", client, model), ("fireworks", backup, settings.fireworks_model)]
+        return LLM(
+            client=FallbackClient(routes),  # type: ignore[arg-type]
+            model=model,
+            provider=settings.llm_provider,
+            default_reasoning=reasoning,
+            fallback="fireworks",
+        )
     return LLM(
         client=client, model=model, provider=settings.llm_provider, default_reasoning=reasoning
     )
