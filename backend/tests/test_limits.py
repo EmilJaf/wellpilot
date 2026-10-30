@@ -71,7 +71,7 @@ def test_an_ipv6_visitor_counts_by_its_64():
 def test_a_long_reader_edit_is_checked_in_well_under_a_second():
     """The checker's search for a digit group before a number scanned from the start of
     the text for every number: 9-14 s for a 2,000-character edit."""
-    run = json.loads((RUNS / "99d66f7a3adb.json").read_text())
+    run = json.loads((RUNS / "f4a331708d2a.json").read_text())
     log = EvidenceLog.restore(run["evidence"].values())
     claim = ("55% " * 200)[:800]  # the longest edit the API accepts
     started = time.monotonic()

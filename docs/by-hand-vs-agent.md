@@ -13,7 +13,7 @@ work. A production engineer answering both questions with a stopwatch would repl
 
 ## 1. "Which wells need attention right now, and why? Forecast the next 12 months of oil for the well that needs it most." (as of 2010-12-31)
 
-| Work | By hand | Estimate | With WellPilot (run 99d66f7a3adb) |
+| Work | By hand | Estimate | With WellPilot (run f4a331708d2a) |
 |---|---|---|---|
 | Rank the wells | Pull the daily production of the 4 wells active by then: 4,544 daily rows (1,054 for F-12). Compute each well's oil change over 90 days, its water cut and uptime. | 1-2 h | `field_screen`: 1 call |
 | A pressure that "fell to zero" | Notice F-12's downhole pressure reads 0 on 81 days from 2010-10-12 while oil keeps flowing; total the oil produced meanwhile (123,258 Sm3) to see it is a dead gauge. | 0.5 h | flagged by the screen and `detect_events` |
@@ -23,7 +23,7 @@ work. A production engineer answering both questions with a stopwatch would repl
 | The plan's limits | Find the design limits in the 53-page development plan, in Norwegian (Table 4.3, page 23), and compare the field's monthly totals. | 0.5-1 h | `field_vs_design`: 1 call |
 | Forecast with a range | Fit Arps declines on candidate windows, forecast 2011, and put a range on it from how far earlier forecasts made the same way were off (5 of them, each refitted on its own date). | 2-4 h | `fit_decline` 2, `forecast_production` 1 |
 | Write it up | A source for every number. | 1 h | every number, date and quote checked; the answer sent back twice and fixed |
-| **Total** | | **9-17 h: about 1-2 working days** | **7 steps, 16 tool calls, 35 s of model and tool time, about $0.22** |
+| **Total** | | **9-17 h: about 1-2 working days** | **12 steps, 23 tool calls, 53 s of model and tool time, about $0.43** |
 
 What happened next: the forecast said 359,000 Sm3 for 2011; F-12 produced 340,000 (+6%).
 Decline fits on fixed windows made the same day said +2% to +24%, the whole-history fit

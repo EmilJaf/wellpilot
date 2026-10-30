@@ -27,7 +27,7 @@ REGIME = "E5[kind=regime_change,signal=oil_rate]/details"
 @pytest.fixture(scope="module")
 def log() -> EvidenceLog:
     """The 2010 time machine's results (run 99d66f7a3adb, as of 2010-12-31)."""
-    run = json.loads((FIXTURES / "runs" / "99d66f7a3adb.json").read_text())
+    run = json.loads((FIXTURES / "retired_runs" / "99d66f7a3adb.json").read_text())
     return EvidenceLog.restore(run["evidence"].values())
 
 
@@ -303,7 +303,7 @@ def test_a_claim_with_too_many_numbers_moves_values_to_its_detail(log):
 def test_a_fact_cannot_rest_on_warnings_a_forecast_or_a_cause(log):
     fit = printed(log, [{"kind": "value", "ref": "E11/best/di_per_year"}])
     assert "rests on E11, which carries warnings" in fit.problems[0]
-    run = json.loads((FIXTURES / "runs" / "99d66f7a3adb.json").read_text())
+    run = json.loads((FIXTURES / "retired_runs" / "99d66f7a3adb.json").read_text())
     run["evidence"]["E13"]["warnings"] = []  # a sound fit: still a forecast
     sound = EvidenceLog.restore(run["evidence"].values())
     forecast = printed(sound, [{"kind": "forecast", "ref": "E13"}])

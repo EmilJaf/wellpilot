@@ -23,7 +23,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 FONT = ROOT / "frontend/node_modules/@fontsource-variable/archivo/files"
 
-run_id = sys.argv[1] if len(sys.argv) > 1 else "99d66f7a3adb"
+run_id = sys.argv[1] if len(sys.argv) > 1 else "f4a331708d2a"
 saved = json.loads(
     next(
         path

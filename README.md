@@ -90,7 +90,7 @@ What one answer covers, counted from the data ([by hand vs with the agent](docs/
 
 | Question | By hand | Estimated by hand | With the agent |
 |---|---|---|---|
-| Which wells need attention at the end of 2010, and next year's oil for the worst one | 4,544 daily rows, the 28 days of well-work reports since first oil (F-12 and F-14), a production log, the design limits in a 53-page Norwegian plan, decline fits on several windows and a range from earlier forecasts' errors | 9-17 h | 16 tool calls in 35 s, about $0.22, every number checked |
+| Which wells need attention at the end of 2010, and next year's oil for the worst one | 4,544 daily rows, the 28 days of well-work reports since first oil (F-12 and F-14), a production log, the design limits in a 53-page Norwegian plan, decline fits on several windows and a range from earlier forecasts' errors | 9-17 h | 23 tool calls in 53 s, about $0.43, every number checked |
 | What was done to F-12 in 2014, and why the 2010 plug did not work | 165 daily drilling reports, a production log in 3 digital passes and a 2009 one that exists only as pictures in a PDF | 7-15 h | 12 tool calls in 51 s, about $0.28 |
 
 The hours are our estimate per step, not a timing: we found no published time study for these tasks. What operators and service companies have published sets the scale: an operator's routine review at 5-15 minutes per well per day and 50-100 wells per engineer (Arrow Energy, SPE workshop 2025), a well review for intervention candidates at 3 days per well (SLB with Pertamina, 2024), well models at 4-5 wells per engineer per day (ONGC, JPT 2026). The page above lists the steps, the sources and a protocol; timing one engineer on question 1 is the next measurement.

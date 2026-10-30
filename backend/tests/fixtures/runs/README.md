@@ -15,20 +15,22 @@ The same ids go into FEATURED_RUNS for the public deployment.
 The featured runs (Muse Spark Open on Baseten, recorded by the eval on Oct 29-30;
 FEATURED_RUNS lists them in this order):
 
-- 99d66f7a3adb, the time machine: "Which wells need attention right now, and why? Forecast
-  the next 12 months of oil for the well that needs it most." with data up to 2010-12-31.
-  F-12 first (dead gauge since 2010-10-12; oil averaged 55% less after 2010-05-02 than
-  before, while the choke was cut from 83% to 58%); F-14 too; the forecast about 359k Sm3
-  for 2011, range 324k-470k, an inference, against 340k produced. Verified on attempt 2,
-  second opinion sound. 7 steps, 16 tool calls, 35 s, $0.22. Replaces 69519dd0a995 (the
-  May-December mean written as the rate on 2010-05-02).
-- 21d18cc312ed, what to do with F-12, as of 2014-10-31: a plug in the only gap left, the
-  blank pipe at 3,147-3,161 m, would have left the flow at about 14% water on the 2010 log
-  (the well was at 97%); the log is 1,500 days old, so a new log before any work; the 2010
-  plug at 3,210 m left water cut at 68%. The operator's plug three weeks later was in that
-  gap, at 3,150 m, with a new zone above; the well came back at 0.34. Verified on attempt
-  3, second opinion sound. 10 steps, 13 tool calls, 49 s, $0.38. Replaces 73a1757ab912
-  (a forecast and "zero remaining oil" labelled fact).
+- f4a331708d2a, the time machine, re-recorded Oct 31 on the prompt with made-up examples
+  (the old prompt carried this run's own numbers): "Which wells need attention right now,
+  and why? Forecast the next 12 months of oil for the well that needs it most." with data up
+  to 2010-12-31. F-12 first (dead gauge since 2010-10-12, 81 days, about 123,000 Sm3; oil
+  averaged 55% less after 2010-05-02 than before, the choke cut 83% -> 58% in its detail);
+  F-14 too; the forecast the same as before, about 359,000 Sm3 for 2011, range 324,000 to
+  470,000, an inference, against 340k produced (+5.7%; the whole-history fit +102%).
+  Verified on attempt 2; no second opinion (accepted at step 12). 12 steps, 23 tool calls,
+  53 s, $0.43. Replaces 99d66f7a3adb (retired_runs/).
+- 9b7757a10976, what to do with F-12, as of 2014-10-31, re-recorded Oct 31 the same way: a
+  water shut-off in the 3,147-3,161 m blank-pipe gap, which cut 98% of the water and left a
+  14% water cut on the 2010 log; that log is 1,500 days old (water cut 63% then, 97% now),
+  so a new log first; the lower gaps are already isolated by the 2010 plug at 3,210 m. The
+  operator's plug three weeks later was in that gap, at 3,150 m. Verified on attempt 2,
+  second opinion sound. 7 steps, 13 tool calls, 40 s, $0.22. Replaces 21d18cc312ed
+  (retired_runs/).
 - 43c53d5c1096, F-12's decline against the 2005 plan: oil averaged 72% lower after
   2010-07-18 than before, the choke about the same across that date; water cut averaged
   0.03 before 2010-02-14 and 0.51 after; breakthrough at about 2.4 million Sm3 against the
