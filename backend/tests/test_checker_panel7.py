@@ -85,7 +85,7 @@ NEEDS = (
 def test_a_sign_and_a_unit_written_into_the_number(index: int, text: str, accepted: bool) -> None:
     from wellpilot.agent.checker import DeclaredNumber, Finding, Submission, check_submission
 
-    run = json.loads((FIXTURES / "runs" / "69519dd0a995.json").read_text())
+    run = json.loads((FIXTURES / "retired_runs" / "69519dd0a995.json").read_text())
     log = EvidenceLog.restore(run["evidence"].values())
     finding = run["result"]["findings"][index - 1]
     gauge = next(

@@ -234,7 +234,9 @@ function WorkNext({ w, asOf }: { w: NonNullable<Hindsight['work_next']>[number];
           <strong>
             {volume(range[0])} to {volume(range[1])}
           </strong>{' '}
-          of oil that year ({w.oil_rest_of_life_sm3 !== undefined && `${volume(w.oil_rest_of_life_sm3)} to the end of the well's life`}).
+          of oil that year.
+          {w.oil_rest_of_life_sm3 !== undefined &&
+            ` From the job to the end of its life the well made ${volume(w.oil_rest_of_life_sm3)} in all (a total, not the gain).`}
           {value && (
             <>
               {' '}

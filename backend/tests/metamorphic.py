@@ -211,6 +211,14 @@ def changed_number(case: dict) -> tuple[dict, str] | None:
             at = re.search(rf"(?<![\w.,]){re.escape(d['text'])}(?![\d.,]\d)", f["claim"])
             if not at:
                 continue
+            # "about 983" is good to 1% by design: a value that lands within 1% of another
+            # in the evidence is no broken number.
+            if re.search(
+                r"(?:about|around|roughly|approximately|nearly|~)\s*$", f["claim"][: at.start()]
+            ):
+                target = new_value * scale
+                if any(abs(v - target) <= 0.01 * abs(target) for v in pool.numbers):
+                    continue
             f["claim"] = f["claim"][: at.start()] + new_text + f["claim"][at.end() :]
             d["text"], d["value"] = new_text, new_value * scale
             return sub, f"Finding {n}"

@@ -10,7 +10,9 @@ from wellpilot.agent.evidence import EvidenceLog
 from wellpilot.agent.paraphrase import check_rewording, reword_run, summarize
 from wellpilot.llm import LLM
 
-RUN = json.loads((Path(__file__).parent / "fixtures" / "runs" / "69519dd0a995.json").read_text())
+RUN = json.loads(
+    (Path(__file__).parent / "fixtures" / "retired_runs" / "69519dd0a995.json").read_text()
+)
 FIRST = RUN["result"]["findings"][0]
 
 

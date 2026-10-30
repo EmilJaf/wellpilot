@@ -68,7 +68,7 @@
         "BASETEN_API_KEY=",
         "MODEL_API_KEY=",
         "PYTHON_SANDBOX=false",
-        "FEATURED_RUNS=69519dd0a995,73a1757ab912,6af55f1b3eef,c8501c918af6,83a3114d185f,f7d3faebb139",
+        "FEATURED_RUNS=99d66f7a3adb,21d18cc312ed,43c53d5c1096,01cde9df71b7,83a3114d185f,f7d3faebb139",
         "STORES_PER_CLIENT_PER_HOUR=10000",
         "CHECKS_PER_CLIENT_PER_HOUR=100000",
         "uv",
