@@ -1504,6 +1504,11 @@ LINK = re.compile(
 )
 
 
+SAME_TIME = re.compile(
+    rf"\bsame\s+time(?:\s+as)?\s+(?:(?:{WELL.pattern})[\s,]*(?:and\s+)?)*$", re.I
+)
+
+
 def _named(text: str, start: int) -> set[str]:
     """The wells a number at `start` belongs to, by the nearest that names any:
     - its part of the sentence (up to the next ", "), with the wells listed before it in the
@@ -1514,7 +1519,13 @@ def _named(text: str, start: int) -> set[str]:
     - anywhere in the text."""
 
     def wells(part: str) -> set[str]:
-        return {_well_key(m.group(0)) for m in WELL.finditer(part)}
+        # "(+366% same time F-1 C F-15 D)": wells set beside the one a result is about own
+        # none of its numbers.
+        return {
+            _well_key(m.group(0))
+            for m in WELL.finditer(part)
+            if not SAME_TIME.search(part[: m.start()])
+        }
 
     bounds = [0, *(m.end() for m in CLAUSE.finditer(text)), len(text)]
     begin = max(b for b in bounds if b <= start)
@@ -1664,7 +1675,7 @@ def _attribution(
         part = _part(text, start)
         named = (
             set()
-            if own_part and re.search(r"\bwith\b|field[\s_-]?wide", part, re.I)
+            if own_part and re.search(r"\bwith\b|field[\s_-]?wide|same\s+time", part, re.I)
             else {_well_key(m.group(0)) for m in WELL.finditer(part)}
             if own_part
             else _named(text, start)
@@ -2093,13 +2104,22 @@ def _description(text: str, blanked: str, start: int, end: int) -> dict[str, tup
             listed and _quantity(blanked, last_start, last_end)
         ):
             said["quantity"] = (name, 2)
-        elif names := [
-            m
-            for m in _NAMES.finditer(blanked, own_start, start)
-            # "at 61% water cut and averaged 34% less oil": a name right after the number
-            # before is that number's, not this one's.
-            if not (previous and OWN_NAME.fullmatch(blanked[own_start : m.start()]))
-        ]:
+        elif (
+            names := [
+                m
+                for m in _NAMES.finditer(blanked, own_start, start)
+                # "at 61% water cut and averaged 34% less oil": a name right after the number
+                # before is that number's, not this one's.
+                if not (previous and OWN_NAME.fullmatch(blanked[own_start : m.start()]))
+                # "water cut and choke moved together with a correlation of 69%": the number is
+                # the correlation's.
+                and not re.search(
+                    r"\b(?:correlation|coefficient|Pearson|Spearman)\b",
+                    blanked[m.end() : start],
+                    re.I,
+                )
+            ]
+        ):
             said["quantity"] = (names[-1].group(0), 1)
     # Its dates: one written right after it with "in", "on", "at" ("31% in 2015-01"), or
     # one before it in its own phrase ("since 2010-10-12 for 58 days", "on 2010-10-12 oil
@@ -2127,6 +2147,13 @@ def _description(text: str, blanked: str, start: int, end: int) -> dict[str, tup
         re.I,
     ):
         tail = m.group("tail")
+        # The end of a range of dates ("a workover from 2014-11-22 to 2014-11-27 that set a
+        # plug at 3150 m", "from 2011 to 2013 with a correlation of 69%") is no one date.
+        range_end = re.search(
+            r"\d{4}(?:-\d{2}){0,2}\s*(?:-|–|to|through|until)\s*$",
+            text[own_start : own_start + m.start(2)],
+            re.I,
+        )
         # Only an event's own day opens a bracket on it ("on 2010-05-02 (weekly mean"), not
         # a period's end ("through 2012-12 (water cut 0.64 to 0.76").
         bracketed = tail.lstrip().startswith("(") and (m.group("prep") or "").lower() not in (
@@ -2149,6 +2176,7 @@ def _description(text: str, blanked: str, start: int, end: int) -> dict[str, tup
             and not period_to
             and not from_value
             and not bracketed
+            and not range_end
         ):
             days.append(m.group(2))
     # "Cut to 40% in 2018-11": a level reached during a month (a year) is the next month's
@@ -2171,7 +2199,16 @@ def _description(text: str, blanked: str, start: int, end: int) -> dict[str, tup
             )
         )
         phrase = text[begin + (breaks[-1].end() if breaks else 0) : start]
-        if m := re.match(rf"\s*(?:(?:in|on|by|during|at)\s+)?{when}\b", phrase, re.I):
+        # ("a workover from 2014-11-22 to 2014-11-27 that set a plug at 3150 m": the end of
+        # a range of dates opens no phrase.)
+        range_end = bool(
+            breaks
+            and breaks[-1].group(0).lower() == "to"
+            and re.search(r"\d{4}(?:-\d{2}){0,2}\s*$", text[begin : begin + breaks[-1].start()])
+        )
+        if not range_end and (
+            m := re.match(rf"\s*(?:(?:in|on|by|during|at)\s+)?{when}\b", phrase, re.I)
+        ):
             days.append(m.group(1))
     # "to 35.12% at 70.96 bar WHP in January 2015, with ...": a phrase with one date, after
     # its numbers, dates them all.
@@ -2229,8 +2266,18 @@ def _description(text: str, blanked: str, start: int, end: int) -> dict[str, tup
         for grain, pattern in GRAIN_TEXT.items():
             if re.search(pattern, blanked[begin:start], re.I):
                 said["grain"] = (grain, 1)
+    # "under the 80% limit and a field liquid rate of 10 700": a limit word with "and" (or
+    # "with", "while", "but") between it and the number is the number before's.
+    refs = list(re.finditer(REF_TEXT, blanked[max(own_start, start - 40) : start], re.I))
     if (
-        re.search(REF_TEXT, blanked[max(own_start, start - 40) : start], re.I)
+        (
+            refs
+            and not re.search(
+                r"\b(?:and|with|while|but|whereas)\b",
+                blanked[max(own_start, start - 40) + refs[-1].end() : start],
+                re.I,
+            )
+        )
         or re.match(rf"[^,;]{{0,30}}?{REF_TEXT}", right, re.I)
         or (listed and re.match(rf"[^,;]{{0,30}}?{REF_TEXT}", list_right, re.I))
     ):
@@ -3891,7 +3938,7 @@ LIMIT_NAMES = {
     "oil_sm3_per_day": r"\boil\b",
     "water_cut": r"water[\s_-]?cut",
     "water_inj_sm3_per_day": r"\binject",
-    "water_sm3_per_day": r"water\s+(?:handling|capacity|rates?|production)|produced water",
+    "water_sm3_per_day": r"water[\s-]+(?:handling|capacity|rates?|production)|produced water",
 }
 
 
@@ -3921,7 +3968,10 @@ def _within_limits(label: str, text: str, items: list[Evidence]) -> list[str]:
         whole_field = re.search(r"\b(?:field|platform|facilit\w*)\b", subject, re.I)
         bounded = re.search(
             r"\b(?:until|before|up to|through)\s+(?:the\s+)?(?:end\s+of\s+|early\s+|mid-?\s*|"
-            r"late\s+)?(?:\d{4}|[A-Z][a-z]+\s+\d{4}|\d{4}-\d{2})",
+            r"late\s+)?(?:\d{4}|[A-Z][a-z]+\s+\d{4}|\d{4}-\d{2})"
+            # A state at one date: "was not over its design limits at end-2010".
+            r"|\b(?:at|as of|on)\s+(?:the\s+)?end[\s-]+(?:of\s+)?(?:\d{4}|[A-Z][a-z]+\s+\d{4})"
+            r"|\b(?:as of|on)\s+\d{4}-\d{2}-\d{2}",
             sentence,
         )
         if (WELL.search(subject) or (WELL.search(sentence) and not whole_field)) or bounded:
@@ -4393,7 +4443,9 @@ def _quote_neighbours(label: str, text: str) -> list[str]:
 # "the choke stayed unchanged", "not a choke cut": the choke said not to have moved.
 CHOKE_STILL = re.compile(
     r"\bchoke\b[^.;]{0,40}?\b(?:(?:was|remained|stayed|held)\s+)?(?:unchanged|constant|steady|"
-    r"flat|the same|did not (?:change|move)|didn't (?:change|move)|never (?:changed|moved))\b"
+    # ("cut at the same time" is when, not how much.)
+    r"flat|(?<!at )the same(?!\s+(?:time|day|week|month|moment|date|period))|"
+    r"did not (?:change|move)|didn't (?:change|move)|never (?:changed|moved))\b"
     r"|\b(?:not|no|without)\s+(?:a\s+|any\s+)?choke\s+(?:cut|change|move|back)",
     re.IGNORECASE,
 )
@@ -4771,6 +4823,15 @@ def _depth_ties(label: str, text: str, declared, log: EvidenceLog, leaves_of) ->
         ]
         clause_start = max([part_start, *(t for t in turns if t < start)])
         clause_end = min([part_end, *(t for t in turns if t > end)])
+        # "cutting water cut from about 97% to about 31%": a water cut, not a share of the
+        # flow below a depth.
+        if re.search(
+            r"\bwater[\s_-]?cuts?\b(?:[^\d.;,%]{0,25}|\s+(?:\w+\s+){0,2}from\s+"
+            r"(?:about\s+|around\s+|~\s*)?[\d.,]+\s*%?\s+to\s+(?:about\s+|around\s+|~\s*)?)$",
+            text[clause_start:start],
+            re.I,
+        ):
+            continue
         before = [m for m in DEPTH.finditer(text, clause_start, start)]
         after = [m for m in DEPTH.finditer(text, end, clause_end)]
         # "1% entered below 3,180 m": a depth the number points to right after it is its own.

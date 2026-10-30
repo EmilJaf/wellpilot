@@ -5,8 +5,8 @@
   "model": "meta-models/muse-spark-open-1026",
   "question": "What oil plateau rate and duration does the forecast figure on page 23 of the 2005 development plan show?"
  },
- "to_review": true,
- "note": "",
+ "to_review": false,
+ "note": "Reviewed Oct 31: fair. Facts and a summary resting on the model's own page reading, its 2 years disputed by SAM's 19 months, a detail value and a declaration from an uncited result.",
  "expected": {
   "accepted": false,
   "flagged": [

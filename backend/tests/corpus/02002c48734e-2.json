@@ -1,0 +1,920 @@
+{
+ "source": {
+  "run": "02002c48734e",
+  "submission": 2,
+  "model": "meta-models/muse-spark-open-1026",
+  "question": "Why did well F-99 stop producing in 2013?"
+ },
+ "to_review": false,
+ "note": "",
+ "expected": {
+  "accepted": true,
+  "flagged": []
+ },
+ "submission": {
+  "summary": "Well F-99 does not exist in the Volve dataset and has no production records, so it did not stop producing in 2013; the only producers active that year were F-11, F-12 and F-14.",
+  "findings": [
+   {
+    "claim": "Well F-99 has no production records in the Volve database (0 daily records).",
+    "detail": "SELECT COUNT(*) FROM production_daily WHERE well='F-99' returns 0; all 7 well names in the database are F-1 C, F-11, F-12, F-14, F-15 D, F-4 and F-5 (E1, E7, E9).",
+    "evidence_ids": [
+     "E5",
+     "E9",
+     "E1",
+     "E7"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "0",
+      "value": 0,
+      "evidence_id": "E9"
+     }
+    ]
+   },
+   {
+    "claim": "The Volve production data covers only seven well entries, none named F-99, so a stop in 2013 cannot be attributed to it.",
+    "detail": "list_wells (E1) and production_daily distinct wells (E2, E7) list F-1 C, F-11, F-12, F-14, F-15 D, F-4, F-5. Search of reports for F-99 returns no Volve well (only F-11 B completion reports, E3). Field activity in 2013 was completion of F-11 B in June-July 2013 and ongoing production from F-12 and F-14.",
+    "evidence_ids": [
+     "E1",
+     "E2",
+     "E3",
+     "E7"
+    ],
+    "confidence": "inference",
+    "numbers": []
+   }
+  ],
+  "summary_numbers": []
+ },
+ "evidence": [
+  {
+   "id": "E1",
+   "tool": "list_wells",
+   "arguments": {},
+   "result": {
+    "columns": [
+     "well",
+     "well_types",
+     "first_oil",
+     "last_date",
+     "cum_oil_sm3",
+     "cum_water_sm3",
+     "cum_water_injected_sm3",
+     "producing_days"
+    ],
+    "rows": [
+     [
+      "F-1 C",
+      "OP/WI",
+      "2014-04-22",
+      "2016-04-21",
+      177709,
+      207302,
+      null,
+      438
+     ],
+     [
+      "F-11",
+      "OP",
+      "2013-07-24",
+      "2016-09-17",
+      1147849,
+      1090806,
+      0.0,
+      1122
+     ],
+     [
+      "F-12",
+      "OP",
+      "2008-02-12",
+      "2016-09-17",
+      4579610,
+      6817753,
+      0.0,
+      2838
+     ],
+     [
+      "F-14",
+      "OP",
+      "2008-07-13",
+      "2016-09-17",
+      3942233,
+      7121310,
+      0.0,
+      2724
+     ],
+     [
+      "F-15 D",
+      "OP",
+      "2014-01-16",
+      "2016-09-17",
+      148519,
+      52366,
+      0.0,
+      769
+     ],
+     [
+      "F-4",
+      "WI",
+      null,
+      "2016-12-01",
+      0.0,
+      0.0,
+      16240727,
+      0
+     ],
+     [
+      "F-5",
+      "OP/WI",
+      "2016-04-20",
+      "2016-09-18",
+      41161,
+      13533,
+      14089406,
+      129
+     ]
+    ]
+   },
+   "code": "wellpilot.agent.tools.list_wells@67bd47cfcdd1",
+   "created_at": "2026-10-30T20:11:21+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E2",
+   "tool": "run_sql",
+   "arguments": {
+    "sql": "SELECT DISTINCT well, well_type, flow_kind FROM production_daily ORDER BY well"
+   },
+   "result": {
+    "columns": [
+     "well",
+     "well_type",
+     "flow_kind"
+    ],
+    "rows": [
+     [
+      "F-1 C",
+      "WI",
+      "production"
+     ],
+     [
+      "F-1 C",
+      "OP",
+      "production"
+     ],
+     [
+      "F-11",
+      "OP",
+      "production"
+     ],
+     [
+      "F-12",
+      "OP",
+      "production"
+     ],
+     [
+      "F-14",
+      "OP",
+      "production"
+     ],
+     [
+      "F-15 D",
+      "OP",
+      "production"
+     ],
+     [
+      "F-4",
+      "WI",
+      "injection"
+     ],
+     [
+      "F-5",
+      "WI",
+      "injection"
+     ],
+     [
+      "F-5",
+      "WI",
+      "production"
+     ],
+     [
+      "F-5",
+      "OP",
+      "production"
+     ]
+    ],
+    "row_count": 10,
+    "truncated": false
+   },
+   "code": "wellpilot.agent.tools.run_sql@50068378f8ca",
+   "created_at": "2026-10-30T20:11:21+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E3",
+   "tool": "search_reports",
+   "arguments": {
+    "query": "F-99",
+    "limit": 10
+   },
+   "result": {
+    "documents": {
+     "f11b_completion": {
+      "title": "Final Well Report, Completion, 15/9-F-11 B",
+      "issued": "2013-09-04"
+     }
+    },
+    "facts": {
+     "columns": [
+      "doc_id",
+      "page",
+      "topic",
+      "source",
+      "statement_en",
+      "quote",
+      "quote_check",
+      "wells"
+     ],
+     "rows": [
+      [
+       "f11b_completion",
+       3,
+       "schedule",
+       "text",
+       "For well F-11 B the Liner IOR activity occurred on 12.06.2013 20:15.",
+       "15/9 F-11B IOR, Liner (12.06.2013 20:15)",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       3,
+       "schedule",
+       "text",
+       "For well F-11 B the Well bore preparation IOR activity occurred on 16.06.2013 13:30.",
+       "15/9 F-11B IOR, Well bore preparation (16.06.2013 13:30)",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       3,
+       "schedule",
+       "text",
+       "For well F-11 B the Temporary abandonment with SAFELOCK plug occurred on 21.06.2013 07:00.",
+       "15/9 F-11B IOR, Temporary abandonment (SAFELOCK plug) (21.06.2013 07:00)",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       3,
+       "schedule",
+       "text",
+       "For well F-11 B the Other activity Retrieve HPDR and install PR and surface WH occurred on 21.06.2013 21:00.",
+       "NO 15/9-F-11 B, Other (Retrieve HPDR and install PR and surface WH) (21.06.2013 21:00)",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       3,
+       "schedule",
+       "text",
+       "For well F-11 B the Install 10 ¾” tie 11 B, Tie-back IOR activity occurred on 28.06.2013 01:00.",
+       "NO 15/9 -F-11B IOR, Install 10 ¾” tie 11 B, Tie-back (28.06.2013 01:00)",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       3,
+       "schedule",
+       "text",
+       "For well F-11 B the Retrieve SAFELOCK plug 11 B, Other activity occurred on 30.06.2013 07:15.",
+       "NO 15/9 -F-11B IOR, Retrieve SAFELOCK plug11 B, Other (30.06.2013 07:15)",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       3,
+       "schedule",
+       "text",
+       "For well F-11 B the Run completion, Completion IOR activity occurred on 30.06.2013 14:15.",
+       "NO 15/9 -F-11B IOR11 B, Run completion, Completion (30.06.2013 14:15)",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       3,
+       "schedule",
+       "text",
+       "For well F-11 B the Install tubing hanger, Tubing Hanger IOR activity occurred on 04.07.2013 20:00.",
+       "NO 15/9 -F-11B IOR11 B, Install tubing hanger, Tubing Hanger (04.07.2013 20:00)",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       3,
+       "schedule",
+       "text",
+       "For well F-11 B the Install X-mas tree Tree IOR activity occurred on 06.07.2013 12:30.",
+       "NO 15/9 -F-11B IOR11 B, Install X-mas treeTree (06.07.2013 12:30)",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       3,
+       "schedule",
+       "text",
+       "For well F-11 B the Perforation IOR activity occurred on 09.07.2013 00:45.",
+       "NO 15/9 -F-11B IOR11 B, Perforation (09.07.2013 00:45)",
+       "exact",
+       "F-11 B"
+      ]
+     ]
+    }
+   },
+   "code": "wellpilot.agent.tools.search_reports@5907b6347b0e",
+   "created_at": "2026-10-30T20:11:21+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E4",
+   "tool": "field_screen",
+   "arguments": {},
+   "result": {
+    "as_of": "2016-09-17",
+    "window_days": 90,
+    "field_oil_sm3": 10037081,
+    "wells": [
+     {
+      "well": "F-11",
+      "role": "producer",
+      "first_oil": "2013-07-24",
+      "cum_oil_sm3": 1147849,
+      "share_of_field_oil": 0.1144,
+      "cum_water_injected_sm3": 0.0,
+      "oil_rate_sm3_per_day": 481.56,
+      "water_cut": 0.8459,
+      "uptime": 0.9907,
+      "oil_rate_change_90d": -0.03297,
+      "level": "caution",
+      "issues": [
+       {
+        "level": "caution",
+        "kind": "water_cut",
+        "since": "2016-05-02",
+        "text": "water cut above 0.80 (now 0.85)"
+       },
+       {
+        "level": "caution",
+        "kind": "shift_down",
+        "since": "2016-03-27",
+        "text": "oil rate 60% lower in the period after than before (weekly mean 1,259 -> 509 Sm3/d), a gradual change: 23% across it"
+       }
+      ]
+     },
+     {
+      "well": "F-5",
+      "role": "producer",
+      "first_oil": "2016-04-20",
+      "cum_oil_sm3": 41161,
+      "share_of_field_oil": 0.004101,
+      "cum_water_injected_sm3": 14089406,
+      "oil_rate_sm3_per_day": 334.41,
+      "water_cut": 0.2056,
+      "uptime": 0.7135,
+      "oil_rate_change_90d": 0.08348,
+      "level": "caution",
+      "issues": [
+       {
+        "level": "caution",
+        "kind": "shut_in",
+        "since": null,
+        "text": "31 days shut in over the last 180"
+       }
+      ]
+     },
+     {
+      "well": "F-12",
+      "role": "producer",
+      "first_oil": "2008-02-12",
+      "cum_oil_sm3": 4579610,
+      "share_of_field_oil": 0.4563,
+      "cum_water_injected_sm3": 0.0,
+      "oil_rate_sm3_per_day": 143.87,
+      "water_cut": 0.8694,
+      "uptime": 0.5804,
+      "oil_rate_change_90d": -0.27,
+      "level": "note",
+      "issues": [
+       {
+        "level": "note",
+        "kind": "stopped",
+        "since": "2016-08-12",
+        "text": "no oil since then"
+       }
+      ]
+     },
+     {
+      "well": "F-14",
+      "role": "producer",
+      "first_oil": "2008-07-13",
+      "cum_oil_sm3": 3942233,
+      "share_of_field_oil": 0.3928,
+      "cum_water_injected_sm3": 0.0,
+      "oil_rate_sm3_per_day": 103.05,
+      "water_cut": 0.9667,
+      "uptime": 0.2617,
+      "oil_rate_change_90d": -0.005645,
+      "level": "note",
+      "issues": [
+       {
+        "level": "note",
+        "kind": "stopped",
+        "since": "2016-07-13",
+        "text": "no oil since then"
+       }
+      ]
+     },
+     {
+      "well": "F-1 C",
+      "role": "producer",
+      "first_oil": "2014-04-22",
+      "cum_oil_sm3": 177709,
+      "share_of_field_oil": 0.01771,
+      "cum_water_injected_sm3": 0.0,
+      "oil_rate_sm3_per_day": null,
+      "water_cut": null,
+      "uptime": null,
+      "oil_rate_change_90d": null,
+      "level": "note",
+      "issues": [
+       {
+        "level": "note",
+        "kind": "stopped",
+        "since": "2016-04-06",
+        "text": "no oil since then"
+       }
+      ]
+     },
+     {
+      "well": "F-15 D",
+      "role": "producer",
+      "first_oil": "2014-01-16",
+      "cum_oil_sm3": 148519,
+      "share_of_field_oil": 0.0148,
+      "cum_water_injected_sm3": 0.0,
+      "oil_rate_sm3_per_day": 144.95,
+      "water_cut": 0.5851,
+      "uptime": 0.1863,
+      "oil_rate_change_90d": -0.1216,
+      "level": "note",
+      "issues": [
+       {
+        "level": "note",
+        "kind": "stopped",
+        "since": "2016-07-06",
+        "text": "no oil since then"
+       }
+      ]
+     },
+     {
+      "well": "F-4",
+      "role": "injector",
+      "first_oil": null,
+      "cum_oil_sm3": 0.0,
+      "share_of_field_oil": 0.0,
+      "cum_water_injected_sm3": 16240727,
+      "water_inj_sm3_per_day": 2957,
+      "level": null,
+      "issues": []
+     }
+    ],
+    "levels": "alarm: act now; caution: watch; note: for the record"
+   },
+   "code": "wellpilot.agent.tools.field_screen@410061176252",
+   "created_at": "2026-10-30T20:11:21+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E5",
+   "tool": "run_sql",
+   "arguments": {
+    "sql": "SELECT COUNT(*) as cnt FROM production_daily WHERE well='F-99'"
+   },
+   "result": {
+    "columns": [
+     "cnt"
+    ],
+    "rows": [
+     [
+      0
+     ]
+    ],
+    "row_count": 1,
+    "truncated": false
+   },
+   "code": "wellpilot.agent.tools.run_sql@50068378f8ca",
+   "created_at": "2026-10-30T20:11:23+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E6",
+   "tool": "search_reports",
+   "arguments": {
+    "query": "wells producers",
+    "limit": 8
+   },
+   "result": {
+    "documents": {
+     "f11b_completion": {
+      "title": "Final Well Report, Completion, 15/9-F-11 B",
+      "issued": "2013-09-04"
+     },
+     "volve_pud": {
+      "title": "Plan for utbygging og drift av Volve (PUD, plan for development and operation)",
+      "issued": "2005-02-01"
+     }
+    },
+    "facts": {
+     "columns": [
+      "doc_id",
+      "page",
+      "topic",
+      "source",
+      "statement_en",
+      "quote",
+      "quote_check",
+      "wells"
+     ],
+     "rows": [
+      [
+       "f11b_completion",
+       4,
+       "wells",
+       "text",
+       "Well F-11 B is tied into the platform with 14” Production Risers from subsea WH to surface WH",
+       "The wells are tied into the platform with 14” Production Risers from subsea WH to surface WH.",
+       "exact",
+       "F-11"
+      ],
+      [
+       "volve_pud",
+       7,
+       "wells",
+       "text",
+       "Both wells in the oil zone have been production tested and showed good production properties.",
+       "Begge brønner i oljesonen har blitt produksjonstestet og viste gode produksjonsegenskaper.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       8,
+       "production_forecast",
+       "text",
+       "The development concept is down-flank water injection with production wells placed high on the structure.",
+       "nedflanks vanninjeksjon med produksjonsbrønner plassert høyt på strukturen.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       8,
+       "wells",
+       "text",
+       "The Volve field is planned to be developed with three oil production wells and three water injection wells, plus two water production wells to the Utsira formation for production of injection water.",
+       "Volvefeltet er planlagt utbygd med tre oljeproduksjonsbrønner og tre vanninjeksjonsbrønner. I tillegg er det planlagt å bore to vannproduksjonsbrønner til Utsira-formasjonen for produksjon av injeksjonsvann.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       8,
+       "wells",
+       "text",
+       "The three production wells are planned to be completed with gas lift equipment.",
+       "De tre produksjonsbrønnene er planlagt komplettert med gassløft utstyr.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       11,
+       "wells",
+       "text",
+       "About 50 production wells have been drilled for the gas/condensate fields in Block 15/9.",
+       "det er boret ca 50 produksjonsbrønner for dette formål.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       22,
+       "reserves",
+       "text",
+       "The two non-communicating segments will be developed with dedicated production and injection wells.",
+       "De to ikkekommuniserende segmentene vil bli utviklet med dedikerte produksjons og injeksjonsbrønner.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       22,
+       "schedule",
+       "text",
+       "The proposed drilling programme handles reservoir uncertainties in the reservoir model, with one producer prepared for production start while the remaining wells are drilled during the production period to collect dynamic data to optimize placement of the remaining wells.",
+       "Det foreslåtte boreprogrammet ivaretar reservoarusikkerheter i reservoarmodellen. En produsent klargjøres for produksjonsstart, mens resten av brønnene bores i løpet av produksjonsperioden. Dette muliggjør innsamling av dynamiske data som er til hjelp å optimalisere plassering av de gjenværende brønnene.",
+       "exact",
+       ""
+      ]
+     ]
+    }
+   },
+   "code": "wellpilot.agent.tools.search_reports@5907b6347b0e",
+   "created_at": "2026-10-30T20:11:23+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E7",
+   "tool": "run_sql",
+   "arguments": {
+    "sql": "SELECT well, min(date) as first_date, max(date) as last_date FROM production_daily GROUP BY well ORDER BY well"
+   },
+   "result": {
+    "columns": [
+     "well",
+     "first_date",
+     "last_date"
+    ],
+    "rows": [
+     [
+      "F-1 C",
+      "2014-04-07",
+      "2016-04-21"
+     ],
+     [
+      "F-11",
+      "2013-07-08",
+      "2016-09-17"
+     ],
+     [
+      "F-12",
+      "2008-02-12",
+      "2016-09-17"
+     ],
+     [
+      "F-14",
+      "2008-02-12",
+      "2016-09-17"
+     ],
+     [
+      "F-15 D",
+      "2014-01-12",
+      "2016-09-17"
+     ],
+     [
+      "F-4",
+      "2007-09-01",
+      "2016-12-01"
+     ],
+     [
+      "F-5",
+      "2007-09-01",
+      "2016-09-18"
+     ]
+    ],
+    "row_count": 7,
+    "truncated": false
+   },
+   "code": "wellpilot.agent.tools.run_sql@50068378f8ca",
+   "created_at": "2026-10-30T20:11:26+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E8",
+   "tool": "search_reports",
+   "arguments": {
+    "query": "well inventory",
+    "limit": 5
+   },
+   "result": {
+    "documents": {
+     "f11b_completion": {
+      "title": "Final Well Report, Completion, 15/9-F-11 B",
+      "issued": "2013-09-04"
+     }
+    },
+    "facts": {
+     "columns": [
+      "doc_id",
+      "page",
+      "topic",
+      "source",
+      "statement_en",
+      "quote",
+      "quote_check",
+      "wells"
+     ],
+     "rows": [
+      [
+       "f11b_completion",
+       3,
+       "schedule",
+       "text",
+       "For well F-11 B the Liner IOR activity occurred on 12.06.2013 20:15.",
+       "15/9 F-11B IOR, Liner (12.06.2013 20:15)",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       3,
+       "schedule",
+       "text",
+       "For well F-11 B the Well bore preparation IOR activity occurred on 16.06.2013 13:30.",
+       "15/9 F-11B IOR, Well bore preparation (16.06.2013 13:30)",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       3,
+       "schedule",
+       "text",
+       "For well F-11 B the Temporary abandonment with SAFELOCK plug occurred on 21.06.2013 07:00.",
+       "15/9 F-11B IOR, Temporary abandonment (SAFELOCK plug) (21.06.2013 07:00)",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       3,
+       "schedule",
+       "text",
+       "For well F-11 B the Other activity Retrieve HPDR and install PR and surface WH occurred on 21.06.2013 21:00.",
+       "NO 15/9-F-11 B, Other (Retrieve HPDR and install PR and surface WH) (21.06.2013 21:00)",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       3,
+       "schedule",
+       "text",
+       "For well F-11 B the Install 10 ¾” tie 11 B, Tie-back IOR activity occurred on 28.06.2013 01:00.",
+       "NO 15/9 -F-11B IOR, Install 10 ¾” tie 11 B, Tie-back (28.06.2013 01:00)",
+       "exact",
+       "F-11 B"
+      ]
+     ]
+    }
+   },
+   "code": "wellpilot.agent.tools.search_reports@5907b6347b0e",
+   "created_at": "2026-10-30T20:11:32+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E9",
+   "tool": "run_sql",
+   "arguments": {
+    "sql": "SELECT 'F-99' as query_well, COUNT(*) as records FROM production_daily WHERE well='F-99'\nUNION ALL\nSELECT well, COUNT(*) FROM production_daily GROUP BY well ORDER BY well"
+   },
+   "result": {
+    "columns": [
+     "query_well",
+     "records"
+    ],
+    "rows": [
+     [
+      "F-1 C",
+      746
+     ],
+     [
+      "F-11",
+      1168
+     ],
+     [
+      "F-12",
+      3141
+     ],
+     [
+      "F-14",
+      3141
+     ],
+     [
+      "F-15 D",
+      980
+     ],
+     [
+      "F-4",
+      3380
+     ],
+     [
+      "F-5",
+      3306
+     ],
+     [
+      "F-99",
+      0
+     ]
+    ],
+    "row_count": 8,
+    "truncated": false
+   },
+   "code": "wellpilot.agent.tools.run_sql@50068378f8ca",
+   "created_at": "2026-10-30T20:11:38+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E10",
+   "tool": "search_reports",
+   "arguments": {
+    "query": "producer F-11 F-12 F-14",
+    "limit": 5
+   },
+   "result": {
+    "documents": {
+     "f11b_completion": {
+      "title": "Final Well Report, Completion, 15/9-F-11 B",
+      "issued": "2013-09-04"
+     }
+    },
+    "facts": {
+     "columns": [
+      "doc_id",
+      "page",
+      "topic",
+      "source",
+      "statement_en",
+      "quote",
+      "quote_check",
+      "wells"
+     ],
+     "rows": [
+      [
+       "f11b_completion",
+       4,
+       "wells",
+       "text",
+       "Well NO 15/9-F-11 B is an oil producer on slot F11 with licence NO PL046BS",
+       "Licence number: NO PL046BS Well name: NO 15/9-F-11 B Slot: F11 Type of well: Oil producer",
+       "exact",
+       "F-11"
+      ],
+      [
+       "f11b_completion",
+       4,
+       "wells",
+       "text",
+       "Well F-11 B primary objective is oil production from Hugin formation and completion type is 7” monobore",
+       "Primary objective: Oil production from Hugin formation Completion type: 7” monobore",
+       "exact",
+       "F-11"
+      ],
+      [
+       "f11b_completion",
+       4,
+       "wells",
+       "text",
+       "Well F-11 B objective is to provide for production of oil from the Hugin reservoir",
+       "The completion is to provide for production of oil from the Hugin reservoir.",
+       "exact",
+       "F-11"
+      ],
+      [
+       "f11b_completion",
+       4,
+       "wells",
+       "text",
+       "Well F-11 B was brought on production after being perforated using tractor conveyed orientated guns",
+       "The well has been brought on production after being perforated using tractor conveyed orientated guns.",
+       "exact",
+       "F-11"
+      ],
+      [
+       "f11b_completion",
+       4,
+       "wells",
+       "text",
+       "Well F-11 B IOR completion is a 7” monobore design with 7” production tubing and 7” cemented liner",
+       "The F-11B IOR completion is a 7” monobore design with 7” production tubing and 7” cemented liner.",
+       "exact",
+       "F-11"
+      ]
+     ]
+    }
+   },
+   "code": "wellpilot.agent.tools.search_reports@5907b6347b0e",
+   "created_at": "2026-10-30T20:11:41+00:00",
+   "warnings": []
+  }
+ ]
+}

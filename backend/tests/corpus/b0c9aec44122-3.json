@@ -1,0 +1,945 @@
+{
+ "source": {
+  "run": "b0c9aec44122",
+  "submission": 3,
+  "model": "meta-models/muse-spark-open-1026",
+  "question": "When was well F-11 B completed, and how does its completion report's timing compare with when it started producing?"
+ },
+ "to_review": false,
+ "note": "",
+ "expected": {
+  "accepted": true,
+  "flagged": []
+ },
+ "submission": {
+  "summary": "Well F-11 B was handed over to production on 2013-07-23 and started producing the next day on 2013-07-24, with about 3,923 Sm3 of oil in its first 8 producing days in July 2013; its Final Completion Report was issued on 2013-09-04.",
+  "findings": [
+   {
+    "claim": "Well F-11 B was completed and handed over to production on 2013-07-23 after a drilling and completion campaign starting 2013-05-28.",
+    "detail": "well_operations shows job 2013-05-28 to 2013-07-23 kind drilling with 57 report_days, summary on 2013-07-23: Performed final pressure testing on F-11B tree and handed well over to production. list_wells shows F-11 first_oil 2013-07-24.",
+    "evidence_ids": [
+     "E3",
+     "E1"
+    ],
+    "confidence": "fact",
+    "numbers": []
+   },
+   {
+    "claim": "The Final Well Report, Completion for 15/9-F-11 B was issued as Final on 2013-09-04.",
+    "detail": "search_reports and read_report_page show document f11b_completion issued 2013-09-04, title Final Well Report, Completion, 15/9-F-11 B. Quote: FINAL WELL REPORT Drilling and Completion License NO PL046BS Well NO 15/9-F-11 B Valid from 2013-09-04 Page 52 of 64.",
+    "evidence_ids": [
+     "E2",
+     "E4"
+    ],
+    "confidence": "fact",
+    "numbers": []
+   },
+   {
+    "claim": "First production occurred on 2013-07-24, one day after handover, with 3,923 Sm3 oil produced over 8 producing days in July 2013.",
+    "detail": "list_wells: F-11 first_oil 2013-07-24. production_monthly 2013-07: 8 producing_days, 3923 oil_sm3, choke 9.27%, water_cut 0.0.",
+    "evidence_ids": [
+     "E1",
+     "E5"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "3,923",
+      "value": 3923,
+      "evidence_id": "E5"
+     },
+     {
+      "text": "8",
+      "value": 8,
+      "evidence_id": "E5"
+     }
+    ]
+   },
+   {
+    "claim": "Completion operations totaled 858 hours (35.7 days) from mid-June to handover.",
+    "detail": "read_report_page p11 table: Sum 858.0 hrs 35.7 days; Run Completion 30.Jun.2013 14:15 Actual 101.8 hrs 4.2 days; Perforation 09.Jul.2013 00:45 Actual 310.3 hrs 12.9 days. All quotes exact.",
+    "evidence_ids": [
+     "E6",
+     "E8"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "858",
+      "value": 858,
+      "evidence_id": "E8"
+     },
+     {
+      "text": "35.7",
+      "value": 35.75,
+      "evidence_id": "E8"
+     }
+    ]
+   }
+  ],
+  "summary_numbers": [
+   {
+    "text": "3,923",
+    "value": 3923,
+    "evidence_id": "E5"
+   },
+   {
+    "text": "8",
+    "value": 8,
+    "evidence_id": "E5"
+   }
+  ]
+ },
+ "evidence": [
+  {
+   "id": "E1",
+   "tool": "list_wells",
+   "arguments": {},
+   "result": {
+    "columns": [
+     "well",
+     "well_types",
+     "first_oil",
+     "last_date",
+     "cum_oil_sm3",
+     "cum_water_sm3",
+     "cum_water_injected_sm3",
+     "producing_days"
+    ],
+    "rows": [
+     [
+      "F-1 C",
+      "OP/WI",
+      "2014-04-22",
+      "2016-04-21",
+      177709,
+      207302,
+      null,
+      438
+     ],
+     [
+      "F-11",
+      "OP",
+      "2013-07-24",
+      "2016-09-17",
+      1147849,
+      1090806,
+      0.0,
+      1122
+     ],
+     [
+      "F-12",
+      "OP",
+      "2008-02-12",
+      "2016-09-17",
+      4579610,
+      6817753,
+      0.0,
+      2838
+     ],
+     [
+      "F-14",
+      "OP",
+      "2008-07-13",
+      "2016-09-17",
+      3942233,
+      7121310,
+      0.0,
+      2724
+     ],
+     [
+      "F-15 D",
+      "OP",
+      "2014-01-16",
+      "2016-09-17",
+      148519,
+      52366,
+      0.0,
+      769
+     ],
+     [
+      "F-4",
+      "WI",
+      null,
+      "2016-12-01",
+      0.0,
+      0.0,
+      16240727,
+      0
+     ],
+     [
+      "F-5",
+      "OP/WI",
+      "2016-04-20",
+      "2016-09-18",
+      41161,
+      13533,
+      14089406,
+      129
+     ]
+    ]
+   },
+   "code": "wellpilot.agent.tools.list_wells@67bd47cfcdd1",
+   "created_at": "2026-10-30T20:12:26+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E2",
+   "tool": "search_reports",
+   "arguments": {
+    "query": "F-11 B completion",
+    "well": "F-11",
+    "limit": 10
+   },
+   "result": {
+    "documents": {
+     "f11b_completion": {
+      "title": "Final Well Report, Completion, 15/9-F-11 B",
+      "issued": "2013-09-04"
+     }
+    },
+    "facts": {
+     "columns": [
+      "doc_id",
+      "page",
+      "topic",
+      "source",
+      "statement_en",
+      "quote",
+      "quote_check",
+      "wells"
+     ],
+     "rows": [
+      [
+       "f11b_completion",
+       4,
+       "wells",
+       "text",
+       "Well F-11 B primary objective is oil production from Hugin formation and completion type is 7” monobore",
+       "Primary objective: Oil production from Hugin formation Completion type: 7” monobore",
+       "exact",
+       "F-11"
+      ],
+      [
+       "f11b_completion",
+       4,
+       "wells",
+       "text",
+       "Well F-11 B objective is to provide for production of oil from the Hugin reservoir",
+       "The completion is to provide for production of oil from the Hugin reservoir.",
+       "exact",
+       "F-11"
+      ],
+      [
+       "f11b_completion",
+       4,
+       "wells",
+       "text",
+       "Well F-11 B IOR completion is a 7” monobore design with 7” production tubing and 7” cemented liner",
+       "The F-11B IOR completion is a 7” monobore design with 7” production tubing and 7” cemented liner.",
+       "exact",
+       "F-11"
+      ],
+      [
+       "f11b_completion",
+       4,
+       "wells",
+       "text",
+       "Well F-11 B completion incorporates a 7” x 9 5/8” production packer, single DHG for reservoir pressure and temperature monitoring and a TRSCSSV down hole safety valve",
+       "The completion incorporates: 7” x 9 5/8” production packer, single DHG for reservoir pressure and temperature monitoring and a TRSCSSV down hole safety valve.",
+       "exact",
+       "F-11"
+      ],
+      [
+       "f11b_completion",
+       4,
+       "wells",
+       "text",
+       "Well F-11 B has a 10 ¾” surface tieback casing installed from the subsea WH to the surface WH inside the 14” Production Riser",
+       "Prior to the completion a 10 ¾” surface tieback casing is installed from the subsea WH to the surface WH inside the 14” Production Riser, connecting the subsea and surface WH.",
+       "exact",
+       "F-11"
+      ],
+      [
+       "f11b_completion",
+       11,
+       "schedule",
+       "table",
+       "For section NO 15/9-F-11 B Run Completion starting 30.Jun.2013 14:15, Length m was 90,0, Budget was 100,0 hrs (4,2 days), TL was 96,0 hrs (4,0 days), Actual was 101,8 hrs (4,2 days) and Ops (f) was 99,3.",
+       "NO 15/9-F-11 B Run Completion 30.Jun.2013 14:15 90,0 100,0 4,2 96,0 4,0 101,8 4,2 99,3",
+       "exact",
+       "F-11"
+      ],
+      [
+       "f11b_completion",
+       45,
+       "wells",
+       "figure",
+       "Figure shows the Volve Completion Well F-11B IOR schematic with wellhead, casings, tubing, liner and packer configuration.",
+       "Volve Completion Well F-11B IOR",
+       "exact",
+       "F-11"
+      ],
+      [
+       "f11b_completion",
+       52,
+       "wells",
+       "text",
+       "The document is the Final Well Report Drilling and Completion for license NO PL046BS well NO 15/9-F-11 B, valid from 2013-09-04, page 52 of 64.",
+       "FINAL WELL REPORT Drilling and Completion License: NO PL046BS Well: NO 15/9-F-11 B Doc. No. xxx Valid from Rev. no. 2013-09-04 xxx Classification: Internal Status: Final Expiry date: Page 52 of 64",
+       "exact",
+       "F-11"
+      ]
+     ]
+    }
+   },
+   "code": "wellpilot.agent.tools.search_reports@5907b6347b0e",
+   "created_at": "2026-10-30T20:12:26+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E3",
+   "tool": "well_operations",
+   "arguments": {
+    "well": "F-11"
+   },
+   "result": {
+    "well": "F-11",
+    "jobs": [
+     {
+      "start": "2013-05-28",
+      "end": "2013-07-23",
+      "kind": "drilling",
+      "report_days": 57,
+      "contractor": "Maersk Drilling",
+      "perforations": [
+       "4031-4043 mMD; 4063-4075 mMD; 4268-4280 mMD; 4286-4295 mMD; 4304-4316 mMD; 4355-4367 mMD; 4488-4500 mMD; 4527-4539 mMD"
+      ],
+      "summaries": [
+       {
+        "date": "2013-05-28",
+        "summary": "Drilled 12 1/4\" hole from 2627 m MD to 2787 m MD."
+       },
+       {
+        "date": "2013-05-29",
+        "summary": "Drilled and orientated 12 1/4\" hole from 2787 m to 2917 m. POOH from 2917 m to 368 m to change bit."
+       },
+       {
+        "date": "2013-05-30",
+        "summary": "POOH with 12 1/4\" BHA. L/O mud motor, CoPilot, AutoTrack and 12 1/4\" bit. P/U back-up motor, Copilot, AutoTrack and 12 1/4\" bit. RIH to 2870 m reamed/washed in hole to 2917 m. Drilled and orientated 12 1/4\" hole to 3104 m."
+       },
+       {
+        "date": "2013-07-21",
+        "summary": "Inflow tested SCSSSV and HMV. R/D wireline equipment and prepared for skidding operations.."
+       },
+       {
+        "date": "2013-07-22",
+        "summary": "Performed pressure testing of valves on F-11 Xmas tree in preparation for handover to production department."
+       },
+       {
+        "date": "2013-07-23",
+        "summary": "Performed final pressure testing on F-11B tree and handed well over to production."
+       }
+      ]
+     },
+     {
+      "start": "2015-10-24",
+      "end": "2015-11-02",
+      "kind": "workover",
+      "report_days": 10,
+      "contractor": "Altus Intervention",
+      "perforations": [
+       "3960-3969 mMD",
+       "3910-3919 mMD"
+      ],
+      "summaries": [
+       {
+        "date": "2015-10-24",
+        "summary": "Lifted wireline equipment off vessel and started to spot same."
+       },
+       {
+        "date": "2015-10-25",
+        "summary": "Spotted wireline equipment and hooked up same. Leak and function tested BOP. Started to build lubricator sections and GIH."
+       },
+       {
+        "date": "2015-10-26",
+        "summary": "Completed spotting equipment. Well handed over from production department. Rigged up wireline equipment."
+       },
+       {
+        "date": "2015-10-27",
+        "summary": "Completed rigging up WL equipment. Leak tested R/U to 20/345 bar. Logged first sigma pass from 4530 m to 3440 m. Started to log first IC pass from 4254 m."
+       },
+       {
+        "date": "2015-10-28",
+        "summary": "Completed first set of RST IC logging passes from 4254 to 3470 m. Started second set of RST IC logging passes in same intervals."
+       },
+       {
+        "date": "2015-10-29",
+        "summary": "Completed logging RST IC passes. Performed shut in PLT pass. Started to bean up well for flowing PLT passes."
+       },
+       {
+        "date": "2015-10-30",
+        "summary": "Logged three flowing PLT passes. Evaluated data and decided to perforate two new zones. POOH and L/D BHA. Started to prepare perforation gun."
+       },
+       {
+        "date": "2015-10-31",
+        "summary": "M/U BHA #2 Tractor and 4,5\" perforating guns. RIH and performed correlation and orientation of the perforation gun."
+       },
+       {
+        "date": "2015-11-01",
+        "summary": "Perforated zone from 3960-3969 m. POOH and prepared toolstring for next perforation. RIH and started to correlate depth prior to perforate."
+       },
+       {
+        "date": "2015-11-02",
+        "summary": "Perforated zone from 3910 m to 3919 m. POOH and L/D toolstring. Rigged down equipment and tested XMT barriers. Handed well over to production."
+       }
+      ]
+     },
+     {
+      "start": "2016-04-14",
+      "end": "2016-04-24",
+      "kind": "workover",
+      "report_days": 10,
+      "contractor": "Altus Intervention",
+      "perforations": [
+       "3475-3481 mMD; 3675-3684 mMD"
+      ],
+      "summaries": [
+       {
+        "date": "2016-04-14",
+        "summary": "Recieved and spotted equipment"
+       },
+       {
+        "date": "2016-04-15",
+        "summary": "Prepared WL equipment for rig up. Started to shut-in well."
+       },
+       {
+        "date": "2016-04-16",
+        "summary": "Prepared WL equipment for rig-up. Handover of well. Rigged up WL Equipment"
+       },
+       {
+        "date": "2016-04-17",
+        "summary": "Perforated well. R/D WL equipment"
+       },
+       {
+        "date": "2016-04-18",
+        "summary": "R/D WL equipment"
+       },
+       {
+        "date": "2016-04-20",
+        "summary": "Received well from production. Rigged up WL equipment. Unable to leak test Rig-up."
+       },
+       {
+        "date": "2016-04-21",
+        "summary": "Waited for repair of grease pump. R/D WL equipment and changed O-rings in X-over. R/U WL equipment."
+       },
+       {
+        "date": "2016-04-22",
+        "summary": "Tested RU. Opened well and RIH to 2830 m. Tractored down to 3735 mMD. Made multiple correlation passes. Set straddle across interval 3674.4 - 3685 mMD. POOH and L/D BHA. M/U BHA #3 (Straddle-Tractor) and RIH."
+       },
+       {
+        "date": "2016-04-23",
+        "summary": "Correlated and set straddle. POOH. L/D BHA and R/D WL equipment."
+       },
+       {
+        "date": "2016-04-24",
+        "summary": "Packed equipment. Cleaned workspace. Demobilized personell."
+       }
+      ]
+     },
+     {
+      "start": "2016-09-18",
+      "end": "2016-09-28",
+      "kind": "abandonment",
+      "report_days": 11,
+      "contractor": "Maersk Drilling",
+      "perforations": [],
+      "summaries": [
+       {
+        "date": "2016-09-18",
+        "summary": "- Skidded cantilever onto slot F-11 - R/U WL equipment - Attempted to pressure test lower WL riser and WL BOP"
+       },
+       {
+        "date": "2016-09-19",
+        "summary": "- R/U WL pressure control equipment - Bullheaded sea water into the well - RIH w/ deep set barrier plug"
+       },
+       {
+        "date": "2016-09-20",
+        "summary": "- Installed deepset barrier plug. Pressure tested and inflow tested same - Cut 7in tubing above production packer - Instaled shallow set barrier plug. Pressure tested same - Started R/D WL pressure control equipment"
+       },
+       {
+        "date": "2016-09-21",
+        "summary": "- Finished R/D WL - N/D X-tree and spacer spool - N/U HP riser and BOP, performed connector test - R/U casing handling equipment - RIH w/ THRT"
+       },
+       {
+        "date": "2016-09-22",
+        "summary": "- Landed and engaged THRT - Pumped open shallow set barrier plug - Retrieved TH and 500m of tubing - RIH w/ tubing, circulated well clean to sea water"
+       },
+       {
+        "date": "2016-09-23",
+        "summary": "- Placed balanced cement plug in 9 5/8in casing - Pulled and L/D 600m of tubing - RIH w/ tubing on spear, tagged cement - Released spear and left tubing in the well"
+       },
+       {
+        "date": "2016-09-24",
+        "summary": "- POOH w/ spear - Retrieved MS-T seal assy - Cut 10 3/4in tieback casing - RIH w/ spear and pulled 10 3/4in tieback casing - Released and retrieved tieback adapter - Punched below 10 3/4in subsea casing hanger and ventilated annulus - M/U and RIH w/ cutter BHA to cut 9 5/8in casing"
+       },
+       {
+        "date": "2016-09-25",
+        "summary": "- Cut 9 5/8in casing - Milled 10 3/4in subsea casing hanger - Fished 10 3/4in casing fish and secured on surface - Pulled 34 joints of 10 3/4in casing, L/D same"
+       },
+       {
+        "date": "2016-09-26",
+        "summary": "- Finished puling 10 3/4in casing to X-over - Pulled 9 5/8in casing - Installed 14in EZSV (lower) - Cut 14in casing - Punched below 14in subsea casing hanger - Installed 14in EZSV (upper) - Displaced C-annulus to sea water"
+       },
+       {
+        "date": "2016-09-27",
+        "summary": "- WOC, meanwhile performed mantenance on rig equipment - Pressure tested C-annulus cement plug"
+       },
+       {
+        "date": "2016-09-28",
+        "summary": "- Placed balanced cement plug in 14in casing - N/D BOP"
+       }
+      ]
+     },
+     {
+      "start": "2016-10-20",
+      "end": "2016-10-21",
+      "kind": "abandonment",
+      "report_days": 2,
+      "contractor": "Maersk Drilling",
+      "perforations": [],
+      "summaries": [
+       {
+        "date": "2016-10-20",
+        "summary": "- Skidded to well F-11 B - Pulled production riser"
+       },
+       {
+        "date": "2016-10-21",
+        "summary": "None"
+       }
+      ]
+     }
+    ],
+    "note": "Daily reports exist for drilling and for work on the well (wireline, plugs, perforations, production logs), not for days of normal production. A job's date is the day the work was done; kind is drilling, completion, workover (work on a producing or injecting well) or abandonment. Ask for one day to see every operation line."
+   },
+   "code": "wellpilot.agent.tools.well_operations@691598c6cb8c",
+   "created_at": "2026-10-30T20:12:26+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E4",
+   "tool": "read_report_page",
+   "arguments": {
+    "doc_id": "f11b_completion",
+    "page": 1
+   },
+   "result": {
+    "document": {
+     "title": "Final Well Report, Completion, 15/9-F-11 B",
+     "issued": "2013-09-04"
+    },
+    "page": 1,
+    "pages": 64,
+    "text": "Classification: Internal Status: Final Expiry date: Page 1 of 64 FINAL WELL REPORT Completion License: NO PL046BS Well: NO 15/9-F-11 B",
+    "image": "reports/f11b_completion/p001.png",
+    "summary_en": "",
+    "facts": {
+     "columns": [
+      "topic",
+      "source",
+      "statement_en",
+      "quote",
+      "quote_check",
+      "wells"
+     ],
+     "rows": []
+    }
+   },
+   "code": "wellpilot.agent.tools.read_report_page@d467451f92da",
+   "created_at": "2026-10-30T20:12:26+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E5",
+   "tool": "production_monthly",
+   "arguments": {
+    "well": "F-11",
+    "start": "2013-07-01",
+    "end": "2013-09-30"
+   },
+   "result": {
+    "columns": [
+     "month",
+     "days",
+     "producing_days",
+     "oil_sm3",
+     "water_sm3",
+     "gas_sm3",
+     "water_injected_sm3",
+     "water_cut",
+     "uptime",
+     "oil_rate_per_producing_day",
+     "bhp_bar",
+     "whp_bar",
+     "choke_pct"
+    ],
+    "rows": [
+     [
+      "2013-07",
+      24,
+      8,
+      3923,
+      0.0,
+      590505,
+      null,
+      0.0,
+      0.196,
+      833.85,
+      163.59,
+      102.12,
+      9.27
+     ],
+     [
+      "2013-08",
+      31,
+      25,
+      25496,
+      520.01,
+      3871942,
+      null,
+      0.01999,
+      0.7886,
+      1043,
+      269.08,
+      92.86,
+      9.71
+     ],
+     [
+      "2013-09",
+      30,
+      27,
+      23775,
+      1574,
+      3661574,
+      0.0,
+      0.06208,
+      0.7485,
+      1059,
+      263.24,
+      87.83,
+      9.62
+     ]
+    ]
+   },
+   "code": "wellpilot.agent.tools.production_monthly@c841520578bb",
+   "created_at": "2026-10-30T20:12:30+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E6",
+   "tool": "read_report_page",
+   "arguments": {
+    "doc_id": "f11b_completion",
+    "page": 11
+   },
+   "result": {
+    "document": {
+     "title": "Final Well Report, Completion, 15/9-F-11 B",
+     "issued": "2013-09-04"
+    },
+    "page": 11,
+    "pages": 64,
+    "text": "FINAL WELL REPORT Completion License: NO PL046BS Well: NO 15/9-F-11 B Doc. No. xxx Valid from Rev. no. 2013-09-04 1:00 Classification: Internal Status: Final Expiry date: Page 11 of 64 3.4 Time distribution Length m Budget TL Actual Ops Section Start time hrs days hrs days hrs days (f) NO 15/9-F-11 B Wellbore preparation 16.Jun.2013 13:30 90,0 99,0 4,1 59,0 2,5 113,5 4,7 59,7 NO 15/9-F-11 B Other 21.Jun.2013 07:00 90,0 19,0 0,8 10,0 0,4 14,0 0,6 100,0 NO 15/9-F-11 B Other 21.Jun.2013 21:00 90,0 216,0 9,0 179,5 7,5 148,0 6,2 90,7 NO 15/9-F-11 B Tie-back 28.Jun.2013 01:00 90,0 55,5 2,3 29,0 1,2 54,3 2,3 96,3 NO 15/9-F-11 B Other 29.Jun.2013 23:00 90,0 15,0 0,6 8,0 0,3 15,3 0,6 100,0 NO 15/9-F-11 B Run Completion 30.Jun.2013 14:15 90,0 100,0 4,2 96,0 4,0 101,8 4,2 99,3 NO 15/9-F-11 B Install Tubing Hanger 04.Jul.2013 20:00 90,0 87,0 3,6 57,0 2,4 40,5 1,7 100,0 NO 15/9-F-11 B Install X-mas Tree 06.Jul.2013 12:30 90,0 94,0 3,9 87,0 3,6 60,3 2,5 100,0 NO 15/9-F-11 B Perforation 09.Jul.2013 00:45 90,0 206,0 8,6 226,0 9,4 310,3 12,9 65,2 Sum 891,5 37,1 751,5 31,3 858,0 35,7",
+    "image": "reports/f11b_completion/p011.png",
+    "summary_en": "Page 11 of the Final Well Report Completion for well 15/9-F-11 B shows Section 3.4 Time distribution with a table listing Budget, TL and Actual time in hrs and days for each completion operation of the well.",
+    "facts": {
+     "columns": [
+      "topic",
+      "source",
+      "statement_en",
+      "quote",
+      "quote_check",
+      "wells"
+     ],
+     "rows": [
+      [
+       "schedule",
+       "table",
+       "For section NO 15/9-F-11 B Wellbore preparation starting 16.Jun.2013 13:30, Length m was 90,0, Budget was 99,0 hrs (4,1 days), TL was 59,0 hrs (2,5 days), Actual was 113,5 hrs (4,7 days) and Ops (f) was 59,7.",
+       "NO 15/9-F-11 B Wellbore preparation 16.Jun.2013 13:30 90,0 99,0 4,1 59,0 2,5 113,5 4,7 59,7",
+       "exact",
+       "F-11"
+      ],
+      [
+       "schedule",
+       "table",
+       "For section NO 15/9-F-11 B Other starting 21.Jun.2013 07:00, Length m was 90,0, Budget was 19,0 hrs (0,8 days), TL was 10,0 hrs (0,4 days), Actual was 14,0 hrs (0,6 days) and Ops (f) was 100,0.",
+       "NO 15/9-F-11 B Other 21.Jun.2013 07:00 90,0 19,0 0,8 10,0 0,4 14,0 0,6 100,0",
+       "exact",
+       "F-11"
+      ],
+      [
+       "schedule",
+       "table",
+       "For section NO 15/9-F-11 B Other starting 21.Jun.2013 21:00, Length m was 90,0, Budget was 216,0 hrs (9,0 days), TL was 179,5 hrs (7,5 days), Actual was 148,0 hrs (6,2 days) and Ops (f) was 90,7.",
+       "NO 15/9-F-11 B Other 21.Jun.2013 21:00 90,0 216,0 9,0 179,5 7,5 148,0 6,2 90,7",
+       "exact",
+       "F-11"
+      ],
+      [
+       "schedule",
+       "table",
+       "For section NO 15/9-F-11 B Tie-back starting 28.Jun.2013 01:00, Length m was 90,0, Budget was 55,5 hrs (2,3 days), TL was 29,0 hrs (1,2 days), Actual was 54,3 hrs (2,3 days) and Ops (f) was 96,3.",
+       "NO 15/9-F-11 B Tie-back 28.Jun.2013 01:00 90,0 55,5 2,3 29,0 1,2 54,3 2,3 96,3",
+       "exact",
+       "F-11"
+      ],
+      [
+       "schedule",
+       "table",
+       "For section NO 15/9-F-11 B Other starting 29.Jun.2013 23:00, Length m was 90,0, Budget was 15,0 hrs (0,6 days), TL was 8,0 hrs (0,3 days), Actual was 15,3 hrs (0,6 days) and Ops (f) was 100,0.",
+       "NO 15/9-F-11 B Other 29.Jun.2013 23:00 90,0 15,0 0,6 8,0 0,3 15,3 0,6 100,0",
+       "exact",
+       "F-11"
+      ],
+      [
+       "schedule",
+       "table",
+       "For section NO 15/9-F-11 B Run Completion starting 30.Jun.2013 14:15, Length m was 90,0, Budget was 100,0 hrs (4,2 days), TL was 96,0 hrs (4,0 days), Actual was 101,8 hrs (4,2 days) and Ops (f) was 99,3.",
+       "NO 15/9-F-11 B Run Completion 30.Jun.2013 14:15 90,0 100,0 4,2 96,0 4,0 101,8 4,2 99,3",
+       "exact",
+       "F-11"
+      ],
+      [
+       "schedule",
+       "table",
+       "For section NO 15/9-F-11 B Install Tubing Hanger starting 04.Jul.2013 20:00, Length m was 90,0, Budget was 87,0 hrs (3,6 days), TL was 57,0 hrs (2,4 days), Actual was 40,5 hrs (1,7 days) and Ops (f) was 100,0.",
+       "NO 15/9-F-11 B Install Tubing Hanger 04.Jul.2013 20:00 90,0 87,0 3,6 57,0 2,4 40,5 1,7 100,0",
+       "exact",
+       "F-11"
+      ],
+      [
+       "schedule",
+       "table",
+       "For section NO 15/9-F-11 B Install X-mas Tree starting 06.Jul.2013 12:30, Length m was 90,0, Budget was 94,0 hrs (3,9 days), TL was 87,0 hrs (3,6 days), Actual was 60,3 hrs (2,5 days) and Ops (f) was 100,0.",
+       "NO 15/9-F-11 B Install X-mas Tree 06.Jul.2013 12:30 90,0 94,0 3,9 87,0 3,6 60,3 2,5 100,0",
+       "exact",
+       "F-11"
+      ],
+      [
+       "schedule",
+       "table",
+       "For section NO 15/9-F-11 B Perforation starting 09.Jul.2013 00:45, Length m was 90,0, Budget was 206,0 hrs (8,6 days), TL was 226,0 hrs (9,4 days), Actual was 310,3 hrs (12,9 days) and Ops (f) was 65,2.",
+       "NO 15/9-F-11 B Perforation 09.Jul.2013 00:45 90,0 206,0 8,6 226,0 9,4 310,3 12,9 65,2",
+       "exact",
+       "F-11"
+      ],
+      [
+       "schedule",
+       "table",
+       "For the Sum of all sections, Budget was 891,5 hrs (37,1 days), TL was 751,5 hrs (31,3 days) and Actual was 858,0 hrs (35,7 days).",
+       "Sum 891,5 37,1 751,5 31,3 858,0 35,7",
+       "exact",
+       "F-11"
+      ]
+     ]
+    }
+   },
+   "code": "wellpilot.agent.tools.read_report_page@d467451f92da",
+   "created_at": "2026-10-30T20:12:34+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E7",
+   "tool": "calculate",
+   "arguments": {
+    "expressions": [
+     "42"
+    ]
+   },
+   "result": {
+    "results": [
+     {
+      "expression": "42",
+      "value": 42.0
+     }
+    ]
+   },
+   "code": "wellpilot.agent.tools.calculate@5c1d806d8f4d",
+   "created_at": "2026-10-30T20:12:38+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E8",
+   "tool": "calculate",
+   "arguments": {
+    "expressions": [
+     "858.0/24",
+     "101.8/24"
+    ]
+   },
+   "result": {
+    "results": [
+     {
+      "expression": "858.0/24",
+      "value": 35.75
+     },
+     {
+      "expression": "101.8/24",
+      "value": 4.24
+     }
+    ]
+   },
+   "code": "wellpilot.agent.tools.calculate@5c1d806d8f4d",
+   "created_at": "2026-10-30T20:12:42+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E9",
+   "tool": "search_reports",
+   "arguments": {
+    "query": "F-11 first oil production start",
+    "limit": 5
+   },
+   "result": {
+    "documents": {
+     "f11b_completion": {
+      "title": "Final Well Report, Completion, 15/9-F-11 B",
+      "issued": "2013-09-04"
+     },
+     "volve_pud": {
+      "title": "Plan for utbygging og drift av Volve (PUD, plan for development and operation)",
+      "issued": "2005-02-01"
+     }
+    },
+    "facts": {
+     "columns": [
+      "doc_id",
+      "page",
+      "topic",
+      "source",
+      "statement_en",
+      "quote",
+      "quote_check",
+      "wells"
+     ],
+     "rows": [
+      [
+       "volve_pud",
+       23,
+       "production_forecast",
+       "text",
+       "The field will start up when the first well is completed and after a start-up period of about 1 year it will produce at plateau rate.",
+       "Feltet vil bli startet opp når første brønn er klargjort og etter en oppstartsperiode på ca. 1 år vil feltetprodusere på platårate.",
+       "exact",
+       ""
+      ],
+      [
+       "f11b_completion",
+       4,
+       "wells",
+       "text",
+       "Well NO 15/9-F-11 B is an oil producer on slot F11 with licence NO PL046BS",
+       "Licence number: NO PL046BS Well name: NO 15/9-F-11 B Slot: F11 Type of well: Oil producer",
+       "exact",
+       "F-11"
+      ],
+      [
+       "f11b_completion",
+       4,
+       "wells",
+       "text",
+       "Well F-11 B primary objective is oil production from Hugin formation and completion type is 7” monobore",
+       "Primary objective: Oil production from Hugin formation Completion type: 7” monobore",
+       "exact",
+       "F-11"
+      ],
+      [
+       "f11b_completion",
+       4,
+       "wells",
+       "text",
+       "Well F-11 B objective is to provide for production of oil from the Hugin reservoir",
+       "The completion is to provide for production of oil from the Hugin reservoir.",
+       "exact",
+       "F-11"
+      ],
+      [
+       "f11b_completion",
+       59,
+       "wells",
+       "figure",
+       "Well NO 15/9-F-11 B is completed as Oil Producer on Rig Maersk Inspirer with completion number 1.00 under the plan Completion F-11 B IOR.",
+       null,
+       "image",
+       "F-11 B"
+      ]
+     ]
+    }
+   },
+   "code": "wellpilot.agent.tools.search_reports@5907b6347b0e",
+   "created_at": "2026-10-30T20:12:45+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E10",
+   "tool": "calculate",
+   "arguments": {
+    "expressions": [
+     "310.3/24"
+    ]
+   },
+   "result": {
+    "results": [
+     {
+      "expression": "310.3/24",
+      "value": 12.93
+     }
+    ]
+   },
+   "code": "wellpilot.agent.tools.calculate@5c1d806d8f4d",
+   "created_at": "2026-10-30T20:12:48+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E11",
+   "tool": "calculate",
+   "arguments": {
+    "expressions": [
+     "42"
+    ]
+   },
+   "result": {
+    "results": [
+     {
+      "expression": "42",
+      "value": 42.0
+     }
+    ]
+   },
+   "code": "wellpilot.agent.tools.calculate@5c1d806d8f4d",
+   "created_at": "2026-10-30T20:12:52+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E12",
+   "tool": "calculate",
+   "arguments": {
+    "expressions": [
+     "3923"
+    ]
+   },
+   "result": {
+    "results": [
+     {
+      "expression": "3923",
+      "value": 3923
+     }
+    ]
+   },
+   "code": "wellpilot.agent.tools.calculate@5c1d806d8f4d",
+   "created_at": "2026-10-30T20:12:57+00:00",
+   "warnings": []
+  }
+ ]
+}
