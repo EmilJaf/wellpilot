@@ -11,10 +11,10 @@ The task is the agent's last step: given the question and every tool result its 
 gathered, write the `submit_findings` answer. No tool calling is needed, so Muse Glimmer,
 a tuned Glimmer and Muse Spark Open answer exactly the same inputs.
 
-- **Training** (`data/training/writer/train.jsonl`): 62 accepted answers, one per run, from
-  12 questions; the agent's own system prompt and submit schema, the tool results, the
-  answer. About 0.8M tokens, the longest example about 25k (Glimmer reads 131k).
-- **Test** (`test.jsonl`): 25 runs of 6 questions the training never sees: the dead gauge,
+- **Training** (`data/training/writer/train.jsonl`): 70 accepted answers, one per run, from
+  13 questions; the agent's own system prompt and submit schema, the tool results, the
+  answer. About 0.9M tokens, the longest example about 25k (Glimmer reads 131k).
+- **Test** (`test.jsonl`): 30 runs of 6 questions the training never sees: the dead gauge,
   the plan's water-cut limit, the 2014 restart, a refusal (F-99 does not exist), the
   end-2010 screen, and a well on the synthetic field.
 - **Scored by:** the checker on the model's first answer (and on a second one after the
@@ -82,7 +82,7 @@ If `firectl dataset create` says dataset uploads are disabled for the account (i
 Oct 30), use the console's training form instead (Fine-tuning -> new job): model Muse Glimmer
 30B, method SFT, upload `train.jsonl` as the dataset; for evaluation upload
 `data/training/writer/validation.jsonl` (the held-out questions' accepted answers) rather
-than splitting 20% off the 62 training examples; epochs 2, LoRA rank 16, max context 32768
+than splitting 20% off the 70 training examples; epochs 2, LoRA rank 16, max context 32768
 (the others as they are). The estimate must show the training as free; if it shows a cost,
 stop and check.
 
@@ -135,7 +135,7 @@ whatever it is. If a command fails (a model name format, a shape), paste its out
 
 ## What to expect, honestly
 
-62 examples teach the format and the house rules (declare every number, hedge causes, no
+70 examples teach the format and the house rules (declare every number, hedge causes, no
 facts on warned evidence, plain claims) faster than they teach the field. The likely gain is
 in first-pass acceptance over base Glimmer; whether a tuned 30B model beats Muse Spark Open
 on the regexes is open. If it does not help, the README says so.
