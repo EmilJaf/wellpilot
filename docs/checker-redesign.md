@@ -1,8 +1,7 @@
 # The checker: how to get under 1% errors
 
-Status: analysis, Oct 30. Nothing here is built yet except the bench and the offline
-simulations it quotes (scripts in the session scratchpad: `sim_pins.py`, `sim_roles.py`,
-`sim_d.py`, `proto_statements.py`).
+Status: analysis, Oct 30; stage 1 of option D (the feasibility trial) built the same day,
+behind a flag, and not yet run with the model (see "Stage 1, built" at the end).
 
 ## What counts as an error
 
@@ -187,3 +186,38 @@ write it:
 Risk: the deadline. Freeze is Nov 3 and the video is Nov 4. If step 1 does not pass by
 Oct 31 evening, keep v1 for the hackathon and say plainly in the README what it checks
 (every number was found in the result it cites, and 28% of wrong-cell copies still pass).
+
+## Stage 1, built (Oct 30)
+
+`backend/src/wellpilot/agent/statements.py`, behind a flag: `run_agent(statements=True)`,
+`python -m wellpilot.eval --statements`. Nothing changes for prose answers, the API or the
+featured runs.
+
+- **What the model sends:** submit_findings takes a summary and findings, each a list of
+  parts: free words (`{"say": ...}`) or a statement (`value`, `change`, `compare`, `event`,
+  `forecast`, `quote`) whose values are references into the tool results
+  (`E1/wells[well=F-12]/water_cut`, `E7/monthly[month=2010-12]/water_cut`,
+  `E5[kind=regime_change,signal=oil_rate]/details/before_mean`, `E13`, `E4/facts[2]`).
+- **What code does:** resolves every reference (a bad one comes back with what is there:
+  "no row of E7/monthly has month=2015-13 (its month values: 2008-02, ..., 2010-12)"),
+  prints the sentence from the values' own labels (the screen's water cut is printed as a
+  median over its 90 days, which the agent's prose never said), computes changes and
+  ratios, refuses digits, dates, month names, units, amounts in words and quote marks in
+  free words, refuses a change between two quantities or two wells, and keeps a fact off
+  warned results, forecasts and causes. The printed answer becomes an ordinary Submission,
+  so the answer panel, the second opinion and the reveal work as they are.
+- **How it reads** (the 2010 time machine's results, written by hand as statements):
+  "F-12's oil rate averaged 55% less after 2010-05-02 than before (4,207 Sm3/d before, 1,888
+  Sm3/d after), while its choke opening fell from 83% to 58% over the 4 weeks either side of
+  2010-05-02." "F-12 is forecast to make about 359,000 Sm3 of oil from 2011-01-01 to
+  2011-12-31, range 324,000 to 470,000 Sm3 from the errors of 5 earlier forecasts made the
+  same way." A wrong pick prints a true sentence about the row it took ("in 2010-06").
+- **Not in stage 1:** the limit, share and job-effect types (compare and event cover them
+  roughly), numbers that exist only in tool prose (the 2014 plug's 3,150 m), the UI showing
+  references, replay of a statements run.
+- **Tests:** `tests/test_statements.py` (printing on the frozen time machine's evidence,
+  every refusal, and a scripted run sent back once and then verified).
+- **The trial (Emil runs it, about $0.3):** `cd backend && uv run python -m wellpilot.eval
+  --only time_machine_2010 --statements`. Go if it is verified in two submissions or fewer
+  and the answer reads as well as the prose one; then stage 2. No go: keep v1 for the
+  hackathon, as planned above.
