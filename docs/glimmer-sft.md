@@ -11,9 +11,9 @@ The task is the agent's last step: given the question and every tool result its 
 gathered, write the `submit_findings` answer. No tool calling is needed, so Muse Glimmer,
 a tuned Glimmer and Muse Spark Open answer exactly the same inputs.
 
-- **Training** (`data/training/writer/train.jsonl`): 73 accepted answers, one per run, from
-  13 questions; the agent's own system prompt and submit schema, the tool results, the
-  answer. About 1M tokens, the longest example about 25k (Glimmer reads 131k).
+- **Training** (`data/training/writer/train.jsonl`): 62 accepted answers, one per run, from
+  12 questions; the agent's own system prompt and submit schema, the tool results, the
+  answer. About 0.8M tokens, the longest example about 25k (Glimmer reads 131k).
 - **Test** (`test.jsonl`): 25 runs of 6 questions the training never sees: the dead gauge,
   the plan's water-cut limit, the 2014 restart, a refusal (F-99 does not exist), the
   end-2010 screen, and a well on the synthetic field.
@@ -82,7 +82,7 @@ If `firectl dataset create` says dataset uploads are disabled for the account (i
 Oct 30), use the console's training form instead (Fine-tuning -> new job): model Muse Glimmer
 30B, method SFT, upload `train.jsonl` as the dataset; for evaluation upload
 `data/training/writer/validation.jsonl` (the held-out questions' accepted answers) rather
-than splitting 20% off the 73 training examples; epochs 2, LoRA rank 16, max context 32768
+than splitting 20% off the 62 training examples; epochs 2, LoRA rank 16, max context 32768
 (the others as they are). The estimate must show the training as free; if it shows a cost,
 stop and check.
 
@@ -100,33 +100,26 @@ cd ~/wellpilot/backend && uv run python -m wellpilot.training eval --label muse
   firectl deployment-shape-version match --model accounts/fireworks/models/muse-glimmer-30b
   ```
 
-- Create the deployment with add-ons, wait until `firectl deployment get <deployment id>`
-  says it is ready, then load the trained adapter:
+- Create the deployment with add-ons. `--scale-to-zero-window 10m` is the safety net:
+  if it is ever left idle, it drops to zero replicas after 10 minutes (Fireworks bills by
+  GPU-second while replicas are active; deployments at zero for 7 days are deleted):
 
   ```bash
-  firectl deployment create accounts/fireworks/models/muse-glimmer-30b --deployment-shape <BF16 shape> --enable-addons
+  firectl deployment create accounts/fireworks/models/muse-glimmer-30b --deployment-shape <BF16 shape> --enable-addons --min-replica-count 0 --scale-to-zero-window 10m
   ```
 
-  ```bash
-  firectl load-lora wellpilot-glimmer-writer --deployment <deployment id>
-  ```
-
-**5. Score both (about 20-40 minutes in all).** First try three items, to see the model
-answers at all; then the full set. Replace `<account>` and `<deployment id>`:
-
-```bash
-cd ~/wellpilot/backend && LLM_PROVIDER=fireworks FIREWORKS_MODEL="accounts/fireworks/models/muse-glimmer-30b#accounts/<account>/deployments/<deployment id>" uv run python -m wellpilot.training eval --label glimmer-base --limit 3
-```
+**5. Score both, and the machine deletes itself (about 20-40 minutes).** When
+`firectl deployment get <deployment id>` says it is ready, run the script. It loads the
+trained adapter, scores base Glimmer on three items (to see it answers at all), then on
+all of them, then the tuned one, and deletes the deployment when it ends, fails or is
+stopped with Ctrl-C; a watchdog deletes it after 90 minutes even if a step hangs.
 
 ```bash
-cd ~/wellpilot/backend && LLM_PROVIDER=fireworks FIREWORKS_MODEL="accounts/fireworks/models/muse-glimmer-30b#accounts/<account>/deployments/<deployment id>" uv run python -m wellpilot.training eval --label glimmer-base
+cd ~/wellpilot && scripts/glimmer_eval.sh <account> <deployment id>
 ```
 
-```bash
-cd ~/wellpilot/backend && LLM_PROVIDER=fireworks FIREWORKS_MODEL="accounts/<account>/models/wellpilot-glimmer-writer#accounts/<account>/deployments/<deployment id>" uv run python -m wellpilot.training eval --label glimmer-tuned
-```
-
-**6. Stop the billing.**
+**6. Check the billing stopped:** the script prints `deleted deployment ...` and the list
+after it should not hold the deployment. If it says it could not delete, run these:
 
 ```bash
 firectl deployment delete <deployment id>
@@ -142,7 +135,7 @@ whatever it is. If a command fails (a model name format, a shape), paste its out
 
 ## What to expect, honestly
 
-73 examples teach the format and the house rules (declare every number, hedge causes, no
+62 examples teach the format and the house rules (declare every number, hedge causes, no
 facts on warned evidence, plain claims) faster than they teach the field. The likely gain is
 in first-pass acceptance over base Glimmer; whether a tuned 30B model beats Muse Spark Open
 on the regexes is open. If it does not help, the README says so.
