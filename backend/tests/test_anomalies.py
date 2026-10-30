@@ -195,10 +195,28 @@ def test_mark_field_wide() -> None:
 
     marked = mark_field_wide(events)
 
-    assert marked[0].details == {"field_wide": True, "also_shut_in": ["F-14"]}
+    assert marked[0].details == {"field_wide": True, "also_shut_in": ["F-14"], "others_flowing": []}
     assert marked[1].details["also_shut_in"] == ["F-12"]
     assert marked[2].details["field_wide"] is False
     assert marked[3] is events[3]
+
+
+def test_a_shut_in_shared_with_some_wells_is_not_field_wide() -> None:
+    """F-12's December 2014 shut-in overlapped F-1 C's and F-15 D's while F-11 and F-14
+    flowed all month: shared, not the platform."""
+    events = [
+        _event("F-12", "shut_in", "2014-11-30", "2014-12-31"),
+        _event("F-1 C", "shut_in", "2014-11-29", "2015-01-01"),
+    ]
+    flowing = {"F-12", "F-1 C", "F-11", "F-14"}
+
+    marked = mark_field_wide(events, flowing=lambda e: flowing)
+
+    assert marked[0].details["field_wide"] is False
+    assert marked[0].details["others_flowing"] == ["F-11", "F-14"]
+    assert marked[0].summary.endswith("Same time as F-1 C; F-11, F-14 kept flowing.")
+    alone = mark_field_wide(events, flowing=lambda e: {"F-12", "F-1 C"})
+    assert alone[0].details["field_wide"] is True and alone[0].summary.endswith("(field-wide).")
 
 
 def test_real_volve_events() -> None:

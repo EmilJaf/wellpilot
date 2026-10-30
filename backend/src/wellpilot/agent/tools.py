@@ -256,8 +256,23 @@ def detect_events(store: ProductionStore, args: WellArgs) -> list[dict]:
     producers = store.query(
         "SELECT DISTINCT well FROM production_daily WHERE oil_sm3 > 0 ORDER BY well"
     ).rows["well"]
-    all_shut_ins = [e for w in producers for e in shut_ins(store.well_daily(w), min_days=7)]
-    marked = mark_field_wide(events + all_shut_ins)
+    dailies = {w: store.well_daily(w) for w in producers}
+    all_shut_ins = [e for d in dailies.values() for e in shut_ins(d, min_days=7)]
+
+    def flowing(e) -> set[str]:
+        """The producers with oil in the 30 days before a shut-in."""
+        start = pd.Timestamp(e.start)
+        return {
+            w
+            for w, d in dailies.items()
+            if (
+                (d["date"] >= start - pd.Timedelta(days=30))
+                & (d["date"] < start)
+                & (d["oil_sm3"] > 0)
+            ).any()
+        }
+
+    marked = mark_field_wide(events + all_shut_ins, flowing=flowing)
     mine = sorted((e for e in marked if e.well == args.well), key=lambda e: e.start)
     return [
         to_jsonable(
@@ -775,8 +790,36 @@ def field_vs_design(store: ProductionStore, _: NoArgs) -> dict:
         }
     if "water_sm3_per_day" in crossings:
         worst = months.loc[months["max_day_water_sm3"].idxmax()]
-        crossings["water_sm3_per_day"]["max_day"] = worst["max_day_water_sm3"]
         crossings["water_sm3_per_day"]["max_day_month"] = worst["month"]
+    # Single days against the same limits: a capacity is a daily rate, and a month's average
+    # can stay under it while days pass it (oil over 9,000 Sm3/d on 49 days, injection over
+    # 16,000 on 224, both under it in all but a few monthly averages; audit, Oct 31).
+    daily_columns = {
+        "oil_sm3_per_day": "oil",
+        "liquid_sm3_per_day": "oil + water",
+        "water_sm3_per_day": "water",
+        "water_inj_sm3_per_day": "inj",
+    }
+    for key, column in daily_columns.items():
+        if key not in crossings:
+            continue
+        day = store.query(
+            f"""
+            WITH daily AS (
+                SELECT date, sum(coalesce(oil_sm3, 0)) AS oil,
+                       sum(coalesce(water_sm3, 0)) AS water,
+                       sum(coalesce(water_inj_sm3, 0)) AS inj
+                FROM production_daily GROUP BY date
+            )
+            SELECT max({column}) AS top, strftime(arg_max(date, {column}), '%Y-%m-%d') AS on_day,
+                   count(*) FILTER (WHERE {column} >= ?) AS days_over
+            FROM daily
+            """,
+            [limits[key]["value"]],
+        ).rows.iloc[0]
+        crossings[key]["max_day"] = day["top"]
+        crossings[key]["max_day_date"] = day["on_day"]
+        crossings[key]["days_at_or_above"] = int(day["days_over"])
     economic = [q for q in facts if "minimum økonomisk rate" in q]
     return to_jsonable(
         {
@@ -791,7 +834,9 @@ def field_vs_design(store: ProductionStore, _: NoArgs) -> dict:
             "is a share at full liquid rate: the water the platform can handle is liquid "
             "capacity x maximum water cut (water_sm3_per_day). The field reaching that share at "
             "a lower liquid rate means it ran at the design water cut, not over its water "
-            "capacity. Rates are per calendar day of each month.",
+            "capacity. The months' rates are per calendar day of each month; max_day and "
+            "days_at_or_above give single days, which can pass a capacity the monthly average "
+            "stays under.",
         }
     )
 

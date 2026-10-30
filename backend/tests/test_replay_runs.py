@@ -30,6 +30,12 @@ DRIFT = {
         "E8": "waterflood",
     },
     "f7d3faebb139": {"E3": "detect_events", "E4": "waterflood"},
+    # Oct 31: a shut-in is field-wide only when every producer that flowed before it
+    # stopped (others_flowing), so detect_events reads differently; the verdicts replay.
+    "99d66f7a3adb": {"E5": "detect_events", "E6": "detect_events"},
+    "21d18cc312ed": {"E5": "detect_events"},
+    "43c53d5c1096": {"E2": "detect_events"},
+    "83a3114d185f": {"E3": "detect_events"},
 }
 
 

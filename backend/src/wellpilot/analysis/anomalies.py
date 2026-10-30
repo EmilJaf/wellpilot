@@ -4,6 +4,7 @@ Every detector returns Events with the numbers behind them and a one-line, deter
 summary, so the agent quotes measured facts instead of paraphrasing a chart.
 """
 
+from collections.abc import Callable
 from dataclasses import dataclass, replace
 from typing import Literal
 
@@ -413,8 +414,15 @@ def shut_ins(daily: pd.DataFrame, min_days: int = 3, compare_days: int = 30) -> 
     return events
 
 
-def mark_field_wide(events: list[Event], tolerance_days: int = 2) -> list[Event]:
-    """Mark shut-ins that overlap a shut-in of another well: platform-wide, not well-specific."""
+def mark_field_wide(
+    events: list[Event],
+    tolerance_days: int = 2,
+    flowing: Callable[[Event], set[str]] | None = None,
+) -> list[Event]:
+    """Mark shut-ins that overlap other wells' shut-ins. One is field-wide only when every
+    producer that flowed in the 30 days before it (`flowing`) was shut in too: F-12's
+    December 2014 shut-in overlapped F-1 C's and F-15 D's while F-11 and F-14 ran all month
+    (audit, Oct 31; it used to count any one overlap as the platform)."""
     shut = [e for e in events if e.kind == "shut_in"]
     tol = pd.Timedelta(days=tolerance_days)
     marked = []
@@ -429,7 +437,16 @@ def mark_field_wide(events: list[Event], tolerance_days: int = 2) -> list[Event]
                 if o.well != e.well and o.start <= e.end + tol and e.start <= o.end + tol
             }
         )
-        details = {**e.details, "field_wide": bool(others), "also_shut_in": others}
-        summary = e.summary + (f" Same time as {', '.join(others)}." if others else "")
+        running = sorted((flowing(e) if flowing else set()) - {e.well} - set(others))
+        details = {
+            **e.details,
+            "field_wide": bool(others) and not running,
+            "also_shut_in": others,
+            "others_flowing": running,
+        }
+        summary = e.summary
+        if others:
+            summary += f" Same time as {', '.join(others)}"
+            summary += f"; {', '.join(running)} kept flowing." if running else " (field-wide)."
         marked.append(replace(e, details=details, summary=summary))
     return marked
