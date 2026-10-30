@@ -24,9 +24,28 @@ EVENTS = {
             "kind": "regime_change",
             "start": "2010-07-18",
             "details": {"before": 4050.37, "after": 1145.72, "relative_change": -0.7171},
-        }
+        },
+        # The prompt's declaration examples ("2 870", "38%") use made-up values.
+        {
+            "kind": "regime_change",
+            "signal": "liquid_rate",
+            "start": "2010-07-18",
+            "details": {"before": 2870.4, "after": 1779.6, "relative_change": -0.38},
+        },
     ],
     "first_oil": "2008-02-12",
+}
+# The submit tool's example finding is about a made-up well, P-2.
+P2_EVENTS = {
+    "events": [
+        {
+            "kind": "regime_change",
+            "signal": "oil_rate",
+            "start": "2018-11-07",
+            "details": {"before": 1032.4, "after": 640.2, "relative_change": -0.3798},
+        }
+    ],
+    "first_oil": "2015-03-01",
 }
 
 
@@ -66,12 +85,12 @@ def test_each_exemption_the_prompt_states_holds(clause: str, claim: str, questio
 def test_the_prompts_rounding_examples_pass() -> None:
     """The prompt asks for readable precision; the checker must accept the examples it gives."""
     log = EvidenceLog()
-    log.add("fit", {"well": "F-12"}, {"di_per_year": 0.4461, "oil_sm3": 1133053}, _tool)
-    assert "0.45 per year" in SYSTEM_PROMPT and "1.13 million Sm3" in SYSTEM_PROMPT
-    claim = "F-12 declined at 0.45 per year and produced 1.13 million Sm3 meanwhile."
+    log.add("fit", {"well": "P-2"}, {"di_per_year": 0.3127, "oil_sm3": 2468915}, _tool)
+    assert "0.31 per year" in SYSTEM_PROMPT and "2.47 million Sm3" in SYSTEM_PROMPT
+    claim = "P-2 declined at 0.31 per year and produced 2.47 million Sm3 meanwhile."
     numbers = [
-        DeclaredNumber(text="0.45", value=0.4461, evidence_id="E1"),
-        DeclaredNumber(text="1.13 million", value=1133053, evidence_id="E1"),
+        DeclaredNumber(text="0.31", value=0.3127, evidence_id="E1"),
+        DeclaredNumber(text="2.47 million", value=2468915, evidence_id="E1"),
     ]
     finding = Finding(claim=claim, evidence_ids=["E1"], confidence="fact", numbers=numbers)
     assert check_submission(Submission(summary="Done.", findings=[finding]), log) == []
@@ -100,8 +119,8 @@ def test_the_submit_tools_example_finding_passes() -> None:
     description = submit_tool_schema()["function"]["description"]
     example = json.loads(description[description.index("{") : description.rindex("}") + 1])
     log = EvidenceLog()
-    log.add("detect_events", {"well": "F-12"}, EVENTS, _tool)
-    log.add("fit_decline", {"well": "F-12"}, {"best": {"r2_log": 0.8732}}, _tool)
+    log.add("detect_events", {"well": "P-2"}, P2_EVENTS, _tool)
+    log.add("fit_decline", {"well": "P-2"}, {"best": {"r2_log": 0.91}}, _tool)
     example["evidence_ids"] = ["E1", "E2"]  # the example's E3/E7, as this log numbers them
     for number in example["numbers"]:
         number["evidence_id"] = {"E3": "E1", "E7": "E2"}[number["evidence_id"]]
@@ -126,3 +145,52 @@ def test_a_question_as_of_a_past_date_names_no_field_and_no_operator() -> None:
 
     assert "Volve" not in past and "Equinor" not in past
     assert "Volve" in now
+
+
+# F-12's values and dates from the whole history: an answer the time machine gives, or a
+# fact from after any cut it might be asked at. The model reads the prompt and every tool
+# description in each run, so none of them may hold one (audit, Oct 31: the examples used
+# the time machine's own 359,000 and F-12's 2010-07-18 change).
+FULL_HISTORY = [
+    "359,000", "359 007", "324,000", "470,000", "340,000", "1.13 million", "1,133,053",
+    "1133053", "0.4461", "0.45 per year", "1 146", "1146", "1145.72", "4 050", "4050",
+    "4207", "1888", "1,890", "0.7171", "0.8732", "0.0566", "100% by 2012", "2095", "857",
+    "2010-05-02", "2010-07-18", "2010-10-12", "2012-02-14", "2014-11-26",
+]  # fmt: skip
+
+
+@pytest.mark.parametrize("as_of", ["2009-06-30", "2010-12-31", "2014-10-31"])
+def test_nothing_the_model_reads_comes_from_after_the_cut(as_of: str) -> None:
+    import json
+    from datetime import date
+    from pathlib import Path
+
+    from wellpilot.agent import review, sandbox, vision
+    from wellpilot.agent.loop import statements_tool_schema, submit_tool_schema, system_prompt
+    from wellpilot.agent.tools import tool_schemas
+    from wellpilot.data.store import ProductionStore
+
+    cut = date.fromisoformat(as_of)
+    store = ProductionStore(Path(__file__).parent / "fixtures" / "processed", as_of=cut)
+    texts = [
+        system_prompt(store),
+        system_prompt(store, statements=True),
+        json.dumps([*tool_schemas(), submit_tool_schema(), statements_tool_schema()]),
+        json.dumps([vision.VISION_TOOL.schema(), sandbox.PYTHON_TOOL.schema()]),
+        review.SYSTEM,
+        review.REVISE,
+        vision.SYSTEM,
+        vision.WARNING,
+        sandbox.NO_DATA,
+        sandbox.OWN_CODE,
+    ]
+    read = "\n".join(texts)
+    assert [v for v in FULL_HISTORY if v in read] == []
+    # Volve's years (first oil 2008, shutdown 2016): every date of them is before the cut.
+    # The examples' made-up well P-2 lives in 2015-2020 and is dated outside Volve's years.
+    later = [
+        d
+        for d in re.findall(r"\b((?:2007|2008|2009|201[0-6])-\d{2}(?:-\d{2})?)\b", read)
+        if d > as_of[: len(d)]
+    ]
+    assert later == []

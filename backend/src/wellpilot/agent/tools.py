@@ -163,12 +163,12 @@ class CalcArgs(Args):
 
     expression: str | None = Field(
         None,
-        description="Arithmetic on numbers taken from evidence, e.g. '0.4461 / 0.0566'. "
+        description="Arithmetic on numbers taken from evidence, e.g. '0.3127 / 0.0412'. "
         "Operators: + - * / ** and parentheses.",
     )
     expressions: list[str] | None = Field(
         None,
-        description="Several expressions in one call, e.g. ['4207 - 1888', '1888 / 4207']: "
+        description="Several expressions in one call, e.g. ['1032 - 640', '640 / 1032']: "
         "use this rather than one call per step.",
         max_length=20,
     )
@@ -554,10 +554,19 @@ def _snippet(text: str, terms: list[str], width: int = 300) -> str:
     return text[start : start + width]
 
 
+def known_documents(store: ProductionStore, doc_id: str) -> None:
+    """Refuse a document the store does not hold, naming only those it does: a run as of a
+    past date learns no later report's id from the error."""
+    known = list(
+        store.query("SELECT DISTINCT doc_id FROM report_pages ORDER BY doc_id").rows["doc_id"]
+    )
+    if doc_id not in known:
+        raise ValueError(f"unknown document {doc_id!r}; known: {', '.join(known) or 'none'}")
+
+
 def read_report_page(store: ProductionStore, args: ReportPageArgs) -> dict:
     _require_reports(store)
-    if args.doc_id not in REPORTS_BY_ID:
-        raise ValueError(f"unknown document {args.doc_id!r}; known: {', '.join(REPORTS_BY_ID)}")
+    known_documents(store, args.doc_id)
     page = store.query(
         "SELECT page, pages, text, image FROM report_pages WHERE doc_id = ? AND page = ?",
         [args.doc_id, args.page],
@@ -1303,7 +1312,7 @@ TOOLS = [
         "Evaluate arithmetic on numbers from evidence (ratios, differences, changes). Use it "
         "for every derived number you state, so the number has evidence; put all you need "
         "in one call with 'expressions'. Not needed to write a share as a percent: declare "
-        "'69%' with the evidence's 0.69.",
+        "'38%' with the evidence's 0.38.",
         CalcArgs,
         calculate,
     ),

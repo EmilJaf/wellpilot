@@ -327,12 +327,12 @@ FULL_SENTENCE = re.compile(r"(?<=[.!?])\s+")
 
 class DeclaredNumber(BaseModel):
     text: str = Field(
-        description="The number exactly as written in the text, e.g. '4 050', '72%', '0.4461', "
-        "'1.13 million'."
+        description="The number exactly as written in the text, e.g. '2 870', '38%', '0.3127', "
+        "'2.47 million'."
     )
     value: float = Field(
-        description="Its full value as the evidence has it: 4050 for '4 050' or '4.05k', "
-        "1133053 for '1.13 million', 0.72 or 72 for '72%'."
+        description="Its full value as the evidence has it: 2870 for '2 870' or '2.87k', "
+        "2468915 for '2.47 million', 0.38 or 38 for '38%'."
     )
     evidence_id: str = Field(description="The evidence id (E1, E2, ...) that contains the value.")
 

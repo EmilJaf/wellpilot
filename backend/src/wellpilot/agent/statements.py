@@ -52,8 +52,8 @@ class Part(BaseModel):
     ref: str | None = Field(
         None,
         description="Where the value is: an evidence id, then field names and row "
-        "selectors, e.g. 'E1/wells[well=F-12]/water_cut', 'E7/monthly[month=2010-12]/"
-        "water_cut', 'E5[kind=regime_change,signal=oil_rate,start=2010-05-02]', 'E13', "
+        "selectors, e.g. 'E1/wells[well=P-2]/water_cut', 'E7/monthly[month=2018-12]/"
+        "water_cut', 'E5[kind=regime_change,signal=oil_rate,start=2018-11-07]', 'E13', "
         "'E4/facts[0]'. [n] picks a row by its place (from 0).",
     )
     to: str | None = Field(None, description="change: the value it changed to.")
@@ -63,8 +63,8 @@ class Part(BaseModel):
     )
     form: Literal["clause", "phrase"] | None = Field(
         None,
-        description="value: 'clause' (F-12's water cut was 69% ...) or 'phrase' (F-12's water "
-        "cut of 69% ...), to fit the free words around it. Default clause.",
+        description="value: 'clause' (P-2's water cut was 54% ...) or 'phrase' (P-2's water "
+        "cut of 54% ...), to fit the free words around it. Default clause.",
     )
 
 

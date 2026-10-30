@@ -30,7 +30,7 @@ the tool result it cites, so do not question the numbers. Judge only the reasoni
 - an explanation stated while another was not ruled out (a gauge fault, a shut-in, a choke \
 change, work done on the well, a change in a neighbouring injector);
 - a conclusion that goes beyond what the evidence shows, or a cause marked as fact;
-- a period's average given as the level on one day ("to 1,890 around 2010-05-02" for the \
+- a period's average given as the level on one day ("to 640 around 2018-11-07" for the \
 mean of the months after), or a forecast stated as what will happen;
 - advice on a plug that ignores what the production log says it would leave flowing (its \
 water_cut_left_above against the well's water cut now);

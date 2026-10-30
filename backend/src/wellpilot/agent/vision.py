@@ -16,7 +16,7 @@ import json
 from pydantic import BaseModel, Field, ValidationError
 
 from wellpilot.agent.crosscheck import MONTHS_TOLERANCE, RATE_TOLERANCE, cross_check, measured
-from wellpilot.agent.tools import MAX_RESULT_CHARS, Args, Tool, to_jsonable
+from wellpilot.agent.tools import MAX_RESULT_CHARS, Args, Tool, known_documents, to_jsonable
 from wellpilot.data.store import ProductionStore
 from wellpilot.ingest.reports import REPORTS_BY_ID
 from wellpilot.llm import LLM, json_schema
@@ -60,10 +60,9 @@ class PageReading(BaseModel):
 
 async def look_at_page(store: ProductionStore, llm: LLM, args: LookArgs) -> dict:
     """Show the model a report page image with the agent's question; return its reading."""
-    if args.doc_id not in REPORTS_BY_ID:
-        raise ValueError(f"unknown document {args.doc_id!r}; known: {', '.join(REPORTS_BY_ID)}")
     if "report_pages" not in store.tables:
         raise ValueError("no report pages are loaded")
+    known_documents(store, args.doc_id)
     page = store.query(
         "SELECT pages, image FROM report_pages WHERE doc_id = ? AND page = ?",
         [args.doc_id, args.page],

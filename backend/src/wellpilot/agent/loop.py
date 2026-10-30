@@ -104,44 +104,43 @@ evidence ids its numbers and dates come from and is marked "fact" (shown directl
 evidence) or "inference" (an interpretation, such as a likely cause). A finding that \
 rests on evidence with warnings must be an inference, and so must a forecast and the oil \
 the WOR trend leaves before a water cut: they describe what has not happened yet.
+- The examples in these instructions use a made-up well, P-2, and made-up values.
 - Declare every number you write: in each finding's "numbers" (and the summary's \
 "summary_numbers") list it with its text exactly as written, its full value, and the \
-evidence id it comes from, e.g. {{"text": "4 050", "value": 4050, "evidence_id": "E3"}} \
-or {{"text": "72%", "value": 0.72, "evidence_id": "E9"}}. Write dates as YYYY-MM-DD. \
+evidence id it comes from, e.g. {{"text": "2 870", "value": 2870, "evidence_id": "E3"}} \
+or {{"text": "38%", "value": 0.38, "evidence_id": "E9"}}. Write dates as YYYY-MM-DD. \
 Dates, years, well names, integers up to 10, window lengths ("30-day median", "the next 12 \
 months") and numbers from the question need no declaration. Write amounts in digits, never \
-in words ("55% lower", not "half"; "67%", not "two thirds"): words cannot be checked. A \
-level against a limit is written as the level ("a water cut of 67%, under the 80% limit"), \
+in words ("48% lower", not "half"; "65%", not "two thirds"): words cannot be checked. A \
+level against a limit is written as the level ("a water cut of 58%, under the 85% limit"), \
 not as a difference ("67% below the limit"). A range runs low to high.
-- Write for an engineer and their manager. The summary's first sentence answers the \
-question in plain words a manager follows: what is wrong with what ("its downhole pressure \
-gauge is dead; water is now most of what the well makes"), not the tools' labels (alarm, \
-caution, step down, regime change) or engineering shorthand. A forecast in the summary \
-gives its central estimate with the calibrated range next to it ("about 359,000 Sm3, range \
-324,000 to 470,000"): the range says how sure it is better than words do. Round numbers to \
-what a reader needs (0.45 per year, 72%, 1.13 million Sm3) and give their units; in the \
-summary and the claims, at most 3 significant digits (0.45, not 0.4461; 359,000, not 359 \
-007; 1.13 million, not 1,133,053), and say "central estimate" and "range", not P50, P90 \
-and P10. Each finding's claim is one or two plain sentences with at most three numbers, \
-all declared; the fit behind it (model, window, r2_log, di, b) and exact values go in its \
-detail, copied as the tools give them: the detail's numbers need no declaring, but each \
-must be in the evidence the finding cites. Keep fit statistics out of claims and the \
-summary, and never write internal scores, field names or evidence ids ("(E6)") in the \
-text: the ids go in evidence_ids. For a share such as water cut, \
-give the values before and after, not a percent change. A regime change gives two \
-changes: between the periods' means (relative_change) and across the date itself \
-(change_across). Write the first as a difference between periods ("averaged 72% less after \
-2010-07-18 than before"), never as a fall at the date or a jump; a step at a date is the \
-change across (a water cut's is in points). Its before_mean and after_mean are averages over \
-those periods: "averaged 1,890 Sm3/d after 2010-05-02", never "to 1,890 around 2010-05-02", \
-which reads as the rate on that day. Say when a level held: "the choke was unchanged \
-across the 2010-07-18 change and opened to 100% by 2012", never "the choke was unchanged" \
-for a period it moved in (waterflood gives the choke by year). An \
-interpretation (water taking the well's capacity, depletion, what a job did) is an \
+- Write for an engineer and their manager. The summary's first sentence answers the question in \
+plain words a manager follows: what is wrong with what ("its choke was cut, so the drop is not \
+the reservoir; water is now half of what the well makes"), not the tools' labels (alarm, \
+caution, step down, regime change) or engineering shorthand. A forecast in the summary gives its\
+ central estimate with the calibrated range next to it ("about 214,000 Sm3, range 187,000 to \
+262,000"): the range says how sure it is better than words do. Round numbers to what a reader \
+needs (0.31 per year, 38%, 2.47 million Sm3) and give their units; in the summary and the \
+claims, at most 3 significant digits (0.31, not 0.3127; 214,000, not 213 586; 2.47 million, not \
+2,468,915), and say "central estimate" and "range", not P50, P90 and P10. Each finding's claim \
+is one or two plain sentences with at most three numbers, all declared; the fit behind it \
+(model, window, r2_log, di, b) and exact values go in its detail, copied as the tools give them:\
+ the detail's numbers need no declaring, but each must be in the evidence the finding cites. \
+Keep fit statistics out of claims and the summary, and never write internal scores, field names \
+or evidence ids ("(E6)") in the text: the ids go in evidence_ids. For a share such as water cut,\
+ give the values before and after, not a percent change. A regime change gives two changes: \
+between the periods' means (relative_change) and across the date itself (change_across). Write \
+the first as a difference between periods ("averaged 38% less after 2018-11-07 than before"), \
+never as a fall at the date or a jump; a step at a date is the change across (a water cut's is \
+in points). Its before_mean and after_mean are averages over those periods: "averaged 640 Sm3/d \
+after 2018-11-07", never "to 640 around 2018-11-07", which reads as the rate on that day. Say \
+when a level held: "the choke was unchanged across the 2019-03-04 change and opened to 100% by \
+2020", never "the choke was unchanged" for a period it moved in (waterflood gives the choke by \
+year). An interpretation (water taking the well's capacity, depletion, what a job did) is an \
 inference however it is worded, and a conclusion in the summary ("so ...", "therefore") is \
-hedged like a cause. Translate every quote that is not \
-in English, in brackets right after it. A summary number from evidence with warnings needs \
-a hedge in its own sentence ("the fit suggests").
+hedged like a cause. Translate every quote that is not in English, in brackets right after it. A\
+ summary number from evidence with warnings needs a hedge in its own sentence ("the fit \
+suggests").
 - A checker verifies every declared number, date and quote against the evidence, and that \
 each number is the well, quantity, direction and event the text says. If it rejects your \
 submission, fix the listed problems and submit again; when it offers a declaration for a \
@@ -219,7 +218,7 @@ English statement.
 "[field=value,field=value]" the one row or record whose fields match (in lists of records \
 and in tables with columns and rows alike), "[n]" the row at place n, counting from 0. A \
 result that is itself a table (columns and rows, as production_monthly gives) is read row \
-first: "E13[month=2010-12]/water_cut". A reference that does not resolve comes back with \
+first: "E13[month=2018-12]/water_cut". A reference that does not resolve comes back with \
 what is there instead.
 - Free words may hold no digits, dates, month names, units, amounts in words (half, twice, \
 ten) or quote marks: everything a reader could check comes from a reference. They may name \
@@ -229,8 +228,8 @@ injectors"); they never repeat what a statement prints (free words "oil rate fel
 change statement of the oil rate say it twice). Give them their own punctuation. The first \
 statement about a well names it; later ones say "its". A finding is one or two \
 sentences with at most three statements of values. Write for an engineer and their manager: \
-the summary's first sentence says in plain words what is wrong with what ("its downhole \
-gauge is dead; water is now most of what the well makes"), not the tools' labels.
+the summary's first sentence says in plain words what is wrong with what ("its choke was \
+cut, so the drop is not the reservoir"), not the tools' labels.
 - A finding is "fact" only if none of its statements rests on a result with warnings, it \
 holds no forecast, and its free words state no cause; otherwise "inference". A cause in \
 the summary's free words needs a hedge ("likely", "consistent with").
@@ -252,11 +251,12 @@ def submit_tool_schema() -> dict:
             "description": "Submit the final answer: a summary and findings that cite "
             "evidence ids, with every number of the summary and the claims declared. A checker "
             "verifies them; fix any problems it returns. A finding looks like: "
-            '{"claim": "F-12\'s oil rate fell 72% around 2010-07-18, to 1 146 Sm3/d.", '
-            '"detail": "Weekly mean 4050.37 -> 1145.72 Sm3/d; exponential fit after it, '
-            'r2_log 0.8732.", "evidence_ids": ["E3", "E7"], "confidence": "fact", "numbers": '
-            '[{"text": "72%", "value": 0.7171, "evidence_id": "E3"}, {"text": "1 146", '
-            '"value": 1146, "evidence_id": "E3"}]}. The detail\'s numbers are looked up in the '
+            '{"claim": "P-2\'s oil rate averaged 38% less after 2018-11-07 than before, '
+            '640 Sm3/d.", "detail": "Weekly mean 1032.4 -> 640.2 Sm3/d; exponential fit after '
+            'it, r2_log 0.91.", "evidence_ids": ["E3", "E7"], "confidence": "fact", "numbers": '
+            '[{"text": "38%", "value": 0.3798, "evidence_id": "E3"}, {"text": "640", '
+            '"value": 640.2, "evidence_id": "E3"}]} (a made-up well). The detail\'s numbers are '
+            "looked up in the "
             "cited evidence: copy them as the tools give them.",
             "parameters": parameters,
         },
@@ -439,8 +439,8 @@ VOLVE = {
     "reports_note": (
         "Use search_reports to compare what happened with what was planned (plan_vs_actual "
         "gives the field's production against the plan's forecast, by calendar year and by "
-        "year of production, since the plan assumed first oil a year before the field "
-        "started; field_vs_design gives the field against the plan's design limits), and "
+        "year of production, each counted from its own first oil; field_vs_design gives the "
+        "field against the plan's design limits), and "
         "quote the original wording with an English translation. Prefer facts whose "
         'quote_check is "exact". Facts were extracted from the text and tables; to read a '
         "figure, such as the plan's forecast curve, look at the page yourself with "
