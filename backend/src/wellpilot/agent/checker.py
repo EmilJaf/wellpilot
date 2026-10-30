@@ -873,7 +873,14 @@ def _standalone(text: str, written: str) -> list[tuple[int, int]]:
     """Spans where a declared text stands as a whole number: "2" in "2 years", not the 2 in
     "2 100", "12", "0.2" or "Sm3"; "276,078" in "P50 276,078"."""
     pattern = re.compile(rf"(?<![\w.,]){re.escape(written)}(?!\d|[.,]\d|[ \u00a0\u202f]\d{{3}}\b)")
-    return [m.span() for m in pattern.finditer(text) if not GROUP_BEFORE.search(text, 0, m.start())]
+    # GROUP_BEFORE ends at the match and spans at most 5 characters ("x123 "): searching only
+    # that window keeps a long text linear (from 0 it was quadratic: 9-14 s for a reader's
+    # 2,000-character edit, audit Oct 31).
+    return [
+        m.span()
+        for m in pattern.finditer(text)
+        if not GROUP_BEFORE.search(text, max(0, m.start() - 6), m.start())
+    ]
 
 
 # A time of day ("from 2013-06-30 14:15 to ... 20:00") is part of its date.

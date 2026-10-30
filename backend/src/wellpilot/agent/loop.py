@@ -720,7 +720,12 @@ async def run_agent(
                     "Write every number in plain decimal form and submit again."
                 ]
             # Readability is asked once: a second request could cost the answer its rounds.
-            if not asked_readability and (style := readability(submission)):
+            try:
+                style = [] if asked_readability else readability(submission)
+            except Exception:  # a style check must never cost the run ("1e400" overflowed)
+                logger.exception("readability failed on a submission")
+                style = []
+            if style:
                 asked_readability = True
                 problems = [*problems, *style]
             check_rounds.append(problems)
@@ -759,7 +764,8 @@ async def run_agent(
             name, arguments = call.function.name, call.function.arguments
             record: dict = {"name": name, "arguments": arguments}
             if name == SUBMIT:
-                payload = check(arguments)
+                # The checker is CPU-bound: in a thread, so other runs' streams flow.
+                payload = await asyncio.to_thread(check, arguments)
                 if "_rendered" in payload:
                     record["rendered"] = payload.pop("_rendered")
             elif (calls := calls + 1) > MAX_CALLS_PER_STEP:
@@ -813,7 +819,7 @@ async def run_agent(
         # model that forgets the tool still gets an answer checked and its problems back.
         written = None if message.tool_calls else _text_submission(message.content)
         if written:
-            payload = check(written)
+            payload = await asyncio.to_thread(check, written)
             text_call = {"name": SUBMIT, "arguments": written, "result": payload, "as_text": True}
             if "_rendered" in payload:
                 text_call["rendered"] = payload.pop("_rendered")

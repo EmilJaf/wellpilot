@@ -5,12 +5,14 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from wellpilot import __version__
 from wellpilot.agent.sandbox import modal_pool
 from wellpilot.api import data, redteam, runs, voice
+from wellpilot.api.bodylimit import BodyLimit
 from wellpilot.config import Settings, get_settings
 from wellpilot.llm import LLM, make_llm, provider_key
 
@@ -38,6 +40,19 @@ def create_app(
     sandboxes = modal_pool(settings.processed_dir) if settings.python_sandbox else None
     public = settings.public or on_fly
     app = FastAPI(title="WellPilot", version=__version__, lifespan=lifespan)
+    # Every body is small (a question, a reader's edit) but a voice clip.
+    app.add_middleware(
+        BodyLimit,
+        default=64_000,
+        limits={"/api/transcribe": settings.voice_max_audio_b64 + 64_000},
+    )
+
+    @app.exception_handler(RequestValidationError)
+    async def invalid(request: Request, exc: RequestValidationError) -> JSONResponse:
+        # What was wrong and where, never the input itself echoed back.
+        errors = [{k: e[k] for k in ("type", "loc", "msg") if k in e} for e in exc.errors()]
+        return JSONResponse({"detail": errors}, status_code=422)
+
     proxy = settings.trusted_proxy
     app.state.runs = runs.RunManager(
         settings.processed_dir,

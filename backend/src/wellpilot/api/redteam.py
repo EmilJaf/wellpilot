@@ -6,6 +6,8 @@ goes through the checker against the run's saved evidence. It costs tokens, so i
 own per-client limit, counts against the daily budget, and is refused without a key.
 """
 
+import asyncio
+
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field, ValidationError
 
@@ -52,8 +54,12 @@ async def attack_finding(run_id: str, body: AttackRequest, request: Request) -> 
     except Exception as e:  # a provider error: say the type, never the body
         raise HTTPException(502, f"the model failed ({type(e).__name__})") from None
     manager.charge(tokens)
+    # Judging runs the checker, CPU-bound: in a thread, so other requests are served.
+    judged = await asyncio.to_thread(
+        judge, record.question, result, record.evidence, body.index, attempts
+    )
     return {
-        "attempts": judge(record.question, result, record.evidence, body.index, attempts),
+        "attempts": judged,
         "model": llm.model,
         "tokens": tokens,
     }

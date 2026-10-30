@@ -11,6 +11,7 @@ by a daily token budget, and by how many can run at once.
 
 import asyncio
 import hmac
+import ipaddress
 import json
 import logging
 import os
@@ -56,15 +57,17 @@ class RunRequest(BaseModel):
 
 class EditedFinding(BaseModel):
     index: int = Field(ge=1, le=50, description="1-based, as the answer numbers them")
-    claim: str = Field(min_length=1, max_length=2000)
+    # A claim is a sentence or two; the checker's time grows with the text, so a reader's
+    # edit is capped near the longest real claims.
+    claim: str = Field(min_length=1, max_length=800)
     confidence: Literal["fact", "inference"]
 
 
 class CheckRequest(BaseModel):
     """A reader's edit of a finished answer, to be checked like the agent's submission."""
 
-    findings: list[EditedFinding] = Field(default_factory=list, max_length=10)
-    summary: str | None = Field(None, max_length=3000)
+    findings: list[EditedFinding] = Field(default_factory=list, max_length=3)
+    summary: str | None = Field(None, max_length=1500)
 
 
 def _record_of(value: dict) -> dict:
@@ -267,6 +270,7 @@ class RunManager:
         self._checks: dict[str, deque[float]] = {}  # readers' edits checked
         self._builds: dict[str, deque[float]] = {}  # stores built for a client's new dates
         self._building: dict[date | None, threading.Lock] = {}
+        self._build_slot = threading.Lock()
         # Checking is CPU-bound Python: two at a time keep the server answering the rest.
         self.check_slots = threading.BoundedSemaphore(2)
         self._hindsight: OrderedDict[str, dict] = OrderedDict()  # a finished run's never changes
@@ -322,29 +326,40 @@ class RunManager:
                 self._stores.move_to_end(as_of)
                 return self._stores[as_of]
             building = self._building.setdefault(as_of, threading.Lock())
-        with building:
+        evicted = []
+        try:
+            with building:
+                with self._stores_lock:
+                    if as_of in self._stores:  # built while this one waited
+                        return self._stores[as_of]
+                if client is not None:
+                    self._allow(
+                        self._builds,
+                        client,
+                        privileged,
+                        self.stores_per_client_per_hour,
+                        f"limit of {self.stores_per_client_per_hour} new dates per hour "
+                        "reached; pick a date already shown",
+                        budget=False,
+                    )
+                # One build at a time across dates: each holds about 40 MB while it loads,
+                # and the machine has 1 GB (audit, Oct 31: 40 at once took about 1 GB).
+                with self._build_slot:
+                    store = ProductionStore(
+                        self.processed_dir, as_of=as_of, isolated=self.isolate_sql
+                    )
+                with self._stores_lock:
+                    self._stores[as_of] = store
+                    while len(self._stores) > STORE_CACHE_SIZE:
+                        evicted.append(self._stores.popitem(last=False)[1])
+                return store
+        finally:
             with self._stores_lock:
-                if as_of in self._stores:  # built while this one waited
-                    return self._stores[as_of]
-            if client is not None:
-                self._allow(
-                    self._builds,
-                    client,
-                    privileged,
-                    self.stores_per_client_per_hour,
-                    f"limit of {self.stores_per_client_per_hour} new dates per hour reached; "
-                    "pick a date already shown",
-                    budget=False,
-                )
-            store = ProductionStore(self.processed_dir, as_of=as_of, isolated=self.isolate_sql)
-            with self._stores_lock:
-                self._stores[as_of] = store
-                while len(self._stores) > STORE_CACHE_SIZE:
-                    _, old = self._stores.popitem(last=False)
-                    if old.isolated is not None:  # a run still using it starts a new one
-                        old.isolated.close()
                 self._building.pop(as_of, None)
-            return store
+            # Closing waits for a query in flight: never under the cache lock.
+            for old in evicted:
+                if old.isolated is not None:  # a run still using it starts a new one
+                    old.isolated.close()
 
     def allow_check(self, client: str, privileged: bool = False) -> None:
         """A reader's edit checked: no tokens, but CPU. Raises Refused."""
@@ -380,6 +395,7 @@ class RunManager:
         if active >= self.max_active:
             raise Refused("too many runs in progress; try again in a minute")
         now = time.monotonic()
+        _sweep(self._starts, now)
         starts = self._starts.setdefault(client, deque())
         while starts and now - starts[0] > 3600:
             starts.popleft()
@@ -497,6 +513,7 @@ class RunManager:
         if privileged:
             return
         now = time.monotonic()
+        _sweep(bucket, now)
         starts = bucket.setdefault(client, deque())
         while starts and now - starts[0] > 3600:
             starts.popleft()
@@ -581,15 +598,38 @@ def _record(request: Request, run_id: str) -> RunRecord:
         raise HTTPException(404, f"no run {run_id}") from None
 
 
+def _sweep(bucket: dict[str, deque[float]], now: float) -> None:
+    """Forget clients with nothing in the last hour, now and then: the buckets are keyed
+    by address and would otherwise grow with every visitor."""
+    if len(bucket) < 1000:
+        return
+    for client in [c for c, q in bucket.items() if not q or now - q[-1] > 3600]:
+        del bucket[client]
+
+
 def client_id(request: Request, trusted_proxy: str = "none") -> str:
     """The visitor's address for rate limits. Proxy headers count only from the proxy we
     run behind: Fly-Client-IP on Fly, the last X-Forwarded-For hop (which our own proxy
     appended) with "xff". Otherwise a visitor could set them to dodge the limit."""
     if trusted_proxy == "fly" and (ip := request.headers.get("fly-client-ip")):
-        return ip
+        return _network(ip)
     if trusted_proxy == "xff" and (forwarded := request.headers.get("x-forwarded-for")):
-        return forwarded.split(",")[-1].strip()
-    return request.client.host if request.client else "unknown"
+        return _network(forwarded.split(",")[-1].strip())
+    return _network(request.client.host) if request.client else "unknown"
+
+
+def _network(ip: str) -> str:
+    """An IPv6 visitor counts by its /64, the block one subscriber holds: by full address
+    one person has billions of "clients" and every per-client limit is gone."""
+    try:
+        address = ipaddress.ip_address(ip)
+    except ValueError:
+        return ip
+    if address.version == 6:
+        if address.ipv4_mapped is not None:
+            return str(address.ipv4_mapped)
+        return str(ipaddress.ip_network(f"{address}/64", strict=False))
+    return str(address)
 
 
 @router.post("", status_code=202)
@@ -674,7 +714,9 @@ def check_edit(run_id: str, body: CheckRequest, request: Request) -> dict:
         )
     except Refused as e:
         raise HTTPException(429, str(e)) from None
-    if not manager.check_slots.acquire(timeout=10):
+    # Never wait for a slot: a waiting request holds one of the server's worker threads,
+    # and enough of them stall every data route (audit, Oct 31).
+    if not manager.check_slots.acquire(blocking=False):
         raise HTTPException(429, "the checker is busy; try again in a moment")
     try:
         return check_edits(
