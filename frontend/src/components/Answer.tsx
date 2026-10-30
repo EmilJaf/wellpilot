@@ -120,9 +120,16 @@ function bySpans(
           key={`q${q.start}`}
           className="quote-link"
           title={`Show this passage on the page it was read from (${source})`}
+          role="button"
+          tabIndex={0}
           onClick={(e) => {
             if ((e.target as HTMLElement).closest('button')) return
             e.stopPropagation()
+            open(source, { text: inner, value: Number.NaN, quote: true })
+          }}
+          onKeyDown={(e) => {
+            if (e.target !== e.currentTarget || (e.key !== 'Enter' && e.key !== ' ')) return
+            e.preventDefault()
             open(source, { text: inner, value: Number.NaN, quote: true })
           }}
         >
@@ -224,7 +231,9 @@ export function Answer(props: Props) {
             <p>
               {state.steps.length
                 ? 'No answer: the run stopped. The agent log says where.'
-                : `The agent could not start: ${state.error ?? 'the server refused the run'}.`}
+                : state.mode === 'saved' || state.mode === 'replay'
+                  ? `This run could not be opened: ${state.error ?? 'the server refused it'}.`
+                  : `The agent could not start: ${state.error ?? 'the server refused the run'}.`}
             </p>
             {props.recorded && (
               <button type="button" className="primary-button" onClick={() => props.onReplay(props.recorded!.id)}>
@@ -236,7 +245,7 @@ export function Answer(props: Props) {
           state.mode === 'saved' ? (
             <p className="empty">Loading the recorded answer</p>
           ) : (
-            <Live steps={state.steps} thinking={state.thinking} />
+            <Live steps={state.steps} thinking={state.thinking} reviewed={state.review != null} />
           )
         )}
       </div>
@@ -323,7 +332,7 @@ function Intro({
 }
 
 /** While the agent works: what it is doing now, and the checker's verdicts as they come. */
-function Live({ steps, thinking }: { steps: StepEvent[]; thinking: number | null }) {
+function Live({ steps, thinking, reviewed }: { steps: StepEvent[]; thinking: number | null; reviewed: boolean }) {
   const calls = steps.flatMap((s) => s.tool_calls)
   const results = calls.filter((c) => c.evidence_id).length
   const submissions = calls.filter((c) => c.name === 'submit_findings')
@@ -333,7 +342,13 @@ function Live({ steps, thinking }: { steps: StepEvent[]; thinking: number | null
     <div className="live">
       <p className="live-now">
         <span className="pulse" aria-hidden />
-        {thinking !== null ? `Step ${thinking}: the model is deciding what to do next` : 'Starting the run'}
+        {thinking !== null
+          ? `Step ${thinking}: the model is deciding what to do next`
+          : submissions.some((c) => c.accepted) && !reviewed
+            ? 'Answer accepted: a second opinion is reading its reasoning'
+            : steps.length
+              ? 'Between steps'
+              : 'Starting the run'}
       </p>
       {latest && (
         <p className="live-last">

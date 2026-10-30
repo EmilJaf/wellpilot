@@ -2140,6 +2140,17 @@ code,
   white-space: nowrap;
 }
 
+/* On a phone the mean and misses go under the bar instead of past the edge. */
+@media (max-width: 520px) {
+  .error-bar-track {
+    flex-wrap: wrap;
+  }
+  .error-bar-more {
+    flex-basis: 100%;
+    white-space: normal;
+  }
+}
+
 .error-bar-note {
   display: block;
   font-style: normal;
@@ -3838,6 +3849,39 @@ code,
   font-weight: 450;
   font-size: 0.9em;
   white-space: nowrap;
+}
+
+/* A result laid out as fields (well work, production logs): key beside value, long text
+   wraps, never wider than the pane. */
+.tree {
+  display: grid;
+  grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
+  gap: 3px 12px;
+  margin: 4px 0;
+  font-size: 13.5px;
+}
+.tree > dt {
+  color: var(--ink-3);
+  font-stretch: var(--narrow);
+}
+.tree > dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.tree-list {
+  margin: 0;
+  padding-left: 18px;
+}
+.tree-list > li + li {
+  margin-top: 6px;
+}
+.tree-none {
+  color: var(--ink-3);
+}
+pre.code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 /* A list inside a returned value (run_python's monthly rows): scrolls in its own box. */

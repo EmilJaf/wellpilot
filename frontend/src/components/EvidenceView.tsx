@@ -66,11 +66,15 @@ export function EvidenceView({ runId, evidenceId, attempt, focus }: Props) {
   const error = loaded?.key === key ? loaded.error : undefined
   const hit = matcher(focus)
   const host = useRef<HTMLDivElement>(null)
+  // What the view actually marked, counted once it rendered: a match in the raw result
+  // that the view does not show must not be promised ("marked below" over no mark).
+  const [marked, setMarked] = useState<{ key: string; count: number } | null>(null)
 
   // Opened from a number: show the banner that says where it came from, then its first
   // match, if the match is not already in view below it.
   useEffect(() => {
     if (!evidence || !focus) return
+    setMarked({ key: `${key}/${focus.text}`, count: host.current?.querySelectorAll('.hit').length ?? 0 })
     // Stacked on a phone, the evidence sits below the answer: a step that opens a source
     // (step 3's first finding) must not pull the page down to it. Scroll only when it shows.
     const frame = host.current?.getBoundingClientRect()
@@ -82,7 +86,7 @@ export function EvidenceView({ runId, evidenceId, attempt, focus }: Props) {
     if (hitEl && box && (box.bottom > window.innerHeight - 24 || box.top < 0)) {
       hitEl.scrollIntoView({ block: 'center', inline: 'nearest' })
     } else hitEl?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
-  }, [evidence, focus])
+  }, [evidence, focus, key])
 
   if (!evidenceId) {
     if (!runId) return null
@@ -98,7 +102,7 @@ export function EvidenceView({ runId, evidenceId, attempt, focus }: Props) {
   if (error) return <div className="panel-body evidence"><p className="empty">Evidence {evidenceId}: {error}</p></div>
   if (!evidence) return <div className="panel-body evidence"><p className="empty">Loading {evidenceId}</p></div>
 
-  const hits = focus ? countHits(evidence.result, hit) : 0
+  const hits = focus && marked?.key === `${key}/${focus.text}` ? marked.count : 0
   return (
     <div className="panel-body evidence" ref={host}>
       {focus && (
@@ -223,8 +227,15 @@ function Result({
 }) {
   if (tool === 'run_python') return <PythonRun result={result as PythonResult} code={String(args?.code ?? '')} />
   if (tool === 'calculate') {
-    const r = result as { expression: string; value: number }
-    return <CalcResult expression={r.expression} value={r.value} />
+    const r = result as { expression?: string; value?: number; results?: { expression: string; value: number }[] }
+    const rows = r.results ?? (r.expression !== undefined ? [{ expression: r.expression, value: r.value as number }] : [])
+    return (
+      <>
+        {rows.map((row, i) => (
+          <CalcResult key={i} expression={row.expression} value={row.value} />
+        ))}
+      </>
+    )
   }
   if (tool === 'detect_events') return <Events events={result as EventRow[]} />
   if (tool === 'plan_vs_actual') return <PlanEvidence result={result as PlanResult} />
@@ -256,7 +267,105 @@ function Result({
   if (tool === 'read_report_page') return <ReportPage page={result as PageResult} focus={focus} />
   if (tool === 'fit_decline' || tool === 'forecast_production') return <Fit result={result as FitResult} />
   if (isTable(result)) return <DataTable table={result} />
-  return <pre className="code">{JSON.stringify(result, null, 2)}</pre>
+  return <Tree value={result} />
+}
+
+type Scalar = string | number | boolean | null
+const isScalar = (v: unknown): v is Scalar => v === null || typeof v !== 'object'
+
+/** A list of records that share their keys and hold plain values: a table. */
+function recordKeys(value: unknown[]): string[] | null {
+  if (!value.length || !value.every((v) => v && typeof v === 'object' && !Array.isArray(v))) return null
+  const keys = Object.keys(value[0] as object)
+  const same = value.every((v) => {
+    const k = Object.keys(v as object)
+    return k.length === keys.length && k.every((x, i) => x === keys[i]) && Object.values(v as object).every(isScalar)
+  })
+  return same ? keys : null
+}
+
+/** Any result the views above do not know (well work, production logs, SQL in records),
+    as nested fields and tables with the clicked number marked. A raw JSON dump had no
+    marks and ran thousands of pixels wide on a phone. */
+function Tree({ value, depth = 0 }: { value: unknown; depth?: number }) {
+  const hit = useContext(HitContext)
+  if (isScalar(value)) {
+    if (value === null) return <span className="tree-none">none</span>
+    return <span className={hit(value) ? 'hit' : undefined}>{String(value)}</span>
+  }
+  if (Array.isArray(value)) {
+    if (!value.length) return <span className="tree-none">none</span>
+    if (value.every(isScalar)) {
+      return (
+        <span>
+          {value.map((v, i) => (
+            <Fragment key={i}>
+              {i ? ', ' : ''}
+              <Tree value={v} depth={depth + 1} />
+            </Fragment>
+          ))}
+        </span>
+      )
+    }
+    const keys = recordKeys(value)
+    const body = keys ? (
+      <div className="table-scroll">
+        <table className="data-table">
+          <thead>
+            <tr>
+              {keys.map((k) => (
+                <th key={k} scope="col">
+                  {k.replace(/_/g, ' ')}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {value.map((row, i) => (
+              <tr key={i}>
+                {keys.map((k) => {
+                  const v = (row as Record<string, Scalar>)[k]
+                  return (
+                    <td key={k} className={`${typeof v === 'number' ? 'num' : ''}${hit(v) ? ' hit' : ''}`}>
+                      {v === null ? '' : String(v)}
+                    </td>
+                  )
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    ) : (
+      <ol className="tree-list">
+        {value.map((v, i) => (
+          <li key={i}>
+            <Tree value={v} depth={depth + 1} />
+          </li>
+        ))}
+      </ol>
+    )
+    if (value.length <= 12 || depth === 0) return body
+    return (
+      <details open={countHits(value, hit) > 0}>
+        <summary>{value.length} items</summary>
+        {body}
+      </details>
+    )
+  }
+  if (isTable(value)) return <DataTable table={value} />
+  return (
+    <dl className="tree">
+      {Object.entries(value as Record<string, unknown>).map(([k, v]) => (
+        <Fragment key={k}>
+          <dt>{k.replace(/_/g, ' ')}</dt>
+          <dd>
+            <Tree value={v} depth={depth + 1} />
+          </dd>
+        </Fragment>
+      ))}
+    </dl>
+  )
 }
 
 type PythonResult = {
@@ -654,14 +763,26 @@ function Fit({ result }: { result: FitResult }) {
             <div className="is-honest">
               <dt>Range from past errors (P90 to P10)</dt>
               <dd>
-                {result.calibrated_band_sm3.p90.toLocaleString('en')} to {result.calibrated_band_sm3.p10.toLocaleString('en')}
+                <span className={hit(result.calibrated_band_sm3.p90) ? 'hit' : undefined}>
+                  {result.calibrated_band_sm3.p90.toLocaleString('en')}
+                </span>{' '}
+                to{' '}
+                <span className={hit(result.calibrated_band_sm3.p10) ? 'hit' : undefined}>
+                  {result.calibrated_band_sm3.p10.toLocaleString('en')}
+                </span>
               </dd>
             </div>
           )}
           <div>
             <dt>Range of the fit&rsquo;s scatter (bootstrap)</dt>
             <dd>
-              {result.cumulative_oil_sm3.p90.toLocaleString('en')} to {result.cumulative_oil_sm3.p10.toLocaleString('en')}
+              <span className={hit(result.cumulative_oil_sm3.p90) ? 'hit' : undefined}>
+                {result.cumulative_oil_sm3.p90.toLocaleString('en')}
+              </span>{' '}
+              to{' '}
+              <span className={hit(result.cumulative_oil_sm3.p10) ? 'hit' : undefined}>
+                {result.cumulative_oil_sm3.p10.toLocaleString('en')}
+              </span>
             </dd>
           </div>
         </dl>

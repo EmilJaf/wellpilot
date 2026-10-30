@@ -125,13 +125,30 @@ const stepFromUrl = (): Step | null => {
 // it scrolls, looks again a moment later, and scrolls again if the page went back to the
 // top; a reader who scrolled meanwhile is left where they are. Instant, not smooth: a smooth
 // scroll is cut short by that layout.
-const scrollToId = (id: string, tries = 20, at: number | null = null): void => {
-  requestAnimationFrame(() => {
-    const el = document.getElementById(id)
-    if (at !== null && window.scrollY > 0) return // in place, or the reader moved on
-    if (el) el.scrollIntoView({ block: 'start' })
-    if (tries > 0) window.setTimeout(() => scrollToId(id, tries - 1, el ? window.scrollY : null), el ? 250 : 100)
-  })
+// The reader's own wheel, touch or key ends the retries: on a desktop the story column
+// scrolls itself and the window stays at the top, so the old check ("the window moved")
+// kept pulling the column back for five seconds.
+let scrollGeneration = 0
+const scrollToId = (id: string): void => {
+  const generation = ++scrollGeneration
+  let stopped = false
+  const stop = () => {
+    stopped = true
+  }
+  const inputs = ['wheel', 'touchstart', 'keydown'] as const
+  inputs.forEach((e) => window.addEventListener(e, stop, { passive: true }))
+  const done = () => inputs.forEach((e) => window.removeEventListener(e, stop))
+  const attempt = (tries: number, at: number | null): void => {
+    requestAnimationFrame(() => {
+      if (stopped || generation !== scrollGeneration) return done()
+      const el = document.getElementById(id)
+      if (at !== null && window.scrollY > 0) return done() // in place, or the reader moved on
+      if (el) el.scrollIntoView({ block: 'start' })
+      if (tries > 0) window.setTimeout(() => attempt(tries - 1, el ? window.scrollY : null), el ? 250 : 100)
+      else done()
+    })
+  }
+  attempt(20, null)
 }
 
 /** A date typed as YYYY-MM-DD, the way the data and the answers write it (a browser's date
@@ -710,9 +727,13 @@ export default function App() {
   const askAboutSpan = () => {
     if (!span) return
     setQuestion(`What happened to ${span.well} between ${span.start} and ${span.end}, and why?`)
-    const input = questionBox.current
-    input?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    input?.focus()
+    // The ask bar is folded until asked for: open it, then focus the box once it exists.
+    setAskOpen(true)
+    requestAnimationFrame(() => {
+      const input = questionBox.current
+      input?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      input?.focus()
+    })
   }
 
   // A recorded example opens its saved answer at once (no tokens, no wait); without one it
@@ -919,7 +940,8 @@ export default function App() {
           {credits('credits')}
         </div>
 
-        <ErrorBoundary>
+        {/* Keyed by run: one bad render must not blank the pane for every run after it. */}
+        <ErrorBoundary key={state.id ?? 'none'}>
           <section aria-label="Well data and evidence" className="center">
             <div className="panel-head">
               <div className="tabs" role="tablist" aria-label="Data to show">

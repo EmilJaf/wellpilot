@@ -150,7 +150,7 @@ export const api = {
     }).then((r) => json<RunSummary>(r)),
   runs: () => fetch('/api/runs').then((r) => json<RunSummary[]>(r)),
   evidence: (runId: string, evidenceId: string) =>
-    fetch(`/api/runs/${runId}/evidence/${evidenceId}`).then((r) => json<Evidence>(r)),
+    fetch(`/api/runs/${encodeURIComponent(runId)}/evidence/${encodeURIComponent(evidenceId)}`).then((r) => json<Evidence>(r)),
   // With `end`, the field only up to that day (the time machine before its reveal).
   fieldPlan: (end?: string | null) => fetch(`/api/field/plan${end ? `?end=${end}` : ''}`).then((r) => json<unknown>(r)),
   fieldDesign: (end?: string | null) => fetch(`/api/field/design${end ? `?end=${end}` : ''}`).then((r) => json<unknown>(r)),
@@ -173,7 +173,7 @@ export const api = {
   pageImageUrl: (docId: string, page: number) => `/api/reports/${docId}/pages/${page}/image`,
   code: (ref: string) => fetch(`/api/code/${encodeURIComponent(ref)}`).then((r) => json<ToolCode>(r)),
   backtest: () => fetch('/api/backtest').then((r) => json<Backtest>(r)),
-  hindsight: (runId: string) => fetch(`/api/runs/${runId}/hindsight`).then((r) => json<Hindsight>(r)),
+  hindsight: (runId: string) => fetch(`/api/runs/${encodeURIComponent(runId)}/hindsight`).then((r) => json<Hindsight>(r)),
   backtestCase: (well: string, cutoff: string) =>
     fetch(`/api/backtest/cases/${encodeURIComponent(well)}/${cutoff}`).then((r) => json<BacktestCase>(r)),
   health: () => fetch('/api/health').then((r) => json<Health>(r)),
@@ -187,14 +187,14 @@ export const api = {
   film: (well: string) => fetch(`/api/backtest/film/${encodeURIComponent(well)}`).then((r) => json<Film>(r)),
   // The model's own attempts to get a false version of a finding past the checker.
   attack: (runId: string, index: number, count = 3) =>
-    fetch(`/api/runs/${runId}/attack`, {
+    fetch(`/api/runs/${encodeURIComponent(runId)}/attack`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...operatorHeader() },
       body: JSON.stringify({ index, count }),
     }).then((r) => json<AttackResult>(r)),
   // A reader's edit of a finished answer, checked against the run's saved evidence (no model call).
   check: (runId: string, edit: CheckRequest) =>
-    fetch(`/api/runs/${runId}/check`, {
+    fetch(`/api/runs/${encodeURIComponent(runId)}/check`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(edit),
@@ -511,9 +511,9 @@ export type Hindsight = {
  * before the run ended (unknown run, server gone).
  */
 export function followRun(runId: string, onEvent: (event: RunEvent) => void, onFail: (message: string) => void): () => void {
-  const source = new EventSource(`/api/runs/${runId}/events`)
+  const source = new EventSource(`/api/runs/${encodeURIComponent(runId)}/events`)
   let ended = false
-  const types: RunEvent['type'][] = ['run_started', 'llm_call', 'step', 'final', 'run_error']
+  const types: RunEvent['type'][] = ['run_started', 'llm_call', 'step', 'review', 'final', 'run_error']
   for (const type of types) {
     source.addEventListener(type, (message) => {
       if (!(message instanceof MessageEvent)) return
@@ -527,7 +527,7 @@ export function followRun(runId: string, onEvent: (event: RunEvent) => void, onF
   }
   source.onerror = () => {
     if (!ended && source.readyState === EventSource.CLOSED) {
-      onFail('The run could not be loaded: it does not exist, or the server is unreachable.')
+      onFail('the run could not be loaded: it does not exist, or the server is unreachable')
     }
   }
   return () => {

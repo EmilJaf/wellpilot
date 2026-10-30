@@ -38,7 +38,8 @@ export function FoolChecker({
   const original = findings[index] ?? findings[0]
   const [claim, setClaim] = useState(original.claim)
   const [confidence, setConfidence] = useState(original.confidence)
-  const [result, setResult] = useState<{ value?: CheckResult; error?: string; claim: string } | null>(null)
+  // A result stands for the text and the label it was checked with: either changed, it is gone.
+  const [result, setResult] = useState<{ value?: CheckResult; error?: string; claim: string; confidence: string } | null>(null)
   const [checking, setChecking] = useState(false)
   const [attacks, setAttacks] = useState<{ index: number; value?: AttackResult; error?: string } | null>(null)
   const [attacking, setAttacking] = useState(false)
@@ -128,9 +129,9 @@ export function FoolChecker({
     const edited = claim
     try {
       const value = await api.check(runId, { findings: [{ index: index + 1, claim: edited, confidence }] })
-      setResult({ value, claim: edited })
+      setResult({ value, claim: edited, confidence })
     } catch (e) {
-      setResult({ error: (e as Error).message, claim: edited })
+      setResult({ error: (e as Error).message, claim: edited, confidence })
     } finally {
       setChecking(false)
     }
@@ -173,6 +174,7 @@ export function FoolChecker({
         aria-label="The finding, to edit"
         value={claim}
         rows={3}
+        maxLength={800} // the server checks claims up to 800 characters
         onChange={(e) => setClaim(e.target.value)}
       />
       <p className="fool-tricks">
@@ -200,7 +202,7 @@ export function FoolChecker({
           </button>
         )}
       </div>
-      {result && result.claim === claim && (
+      {result && result.claim === claim && result.confidence === confidence && (
         <div className="fool-result" aria-live="polite">
           {result.error ? (
             <div className="flag flag-alarm">
