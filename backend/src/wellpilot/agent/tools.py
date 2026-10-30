@@ -1053,7 +1053,9 @@ def _depth_work(store: ProductionStore, well: str, surveys: list[dict]) -> dict:
     zones = [
         z for z in zones if sum(1 for y in zones if y != z and z[0] <= y[0] and y[1] <= z[1]) < 2
     ]
-    blank = [[a[1], b[0]] for a, b in zip(zones, zones[1:], strict=False) if b[0] > a[1]]
+    # Gaps under a metre are where two lists of intervals meet (the 2014 perforation ends
+    # at 3130.7 m, the zone starts at 3131 m), not pipe a plug could be set in.
+    blank = [[a[1], b[0]] for a, b in zip(zones, zones[1:], strict=False) if b[0] - a[1] >= 1.0]
     since = None
     if surveys:
         last = surveys[-1]
@@ -1089,10 +1091,13 @@ def _after_plugs(survey: dict, plugs: list[dict], passes: dict) -> None:
     a depth above it cuts only the flow between the two: of_flow_left gives that as a share of
     what the log measured above the plug. F-12's 2010 log was run the day before its 3210 m
     plug, so its shares below 3210 m were gone by 2014."""
-    later = [p for p in plugs if p["date"] > survey["date"]]
+    later = sorted((p for p in plugs if p["date"] > survey["date"]), key=lambda p: p["date"])
     if not later:
         return
-    plug = min(p["depth_m"] for p in later)  # the shallowest shuts off the most
+    # The first plug set after the log is what was in the hole for the next decision; a later
+    # one is that decision itself (on all of F-12's data the 2014 plug at 3150 m used to mark
+    # its own gap as already isolated).
+    plug = later[0]["depth_m"]
     survey["plugs_set_since"] = [{"date": p["date"], "depth_m": p["depth_m"]} for p in later]
     for p in survey["passes"]:
         gone = inflow_below(passes[p["pass"]], plug)

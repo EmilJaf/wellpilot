@@ -252,9 +252,13 @@ class SandboxPool:
                 sandbox = None
         sandbox = sandbox or await self._start()
         self.warm()
-        code, _, stderr = await sandbox.exec(
-            "python", RUNNER_PATH, "prepare", as_of.isoformat() if as_of else "none", limit_s=60
-        )
+        try:
+            code, _, stderr = await sandbox.exec(
+                "python", RUNNER_PATH, "prepare", as_of.isoformat() if as_of else "none", limit_s=60
+            )
+        except BaseException:  # a timeout, or the run ended meanwhile: never leave it running
+            await _quietly(asyncio.shield(sandbox.close()))
+            raise
         if code != 0:
             await _quietly(sandbox.close())
             raise RuntimeError(f"the sandbox could not prepare its data: {stderr[-300:]}")

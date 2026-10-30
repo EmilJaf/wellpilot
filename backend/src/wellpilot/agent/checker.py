@@ -3343,7 +3343,10 @@ def _declared(
     def readings_of(number: DeclaredNumber) -> list[Reading]:
         # A unit the text writes right after the declared number scales it too: "4.58"
         # declared, "4.58 MSm3" written.
-        end = _standalone(masked, number.text)[0][1]
+        spans = _standalone(masked, number.text)
+        if not spans:  # declared but not written as such (a reader's edit can do this)
+            return _readings(number.text)
+        end = spans[0][1]
         unit = SUFFIX_AFTER.match(masked, end)
         # The first end of a range takes the scale written after the second: "0.32 to 0.47
         # million Sm3" (not "316,000 to 1.11 million", written in full).
@@ -3356,7 +3359,7 @@ def _declared(
         # (+2 keeps the "Sm" that "M" and "k" need after them)
         readings = _readings(number.text + (masked[unit.start() : unit.end() + 2] if unit else ""))
         # "about 70%" for 69.39%: an approximate number is good to 1% of itself.
-        if APPROX.search(masked[: _standalone(masked, number.text)[0][0]]):
+        if APPROX.search(masked[: spans[0][0]]):
             readings = [(v, max(u, 0.01 * abs(v)), sc) for v, u, sc in readings]
         return readings
 

@@ -85,7 +85,8 @@ def _forecast_hindsight(
     agent_fit = fit_decline(window, model=args.get("model", "auto")).best
     reported = result["cumulative_oil_sm3"]
     classic_fit = fit_decline(_production(past, well)).best
-    classic = forecast(classic_fit, result["horizon_days"], n_boot=100, start=first)
+    horizon_days = result.get("horizon_days") or 365  # forecasts saved before it existed
+    classic = forecast(classic_fit, horizon_days, n_boot=100, start=first)
     # Fits on fixed recent windows, made the same day: the fair baselines. Which one would
     # have been right is known only afterwards; the agent chose its own window.
     fixed = []
@@ -95,7 +96,7 @@ def _forecast_hindsight(
             fit = fit_decline(recent).best
         except (ValueError, RuntimeError):
             continue
-        p50 = float(forecast(fit, result["horizon_days"], n_boot=50, start=first).cumulative["p50"])
+        p50 = float(forecast(fit, horizon_days, n_boot=50, start=first).cumulative["p50"])
         fixed.append(
             {
                 "months": months,
@@ -310,7 +311,10 @@ def _work_next(
                 continue
             after = _rates(full, well, back, back + pd.Timedelta(days=RATE_DAYS))
             daily = _production(full, well)
-            actual = float(daily.loc[daily["date"].between(back, back + YEAR), "oil_sm3"].sum())
+            # 365 days from the day back, as the trend it is set against (between() is
+            # inclusive at both ends: back + YEAR made it 366).
+            last = back + YEAR - pd.Timedelta(days=1)
+            actual = float(daily.loc[daily["date"].between(back, last), "oil_sm3"].sum())
             rest = float(daily.loc[daily["date"] >= back, "oil_sm3"].sum())
             # The decline the well was on, fitted on the 12, 6 and 3 months before the job:
             # no one window is the right one, so the gain is given as a range.
@@ -498,8 +502,8 @@ def _named_wells(run: dict, full: ProductionStore) -> list[str]:
     """The producing wells the question or the answer names, in the data's order."""
     result = run.get("result") or {}
     text = " ".join(
-        [run.get("question", ""), result.get("summary", "")]
-        + [f.get("claim", "") for f in result.get("findings") or []]
+        [run.get("question") or "", result.get("summary") or ""]
+        + [f.get("claim") or "" for f in result.get("findings") or []]
     )
     named = {re.sub(r"\s+", " ", m.group(0)).removeprefix("15/9-") for m in WELL.finditer(text)}
     wells = full.query("SELECT DISTINCT well FROM production_daily ORDER BY 1").rows["well"]

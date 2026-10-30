@@ -14,7 +14,7 @@ from wellpilot.agent.sandbox import modal_pool
 from wellpilot.api import data, redteam, runs, voice
 from wellpilot.api.bodylimit import BodyLimit
 from wellpilot.config import Settings, get_settings
-from wellpilot.llm import LLM, make_llm, provider_key
+from wellpilot.llm import LLM, is_down, make_llm, provider_key
 
 
 def create_app(
@@ -95,7 +95,7 @@ def create_app(
             if settings.llm_provider == "baseten" and settings.fireworks_api_key
             else None,
             # Audio input is a Muse Spark Open on Baseten feature; the mic hides otherwise.
-            "voice": bool(key) and settings.llm_provider == "baseten",
+            "voice": bool(key) and settings.llm_provider == "baseten" and not is_down("baseten"),
             # The agent can run its own Python (Modal Sandboxes are set up).
             "python": sandboxes is not None,
             "data_ready": (settings.processed_dir / "production_daily.parquet").exists(),
@@ -121,8 +121,12 @@ def _serve_frontend(app: FastAPI, dist: Path, https: bool = False) -> None:
     async def frontend(path: str, request: Request) -> FileResponse | HTMLResponse:
         if path.startswith("api/"):
             raise HTTPException(404, "not found")
-        file = (root / path).resolve()
-        if path and file.is_file() and root in file.parents:  # favicon.svg, never ../
+        try:
+            file = (root / path).resolve()
+            found = bool(path) and file.is_file() and root in file.parents  # never ../
+        except (OSError, ValueError):  # a NUL byte, a name too long: no such file
+            found = False
+        if found:  # favicon.svg
             return FileResponse(file)
         scheme = "https" if https else request.url.scheme
         origin = f"{scheme}://{request.url.netloc}"

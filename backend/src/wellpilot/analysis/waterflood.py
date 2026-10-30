@@ -84,8 +84,12 @@ def _wor_fit(monthly: pd.DataFrame, start=None, end=None) -> tuple[dict | None, 
         return None, f"WOR is not rising with cumulative oil on {span}: no limit can be projected"
     if r2 < 0.5:
         return None, f"no reliable WOR trend on {span}: r2 {r2:.2f} < 0.5"
-    np_now = float(monthly["cum_oil_sm3"].iloc[-1])
-    wor_now = float(monthly["wor"].iloc[-1])
+    # "Now" is the end of the window asked for, not of all the data: with end=2012-12-31 on
+    # F-12 it used 2016's cumulative oil and said no oil was left to a 0.90 water cut.
+    upto = monthly if end is None else monthly[monthly["month"] <= pd.Timestamp(end)]
+    upto = upto if len(upto) else monthly
+    np_now = float(upto["cum_oil_sm3"].iloc[-1])
+    wor_now = float(upto["wor"].iloc[-1])
     limits = []
     for cut in WATER_CUT_LIMITS:
         wor_limit = cut / (1 - cut)

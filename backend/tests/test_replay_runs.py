@@ -35,7 +35,9 @@ DRIFT = {
     "99d66f7a3adb": {"E5": "detect_events", "E6": "detect_events"},
     "21d18cc312ed": {"E5": "detect_events"},
     "43c53d5c1096": {"E2": "detect_events"},
-    "83a3114d185f": {"E3": "detect_events"},
+    # Its production_log too: the 2014 plug no longer isolates its own gap on all the data,
+    # and the 0.3 m "gap" between the 2014 perforation and the zone is gone.
+    "83a3114d185f": {"E3": "detect_events", "E8": "production_log"},
 }
 
 

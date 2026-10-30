@@ -58,7 +58,9 @@ class PageReading(BaseModel):
     readings: list[Reading] = Field(description="Every value the answer uses.")
 
 
-async def look_at_page(store: ProductionStore, llm: LLM, args: LookArgs) -> dict:
+async def look_at_page(
+    store: ProductionStore, llm: LLM, args: LookArgs
+) -> tuple[dict, tuple[int, int]]:
     """Show the model a report page image with the agent's question; return its reading."""
     if "report_pages" not in store.tables:
         raise ValueError("no report pages are loaded")
@@ -133,7 +135,9 @@ async def look_at_page(store: ProductionStore, llm: LLM, args: LookArgs) -> dict
                     WARNING,
                     f"SAM 3.1's measurement of the same figure disagrees on: {', '.join(off)}",
                 ]
-    return to_jsonable(result)
+    usage = response.usage
+    tokens = (usage.prompt_tokens, usage.completion_tokens) if usage else (0, 0)
+    return to_jsonable(result), tokens
 
 
 def for_the_model(result: dict) -> dict:
@@ -158,14 +162,16 @@ async def look(store: ProductionStore, llm: LLM, arguments: str) -> dict:
     except ValidationError as e:
         return {"error": f"invalid arguments for {LOOK}: {e}"}
     try:
-        result = await look_at_page(store, llm, args)
+        result, tokens = await look_at_page(store, llm, args)
     except (ValueError, TimeoutError) as e:
         return {"error": str(e) or f"{LOOK} timed out"}
     except Exception as e:  # a provider error must cost the call, not the run
         return {"error": f"{LOOK} failed: {type(e).__name__}"}
     if len(json.dumps(result, ensure_ascii=False)) > MAX_RESULT_CHARS:
-        return {"error": f"{LOOK} returned too much; ask a narrower question"}
-    return {"result": result}
+        return {"error": f"{LOOK} returned too much; ask a narrower question", "tokens": tokens}
+    # The reading's tokens, (prompt, completion): the loop adds them to the step's, so the
+    # run's total and the daily budget count them.
+    return {"result": result, "tokens": tokens}
 
 
 VISION_TOOL = Tool(

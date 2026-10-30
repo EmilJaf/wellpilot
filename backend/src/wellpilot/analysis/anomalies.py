@@ -213,7 +213,9 @@ def regime_changes(
                     "after_mean": after,
                     **change,
                     "before_from": weekly.index[bounds[i]],
-                    "after_to": weekly.index[bounds[i + 2] - 1],
+                    # Weeks are labelled by their Sunday: the last one may end past the data
+                    # (past an as-of date), so the period ends on the data's last day.
+                    "after_to": min(weekly.index[bounds[i + 2] - 1], daily["date"].max()),
                 },
                 summary=(
                     f"{signal} shifts around {start.date()}: weekly mean {_fmt(before)} -> "

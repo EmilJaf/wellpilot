@@ -33,6 +33,7 @@ REPORT_TABLES = {
 }
 # Present once the daily-report and production-log ingests have run: well work by day and
 # the logs run in the wells, cut at as_of like production (known from the day of the work).
+UNTRUSTED_ROWS = 201  # run_sql shows 200 rows and says when there were more
 OPERATION_TABLES = {
     "well_operations": OPERATIONS_FILE,
     "well_operation_steps": STEPS_FILE,
@@ -140,7 +141,13 @@ class ProductionStore:
                 continue
             frame = pd.read_parquet(processed_dir / file)
             if as_of is not None:
-                frame = frame[frame["date"] <= pd.Timestamp(as_of)]
+                cut = pd.Timestamp(as_of)
+                if "report_date" in frame:  # a day's work is reported the next morning
+                    frame = frame[frame["report_date"] <= cut]
+                elif table == "well_operation_steps":  # lines of those same reports
+                    frame = frame[frame["date"] < cut]
+                else:
+                    frame = frame[frame["date"] <= cut]
             self._load(table, frame)
         self._con.execute("SET temp_directory = ''")  # nothing spills to disk
         self._con.execute("SET enable_external_access = false")
@@ -154,8 +161,11 @@ class ProductionStore:
         self._con.unregister("_frame")
         self.tables.add(table)
 
-    def query(self, sql: str, params: list | None = None) -> QueryResult:
+    def query(
+        self, sql: str, params: list | None = None, max_rows: int | None = None
+    ) -> QueryResult:
         """Run one read-only SELECT, capped at max_rows rows and timeout_s seconds."""
+        limit = min(self.max_rows, max_rows) if max_rows else self.max_rows
         # Everything touching the connection, parsing included, holds the lock: DuckDB
         # connections are not safe to use from several threads at once.
         with self._lock:
@@ -165,7 +175,7 @@ class ProductionStore:
             try:
                 cursor = self._con.execute(sql, params)
                 columns = [d[0] for d in cursor.description]
-                records = cursor.fetchmany(self.max_rows + 1)
+                records = cursor.fetchmany(limit + 1)
             except duckdb.InterruptException as e:
                 raise QueryError(f"query ran longer than {self.timeout_s}s") from e
             except duckdb.Error as e:
@@ -173,8 +183,8 @@ class ProductionStore:
             finally:
                 timer.cancel()
 
-        truncated = len(records) > self.max_rows
-        rows = pd.DataFrame.from_records(records[: self.max_rows], columns=columns)
+        truncated = len(records) > limit
+        rows = pd.DataFrame.from_records(records[:limit], columns=columns)
         return QueryResult(rows=rows, truncated=truncated)
 
     def _single_select(self, sql: str) -> None:
@@ -223,7 +233,9 @@ class ProductionStore:
             f'left("{n}", {MAX_TEXT}) AS "{n}"' if kind == "VARCHAR" else f'"{n}"'
             for n, kind in quoted
         )
-        return self.query(f"SELECT {columns} FROM ({sql}) AS _q")
+        # The agent sees UNTRUSTED_ROWS rows: fetching thousands of wide ones only to drop
+        # them cost hundreds of MB in the worker's reply (audit, Oct 31).
+        return self.query(f"SELECT {columns} FROM ({sql}) AS _q", max_rows=UNTRUSTED_ROWS)
 
     def well_daily(
         self, well: str, start: date | None = None, end: date | None = None

@@ -51,6 +51,7 @@ ReviewFn = Callable[[LLM, str, Submission, EvidenceLog], Awaitable[tuple[Review,
 SUBMIT = "submit_findings"
 MAX_STEPS = 14  # real runs use 5-9; the model is warned two steps before the end
 MAX_CHECK_ROUNDS = 3
+MAX_LOOKS_PER_RUN = 6  # page readings per question: each is a model call on an image
 MAX_CALLS_PER_STEP = 8  # tool calls past this in one step get an error, not a result
 PREVIEW_CHARS = 300
 MAX_REASONING_CHARS = 6000  # Muse Spark Open's visible reasoning, per step, in the stream
@@ -156,6 +157,10 @@ NUDGE = (
     "tool, citing the evidence ids of the tool results each finding rests on."
 )
 NUDGE_FIX = "Fix the problems the checker listed and call submit_findings again."
+NUDGE_REVISE = (
+    "Check the reviewer's points with your tools and call submit_findings with the revised "
+    "answer, or submit the checked answer again if they do not change it."
+)
 SUBMIT_BY = 8  # a run with no submission by this step is told to submit, keeping steps to fix
 SUBMIT_ONLY = 10  # still none: only submit_findings is offered until the checker answers
 SUBMIT_ONLY_NOTE = (
@@ -530,7 +535,9 @@ def _text_submission(content: str | None) -> str | None:
     return None
 
 
-def _nudge(log: EvidenceLog, last_submission: Submission | None) -> str:
+def _nudge(log: EvidenceLog, last_submission: Submission | None, revising: bool = False) -> str:
+    if revising:  # the reviewer raised points; the checker listed nothing
+        return NUDGE_REVISE
     if last_submission:
         return NUDGE_FIX
     return NUDGE if len(log) else NUDGE_START
@@ -581,6 +588,7 @@ async def run_agent(
         submit_schema,
     ]
     python_calls = 0
+    look_calls = 0
     log = evidence_log if evidence_log is not None else EvidenceLog()
     steps: list[Step] = []
     check_rounds: list[list[str]] = []
@@ -773,23 +781,46 @@ async def run_agent(
                     "error": f"too many tool calls in one step; call at most {MAX_CALLS_PER_STEP}"
                 }
             else:
-                if name == LOOK:  # asks the model about a page image: async, not a thread
-                    payload = await look_fn(store, llm, arguments)
-                elif name == RUN_PYTHON and python_fn:
-                    python_calls += 1
-                    payload = (
-                        await python_fn(arguments)
-                        if python_calls <= MAX_CALLS_PER_RUN
-                        else {
-                            "error": f"{RUN_PYTHON} is limited to {MAX_CALLS_PER_RUN} calls per "
-                            "question; answer with the evidence you have"
-                        }
-                    )
-                    if isinstance(payload.get("result"), dict):  # recorded ones too
-                        payload = {**payload, "result": as_inference(payload["result"])}
-                else:
-                    # Tools are synchronous (DuckDB, scipy); keep the event loop free.
-                    payload = await asyncio.to_thread(execute, store, name, arguments)
+                # Tools run inside the run's time limit too: a page reading or the agent's
+                # own Python can take minutes (audit, Oct 31).
+                remaining = deadline - time.monotonic() if deadline else None
+                if remaining is not None and remaining <= 0:
+                    return stop(f"time limit of {timeout_s:.0f} s")
+                try:
+                    if name == LOOK:  # asks the model about a page image: async, not a thread
+                        look_calls += 1
+                        payload = (
+                            await asyncio.wait_for(look_fn(store, llm, arguments), remaining)
+                            if look_calls <= MAX_LOOKS_PER_RUN
+                            else {
+                                "error": f"{LOOK} is limited to {MAX_LOOKS_PER_RUN} pages per "
+                                "question; answer with the readings you have"
+                            }
+                        )
+                        # The page reading's own model call counts like a step's.
+                        used = payload.pop("tokens", None) if isinstance(payload, dict) else None
+                        if used:
+                            step.prompt_tokens += used[0]
+                            step.completion_tokens += used[1]
+                    elif name == RUN_PYTHON and python_fn:
+                        python_calls += 1
+                        payload = (
+                            await asyncio.wait_for(python_fn(arguments), remaining)
+                            if python_calls <= MAX_CALLS_PER_RUN
+                            else {
+                                "error": f"{RUN_PYTHON} is limited to {MAX_CALLS_PER_RUN} calls "
+                                "per question; answer with the evidence you have"
+                            }
+                        )
+                        if isinstance(payload.get("result"), dict):  # recorded ones too
+                            payload = {**payload, "result": as_inference(payload["result"])}
+                    else:
+                        # Tools are synchronous (DuckDB, scipy); keep the event loop free.
+                        payload = await asyncio.wait_for(
+                            asyncio.to_thread(execute, store, name, arguments), remaining
+                        )
+                except TimeoutError:
+                    return stop(f"time limit of {timeout_s:.0f} s")
                 if "result" in payload:
                     evidence = log.add(
                         name,
@@ -848,6 +879,7 @@ async def run_agent(
                     checked, accepted = accepted, None
                     reviewed["outcome"] = "asked"
                     messages.append({"role": "user", "content": revise_message(result)})
+                    text_replies = 0  # a reply before the review must not count against this
                     continue
                 reviewed["outcome"] = "sound"
             elif reviewed is not None and checked is not None:
@@ -879,7 +911,9 @@ async def run_agent(
                         submission=last_submission,
                     )
                 return finish(message.content, [], verified=False)
-            messages.append({"role": "user", "content": _nudge(log, last_submission)})
+            messages.append(
+                {"role": "user", "content": _nudge(log, last_submission, checked is not None)}
+            )
         if choice.finish_reason == "length":
             messages.append({"role": "user", "content": CUT_OFF})
 

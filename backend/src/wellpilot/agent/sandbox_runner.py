@@ -26,6 +26,7 @@ DATA_DIR = Path(os.environ.get("DATA_DIR", "/data"))
 TABLES = ("production_daily", "production_issues", "production_logs")
 MARKER = "__wellpilot_result__"
 PRINTED_CHARS = 2000
+RESULT_CHARS = 200_000
 SOURCE = "<agent code>"
 
 
@@ -44,6 +45,8 @@ def prepare(as_of: str) -> None:
             f"TO '{DATA_DIR / f'{table}.parquet'}' (FORMAT parquet)"
         )
     shutil.rmtree(VOLVE_DIR, ignore_errors=True)
+    if VOLVE_DIR.exists():  # the uncut data must be gone before the agent's code runs
+        sys.exit("the full data could not be removed; the run's code cannot be given it")
 
 
 def jsonable(value):
@@ -122,7 +125,16 @@ def run(code: str, nonce: str = "") -> None:
         "printed": printed.getvalue()[-PRINTED_CHARS:],
         "rows_read": read["rows"],
     }
-    print(MARKER + nonce + json.dumps(out))
+    line = json.dumps(out)
+    # The server reads this line whole: a result of millions of characters (a long string,
+    # a frame of every row) would land in its memory. The tools cap results at 40,000.
+    if len(line) > RESULT_CHARS:
+        sys.stderr.write(
+            f"the result is {len(line):,} characters, over {RESULT_CHARS:,}: return a summary "
+            "(a few numbers, or a small table), not the data"
+        )
+        sys.exit(1)
+    print(MARKER + nonce + line)
 
 
 if __name__ == "__main__":

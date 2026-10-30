@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field, ValidationError
 
 from wellpilot.agent.transcribe import transcribe
 from wellpilot.api.runs import Refused, RunManager, client_id
+from wellpilot.llm import is_down
 
 router = APIRouter(prefix="/api", tags=["voice"])
 
@@ -28,7 +29,8 @@ async def transcribe_question(body: VoiceRequest, request: Request) -> dict:
         llm = manager.llm_factory()
     except RuntimeError as e:
         raise HTTPException(503, str(e)) from None
-    if llm.provider != "baseten":
+    # Fireworks takes no audio: while Baseten is passed over, voice waits for it.
+    if llm.provider != "baseten" or is_down("baseten"):
         raise HTTPException(503, "voice input needs Muse Spark Open on Baseten")
     try:
         manager.allow_voice(client_id(request, manager.trusted_proxy), privileged)

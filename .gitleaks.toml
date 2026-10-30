@@ -17,3 +17,15 @@ keywords = ["llm_"]
 id = "baseten-api-key"
 description = "Baseten API key (three characters, underscore, 8 characters, dot, 32 characters)"
 regex = '''\b[a-z0-9]{3}_[A-Za-z0-9]{6,12}\.[A-Za-z0-9]{24,48}\b'''
+
+[[rules]]
+id = "fireworks-api-key"
+description = "Fireworks AI API key (fw_ followed by letters and digits)"
+regex = '''\bfw_[A-Za-z0-9]{20,64}\b'''
+keywords = ["fw_"]
+
+[[rules]]
+id = "modal-token"
+description = "Modal token id or secret (ak- or as- followed by letters and digits)"
+regex = '''\b(?:ak|as)-[A-Za-z0-9]{16,40}\b'''
+keywords = ["ak-", "as-"]

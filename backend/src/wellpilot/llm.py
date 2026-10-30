@@ -29,23 +29,34 @@ class LLM:
     fallback: str = ""  # the provider that answers when this one cannot
 
 
-# A provider that refused the key (401, 403), wants payment (402), no longer serves the model
-# (404) or is down (5xx or no connection, after the client's own retries) is passed over for
-# a while, so a run in the middle of a step and the runs after it go to the fallback.
+# A provider that refused the key (401, 403), wants payment (402) or no longer serves the
+# model (404) is passed over at once for a while; one that is failing (5xx or no connection,
+# after the client's own retries) only after OUTAGE_AFTER such failures in a row, so one bad
+# request does not move everyone to the fallback (audit, Oct 31).
 FALLBACK_STATUS = (401, 402, 403, 404)
+OUTAGE_AFTER = 3
 DOWN_FOR_S = 15 * 60
 _down_until: dict[str, float] = {}
+_failing: dict[str, int] = {}
 
 
-def _unusable(error: Exception) -> bool:
+def is_down(provider: str) -> bool:
+    """Whether a provider is being passed over now (health and voice ask)."""
+    return _down_until.get(provider, 0.0) > time.monotonic()
+
+
+def _unusable(provider: str, error: Exception) -> bool:
     if isinstance(error, openai.APITimeoutError):
         return False  # slow, not down: the run's own time limit handles it
-    if isinstance(error, openai.APIConnectionError):
-        return True
     status = getattr(error, "status_code", None)
-    return isinstance(error, openai.APIStatusError) and (
-        status in FALLBACK_STATUS or (status is not None and status >= 500)
-    )
+    if isinstance(error, openai.APIStatusError) and status in FALLBACK_STATUS:
+        return True
+    if isinstance(error, openai.APIConnectionError) or (
+        isinstance(error, openai.APIStatusError) and status is not None and status >= 500
+    ):
+        _failing[provider] = _failing.get(provider, 0) + 1
+        return _failing[provider] >= OUTAGE_AFTER
+    return False
 
 
 class _Completions:
@@ -58,10 +69,13 @@ class _Completions:
         routes = routes or self._routes[-1:]
         for i, (provider, client, model) in enumerate(routes):
             try:
-                return await client.chat.completions.create(**{**kwargs, "model": model})
+                answer = await client.chat.completions.create(**{**kwargs, "model": model})
+                _failing.pop(provider, None)
+                return answer
             except openai.APIError as e:
-                if i == len(routes) - 1 or not _unusable(e):
+                if not _unusable(provider, e) or i == len(routes) - 1:
                     raise
+                _failing.pop(provider, None)
                 _down_until[provider] = time.monotonic() + DOWN_FOR_S
                 status = getattr(e, "status_code", None)
                 logger.warning(

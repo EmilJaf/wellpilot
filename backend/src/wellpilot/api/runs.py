@@ -666,7 +666,8 @@ async def get_run(run_id: str, request: Request) -> dict:
 async def run_events(run_id: str, request: Request) -> EventSourceResponse:
     record = _record(request, run_id)
     last = request.headers.get("last-event-id", "")
-    after = int(last) if last.isascii() and last.isdigit() else -1  # "²" is a digit too
+    # "²" is a digit too; and 5,000 digits are past Python's int() limit.
+    after = int(last) if last.isascii() and last.isdigit() and len(last) <= 9 else -1
     return EventSourceResponse(_manager(request).stream(record, after))
 
 

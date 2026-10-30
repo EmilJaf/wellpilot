@@ -346,3 +346,10 @@ def test_a_result_line_printed_by_the_code_is_not_taken(box) -> None:
     payload = call(box, code)
 
     assert "error" in payload, payload
+
+
+def test_a_result_of_millions_of_characters_is_refused_in_the_sandbox(box) -> None:
+    """The server reads the result line whole: a huge one would land in its memory."""
+    payload = call(box, "d = daily('F-12')\nresult = 'x' * 1_000_000")
+
+    assert "over 200,000" in payload["error"] and "summary" in payload["error"]

@@ -81,7 +81,14 @@ def _issues(store: ProductionStore, well: str, end: pd.Timestamp) -> tuple[dict,
         return state, issues
 
     for failure in gauge_failures(daily, store.well_issues(well), columns=("bhp_bar",)):
-        if failure.end is not None and failure.end >= end - pd.Timedelta(days=7):
+        # A gauge that read again after its zeros came back (F-14 in February 2010): only
+        # one still reading 0 at the end is dead.
+        back = (
+            daily[(daily["date"] > failure.end) & (daily["bhp_bar"] > 0)]
+            if failure.end is not None
+            else daily.iloc[:0]
+        )
+        if failure.end is not None and failure.end >= end - pd.Timedelta(days=7) and back.empty:
             d = failure.details
             issues.append(
                 Issue(

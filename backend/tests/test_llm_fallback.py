@@ -34,8 +34,10 @@ class FakeClient:
 @pytest.fixture(autouse=True)
 def fresh_state():
     L._down_until.clear()
+    L._failing.clear()
     yield
     L._down_until.clear()
+    L._failing.clear()
 
 
 async def ask(client) -> str:
@@ -51,8 +53,6 @@ async def ask(client) -> str:
         status_error(openai.PermissionDeniedError, 403),
         status_error(openai.APIStatusError, 402),
         status_error(openai.NotFoundError, 404),
-        status_error(openai.InternalServerError, 503),
-        openai.APIConnectionError(request=REQUEST),
     ],
 )
 async def test_falls_back_and_passes_baseten_over_for_a_while(error):
@@ -93,8 +93,28 @@ async def test_the_last_provider_raises():
         await ask(client)
 
 
+@pytest.mark.parametrize(
+    "error",
+    [status_error(openai.InternalServerError, 503), openai.APIConnectionError(request=REQUEST)],
+)
+async def test_an_outage_moves_over_only_after_three_failures_in_a_row(error):
+    baseten = FakeClient(error, error, "fine", error, error, error)
+    fireworks = FakeClient("from fireworks")
+    client = L.FallbackClient([("baseten", baseten, "b"), ("fireworks", fireworks, "f")])
+    for _ in range(2):
+        with pytest.raises(type(error)):
+            await ask(client)
+    assert await ask(client) == "fine"  # a success resets the count
+    for _ in range(2):
+        with pytest.raises(type(error)):
+            await ask(client)
+    assert not L.is_down("baseten")
+    assert await ask(client) == "from fireworks"  # the third in a row
+    assert L.is_down("baseten")
+
+
 async def test_baseten_is_tried_again_after_its_time_out(monkeypatch):
-    baseten = FakeClient(status_error(openai.InternalServerError, 500), "back")
+    baseten = FakeClient(status_error(openai.AuthenticationError, 401), "back")
     fireworks = FakeClient("from fireworks")
     client = L.FallbackClient([("baseten", baseten, "b"), ("fireworks", fireworks, "f")])
     await ask(client)
