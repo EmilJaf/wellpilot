@@ -3840,6 +3840,16 @@ code,
   white-space: nowrap;
 }
 
+/* A share range such as 73-81% stays on one line. */
+.work-next-log td.num-col {
+  white-space: nowrap;
+}
+
+/* The reveal's sentence of barrels is long enough to wrap on a phone. */
+.hindsight-verdict .bbl {
+  white-space: normal;
+}
+
 /* The reveal: every forecast made the same day, as a signed error around the outcome. */
 .error-bars-case {
   margin: 16px 0 14px;

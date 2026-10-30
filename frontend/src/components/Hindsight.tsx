@@ -6,6 +6,9 @@ import { CaseChart } from './AccuracyView'
 
 /** What the model's reasoning holds from the hidden period, in words that promise no more
     than was checked: what it wrote, not what it may remember. */
+/** A date kept on one line: a phone breaks "2011-12-31" at a hyphen otherwise. */
+const Day = ({ d }: { d: string }) => <span className="nobr">{d}</span>
+
 function ReasoningLine({ r, asOf }: { r: ReasoningCheck; asOf: string }) {
   if (!r.available) return <p className="reasoning-line">{r.note}.</p>
   const found = r.later_dates.length + r.hidden_values.length
@@ -13,7 +16,7 @@ function ReasoningLine({ r, asOf }: { r: ReasoningCheck; asOf: string }) {
     return (
       <p className="reasoning-line">
         <CheckIcon /> The model&rsquo;s reasoning ({r.steps} steps, {r.characters.toLocaleString('en')} characters) holds no
-        date or value from after {asOf}
+        date or value from after <Day d={asOf} />
         {r.forecast_mentions > 0 &&
           `; ${r.forecast_mentions} ${r.forecast_mentions === 1 ? 'mention' : 'mentions'} of the year it forecasts ${r.forecast_mentions === 1 ? 'is' : 'are'} not counted`}
         . That is what it wrote, not what it may remember; the README shows what it remembers of this field.
@@ -24,7 +27,7 @@ function ReasoningLine({ r, asOf }: { r: ReasoningCheck; asOf: string }) {
       <CautionIcon />
       <div>
         <strong>
-          The model&rsquo;s reasoning mentions {found === 1 ? 'something' : `${found} things`} from after {asOf}:
+          The model&rsquo;s reasoning mentions {found === 1 ? 'something' : `${found} things`} from after <Day d={asOf} />:
         </strong>
         <ul>
           {r.later_dates.map((d, i) => (
@@ -170,7 +173,7 @@ function WorkNext({ w, asOf }: { w: NonNullable<Hindsight['work_next']>[number];
   return (
     <section className="work-next">
       <h4 className="case-title">
-        What was done to {w.well} next: {w.start === w.end ? w.start : `${w.start} to ${w.end}`}
+        What was done to {w.well} next: <Day d={w.start} />{w.start === w.end ? null : <> to <Day d={w.end} /></>}
       </h4>
       {w.plug_m !== null && (
         <p className="work-next-verdict">
@@ -248,7 +251,7 @@ function WorkNext({ w, asOf }: { w: NonNullable<Hindsight['work_next']>[number];
       )}
       <p className="chart-note-line">
         {w.trend_fit?.r2_log !== undefined && `The decline fits are poor (r² ${w.trend_fit.r2_log} at best): the range is wide for that reason. `}
-        {w.volumes_note} The agent answered as of {asOf} and could not see this job.
+        {w.volumes_note} The agent answered as of <Day d={asOf} /> and could not see this job.
       </p>
     </section>
   )
@@ -290,10 +293,10 @@ function OnLatestLog({
     <>
     <table className="case-table work-next-log">
       <caption>
-        On the last log before the job ({log.survey}, {log.date}), a plug shuts off what enters below it
+        On the last log before the job ({log.survey}, <Day d={log.date} />), a plug shuts off what enters below it
         {old && (
           <>
-            ; the plug set at {old.depth_m.toLocaleString('en-US')} m on {old.date} already shut off what entered
+            ; the plug set at {old.depth_m.toLocaleString('en-US')} m on <Day d={old.date} /> already shut off what entered
             below that, so the shares are of the flow left above it
           </>
         )}
@@ -419,8 +422,8 @@ function ForecastCase({ f, overtaken = false }: { f: Hindsight['forecasts'][numb
         </div>
       </dl>
       <p className="hindsight-verdict">
-        Oil from {f.forecast_from} to {f.horizon_end}
-        {f.data_ends && ` (the data ends on ${f.data_ends})`}
+        Oil from <Day d={f.forecast_from} /> to <Day d={f.horizon_end} />
+        {f.data_ends && <> (the data ends on <Day d={f.data_ends} />)</>}
         <span className="bbl" title={BARRELS_NOTE}>
           : about {barrels(agent.p50_sm3)} barrels forecast, {barrels(f.actual_sm3)} produced
         </span>
@@ -432,7 +435,7 @@ function ForecastCase({ f, overtaken = false }: { f: Hindsight['forecasts'][numb
       <p className="hindsight-fixed">
         {f.window_from_change ? (
           <>
-            <strong>It chose its own window:</strong> it fitted from {f.window_from_change.date},{' '}
+            <strong>It chose its own window:</strong> it fitted from <Day d={f.window_from_change.date} />,{' '}
             {f.window_from_change.kind === 'work'
               ? `after the work on the well it had found (${f.window_from_change.text})`
               : `where it had found ${f.well}’s rate shifting`}
@@ -441,7 +444,7 @@ function ForecastCase({ f, overtaken = false }: { f: Hindsight['forecasts'][numb
         ) : agent.window_start === classic.window_start ? (
           <>It fitted the whole history, as the textbook does. </>
         ) : (
-          <>It fitted from {agent.window_start}, a window it chose itself. </>
+          <>It fitted from <Day d={agent.window_start} />, a window it chose itself. </>
         )}
         The textbook fit on the whole history said {signed(classic.error)}
         {f.fixed_windows && f.fixed_windows.length > 0 && (
@@ -504,7 +507,7 @@ function ErrorBars({ f }: { f: Hindsight['forecasts'][number] }) {
   const at = (e: number) => 50 + (Math.max(-reach, Math.min(reach, e)) / reach) * 50
   return (
     <figure className="error-bars-case" aria-label="Forecast error of each method made the same day">
-      <figcaption>Each forecast made on {f.cutoff}, against what the well then produced</figcaption>
+      <figcaption>Each forecast made on <Day d={f.cutoff} />, against what the well then produced</figcaption>
       <ul>
         {rows.map((r) => (
           <li key={r.label} className={r.agent ? 'is-agent' : undefined}>
