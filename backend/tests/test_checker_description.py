@@ -240,3 +240,63 @@ def test_a_forecast_is_an_inference() -> None:
     assert not check(claim, eid, numbers, log, "inference")
     # The fit behind it describes the past: a fact may give it.
     assert not check("The fit has r2 0.9.", eid, [d("0.9", 0.9, eid)], log)
+
+
+def _events(log: EvidenceLog) -> str:
+    return add(
+        log,
+        "detect_events",
+        {"well": "F-14"},
+        [
+            {
+                "kind": "regime_change",
+                "signal": "water_cut",
+                "start": "2009-12-06",
+                "details": {"before_mean": 0.0612, "after_mean": 0.5304},
+            },
+            {
+                "kind": "regime_change",
+                "signal": "oil_rate",
+                "start": "2010-01-10",
+                "details": {
+                    "before_mean": 3616,
+                    "after_mean": 2397,
+                    "relative_change": -0.3369,
+                    "choke_before_pct": 83.0,
+                    "choke_after_pct": 58.0,
+                    "choke_moved": True,
+                },
+            },
+            {
+                "kind": "regime_change",
+                "signal": "oil_rate",
+                "start": "2011-07-18",
+                "details": {"before_mean": 2397, "after_mean": 1500, "choke_moved": False},
+            },
+        ],
+    )
+
+
+def test_a_name_after_the_number_before_is_that_number_s() -> None:
+    """Re-record 8b2385af10f9 (Oct 30) lost its verification on this: the 34% took the
+    water cut named after the 61% before it."""
+    log = EvidenceLog()
+    screen = add(log, "field_screen", {}, {"wells": [{"well": "F-14", "water_cut": 0.6112}]})
+    eid = _events(log)
+    claim = "F-14 is at 61% water cut and averaged 34% less oil after 2010-01-10 than before."
+    finding = Finding(
+        claim=claim,
+        evidence_ids=[screen, eid],
+        confidence="fact",
+        numbers=[d("61%", 0.6112, screen), d("34%", 0.3369, eid)],
+    )
+    assert not check_submission(Submission(summary="Done.", findings=[finding]), log)
+
+
+def test_a_choke_said_still_where_the_events_record_it_moving() -> None:
+    log = EvidenceLog()
+    eid = _events(log)
+    moved = "F-14's oil fell around 2010-01-10 while the choke stayed unchanged."
+    assert any("choke did not move" in p for p in check(moved, eid, [], log, "inference"))
+    still = "F-14's oil fell around 2011-07-18 while the choke stayed unchanged."
+    assert not check(still, eid, [], log, "inference")

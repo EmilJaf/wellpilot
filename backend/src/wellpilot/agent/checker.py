@@ -1497,7 +1497,8 @@ LINK = re.compile(
     r"stayed|held|holding|remained|high|low|has|had|have|been|being|"
     # "uptime fell from about 97%": a verb of change, and "from" only right after one
     r"(?:rose|risen|rising|fell|fallen|falling|dropped|dropping|declined|declining|"
-    r"increased|decreased|climbed|jumped|went (?:up|down))(?:\s+(?:continuously|steadily|"
+    r"increased|decreased|climbed|jumped|went(?: up| down)?|moved|shifted|changed)"
+    r"(?:\s+(?:continuously|steadily|"
     r"gradually|sharply|slowly|quickly))?(?:\s+from)?)\b,?)*",
     re.IGNORECASE,
 )
@@ -1548,7 +1549,8 @@ def _quantity(blanked: str, start: int, end: int, after: bool = True) -> str | N
         # "0.69 water cut", "53% choke", "1 551 Sm3/d oil", "123 258 Sm3 of water"
         found = re.match(
             rf"\s*(?P<pct>%|percent)?(?:{UNIT_AFTER.pattern})?\s*(?:of\s+(?:the\s+|its\s+)?)?"
-            rf"(?P<name>{_NAMES.pattern})",
+            # "34% less oil", "10% more water"
+            rf"(?:(?:less|more)\s+)?(?P<name>{_NAMES.pattern})",
             blanked[end:],
             re.IGNORECASE,
         )
@@ -1883,6 +1885,13 @@ def _attribution(
     return None
 
 
+# What may stand between a number and the name that is its own: "61% water cut", "123 258
+# Sm3 of water".
+OWN_NAME = re.compile(
+    rf"\s*(?:%|percent)?(?:{UNIT_AFTER.pattern})?\s*(?:of\s+(?:the\s+|its\s+)?)?",
+    re.IGNORECASE,
+)
+
 # Words that make a number a period's average, not a level on one day.
 AVERAGED = re.compile(
     r"\b(?:averag\w*|means?|period|thereafter|typical\w*|from then|since then|"
@@ -2084,7 +2093,13 @@ def _description(text: str, blanked: str, start: int, end: int) -> dict[str, tup
             listed and _quantity(blanked, last_start, last_end)
         ):
             said["quantity"] = (name, 2)
-        elif names := list(_NAMES.finditer(blanked, own_start, start)):
+        elif names := [
+            m
+            for m in _NAMES.finditer(blanked, own_start, start)
+            # "at 61% water cut and averaged 34% less oil": a name right after the number
+            # before is that number's, not this one's.
+            if not (previous and OWN_NAME.fullmatch(blanked[own_start : m.start()]))
+        ]:
             said["quantity"] = (names[-1].group(0), 1)
     # Its dates: one written right after it with "in", "on", "at" ("31% in 2015-01"), or
     # one before it in its own phrase ("since 2010-10-12 for 58 days", "on 2010-10-12 oil
@@ -4375,6 +4390,42 @@ def _quote_neighbours(label: str, text: str) -> list[str]:
     return problems
 
 
+# "the choke stayed unchanged", "not a choke cut": the choke said not to have moved.
+CHOKE_STILL = re.compile(
+    r"\bchoke\b[^.;]{0,40}?\b(?:(?:was|remained|stayed|held)\s+)?(?:unchanged|constant|steady|"
+    r"flat|the same|did not (?:change|move)|didn't (?:change|move)|never (?:changed|moved))\b"
+    r"|\b(?:not|no|without)\s+(?:a\s+|any\s+)?choke\s+(?:cut|change|move|back)",
+    re.IGNORECASE,
+)
+
+
+def _choke_still(label: str, text: str, cited: list) -> list[str]:
+    """A choke said not to have moved at a change the cited events record it moving at
+    ("while the choke stayed unchanged" around 2010-05-02, when it went 83% -> 58%)."""
+    problems = []
+    for sentence in FULL_SENTENCE.split(text):
+        if not CHOKE_STILL.search(sentence):
+            continue
+        days = [date.fromisoformat(d) for d in re.findall(r"\d{4}-\d{2}-\d{2}", sentence)]
+        for e in cited:
+            if e.tool != "detect_events" or not isinstance(e.result, list):
+                continue
+            for event in e.result:
+                details = event.get("details") or {}
+                if event.get("kind") != "regime_change" or not details.get("choke_moved"):
+                    continue
+                start = date.fromisoformat(str(event["start"])[:10])
+                if any(abs((d - start).days) <= 14 for d in days):
+                    before = details.get("choke_before_pct") or 0
+                    after = details.get("choke_after_pct") or 0
+                    problems.append(
+                        f"{label} says the choke did not move, but {e.id} records it going "
+                        f"from {before:.0f}% to {after:.0f}% across the {event['start']} "
+                        "change. Say what the choke did."
+                    )
+    return list(dict.fromkeys(problems))
+
+
 # What a forecast or a trend says about days not yet seen: a forecast's volumes, rates and
 # ranges (not its fit's parameters, which describe the past), and the WOR trend carried to
 # each reference water cut.
@@ -4498,7 +4549,7 @@ def _disputed(
             written = (
                 [
                     m
-                    for sentence in SENTENCE.split(text)
+                    for sentence in FULL_SENTENCE.split(text)
                     if FIGURE_WORDS.search(sentence)
                     for m in re.finditer(
                         rf"(?<![\d.,]){re.escape(f'{value:g}')}(?:\.0)?(?:\s*(?:-|to)\s*[\d.]+)?\s*"
@@ -4514,16 +4565,18 @@ def _disputed(
             shown = [
                 n.text
                 for n in declared
-                if not any(DISPUTE.search(s) for s in SENTENCE.split(text) if n.text in s)
+                if not any(DISPUTE.search(s) for s in FULL_SENTENCE.split(text) if n.text in s)
             ] + [m.group(0) for m in written]
             if shown:
                 unit = check.get("sam_unit") or check.get("unit") or ""
+                # The hint gives SAM's own value, which the evidence holds, and an example
+                # with no semicolon: the model copies both.
                 problems.append(
                     f"{label}: '{shown[0]}' is {item.id}'s reading of the figure "
                     f"({check.get('label')}), and SAM 3.1's measurement of the same figure "
-                    f"disagrees with it (by {check.get('difference'):g} {unit}). Say so in the "
-                    "same sentence (\"the model read about 2 years; SAM's measurement "
-                    'differs"), or leave the reading out.'
+                    f"disagrees with it (SAM: {check.get('sam')} {unit}). Say so in the same "
+                    'sentence ("the model read about 2 years, but SAM\'s measurement differs"), '
+                    "or leave the reading out."
                 )
     return problems
 
@@ -5041,6 +5094,7 @@ def check_submission(submission: Submission, log: EvidenceLog, question: str = "
         problems += _within_limits(f"Finding {n}", own, cited)
         problems += _month_spans(f"Finding {n}", own)
         problems += _quote_neighbours(f"Finding {n}", finding.claim)
+        problems += _choke_still(f"Finding {n}", own, cited)
         problems += _report_claims(f"Finding {n}", own, cited)
         looks = [e for e in cited if e.tool == "look_at_page"]
         problems += _disputed(f"Finding {n}", finding.claim, finding.numbers, looks)
