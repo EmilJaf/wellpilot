@@ -10,7 +10,6 @@ The agent CLI adds each run it makes. For runs made in the web app:
     uv run python -m wellpilot.agent.corpus add            # every run not in the corpus yet
     uv run python -m wellpilot.agent.corpus add <run id>   # one run (again)
     uv run python -m wellpilot.agent.corpus check          # replay all; list cases to review
-    uv run python -m wellpilot.agent.corpus export         # training data (data/training)
 
 A new case expects the verdict the checker gives now. A rejection is marked "to_review":
 someone who understands the answer decides whether the checker was right. If it was
@@ -138,84 +137,6 @@ def check(corpus: Path = CORPUS_DIR) -> int:
     return changed
 
 
-SFT_SYSTEM = (
-    "You answer a petroleum engineer's question about an oil field from the tool results "
-    "given. Reply with one JSON object: summary, summary_numbers, findings (claim, "
-    "evidence_ids, confidence fact|inference, numbers). Every number you write is declared "
-    "with its value and the id of the result it comes from; causes are inferences."
-)
-
-
-def export(corpus: Path = CORPUS_DIR, out: Path | None = None) -> dict:
-    """The corpus as training data a checker labelled, for an open-weight model:
-    - preferences.jsonl: within one run, an answer the checker sent back and the answer it
-      then accepted, with the checker's reasons (pairs for preference training);
-    - accepted.jsonl: every accepted answer with the evidence it cites.
-    Labels are the reviewed verdicts ("expected"), so a false rejection the review
-    corrected is not taught as wrong. Nothing is trained here."""
-    out = out or get_settings().data_dir / "training"
-    out.mkdir(parents=True, exist_ok=True)
-    cases = [json.loads(p.read_text()) for p in sorted(corpus.glob("*.json"))]
-    by_run: dict[str, list[dict]] = {}
-    for case in cases:
-        by_run.setdefault(case["source"]["run"], []).append(case)
-    pairs, accepted = [], []
-    for run in by_run.values():
-        run.sort(key=lambda c: c["source"]["submission"])
-        chosen = next((c for c in run if c["expected"]["accepted"]), None)
-        for case in run:
-            if case["expected"]["accepted"]:
-                accepted.append(
-                    {
-                        "question": case["source"]["question"],
-                        "evidence": case["evidence"],
-                        "answer": case["submission"],
-                    }
-                )
-            elif chosen and case["source"]["submission"] < chosen["source"]["submission"]:
-                pairs.append(
-                    {
-                        "question": case["source"]["question"],
-                        "evidence": case["evidence"],
-                        "rejected": case["submission"],
-                        "checker_said": replay(case),
-                        "chosen": chosen["submission"],
-                    }
-                )
-    for name, rows in (("preferences", pairs), ("accepted", accepted)):
-        (out / f"{name}.jsonl").write_text(
-            "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows)
-        )
-    # The accepted answers as chat examples for supervised fine-tuning (Fireworks and most
-    # trainers read {"messages": [...]} per line): the question and the tool results in,
-    # the checked submission out.
-    sft = [
-        {
-            "messages": [
-                {"role": "system", "content": SFT_SYSTEM},
-                {
-                    "role": "user",
-                    "content": json.dumps(
-                        {"question": a["question"], "tool_results": a["evidence"]},
-                        ensure_ascii=False,
-                    ),
-                },
-                {"role": "assistant", "content": json.dumps(a["answer"], ensure_ascii=False)},
-            ]
-        }
-        for a in accepted
-    ]
-    (out / "sft.jsonl").write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in sft))
-    return {
-        "cases": len(cases),
-        "runs": len(by_run),
-        "questions": len({c["source"]["question"] for c in cases}),
-        "preference_pairs": len(pairs),
-        "accepted_answers": len(accepted),
-        "out": str(out),
-    }
-
-
 def main() -> None:
     parser = argparse.ArgumentParser(description="Checker corpus of real submissions.")
     common = argparse.ArgumentParser(add_help=False)
@@ -226,13 +147,9 @@ def main() -> None:
     )
     add_parser.add_argument("run", nargs="?", help="run id (from data/runs) or path to a file")
     commands.add_parser("check", parents=[common], help="replay every case; list cases to review")
-    commands.add_parser("export", parents=[common], help="write checker-labelled training data")
     args = parser.parse_args()
     if args.command == "check":
         sys.exit(1 if check(args.corpus) else 0)
-    if args.command == "export":
-        print(json.dumps(export(args.corpus), indent=1))
-        return
     runs_dir = get_settings().runs_dir
     if args.run is None:
         describe(add_new(runs_dir, args.corpus))
