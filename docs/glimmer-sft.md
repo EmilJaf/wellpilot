@@ -32,106 +32,82 @@ checker's blind spots.
 
 ## What it costs
 
-- **Training:** Muse Glimmer 30B supervised fine-tuning is free on Fireworks until Nov 30
-  (LoRA, via the web UI or the Serverless Training API).
-- **Answers:** Glimmer has no serverless endpoint on Fireworks, and a LoRA runs only on an
-  on-demand deployment: an H100 at $8 an hour, billed by the second, start-up not charged.
-  One deployment of the base model with add-ons serves both base and tuned Glimmer; the 25
-  items twice each take well under an hour. Delete the deployment when done.
+- **Training:** Muse Glimmer 30B LoRA training is free on Fireworks' Serverless Training API
+  until Nov 30. It runs from the local file, so nothing is uploaded as a dataset.
+- **Answers:** Glimmer has no public inference endpoint, but a serverless training session
+  samples its own checkpoints with no deployment. That is billed per token ($1.96 per million
+  read, about 80% less when cached; $4.88 per million written). Base and tuned, both rounds on
+  all 30 items, cost at most about $7; `--dry-run` prints the bound for today's data.
 - **Muse Spark Open as a reference** (Baseten): about 25 x 15k tokens in, about $0.5-0.8.
 
 ## Steps (Emil runs them; they use the Fireworks account)
 
-About 30 minutes of hands-on time, spread over an evening; training itself runs on its own.
+`wellpilot.training_serverless` follows Fireworks' own example
+(`training/examples/sft/muse_glimmer_starter.py` in `fw-ai/cookbook`) and needs its packages,
+so it has its own venv. `data/` is git-ignored. The key is the `FIREWORKS_API_KEY` the backend
+already reads.
 
-**1. Prepare (once, about 5 minutes).**
-- Redeem the Fireworks promo code (Billing -> Credits -> Redeem Promo); it must be done by Nov 3.
-- Install the CLI and sign in; `whoami` prints the account id the commands below need:
-
-  ```bash
-  brew tap fw-ai/firectl
-  ```
-
-  ```bash
-  brew install firectl
-  ```
-
-  ```bash
-  firectl signin
-  ```
-
-  ```bash
-  firectl whoami
-  ```
-
-**2. Upload the data and start training (about 5 minutes; then it runs by itself).**
+**1. Install, once (about 5 minutes, about 3 GB).**
 
 ```bash
-cd ~/wellpilot && firectl dataset create wellpilot-writer data/training/writer/train.jsonl
+cd ~/wellpilot && git clone --depth 1 https://github.com/fw-ai/cookbook data/training/sft/cookbook
 ```
 
 ```bash
-firectl sftj create --base-model accounts/fireworks/models/muse-glimmer-30b --dataset wellpilot-writer --output-model wellpilot-glimmer-writer --epochs 2 --lora-rank 16 --max-context-length 32768
+cd ~/wellpilot && uv venv data/training/sft/venv --python 3.13
 ```
 
-Check on it with `firectl sftj get <job id>` (the id is printed by the command above). If it
-says examples were cut at the context limit, start it again with `--max-context-length 65536`.
-Training is free for Glimmer until Nov 30.
+```bash
+cd ~/wellpilot && uv pip install --python data/training/sft/venv/bin/python -e data/training/sft/cookbook/training -e backend
+```
 
-If `firectl dataset create` says dataset uploads are disabled for the account (it did on
-Oct 30), use the console's training form instead (Fine-tuning -> new job): model Muse Glimmer
-30B, method SFT, upload `train.jsonl` as the dataset; for evaluation upload
-`data/training/writer/validation.jsonl` (the held-out questions' accepted answers) rather
-than splitting 20% off the 70 training examples; epochs 2, LoRA rank 16, max context 32768
-(the others as they are). The estimate must show the training as free; if it shows a cost,
-stop and check.
+**2. Check the data, free.** It renders every row with Glimmer's own tokenizer and sends
+nothing. The longest row must fit `--max-seq-len`.
 
-**3. While it trains: the reference on Muse Spark Open (Baseten, about $0.5-0.8).**
+```bash
+cd ~/wellpilot/backend && ../data/training/sft/venv/bin/python -m wellpilot.training_serverless --dry-run
+```
+
+**3. Three questions on the base model, a few cents.** This shows that the account has access
+to serverless training and that Glimmer answers in JSON. If the reply says access must be
+requested, ask Fireworks to enable serverless training for the account. If answers come back
+cut off (`valid_json` below 3), add `--max-tokens 12000` to this and the next step.
+
+```bash
+cd ~/wellpilot/backend && ../data/training/sft/venv/bin/python -m wellpilot.training_serverless --epochs 0 --limit 3
+```
+
+**4. The run.** It scores base Glimmer, trains (3 epochs, 53 steps, a loss line per step), saves
+the adapter as the model `wellpilot-glimmer-writer` and scores the tuned one. How long a step
+takes on the shared pool is not known yet: the first lines will tell. Keep the terminal open.
+After the first steps, check the billing page shows no training charge; if it does, stop with
+Ctrl-C and tell Claude.
+
+```bash
+cd ~/wellpilot/backend && ../data/training/sft/venv/bin/python -m wellpilot.training_serverless
+```
+
+If it stops partway, every epoch's adapter is saved and its path is in
+`data/training/writer/serverless/metrics.jsonl`. Score one with:
+
+```bash
+cd ~/wellpilot/backend && ../data/training/sft/venv/bin/python -m wellpilot.training_serverless --tuned-path <path>
+```
+
+**5. The reference on Muse Spark Open (Baseten, about $0.5-0.8).**
 
 ```bash
 cd ~/wellpilot/backend && uv run python -m wellpilot.training eval --label muse
 ```
 
-**4. When training is done: one machine for both Glimmers (billing starts here, $8 an hour).**
-- Find a deployment shape for the base model; pick a BF16 one (FP8 and FP4 shapes cannot
-  hold an adapter). If the list is unclear, send it to Claude.
-
-  ```bash
-  firectl deployment-shape-version match --model accounts/fireworks/models/muse-glimmer-30b
-  ```
-
-- Create the deployment with add-ons. `--scale-to-zero-window 10m` is the safety net:
-  if it is ever left idle, it drops to zero replicas after 10 minutes (Fireworks bills by
-  GPU-second while replicas are active; deployments at zero for 7 days are deleted):
-
-  ```bash
-  firectl deployment create accounts/fireworks/models/muse-glimmer-30b --deployment-shape <BF16 shape> --enable-addons --min-replica-count 0 --scale-to-zero-window 10m
-  ```
-
-**5. Score both, and the machine deletes itself (about 20-40 minutes).** When
-`firectl deployment get <deployment id>` says it is ready, run the script. It loads the
-trained adapter, scores base Glimmer on three items (to see it answers at all), then on
-all of them, then the tuned one, and deletes the deployment when it ends, fails or is
-stopped with Ctrl-C; a watchdog deletes it after 90 minutes even if a step hangs.
-
-```bash
-cd ~/wellpilot && scripts/glimmer_eval.sh <account> <deployment id>
-```
-
-**6. Check the billing stopped:** the script prints `deleted deployment ...` and the list
-after it should not hold the deployment. If it says it could not delete, run these:
-
-```bash
-firectl deployment delete <deployment id>
-```
-
-```bash
-firectl deployment list
-```
-
 Each scorecard is written to `data/evals/writer-<label>-<time>.json`. Tell Claude when the
-three are there: it reads them and a sample of the answers and writes the result up,
-whatever it is. If a command fails (a model name format, a shape), paste its output.
+three are there: it reads them and a sample of the answers and writes the result up, whatever
+it is. If a command fails (a changed SDK call, an access error), paste its output.
+
+The tuned model on a deployment (a machine at $8 an hour) is needed only to serve it through
+the chat API, not for this test; `scripts/glimmer_eval.sh` does that when deployments work
+again. The web form and `firectl dataset create` are the other way in, blocked since Oct 30 by
+Fireworks' upload problem, and the same incident affects deployment creation.
 
 ## What to expect, honestly
 

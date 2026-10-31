@@ -6,6 +6,8 @@ the training worked.
     LLM_PROVIDER=fireworks FIREWORKS_MODEL=<model or deployment> \\
         uv run python -m wellpilot.training eval --label tuned   # spends tokens
 
+wellpilot.training_serverless trains Muse Glimmer on these files and scores it the same way.
+
 The task is the agent's last step: given the question and every tool result its run
 gathered, write the submit_findings answer. It needs no tool calling, so any chat model can
 be compared on the same inputs. Training examples are the corpus's accepted answers; the
@@ -21,6 +23,7 @@ import json
 import re
 import time
 from collections import Counter
+from collections.abc import Awaitable, Callable
 from pathlib import Path
 
 from wellpilot.agent.checker import Submission, check_submission, readability
@@ -61,6 +64,10 @@ KINDS = [
     ),
     ("meaning rule", r"limit|pressure|gauge|trend|within|exceed|SAM"),
 ]
+
+
+# messages and the most tokens to write -> the reply and the tokens read and written
+Ask = Callable[[list[dict], int], Awaitable[tuple[str, int, int]]]
 
 
 def _out() -> Path:
@@ -252,59 +259,80 @@ async def _ask(llm, messages: list[dict], max_tokens: int) -> tuple[str, int, in
     )
 
 
-async def evaluate(items: list[dict], fake: str | None, rounds: int, max_tokens: int) -> list[dict]:
-    llm = None
-    if fake is None:
+async def evaluate(
+    items: list[dict],
+    fake: str | None,
+    rounds: int,
+    max_tokens: int,
+    ask: Ask | None = None,
+    concurrency: int = 1,
+) -> list[dict]:
+    """Each item's answers, in the items' order. `ask` replaces the configured provider: a
+    sampler has no chat endpoint. An item that fails to answer counts as no answer."""
+    if fake is None and ask is None:
         from wellpilot.llm import make_llm
 
         llm = make_llm(get_settings(), timeout=240.0)
-    results = []
-    for item in items:
-        messages = [
-            {"role": "system", "content": system_prompt(item["as_of"])},
-            {"role": "user", "content": user_message(item["question"], item["evidence"])},
-        ]
-        tokens_in = tokens_out = 0
-        started = time.monotonic()
-        attempts = []
-        for attempt in range(rounds):
-            if fake == "gold":
-                reply = json.dumps(item["gold"]) if item["gold"] else ""
-            elif fake == "broken":
-                reply = _broken(item["gold"])
-            else:
-                reply, i, o = await _ask(llm, messages, max_tokens)
-                tokens_in, tokens_out = tokens_in + i, tokens_out + o
-            result = score(item, parse(reply))
-            attempts.append(result)
-            if result["accepted"] or attempt == rounds - 1:
-                break
-            # One more round the way the loop gives it: the checker's problems back.
-            messages += [
-                {"role": "assistant", "content": reply},
-                {
-                    "role": "user",
-                    "content": json.dumps({"accepted": False, "problems": result["problems"]}),
-                },
-            ]
-        results.append(
+
+        async def ask(messages: list[dict], limit: int) -> tuple[str, int, int]:
+            return await _ask(llm, messages, limit)
+
+    gate = asyncio.Semaphore(concurrency)
+
+    async def one(item: dict) -> dict:
+        async with gate:
+            return await _answer(item, fake, rounds, max_tokens, ask)
+
+    return list(await asyncio.gather(*(one(item) for item in items)))
+
+
+async def _answer(
+    item: dict, fake: str | None, rounds: int, max_tokens: int, ask: Ask | None
+) -> dict:
+    messages = [
+        {"role": "system", "content": system_prompt(item["as_of"])},
+        {"role": "user", "content": user_message(item["question"], item["evidence"])},
+    ]
+    tokens_in = tokens_out = 0
+    started = time.monotonic()
+    attempts = []
+    for attempt in range(rounds):
+        if fake == "gold":
+            reply = json.dumps(item["gold"]) if item["gold"] else ""
+        elif fake == "broken":
+            reply = _broken(item["gold"])
+        else:
+            try:
+                reply, i, o = await ask(messages, max_tokens)
+            except Exception as e:  # noqa: BLE001 - one lost answer should not lose the rest
+                print(f"{item['run']}: no answer: {type(e).__name__}: {str(e)[:200]}")
+                reply, i, o = "", 0, 0
+            tokens_in, tokens_out = tokens_in + i, tokens_out + o
+        result = score(item, parse(reply))
+        attempts.append(result)
+        if result["accepted"] or attempt == rounds - 1:
+            break
+        # One more round the way the loop gives it: the checker's problems back.
+        messages += [
+            {"role": "assistant", "content": reply},
             {
-                **attempts[0],
-                "accepted_by_round": next(
-                    (i + 1 for i, a in enumerate(attempts) if a["accepted"]), None
-                ),
-                "live_first_accepted": item["live_first_accepted"],
-                "tokens_in": tokens_in,
-                "tokens_out": tokens_out,
-                "seconds": round(time.monotonic() - started, 1),
-                "last": attempts[-1],
-            }
-        )
-        print(
-            f"{item['run']}: first {'ACCEPTED' if attempts[0]['accepted'] else 'rejected'}"
-            f" ({', '.join(f'{k} {v}' for k, v in attempts[0].get('kinds', {}).items())})"
-        )
-    return results
+                "role": "user",
+                "content": json.dumps({"accepted": False, "problems": result["problems"]}),
+            },
+        ]
+    print(
+        f"{item['run']}: first {'ACCEPTED' if attempts[0]['accepted'] else 'rejected'}"
+        f" ({', '.join(f'{k} {v}' for k, v in attempts[0].get('kinds', {}).items())})"
+    )
+    return {
+        **attempts[0],
+        "accepted_by_round": next((i + 1 for i, a in enumerate(attempts) if a["accepted"]), None),
+        "live_first_accepted": item["live_first_accepted"],
+        "tokens_in": tokens_in,
+        "tokens_out": tokens_out,
+        "seconds": round(time.monotonic() - started, 1),
+        "last": attempts[-1],
+    }
 
 
 def _broken(gold: dict | None) -> str:
@@ -346,6 +374,17 @@ def summarize(results: list[dict]) -> dict:
     }
 
 
+def save_card(label: str, model: str | None, results: list[dict]) -> tuple[dict, Path]:
+    """The scorecard in data/evals, and its path."""
+    summary = summarize(results)
+    card = {"label": label, "model": model, "summary": summary, "results": results}
+    stamp = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
+    target = get_settings().data_dir / "evals" / f"writer-{label}-{stamp}.json"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(json.dumps(card, indent=1, default=str) + "\n")
+    return summary, target
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     sub = parser.add_subparsers(dest="command", required=True)
@@ -371,25 +410,13 @@ def main() -> None:
     if args.limit:
         items = items[: args.limit]
     results = asyncio.run(evaluate(items, args.fake, args.rounds, args.max_tokens))
-    summary = summarize(results)
     settings = get_settings()
     label = args.label or args.fake or settings.llm_provider
-    card = {
-        "label": label,
-        "model": None
-        if args.fake
-        else (
-            settings.fireworks_model
-            if settings.llm_provider == "fireworks"
-            else settings.baseten_model
-        ),
-        "summary": summary,
-        "results": results,
-    }
-    stamp = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
-    target = settings.data_dir / "evals" / f"writer-{label}-{stamp}.json"
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(json.dumps(card, indent=1, default=str) + "\n")
+    model = None
+    if not args.fake:
+        fireworks = settings.llm_provider == "fireworks"
+        model = settings.fireworks_model if fireworks else settings.baseten_model
+    summary, target = save_card(label, model, results)
     print(json.dumps(summary, indent=1))
     print(f"scorecard: {target}")
 
