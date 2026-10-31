@@ -139,8 +139,11 @@ Training took 13 minutes (14 s a step) and the mean loss fell by epoch from 0.35
   independent, so these p values flatter both. The losses are mostly the dead gauge (5 at once
   to 0) and the restart (6 within two tries to 3).
 - **What it did learn:** the format. Every reply is valid JSON and a fifth as long.
-- **Likely cause, not confirmed:** the training answers hold no reasoning, so it answers straight
-  away. Scorecards of this run do not keep the answers (they do from now on).
+- **Why (a rerun of six items, at most $0.17, verdicts the same as before):** the training
+  answers hold no reasoning, and it answers straight away: its tokens are the reply alone, about
+  770 an answer. Its slips are mechanical ("1,130,553" for 1,133,053, "from 100% to 30%"
+  backwards, "185" for 185.7). It also took on Muse's length: 3.3 findings an answer against
+  base's 2.8 and 1.57 problems a first try against 2.2, and 49 of the 70 examples are 5 questions.
 - **Base against Muse:** within two tries base won 8 and lost 2 (p = 0.11). Three of base's
   misses were replies cut off at 8,000 tokens. This is the writing step alone, not the agent.
 - **Cost:** sampling at most $2.79 and $2.16 before the prefill discount, plus $1.73 for Muse on
