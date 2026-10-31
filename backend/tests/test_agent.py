@@ -77,7 +77,7 @@ def completion(content=None, tool_calls=None, **extra) -> ChatCompletion:
 
 
 def validate(request: dict) -> None:
-    """The wire rules the providers enforce (see CLAUDE.md): a request that breaks one is a
+    """The wire rules the providers enforce: a request that breaks one is a
     400 from Baseten or Meta, so a test that breaks one fails here first."""
     assert "tool_choice" not in request, "Meta accepts only the default tool_choice"
     for tool in request.get("tools", []):

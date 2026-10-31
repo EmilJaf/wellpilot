@@ -41,7 +41,7 @@ checker's blind spots.
   check ($0.29 for items shorter than the average).
 - **Muse Spark Open as a reference** (Baseten): about $1-2 with both rounds.
 
-## Steps (Emil runs them; they use the Fireworks account)
+## Steps (they use your Fireworks account)
 
 `wellpilot.training_serverless` follows Fireworks' own example
 (`training/examples/sft/muse_glimmer_starter.py` in `fw-ai/cookbook`) and needs its packages,
@@ -86,8 +86,7 @@ it saves the adapter as the model `wellpilot-glimmer-writer` and scores base and
 step takes on the shared pool is not known yet: the first lines will tell. `caffeinate` keeps
 the Mac awake; keep the terminal open. A refusal for too many runs (`RESOURCE_EXHAUSTED`, 429)
 means an earlier session still holds its slot: wait a few minutes and start again. After the
-first steps, check the billing page shows no training charge; if it does, stop with Ctrl-C and
-tell Claude.
+first steps, check the billing page shows no training charge; if it does, stop with Ctrl-C.
 
 ```bash
 cd ~/wellpilot/backend && caffeinate -is ../data/training/sft/venv/bin/python -m wellpilot.training_serverless
@@ -114,13 +113,11 @@ Then all of them:
 cd ~/wellpilot/backend && uv run python -m wellpilot.training eval --label muse
 ```
 
-Each scorecard is written to `data/evals/writer-<label>-<time>.json`. Tell Claude when the
-three are there: it reads them and a sample of the answers and writes the result up, whatever
-it is. If a command fails (a changed SDK call, an access error), paste its output.
+Each scorecard is written to `data/evals/writer-<label>-<time>.json`, with each attempt's reply,
+so the answers can be read beside the counts.
 
 The tuned model on a deployment (a machine at $8 an hour) is needed only to serve it through
-the chat API, not for this test; `scripts/glimmer_eval.sh` does that when deployments work
-again. The web form and `firectl dataset create` are the other way in, blocked since Oct 30 by
+the chat API, not for this test. The web form and `firectl dataset create` are the other way in, blocked since Oct 30 by
 Fireworks' upload problem, and the same incident affects deployment creation.
 
 ## The result (Oct 31)

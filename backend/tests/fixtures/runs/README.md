@@ -5,7 +5,7 @@ fed back, the tools and the checker run on today's code and the committed data f
 and the evidence results, check rounds and verdict must match the recording. A change that
 would make a featured demo run behave differently on the live site fails the build.
 
-Add a run after recording it on the frozen code (it costs tokens; Emil runs it):
+Add a run after recording it on the frozen code (it costs tokens):
 
     cp data/runs/<id>.json backend/tests/fixtures/runs/
     cd backend && uv run python -m wellpilot.agent.replay ../data/runs/<id>.json   # must match

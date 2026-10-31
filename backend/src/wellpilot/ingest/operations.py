@@ -11,7 +11,7 @@ in the production data that no decline curve can (F-12's 2014 jump).
   was done), with the well as the production data names it.
 - `well_operation_steps.parquet`: one row per line of the operations table.
 
-Download (needs the Databricks profile in CLAUDE.local.md): the reports named
+Download (needs the Volve listing on Databricks): the reports named
 `15_9_<well>_<yyyy>_<mm>_<dd>.html` for the wells in the production data, into
 `data/raw/ddr/`. Run: `uv run python -m wellpilot.ingest.operations`.
 """
