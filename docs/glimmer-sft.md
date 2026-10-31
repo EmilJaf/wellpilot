@@ -69,7 +69,7 @@ longest test prompt (39,131). Whether the shared pool takes rows this long shows
 cd ~/wellpilot/backend && ../data/training/sft/venv/bin/python -m wellpilot.training_serverless --dry-run
 ```
 
-**3. Three questions on the base model, a few cents.** This shows that the account has access
+**3. Three questions on the base model, under $0.50.** This shows that the account has access
 to serverless training and that Glimmer answers in JSON. If the reply says access must be
 requested, ask Fireworks to enable serverless training for the account. If answers come back
 cut off (`valid_json` below 3), add `--max-tokens 12000` to this and the next step.

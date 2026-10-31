@@ -7,7 +7,7 @@ cookbook's packages, so this runs in its own venv, not the backend's; docs/glimm
 the steps.
 
     python -m wellpilot.training_serverless --dry-run              # free: renders every row
-    python -m wellpilot.training_serverless --epochs 0 --limit 3   # cents: does it answer at all
+    python -m wellpilot.training_serverless --epochs 0 --limit 3   # under $0.50: does it answer
     python -m wellpilot.training_serverless                        # base, training, tuned
     python -m wellpilot.training_serverless --tuned-path <path>    # score a saved checkpoint
 """
