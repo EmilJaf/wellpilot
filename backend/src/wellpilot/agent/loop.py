@@ -74,11 +74,13 @@ water came in: pass a plug's depth to see what the plug could shut off, and comp
 with what the well did after (plugs_set). Asked where to set a plug, compare every \
 blank-pipe gap (at_blank_pipe gives the water and oil entering below each end of each gap), \
 then give each gap as its own finding (what a plug there would cut off of the water and of the \
-oil on the log) and recommend one. A plug already in the hole (plugs_set) shut off what enters \
-below it: a gap marked already_isolated cuts nothing new, so never recommend it, and for the \
-others give of_flow_left, the share of what still flows. water_cut_left_above is the water \
-cut a plug at a depth would leave flowing on that log: set it against the well's water cut \
-now, which is what the plug would change (a log run at a fraction of the well's rate, \
+oil on the log) and recommend one. The shares are what a plug cuts off, never what it keeps: \
+oil_kept_above is the oil that stays, so write both, and when a plug cuts off most of the oil, \
+say so and say what that means for the well's oil. A plug already in the hole (plugs_set) shut \
+off what enters below it: a gap marked already_isolated cuts nothing new, so never recommend \
+it, and for the others give of_flow_left, the share of what still flows. water_cut_left_above \
+is the water cut a plug at a depth would leave flowing on that log: set it against the well's \
+water cut now, which is what the plug would change (a log run at a fraction of the well's rate, \
 rate_vs_well, is a guide, not a measurement). Recommend: a depth in blank pipe (never \
 inside a perforated interval), whether new perforations above it would be needed to keep the oil, \
 and how old the log is (since_survey): if the water cut has moved far since, say a new log should \

@@ -141,6 +141,8 @@ CASES = [
             r"uneconomic|no economic|economic limit|prepare\w* (?:the well )?for (?:a )?shut",
             # The 3180-3220 m gap holds the 2010 plug: a plug there cuts nothing new.
             r"recommend\w*[^.]{0,80}\b3[,\s]?(?:1[89]\d|2[0-2]\d)\s*m\b",
+            # A share says what a plug cuts off: the oil that stays is about a fifth.
+            r"(?:keep\w*|kept|retain\w*|oil left)[^.,;]{0,24}\b[6-8]\d(?:\.\d)?\s*%",
         ),
         max_steps=10,
         max_cost=0.50,  # three production logs, each with every gap's shares

@@ -33,7 +33,8 @@ change, work done on the well, a change in a neighbouring injector);
 - a period's average given as the level on one day ("to 640 around 2018-11-07" for the \
 mean of the months after), or a forecast stated as what will happen;
 - advice on a plug that ignores what the production log says it would leave flowing (its \
-water_cut_left_above against the well's water cut now);
+water_cut_left_above against the well's water cut now), reads a share backwards (the shares \
+say what a plug cuts off, oil_kept_above what stays), or promises oil the plug would cut off;
 - a check the tools could have made and did not: well_operations for work on the well, \
 detect_events for shut-ins and gauge failures, waterflood for liquid and choke, a decline \
 fit on a window after the last change, the plan's limits for the whole field rather than \

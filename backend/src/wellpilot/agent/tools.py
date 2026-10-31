@@ -1115,6 +1115,19 @@ def _after_plugs(survey: dict, plugs: list[dict], passes: dict) -> None:
             )
 
 
+def _oil_kept(survey: dict) -> None:
+    """The oil a plug would leave flowing. The shares say what it cuts, and a share of 0.81 is
+    easily read as the oil that stays (run 9b7757a10976 did), so what stays is given as well."""
+    for p in survey["passes"]:
+        for row, cut, left in (
+            *((r, r, r.get("of_flow_left")) for r in p["below"]),
+            *((g, g["below_top"], g.get("of_flow_left_below_top")) for g in p["at_blank_pipe"]),
+        ):
+            share = (left or cut).get("oil_share")
+            if share is not None and not row.get("already_isolated"):
+                row["oil_kept_above"] = round(1 - share, 3)
+
+
 def _left(depth: float, shares: dict, plug: float, gone: dict) -> dict:
     """What a plug at `depth` would cut of the flow left above an old plug at `plug`, which
     already shut off `gone` of each phase."""
@@ -1232,6 +1245,7 @@ def production_log(store: ProductionStore, args: LogArgs) -> dict:
                     if "water_share" in gap["below_top"]:
                         gap["water_cut_left_above"] = water_cut_above(cut, gap["below_top"])
         _after_plugs(survey, work["plugs_set"], passes)
+        _oil_kept(survey)
     return to_jsonable(
         {
             "well": args.well,
@@ -1243,7 +1257,9 @@ def production_log(store: ProductionStore, args: LogArgs) -> dict:
             "the well's inflow, 0 above the top zone). comes_in_from_m to to_m holds 90% of "
             "each phase's inflow. Only shares are given: the files' rates have no units, and "
             "the plots' are downhole volumes. A plug set at a depth shuts off what enters "
-            "below it: the shares below say what it could remove, not what it did; "
+            "below it: the shares below say what it could remove, not what it did, and "
+            "never what it keeps (an oil_share of 0.7 is 70% of the oil cut off and 30% left; "
+            "oil_kept_above is what stays); "
             "plugs_set gives what each plug already set did to the well (water cut and oil "
             "before and after). A bridge plug is set in blank pipe, never inside a perforated "
             "interval (inside_perforation_m names the interval a depth falls in; blank_pipe_m "
