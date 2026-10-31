@@ -13,7 +13,7 @@ a tuned Glimmer and Muse Spark Open answer exactly the same inputs.
 
 - **Training** (`data/training/writer/train.jsonl`): 70 accepted answers, one per run, from
   13 questions; the agent's own system prompt and submit schema, the tool results, the
-  answer. About 0.9M tokens, the longest example about 25k (Glimmer reads 131k).
+  answer. About 1.2M tokens, the longest example 35k (Glimmer reads 131k).
 - **Test** (`test.jsonl`): 30 runs of 6 questions the training never sees: the dead gauge,
   the plan's water-cut limit, the 2014 restart, a refusal (F-99 does not exist), the
   end-2010 screen, and a well on the synthetic field.
@@ -37,7 +37,7 @@ checker's blind spots.
 - **Answers:** Glimmer has no public inference endpoint, but a serverless training session
   samples its own checkpoints with no deployment. That is billed per token ($1.96 per million
   read, about 80% less when cached; $4.88 per million written). Base and tuned, both rounds on
-  all 30 items, cost at most about $7; `--dry-run` prints the bound for today's data.
+  all 30 items, cost at most about $9; `--dry-run` prints the bound for today's data.
 - **Muse Spark Open as a reference** (Baseten): about 25 x 15k tokens in, about $0.5-0.8.
 
 ## Steps (Emil runs them; they use the Fireworks account)
@@ -62,7 +62,8 @@ cd ~/wellpilot && uv pip install --python data/training/sft/venv/bin/python -e d
 ```
 
 **2. Check the data, free.** It renders every row with Glimmer's own tokenizer and sends
-nothing. The longest row must fit `--max-seq-len`.
+nothing. The default `--max-seq-len` of 40,960 fits every row (the longest has 35,222) and the
+longest test prompt (39,131). Whether the shared pool takes rows this long shows in step 4.
 
 ```bash
 cd ~/wellpilot/backend && ../data/training/sft/venv/bin/python -m wellpilot.training_serverless --dry-run
@@ -77,7 +78,7 @@ cut off (`valid_json` below 3), add `--max-tokens 12000` to this and the next st
 cd ~/wellpilot/backend && ../data/training/sft/venv/bin/python -m wellpilot.training_serverless --epochs 0 --limit 3
 ```
 
-**4. The run.** It scores base Glimmer, trains (3 epochs, 53 steps, a loss line per step), saves
+**4. The run.** It scores base Glimmer, trains (3 epochs, 54 steps, a loss line per step), saves
 the adapter as the model `wellpilot-glimmer-writer` and scores the tuned one. How long a step
 takes on the shared pool is not known yet: the first lines will tell. Keep the terminal open.
 After the first steps, check the billing page shows no training charge; if it does, stop with

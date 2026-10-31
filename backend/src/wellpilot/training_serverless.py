@@ -42,17 +42,19 @@ def render(examples: list[dict], renderer, train_on, max_seq_len: int) -> list[t
     """Each example's tokens and the weights that mark its answer. A row too long stops the
     run here, before anything is sent: cutting one would train on half an answer."""
     rendered = []
-    for n, example in enumerate(examples):
+    for example in examples:
         model_input, weights = renderer.build_supervised_example(
             example["messages"], train_on_what=train_on
         )
         tokens = [int(t) for t in model_input.to_ints()]
         marked = [float(w) for w in weights.tolist()]
-        if len(tokens) > max_seq_len:
-            sys.exit(f"row {n} has {len(tokens)} tokens, over --max-seq-len {max_seq_len}")
         if not any(w > 0 for w in marked[1:]):
-            sys.exit(f"row {n} has no answer tokens to train on")
+            sys.exit(f"a row has no answer tokens to train on: {example['messages'][-1]}"[:200])
         rendered.append((tokens, marked))
+    over = [n for n, (tokens, _) in enumerate(rendered) if len(tokens) > max_seq_len]
+    if over:
+        longest = max(len(tokens) for tokens, _ in rendered)
+        sys.exit(f"rows {over} are over --max-seq-len {max_seq_len}; the longest has {longest}")
     return rendered
 
 
@@ -167,7 +169,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--batch-size", type=int, default=4)
     parser.add_argument("--rank", type=int, default=16)
     parser.add_argument("--lr", type=float, default=1e-4)
-    parser.add_argument("--max-seq-len", type=int, default=32768)
+    parser.add_argument("--max-seq-len", type=int, default=40960)
     parser.add_argument("--max-tokens", type=int, default=8000)
     parser.add_argument("--rounds", type=int, default=2)
     parser.add_argument("--limit", type=int, default=0, help="score only the first N test items")

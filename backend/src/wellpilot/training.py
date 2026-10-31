@@ -177,9 +177,9 @@ def build(corpus: Path = CORPUS_DIR, out: Path | None = None) -> dict:
         "test_with_gold": sum(t["gold"] is not None for t in test),
         "validation_examples": len(validation),
         "held_out": list(HOLDOUT),
-        # About 3.5 characters a token for this mix of JSON and English.
-        "train_tokens_estimate": round(sum(chars) / 3.5),
-        "longest_example_tokens_estimate": round(max(chars, default=0) / 3.5),
+        # About 1.85 characters a token on Glimmer's tokenizer: tool results are mostly digits.
+        "train_tokens_estimate": round(sum(chars) / 1.85),
+        "longest_example_tokens_estimate": round(max(chars, default=0) / 1.85),
         "out": str(out),
     }
     (out / "manifest.json").write_text(json.dumps(manifest, indent=1) + "\n")

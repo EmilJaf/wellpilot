@@ -78,8 +78,8 @@ def chat(size: int) -> dict:
 
 def test_a_row_over_the_length_stops_the_run_before_anything_is_sent() -> None:
     assert len(render([chat(5)], Renderer(), "last", 7)[0][0]) == 7
-    with pytest.raises(SystemExit, match="over --max-seq-len 6"):
-        render([chat(5)], Renderer(), "last", 6)
+    with pytest.raises(SystemExit, match=r"rows \[1\] are over --max-seq-len 6; the longest has 7"):
+        render([chat(1), chat(5)], Renderer(), "last", 6)
 
 
 def test_a_datum_shifts_the_targets_and_keeps_the_answer_weighted() -> None:
@@ -174,4 +174,4 @@ def test_answers_keep_their_order_and_a_failed_one_loses_only_itself(judged) -> 
 
 def test_defaults_fit_the_longest_row_and_a_small_batch() -> None:
     args = parse_args([])
-    assert args.max_seq_len >= 32768 and args.batch_size == 4 and args.rank == 16
+    assert args.max_seq_len >= 35222 and args.batch_size == 4 and args.rank == 16
