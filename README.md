@@ -170,11 +170,19 @@ flowchart LR
 - **Backend:** Python 3.13, FastAPI, Server-Sent Events, DuckDB, pandas, scipy, ruptures, pypdfium2. Runs are background tasks saved as JSON and replayable. About 2,200 tests, including the featured runs replayed in CI.
 - **Frontend:** React, TypeScript, Vite, uPlot, hand-written SVG charts. A control-room palette after ISA-101: grey by default, colour only for meaning (oil green, water blue, amber caution, red alarm). "Verified" is a check mark and words, never green, since green means oil. One more colour, indigo, marks only what you can act on and where you are (the step, the tab, buttons, links), far from water's blue.
 
-## Next: the checker as a teacher
+## The checker as a teacher
 
 The checker labels every answer the model submits, with its reasons. That makes training data an open-weight model can learn from, which a closed model cannot: `python -m wellpilot.agent.corpus export` writes 79 preference pairs (an answer the checker sent back and the answer it accepted next, in the same run, with what it caught) and 84 accepted answers with the evidence they cite, also as chat examples ready for supervised fine-tuning (`sft.jsonl`), from 86 real runs on Muse Spark Open. Labels are the reviewed verdicts, so the checker's own false rejections, corrected in review, are not taught as wrong.
 
-We did not train on it during the hackathon. The runs cover 19 questions, so a fair before-and-after needs new questions, not these, and enough of them to tell learning from memory. [docs/glimmer-sft.md](docs/glimmer-sft.md) has the steps for Muse Glimmer on Fireworks.
+We tried it once, on Oct 31, and it made the model worse. Muse Glimmer 30B (open weights, Apache 2.0) got a LoRA adapter trained on 70 accepted answers from 13 questions, 54 steps on Fireworks' Serverless Training API. The test is the last step of a run only: write the answer from that run's tool results, then get one more try after the checker's reply. It uses 30 runs of 6 questions the training never saw.
+
+| | Valid JSON | Accepted at once | Accepted within two tries | Must-say and must-not-say checks | Tokens written per item | Seconds per item |
+|---|---|---|---|---|---|---|
+| Muse Spark Open | 29 of 30 | 7 | 19 | 58 of 58 | 4,047 | 13 |
+| Muse Glimmer 30B | 27 of 30 | 8 | 25 | 54 of 54 | 6,979 | 134 |
+| Muse Glimmer 30B, tuned | 30 of 30 | 4 | 17 | 61 of 61 | 1,561 | 31 |
+
+Training gave a model that always answers in format and writes a fifth as much, and that the checker accepts less often. The likely reason is that the training answers hold no reasoning, so it learned to answer without thinking first; the run did not keep the answers to confirm that. The adapter is not used anywhere in the product. Untrained Glimmer did better than we expected: it finished more answers than Muse Spark Open within two tries, though it ran at high reasoning against Muse's medium, took ten times as long, and 25 against 19 is not a settled difference (p = 0.11, and 30 runs of 6 questions are not independent). [docs/glimmer-sft.md](docs/glimmer-sft.md) has the steps and the scorecards' reading.
 
 ## Running it on another field
 

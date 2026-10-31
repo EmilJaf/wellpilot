@@ -123,9 +123,28 @@ the chat API, not for this test; `scripts/glimmer_eval.sh` does that when deploy
 again. The web form and `firectl dataset create` are the other way in, blocked since Oct 30 by
 Fireworks' upload problem, and the same incident affects deployment creation.
 
-## What to expect, honestly
+## The result (Oct 31)
 
-70 examples teach the format and the house rules (declare every number, hedge causes, no
-facts on warned evidence, plain claims) faster than they teach the field. The likely gain is
-in first-pass acceptance over base Glimmer; whether a tuned 30B model beats Muse Spark Open
-on the regexes is open. If it does not help, the README says so.
+Training took 13 minutes (14 s a step) and the mean loss fell by epoch from 0.358 to 0.259 to
+0.188, on 54 steps at rank 16. All 30 held-out items, up to two tries each:
+
+| | Valid JSON | Accepted at once | Within two tries | Regexes | Tokens out per item | s per item |
+|---|---|---|---|---|---|---|
+| Muse Spark Open (medium reasoning) | 29 | 7 | 19 | 58 of 58 | 4,047 | 13 |
+| Base Glimmer (high reasoning, the renderer's default) | 27 | 8 | 25 | 54 of 54 | 6,979 | 134 |
+| Tuned Glimmer | 30 | 4 | 17 | 61 of 61 | 1,561 | 31 |
+
+- **Training made it worse.** Within two tries, base beat tuned on 11 items and lost on 3
+  (McNemar p = 0.057); at once, 7 against 3 (p = 0.34). Items of one question are not
+  independent, so these p values flatter both. The losses are mostly the dead gauge (5 at once
+  to 0) and the restart (6 within two tries to 3).
+- **What it did learn:** the format. Every reply is valid JSON and a fifth as long.
+- **Likely cause, not confirmed:** the training answers hold no reasoning, so it answers straight
+  away. Scorecards of this run do not keep the answers (they do from now on).
+- **Base against Muse:** within two tries base won 8 and lost 2 (p = 0.11). Three of base's
+  misses were replies cut off at 8,000 tokens. This is the writing step alone, not the agent.
+- **Cost:** sampling at most $2.79 and $2.16 before the prefill discount, plus $1.73 for Muse on
+  Baseten. The Fireworks balance had not moved when this was written; billing may lag.
+
+The adapter is saved as `wellpilot-glimmer-writer` and used nowhere. Scorecards:
+`data/evals/writer-{muse,glimmer-base,glimmer-tuned}-20261031T18*.json`.
