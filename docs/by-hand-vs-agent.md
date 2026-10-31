@@ -19,11 +19,10 @@ work. A production engineer answering both questions with a stopwatch would repl
 | A pressure that "fell to zero" | Notice F-12's downhole pressure reads 0 on 81 days from 2010-10-12 while oil keeps flowing; total the oil produced meanwhile (123,258 Sm3) to see it is a dead gauge. | 0.5 h | flagged by the screen and `detect_events` |
 | Steps in the rate | Plot each well, find the changes (F-12 2010-05-02, F-14 2010-01-10), decide whether each is a step or a gradual shift. | 1-2 h | `detect_events`: 2 calls |
 | Work done on the wells | Find the well-work reports since first oil among the field's daily reports (file names carry the date): 28 report days for F-12 and F-14 (production logs in March 2009 and September 2010, F-12's plug), read at 2-5 minutes a day, and line each job up with the rate. | 1-2 h | `well_operations`: 2 calls |
-| Where the water comes in | Open the September 2010 production log (3 LAS passes) and work out how much water enters below the plug set that month. | 2-4 h | `production_log`: 2 calls |
 | The plan's limits | Find the design limits in the 53-page development plan, in Norwegian (Table 4.3, page 23), and compare the field's monthly totals. | 0.5-1 h | `field_vs_design`: 1 call |
 | Forecast with a range | Fit Arps declines on candidate windows, forecast 2011, and put a range on it from how far earlier forecasts made the same way were off (5 of them, each refitted on its own date). | 2-4 h | `fit_decline` 2, `forecast_production` 1 |
 | Write it up | A source for every number. | 1 h | its numbers, dates and quotes checked; the answer sent back once and fixed |
-| **Total** | | **9-17 h: about 1-2 working days** | **12 steps, 23 tool calls, 53 s of model time (about a minute with the tools and checks), about $0.43** |
+| **Total** | | **7-13 h: about 1-2 working days** | **12 steps, 23 tool calls, 53 s of model time (about a minute with the tools and checks), about $0.43** |
 
 What happened next: the forecast said 359,000 Sm3 for 2011; F-12 produced 340,000 (+6%).
 Decline fits on fixed windows made the same day said +2% to +24%, the whole-history fit
