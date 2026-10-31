@@ -4,7 +4,6 @@ version = "0.1.0"
 description = "AI agent for oil and gas well performance analysis, running on Meta Muse Spark Open"
 requires-python = ">=3.13"
 dependencies = [
-    "aiosqlite>=0.22.1",
     "duckdb>=2.0.0",
     "fastapi>=0.162.0",
     "meta-sam-parser>=0.1.0",
@@ -19,9 +18,7 @@ dependencies = [
     "pypdfium2>=5.14.0",
     "ruptures>=1.1.10",
     "scipy>=1.18.1",
-    "sqlalchemy[asyncio]>=2.1.6",
     "sse-starlette>=3.6.0",
-    "tenacity>=9.2.1",
     "uvicorn[standard]>=0.54.0",
 ]
 

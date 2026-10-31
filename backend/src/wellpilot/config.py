@@ -49,7 +49,6 @@ class Settings(BaseSettings):
     # The built frontend (pnpm build), served by the API in production. In development Vite
     # serves it instead; a missing directory just means the API serves no pages.
     frontend_dir: Path = REPO_ROOT / "frontend" / "dist"
-    database_url: str = ""
     # Public demo limits: every run costs tokens.
     max_active_runs: int = 3
     runs_per_client_per_hour: int = 6
@@ -99,10 +98,6 @@ class Settings(BaseSettings):
     @property
     def runs_dir(self) -> Path:
         return self.data_dir / "runs"
-
-    @property
-    def resolved_database_url(self) -> str:
-        return self.database_url or f"sqlite+aiosqlite:///{self.data_dir / 'wellpilot.db'}"
 
 
 @lru_cache
