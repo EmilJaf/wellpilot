@@ -216,6 +216,14 @@ def test_training_comes_before_any_paid_answer() -> None:
     ]
 
 
+def test_a_variant_run_trains_scores_only_the_tuned_model_and_keeps_no_model() -> None:
+    assert steps_of(["--no-base", "--no-promote", "--tag=-reason"]) == [
+        "train",
+        "save wp-final",
+        "score glimmer-tuned-reason wp-final",
+    ]
+
+
 def test_a_base_only_check_gives_its_slot_back() -> None:
     assert steps_of(["--epochs", "0"]) == [
         "save wp-base",

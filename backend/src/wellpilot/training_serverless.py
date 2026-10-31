@@ -236,6 +236,7 @@ def main(argv: list[str] | None = None) -> None:
     try:
         if args.tuned_path:
             score(f"glimmer-tuned{args.tag}", args.tuned_path)
+            close_serverless_session(service)  # scoring alone keeps nothing: free the slot
             return
         client = service.create_lora_training_client(
             base_model=BASE_MODEL, rank=args.rank, alpha=LORA_ALPHA, **LORA_TARGETS
