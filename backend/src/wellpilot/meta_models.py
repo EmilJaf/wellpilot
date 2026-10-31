@@ -33,6 +33,27 @@ def _numbers(node) -> list[float]:
     return []
 
 
+def _depths(node, under: bool = False) -> list[float]:
+    """Every number a survey result gives under a depth's key."""
+    if isinstance(node, bool):
+        return []
+    if isinstance(node, int | float):
+        return [float(node)] if under else []
+    if isinstance(node, dict):
+        return [
+            n
+            for k, v in node.items()
+            for n in _depths(v, under or "_m" in str(k) or "depth" in str(k))
+        ]
+    if isinstance(node, list):
+        return [n for v in node for n in _depths(v, under)]
+    return []
+
+
+def _near(value: float, values: list[float]) -> bool:
+    return any(abs(abs(value) - abs(x)) <= max(abs(x) * 0.005, 1e-9) for x in values)
+
+
 def _answer_numbers(result: dict | None) -> list[tuple[str, float]]:
     """(evidence id, value) of every number the answer declares."""
     if not result:
@@ -77,11 +98,13 @@ def meta_models(events: list[dict], evidence: dict[str, dict], answer: dict | No
         surveys = result.get("surveys", []) if isinstance(result, dict) else []
         read = [s for s in surveys if "sam-3.1" in str(s.get("read_from", ""))]
         values = [v for s in read for v in _numbers(s)]
+        # A number the other surveys or the well's depths also hold is no credit to SAM: a depth
+        # of 3147 m sits next to a rate of 3150 m3/d, and a share of 0.98 is in both logs.
+        others = [v for s in surveys if s not in read for v in _numbers(s)] + _depths(result)
         used = [
             v
             for source, v in answers
-            if source == eid
-            and any(abs(abs(v) - abs(x)) <= max(abs(x) * 0.005, 1e-9) for x in values)
+            if source == eid and _near(v, values) and not _near(v, others)
         ]
         if item.get("tool") == LOG and read and used:
             logs.append(eid)
