@@ -540,4 +540,5 @@ function Decomposition({ d }: { d: NonNullable<Hindsight['forecasts'][number]['d
   )
 }
 
-const cut = (v: number | null) => (v === null ? '–' : v.toFixed(2))
+// The API rounds to three places: toFixed alone would turn 0.965 into 0.96.
+const cut = (v: number | null) => (v === null ? '–' : (Math.round(v * 100 + 1e-9) / 100).toFixed(2))
