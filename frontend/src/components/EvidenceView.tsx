@@ -14,13 +14,22 @@ type Props = { runId: string | null; evidenceId: string | null; attempt: number;
 /**
  * Does a value in a tool result match the number the reader clicked? The declared value
  * may be a fraction written as a percent (0.72 for "72%") or the other way round, and the
- * text rounds it: a value within 0.6% is that number. Text matches the number as written.
+ * text rounds it: a value within 0.6% is that number. When the result holds the declared
+ * value itself, only that is marked: a table has neighbours within 0.6% (the uptime 0.9626
+ * of 2008-05, beside the water cut 0.9665 of 2014-10 the reader clicked), and the view
+ * scrolls to the first mark. Text matches the number as written.
  */
-function matcher(focus: Focus | null | undefined): (v: unknown) => boolean {
+function matcher(focus: Focus | null | undefined, result?: unknown): (v: unknown) => boolean {
   if (!focus) return () => false
-  const targets = [focus.value, focus.value / 100, focus.value * 100].map(Math.abs).filter((t) => t > 0)
+  const value = Math.abs(focus.value)
+  const close = (v: number, within: (scale: number) => number) =>
+    value > 0 && [1, 0.01, 100].some((scale) => Math.abs(Math.abs(v) - value * scale) <= within(scale))
+  const near = (v: number) => close(v, (scale) => value * scale * 0.006)
+  const halfUnit = 0.5 * 10 ** -(String(value).split('.')[1]?.length ?? 0)
+  const same = (v: number) => close(v, (scale) => Math.min(value * scale * 0.006, halfUnit * scale))
+  const sharp = countHits(result, (v) => typeof v === 'number' && same(v)) > 0
   return (v) => {
-    if (typeof v === 'number') return targets.some((t) => Math.abs(Math.abs(v) - t) <= t * 0.006)
+    if (typeof v === 'number') return sharp ? same(v) : near(v)
     if (typeof v !== 'string') return false
     return focus.quote ? sameQuote(v, focus.text) : v.includes(focus.text)
   }
@@ -64,7 +73,7 @@ export function EvidenceView({ runId, evidenceId, attempt, focus }: Props) {
 
   const evidence = loaded?.key === key ? loaded.evidence : undefined
   const error = loaded?.key === key ? loaded.error : undefined
-  const hit = matcher(focus)
+  const hit = matcher(focus, evidence?.result)
   const host = useRef<HTMLDivElement>(null)
   // What the view actually marked, counted once it rendered: a match in the raw result
   // that the view does not show must not be promised ("marked below" over no mark).
