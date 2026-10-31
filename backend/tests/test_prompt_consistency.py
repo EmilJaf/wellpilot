@@ -166,7 +166,7 @@ def test_nothing_the_model_reads_comes_from_after_the_cut(as_of: str) -> None:
     from pathlib import Path
 
     from wellpilot.agent import review, sandbox, vision
-    from wellpilot.agent.loop import statements_tool_schema, submit_tool_schema, system_prompt
+    from wellpilot.agent.loop import submit_tool_schema, system_prompt
     from wellpilot.agent.tools import tool_schemas
     from wellpilot.data.store import ProductionStore
 
@@ -174,8 +174,7 @@ def test_nothing_the_model_reads_comes_from_after_the_cut(as_of: str) -> None:
     store = ProductionStore(Path(__file__).parent / "fixtures" / "processed", as_of=cut)
     texts = [
         system_prompt(store),
-        system_prompt(store, statements=True),
-        json.dumps([*tool_schemas(), submit_tool_schema(), statements_tool_schema()]),
+        json.dumps([*tool_schemas(), submit_tool_schema()]),
         json.dumps([vision.VISION_TOOL.schema(), sandbox.PYTHON_TOOL.schema()]),
         review.SYSTEM,
         review.REVISE,

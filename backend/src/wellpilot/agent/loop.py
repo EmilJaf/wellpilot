@@ -36,7 +36,6 @@ from wellpilot.agent.sandbox import (
     PythonFn,
     as_inference,
 )
-from wellpilot.agent.statements import StatementSubmission, render
 from wellpilot.agent.tools import TOOLS_BY_NAME, execute, tool_schemas
 from wellpilot.agent.vision import LOOK, VISION_TOOL, for_the_model, look
 from wellpilot.data.store import ProductionStore
@@ -188,60 +187,6 @@ FIELD_FILE = "field.json"  # optional, beside the processed data: {"name", "driv
 FENCE = re.compile(r"^```(?:json)?\s*|\s*```$")
 
 
-# With statements=True the answer is written as statements printed from the tool results
-# (agent/statements.py): this replaces the prompt's bullets on declaring numbers and on
-# the checker.
-STATEMENTS_RULES = """\
-- Changes, ratios and differences are computed when the answer is printed (the change and \
-compare statements below), and every value prints rounded with its unit: never call \
-calculate or run_python to turn a share into a percent, round a value or work out a change \
-for the answer, and never call a tool to draft or test the answer. Submit it: the checker's \
-reply shows how it printed. Call tools that do not depend on each other in the same step.
-- Finish by calling submit_findings. Write the answer as statements, not prose: you never \
-type a number, a date or a unit. submit_findings takes a summary and findings; each is a \
-list of parts. A part is either free words ({{"say": "P-2 needs attention most:"}}) \
-or a statement that points at values in the tool results, and code prints the sentence from \
-those values and their own labels:
-  value: {{"kind": "value", "ref": "E1/wells[well=P-2]/water_cut"}} prints "P-2's median \
-water cut over the 90 days to 2018-06-30 was 42%"; add "form": "phrase" for "P-2's median \
-water cut ... of 42%" inside a sentence (an example well and values, not this field's).
-  change: {{"kind": "change", "ref": "E7/monthly[month=2017-03]/water_cut", "to": \
-"E7/monthly[month=2018-06]/water_cut"}} prints "P-2's water cut rose from 8% in 2017-03 \
-to 42% in 2018-06". Both ends are one quantity: two rows of a column, or one record's \
-before and after (a regime change's details/before_mean to details/after_mean prints how \
-the periods' averages differ; choke_before_pct to choke_after_pct the choke across it).
-  compare: {{"kind": "compare", "ref": "...", "against": "...", "how": "ratio"}} (or \
-"difference"): two values in one unit, with the ratio or difference computed.
-  event: {{"kind": "event", "ref": "E5[kind=gauge_failure]"}}: a record with a kind and \
-dates (a gauge failure, shut-in, regime change, threshold crossing, a field_screen issue, \
-a well_operations job), printed from the record.
-  forecast: {{"kind": "forecast", "ref": "E13"}}: a forecast_production result, printed with \
-its central estimate, its dates and its range from past forecasts.
-  quote: {{"kind": "quote", "ref": "E4/facts[2]"}}: a report fact's exact words with its \
-English statement.
-- A reference is an evidence id, then field names and row selectors: "/name" a field, \
-"[field=value,field=value]" the one row or record whose fields match (in lists of records \
-and in tables with columns and rows alike), "[n]" the row at place n, counting from 0. A \
-result that is itself a table (columns and rows, as production_monthly gives) is read row \
-first: "E13[month=2018-12]/water_cut". A reference that does not resolve comes back with \
-what is there instead.
-- Free words may hold no digits, dates, month names, units, amounts in words (half, twice, \
-ten) or quote marks: everything a reader could check comes from a reference. They may name \
-a well that one of the same finding's statements is about. Free words say what the values \
-mean or link them ("P-2 needs attention most:", ", while", "consistent with water from the \
-injectors"); they never repeat what a statement prints (free words "oil rate fell" before a \
-change statement of the oil rate say it twice). Give them their own punctuation. The first \
-statement about a well names it; later ones say "its". A finding is one or two \
-sentences with at most three statements of values. Write for an engineer and their manager: \
-the summary's first sentence says in plain words what is wrong with what ("its choke was \
-cut, so the drop is not the reservoir"), not the tools' labels.
-- A finding is "fact" only if none of its statements rests on a result with warnings, it \
-holds no forecast, and its free words state no cause; otherwise "inference". A cause in \
-the summary's free words needs a hedge ("likely", "consistent with").
-- A checker reads every reference and the free words. If it sends the answer back, fix the \
-listed parts and submit again; its reply shows how each answer printed.{as_of_note}"""
-
-
 def submit_tool_schema() -> dict:
     parameters = json_schema(Submission)
     # Declared numbers are optional in the model only so old answers still load; the agent
@@ -286,9 +231,6 @@ class Step:
             result = call["result"]
             view: dict = {"name": call["name"], "arguments": _parse_arguments(call["arguments"])}
             if call["name"] == SUBMIT:
-                if call.get("rendered"):  # statements: the UI reads the printed answer
-                    view["statements"] = view["arguments"]
-                    view["arguments"] = call["rendered"]
                 view["accepted"] = result.get("accepted", False)
                 view["problems"] = result.get("problems", [])
                 if call.get("as_text"):  # written as the reply, not called: replay skips it
@@ -473,36 +415,13 @@ def describe_field(store: ProductionStore) -> dict:
 UNNAMED = {"name": "field in this data", "drive": "The field is a waterflood."}
 
 
-def statements_tool_schema() -> dict:
-    return {
-        "type": "function",
-        "function": {
-            "name": SUBMIT,
-            "description": "Submit the final answer as statements: a summary and findings, "
-            "each a list of parts (free words, or statements whose values are references into "
-            "the tool results). Code prints the sentences; a checker reads every reference. A "
-            'finding looks like: {"parts": [{"kind": "change", "ref": '
-            '"E5[kind=regime_change,signal=oil_rate]/details/before_mean", "to": '
-            '"E5[kind=regime_change,signal=oil_rate]/details/after_mean"}, {"say": ", while"}, '
-            '{"kind": "change", "ref": "E5[kind=regime_change,signal=oil_rate]/details/'
-            'choke_before_pct", "to": "E5[kind=regime_change,signal=oil_rate]/details/'
-            'choke_after_pct"}], "confidence": "fact"}.',
-            "parameters": json_schema(StatementSubmission),
-        },
-    }
-
-
-def system_prompt(store: ProductionStore, statements: bool = False) -> str:
+def system_prompt(store: ProductionStore) -> str:
     as_of = store.as_of
     note = f"\n\nData is available only up to {as_of.isoformat()}." if as_of else ""
     field = describe_field(store)
     unnamed = as_of is not None and field["name"] == VOLVE["name"]
     shown = {**field, **UNNAMED} if unnamed else field
-    template = SYSTEM_PROMPT
-    if statements:  # the bullets on declaring, prose and the checker do not apply
-        template = template[: template.index("- Compute every derived number")]
-        template += STATEMENTS_RULES
-    return template.format(
+    return SYSTEM_PROMPT.format(
         field=shown["name"],
         drive=shown["drive"],
         wells=describe_wells(store),
@@ -557,7 +476,6 @@ async def run_agent(
     look_fn: Callable[[ProductionStore, LLM, str], Awaitable[dict]] = look,
     review_fn: ReviewFn | None = None,
     python_fn: PythonFn | None = None,
-    statements: bool = False,
 ) -> AgentRun:
     """Run the agent on one question.
 
@@ -569,18 +487,17 @@ async def run_agent(
     given, reviews the first accepted answer; with points raised, the model gets one chance
     to revise, and the checked answer stands if the revision does not pass. python_fn, when
     given, runs run_python calls in the run's sandbox (the replay passes the recorded
-    results); without it the tool is not offered. statements=True asks for the answer as
-    statements printed from the tool results (agent/statements.py) instead of prose.
+    results); without it the tool is not offered.
 
     The run ends with an answer whatever happens to it: out of steps or time, or a provider
     error after the client's retries, it returns the last submission (unverified) with the
     reason in `stopped`, and its steps and evidence intact.
     """
     messages: list[dict] = [
-        {"role": "system", "content": system_prompt(store, statements)},
+        {"role": "system", "content": system_prompt(store)},
         {"role": "user", "content": question},
     ]
-    submit_schema = statements_tool_schema() if statements else submit_tool_schema()
+    submit_schema = submit_tool_schema()
     tools = [
         *tool_schemas(),
         VISION_TOOL.schema(),
@@ -712,8 +629,6 @@ async def run_agent(
 
         def check(arguments: str) -> dict:
             nonlocal accepted, last_submission, asked_readability
-            if statements:
-                return check_statements(arguments)
             try:
                 submission = Submission.model_validate_json(arguments or "{}")
             except ValidationError as e:
@@ -741,32 +656,6 @@ async def run_agent(
                 accepted = submission
             return {"accepted": not problems, "problems": problems}
 
-        def check_statements(arguments: str) -> dict:
-            """The answer as statements: printed from its references, and the printed
-            answer stands in for a prose submission everywhere after."""
-            nonlocal accepted, last_submission
-            try:
-                written = StatementSubmission.model_validate_json(arguments or "{}")
-            except ValidationError as e:
-                return {"accepted": False, "problems": [f"invalid submission: {e}"]}
-            try:
-                printed = render(written, log)
-            except Exception as e:
-                logger.exception("statements failed to print")
-                problems = [f"The answer could not be printed ({type(e).__name__}); submit again."]
-                check_rounds.append(problems)
-                return {"accepted": False, "problems": problems}
-            last_submission = printed.submission
-            check_rounds.append(printed.problems)
-            if not printed.problems:
-                accepted = printed.submission
-            return {
-                "accepted": not printed.problems,
-                "problems": printed.problems,
-                "printed": printed.texts,
-                "_rendered": printed.submission.model_dump(),
-            }
-
         calls = 0
         for call in message.tool_calls or []:
             name, arguments = call.function.name, call.function.arguments
@@ -774,8 +663,6 @@ async def run_agent(
             if name == SUBMIT:
                 # The checker is CPU-bound: in a thread, so other runs' streams flow.
                 payload = await asyncio.to_thread(check, arguments)
-                if "_rendered" in payload:
-                    record["rendered"] = payload.pop("_rendered")
             elif (calls := calls + 1) > MAX_CALLS_PER_STEP:
                 payload = {
                     "error": f"too many tool calls in one step; call at most {MAX_CALLS_PER_STEP}"
@@ -852,8 +739,6 @@ async def run_agent(
         if written:
             payload = await asyncio.to_thread(check, written)
             text_call = {"name": SUBMIT, "arguments": written, "result": payload, "as_text": True}
-            if "_rendered" in payload:
-                text_call["rendered"] = payload.pop("_rendered")
             step.tool_calls.append(text_call)
             if not accepted:
                 reply = json.dumps(payload, ensure_ascii=False, default=str)

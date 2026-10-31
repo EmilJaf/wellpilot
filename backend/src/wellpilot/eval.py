@@ -6,7 +6,7 @@ needs (look_at_page for a figure, field_vs_design for the plan's limits), says t
 any correct answer contains, refuses a well that does not exist, and stays within a step
 and cost budget. Run it before a deploy, a demo recording or a prompt change.
 
-Spends tokens (about $2 for all cases on Muse Spark Open; Emil runs it):
+Spends tokens (about $2 for all cases on Muse Spark Open):
     uv run python -m wellpilot.eval                 # every case
     uv run python -m wellpilot.eval --only gauge    # one case
     uv run python -m wellpilot.eval --list          # print the cases, no tokens
@@ -358,7 +358,6 @@ async def run_case(
     processed_dir: Path | None = None,
     add_to_corpus: bool = True,
     sandboxes: SandboxPool | None = None,
-    statements: bool = False,
 ) -> dict:
     settings = get_settings()
     store = ProductionStore(processed_dir or settings.processed_dir, as_of=case.as_of)
@@ -375,12 +374,10 @@ async def run_case(
             evidence_log=record.log,
             review_fn=review if settings.review_answers else None,  # the product as served
             python_fn=python_fn,
-            statements=statements,
         )
     record.complete(run)
     path = record.save(runs_dir)
-    # A statements answer is printed by code; the corpus holds prose answers for the checker.
-    if add_to_corpus and not statements and CORPUS_DIR.parent.is_dir():
+    if add_to_corpus and CORPUS_DIR.parent.is_dir():
         corpus.add(path)
     checks = score(case, run)
     return {
@@ -416,11 +413,6 @@ async def main() -> None:
     )
     parser.add_argument("--list", action="store_true", help="print the cases and exit")
     parser.add_argument("--concurrency", type=int, default=2)
-    parser.add_argument(
-        "--statements",
-        action="store_true",
-        help="ask for the answer as statements printed from the tool results (a trial)",
-    )
     args = parser.parse_args()
     cases = [CASES_BY_ID[c] for c in args.only] if args.only else SUITES[args.suite]
     if args.list:
@@ -438,15 +430,12 @@ async def main() -> None:
     print(
         f"provider: {llm.provider}, model: {llm.model}, {len(cases)} cases, "
         f"run_python: {'on' if sandboxes else 'off'}"
-        + (", answers as statements" if args.statements else "")
     )
     semaphore = asyncio.Semaphore(args.concurrency)
 
     async def one(case: Case) -> dict:
         async with semaphore:
-            result = await run_case(
-                case, llm, settings.runs_dir, sandboxes=sandboxes, statements=args.statements
-            )
+            result = await run_case(case, llm, settings.runs_dir, sandboxes=sandboxes)
             print(f"  {case.id}: {'pass' if result['passed'] else 'FAIL'}, run {result['run']}")
             return result
 
@@ -459,7 +448,7 @@ async def main() -> None:
     out = settings.data_dir / "evals"
     out.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
-    report = {"model": llm.model, "at": stamp, "statements": args.statements, "results": results}
+    report = {"model": llm.model, "at": stamp, "results": results}
     (out / f"{stamp}.json").write_text(json.dumps(report, indent=1) + "\n")
     print(f"scorecard: {out / f'{stamp}.json'}")
     if not all(r["passed"] for r in results):
