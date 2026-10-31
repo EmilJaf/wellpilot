@@ -10,7 +10,15 @@ from types import SimpleNamespace
 import pytest
 
 from wellpilot import training
-from wellpilot.training_serverless import costs, datums, parse_args, render, sampler_ask, train
+from wellpilot.training_serverless import (
+    costs,
+    datums,
+    parse_args,
+    render,
+    run,
+    sampler_ask,
+    train,
+)
 
 
 class Tokens:
@@ -175,3 +183,40 @@ def test_answers_keep_their_order_and_a_failed_one_loses_only_itself(judged) -> 
 def test_defaults_fit_the_longest_row_and_a_small_batch() -> None:
     args = parse_args([])
     assert args.max_seq_len >= 35222 and args.batch_size == 4 and args.rank == 16
+
+
+def steps_of(argv: list[str]) -> list[str]:
+    done = []
+
+    def checkpoint(name: str) -> str:
+        done.append(f"save {name}")
+        return name
+
+    run(
+        parse_args(argv),
+        checkpoint,
+        lambda: done.append("train"),
+        lambda path: done.append(f"promote {path}"),
+        lambda label, path: done.append(f"score {label} {path}"),
+        lambda: done.append("release"),
+    )
+    return done
+
+
+def test_training_comes_before_any_paid_answer() -> None:
+    assert steps_of([]) == [
+        "save wp-base",
+        "train",
+        "save wp-final",
+        "promote wp-final",
+        "score glimmer-base wp-base",
+        "score glimmer-tuned wp-final",
+    ]
+
+
+def test_a_base_only_check_gives_its_slot_back() -> None:
+    assert steps_of(["--epochs", "0"]) == [
+        "save wp-base",
+        "score glimmer-base wp-base",
+        "release",
+    ]

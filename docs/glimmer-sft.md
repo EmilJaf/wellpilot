@@ -37,7 +37,8 @@ checker's blind spots.
 - **Answers:** Glimmer has no public inference endpoint, but a serverless training session
   samples its own checkpoints with no deployment. That is billed per token ($1.96 per million
   read, about 80% less when cached; $4.88 per million written). Base and tuned, both rounds on
-  all 30 items, cost at most about $9; `--dry-run` prints the bound for today's data.
+  all 30 items, cost at most about $9 by `--dry-run`'s bound, and about $6-7 by the three-item
+  check ($0.29 for items shorter than the average).
 - **Muse Spark Open as a reference** (Baseten): about 25 x 15k tokens in, about $0.5-0.8.
 
 ## Steps (Emil runs them; they use the Fireworks account)
@@ -78,16 +79,18 @@ cut off (`valid_json` below 3), add `--max-tokens 12000` to this and the next st
 cd ~/wellpilot/backend && ../data/training/sft/venv/bin/python -m wellpilot.training_serverless --epochs 0 --limit 3
 ```
 
-**4. The run.** It scores base Glimmer, trains (3 epochs, 54 steps, a loss line per step), saves
-the adapter as the model `wellpilot-glimmer-writer` and scores the tuned one. How long a step
-takes on the shared pool is not known yet: the first lines will tell. Keep the terminal open.
-A refusal for too many runs (`RESOURCE_EXHAUSTED`, 429) means an earlier session still holds
-its slot: wait a few minutes and start again.
-After the first steps, check the billing page shows no training charge; if it does, stop with
-Ctrl-C and tell Claude.
+**4. The run.** It trains first (3 epochs, 54 steps, a loss line per step), which is free, so a
+row the pool refuses or a charge that should not be there shows before anything is spent. Then
+it saves the adapter as the model `wellpilot-glimmer-writer` and scores base and tuned, about
+20 minutes each at six at a time (base Glimmer took 1-6 minutes an item). How long a training
+step takes on the shared pool is not known yet: the first lines will tell. `caffeinate` keeps
+the Mac awake; keep the terminal open. A refusal for too many runs (`RESOURCE_EXHAUSTED`, 429)
+means an earlier session still holds its slot: wait a few minutes and start again. After the
+first steps, check the billing page shows no training charge; if it does, stop with Ctrl-C and
+tell Claude.
 
 ```bash
-cd ~/wellpilot/backend && ../data/training/sft/venv/bin/python -m wellpilot.training_serverless
+cd ~/wellpilot/backend && caffeinate -is ../data/training/sft/venv/bin/python -m wellpilot.training_serverless
 ```
 
 If it stops partway, every epoch's adapter is saved and its path is in

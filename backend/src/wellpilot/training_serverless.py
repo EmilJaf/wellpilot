@@ -246,20 +246,39 @@ def main(argv: list[str] | None = None) -> None:
             log({"checkpoint": name, "path": path})
             return path
 
-        if not args.no_base:
-            score("glimmer-base", checkpoint("wp-base"))  # an adapter of zeros: the base model
-        if not args.epochs:  # nothing to keep: free the session's slot for the next run
-            close_serverless_session(service)
-            return
-        steps = train(client, datums(rendered, sdk), sdk, args, log, checkpoint)
-        tuned = checkpoint("wp-final")
-        log({"steps": steps, "tuned": tuned})
-        if not args.no_promote:
-            promote(service, key, tuned)
-        score("glimmer-tuned", tuned)
+        def learn() -> None:
+            log({"steps": train(client, datums(rendered, sdk), sdk, args, log, checkpoint)})
+
+        run(
+            args,
+            checkpoint,
+            learn,
+            lambda path: promote(service, key, path),
+            score,
+            lambda: close_serverless_session(service),
+        )
     finally:
         log_file.close()
         service.close()
+
+
+def run(args, checkpoint, learn, promote_to_model, score, release) -> None:
+    """Training comes first: it is free, so a row the pool refuses or a charge that should not
+    be there shows before a cent goes on answers. Without training nothing is left to keep, so
+    the session's slot goes back at once."""
+    base = None if args.no_base else checkpoint("wp-base")  # zeros: the base model
+    tuned = None
+    if args.epochs:
+        learn()
+        tuned = checkpoint("wp-final")
+        if not args.no_promote:
+            promote_to_model(tuned)
+    if base:
+        score("glimmer-base", base)
+    if tuned:
+        score("glimmer-tuned", tuned)
+    if not args.epochs:
+        release()
 
 
 def promote(service, key: str, path: str) -> None:
