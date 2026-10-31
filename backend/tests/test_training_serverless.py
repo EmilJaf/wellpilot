@@ -4,6 +4,7 @@ calls still have these shapes; --dry-run and the three-item run in docs/glimmer-
 
 import asyncio
 import json
+import sys
 from argparse import Namespace
 from types import SimpleNamespace
 
@@ -13,6 +14,7 @@ from wellpilot import training
 from wellpilot.training_serverless import (
     costs,
     datums,
+    main,
     parse_args,
     render,
     run,
@@ -222,6 +224,33 @@ def test_a_variant_run_trains_scores_only_the_tuned_model_and_keeps_no_model() -
         "save wp-final",
         "score glimmer-tuned-reason wp-final",
     ]
+
+
+def test_a_saved_sessions_adapter_is_promoted_under_its_tagged_name(monkeypatch) -> None:
+    promoted = {}
+
+    class Client:
+        account_id = "acct"
+
+        def __init__(self, api_key, base_url) -> None:
+            pass
+
+        def list_training_session_checkpoints(self, name):
+            assert name == "accounts/acct/trainingSessions/ts-1"
+            return [
+                {"name": "other", "checkpointName": "wp-epoch-3", "promotable": True},
+                {"name": "final", "checkpointName": "wp-final-abc", "promotable": True},
+            ]
+
+        def promote_session_checkpoint(self, name, output_model_id, base_model):
+            promoted.update(name=name, model=output_model_id)
+
+    module = SimpleNamespace(FireworksClient=Client)
+    monkeypatch.setitem(sys.modules, "fireworks", SimpleNamespace(training=None))
+    monkeypatch.setitem(sys.modules, "fireworks.training", SimpleNamespace(sdk=module))
+    monkeypatch.setitem(sys.modules, "fireworks.training.sdk", module)
+    main(["--promote-session", "ts-1", "--tag=-reason"])
+    assert promoted == {"name": "final", "model": "wellpilot-glimmer-writer-reason"}
 
 
 def test_a_base_only_check_gives_its_slot_back() -> None:

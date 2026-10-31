@@ -179,11 +179,18 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--no-promote", action="store_true", help="do not save a LoRA model")
     parser.add_argument("--tag", default="", help="a suffix on the scorecard labels, e.g. -reason")
     parser.add_argument("--tuned-path", help="score this saved checkpoint and do nothing else")
+    parser.add_argument(
+        "--promote-session", help="save this session's wp-final as a model and do nothing else"
+    )
     return parser.parse_args(argv)
 
 
 def main(argv: list[str] | None = None) -> None:
     args = parse_args(argv)
+    model_id = OUTPUT_MODEL + args.tag  # a tagged run never replaces an earlier adapter
+    if args.promote_session:
+        promote(args.promote_session, get_settings().fireworks_api_key, "", model_id)
+        return
     # Imported here: they exist only in the cookbook's venv.
     from fireworks.training import sdk
     from fireworks.training.sdk import FiretitanServiceClient
@@ -255,7 +262,7 @@ def main(argv: list[str] | None = None) -> None:
             args,
             checkpoint,
             learn,
-            lambda path: promote(service, key, path),
+            lambda path: promote(service.training_session_name, key, path, model_id),
             score,
             lambda: close_serverless_session(service),
         )
@@ -283,16 +290,20 @@ def run(args, checkpoint, learn, promote_to_model, score, release) -> None:
         release()
 
 
-def promote(service, key: str, path: str) -> None:
+def promote(session: str, key: str, path: str, model_id: str) -> None:
     """A LoRA model from the final adapter, while the session still holds it. Scoring needs no
-    model, so a failure here is reported and the run goes on: the checkpoint path stays."""
+    model, so a failure here is reported and the run goes on: the checkpoint path stays.
+    `session` is a session's full name or its bare id."""
     from fireworks.training.sdk import FireworksClient
 
     client = FireworksClient(api_key=key, base_url=GATEWAY_URL)
     try:
+        name = session
+        if not name.startswith("accounts/"):
+            name = f"accounts/{client.account_id}/trainingSessions/{session}"
         found = [
             r
-            for r in client.list_training_session_checkpoints(service.training_session_name)
+            for r in client.list_training_session_checkpoints(name)
             if r.get("promotable")
             and "wp-final" in (r.get("checkpointName") or r.get("name") or "")
         ]
@@ -301,9 +312,9 @@ def promote(service, key: str, path: str) -> None:
             return
         target = max(found, key=lambda r: r.get("createTime", ""))
         client.promote_session_checkpoint(
-            name=target["name"], output_model_id=OUTPUT_MODEL, base_model=BASE_MODEL
+            name=target["name"], output_model_id=model_id, base_model=BASE_MODEL
         )
-        print(f"promoted {target['name']} to {OUTPUT_MODEL}", flush=True)
+        print(f"promoted {target['name']} to {model_id}", flush=True)
     except Exception as e:  # noqa: BLE001 - see the docstring
         print(f"promotion failed ({type(e).__name__}: {str(e)[:200]}); adapter at {path}")
     finally:
