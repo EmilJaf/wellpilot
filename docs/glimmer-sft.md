@@ -155,7 +155,7 @@ Training took 13 minutes (14 s a step) and the mean loss fell by epoch from 0.35
 **Second try, the one variant named beforehand (Oct 31 night).** `WRITER_DIR=writer_reason`
 `build --with-reasoning` keeps the model's reasoning from the step that submitted each answer (68
 of 72 examples; the renderer trains on it as a `to=self` block before the answer, 117k trained
-tokens against 82k). Loss by epoch 0.58, 0.47, 0.35; 54 steps; sampling at most $1.98.
+tokens against 82k). Loss by epoch 0.58, 0.46, 0.36; 54 steps; sampling at most $1.98.
 
 - **The cause was right.** It beat the first tuned model on 9 items to 2 at once (p = 0.065) and
   10 to 3 within two tries (p = 0.092).
