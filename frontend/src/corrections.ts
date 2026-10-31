@@ -111,6 +111,13 @@ function describe(
   if (declared.length) {
     changes.push(`Named the source of ${declared.map((n) => `${n.text} (${n.evidence_id})`).join(', ')}.`)
   }
+  // The same number taken from another result ("55%" from E21, then from E4).
+  const resourced = after.numbers.filter((n) =>
+    before.numbers.some((m) => m.text === n.text && m.evidence_id !== n.evidence_id),
+  )
+  if (resourced.length) {
+    changes.push(`Took ${resourced.map((n) => `${n.text} from ${n.evidence_id}`).join(', ')} instead.`)
+  }
   const reworded = before.text !== after.text
   if (reworded) changes.push('Reworded it.')
   if (!changes.length) changes.push('Resubmitted it unchanged.')

@@ -68,6 +68,7 @@
         "BASETEN_API_KEY=",
         "MODEL_API_KEY=",
         "PYTHON_SANDBOX=false",
+        "PUBLIC=true",
         "FEATURED_RUNS=f4a331708d2a,9b7757a10976,43c53d5c1096,01cde9df71b7,83a3114d185f,f7d3faebb139",
         "STORES_PER_CLIENT_PER_HOUR=10000",
         "CHECKS_PER_CLIENT_PER_HOUR=100000",
