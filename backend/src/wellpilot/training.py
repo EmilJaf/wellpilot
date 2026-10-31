@@ -248,12 +248,18 @@ def score(item: dict, answer: dict | None) -> dict:
 
 
 async def _ask(llm, messages: list[dict], max_tokens: int) -> tuple[str, int, int]:
+    """The reasoning effort the agent runs at: left unset, Baseten reasons at xhigh, and those
+    tokens count against max_tokens, so a reply can end before it starts."""
+    effort = {"reasoning_effort": llm.default_reasoning} if llm.default_reasoning else {}
     response = await llm.client.chat.completions.create(
-        model=llm.model, messages=messages, temperature=0, max_tokens=max_tokens
+        model=llm.model, messages=messages, temperature=0, max_tokens=max_tokens, **effort
     )
     usage = response.usage
+    choice = response.choices[0]
+    if not choice.message.content:
+        print(f"empty reply: finish_reason {choice.finish_reason}")
     return (
-        response.choices[0].message.content or "",
+        choice.message.content or "",
         getattr(usage, "prompt_tokens", 0) or 0,
         getattr(usage, "completion_tokens", 0) or 0,
     )
@@ -308,7 +314,7 @@ async def _answer(
                 print(f"{item['run']}: no answer: {type(e).__name__}: {str(e)[:200]}")
                 reply, i, o = "", 0, 0
             tokens_in, tokens_out = tokens_in + i, tokens_out + o
-        result = score(item, parse(reply))
+        result = {**score(item, parse(reply)), "reply": reply}
         attempts.append(result)
         if result["accepted"] or attempt == rounds - 1:
             break
@@ -396,7 +402,7 @@ def main() -> None:
         "--rounds", type=int, default=2, help="answers per item, with the checker's reply between"
     )
     run.add_argument("--limit", type=int, default=0)
-    run.add_argument("--max-tokens", type=int, default=6000)
+    run.add_argument("--max-tokens", type=int, default=12000)
     args = parser.parse_args()
     if args.command == "build":
         print(json.dumps(build(), indent=1))

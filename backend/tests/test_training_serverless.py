@@ -161,6 +161,8 @@ def test_the_second_round_carries_the_checkers_problems(judged) -> None:
     assert result["accepted_by_round"] == 2 and not result["accepted"]
     assert (result["tokens_in"], result["tokens_out"]) == (200, 20)
     assert json.loads(seen[1][-1]["content"])["problems"] == ["undeclared 3"]
+    assert json.loads(result["reply"]) == {"fixed": False}  # the answers stay readable
+    assert json.loads(result["last"]["reply"]) == {"fixed": True}
     assert costs([result]) == pytest.approx(200 * 1.96e-6 + 20 * 4.88e-6)
 
 
@@ -220,3 +222,21 @@ def test_a_base_only_check_gives_its_slot_back() -> None:
         "score glimmer-base wp-base",
         "release",
     ]
+
+
+def test_a_chat_model_is_asked_at_the_agents_reasoning_effort() -> None:
+    """Unset, Baseten reasons at xhigh and max_tokens can run out before the answer starts."""
+    sent = {}
+
+    async def create(**kwargs):
+        sent.update(kwargs)
+        message = SimpleNamespace(content="answer")
+        return SimpleNamespace(
+            choices=[SimpleNamespace(message=message, finish_reason="stop")],
+            usage=SimpleNamespace(prompt_tokens=5, completion_tokens=2),
+        )
+
+    client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=create)))
+    llm = SimpleNamespace(client=client, model="m", default_reasoning="medium")
+    assert asyncio.run(training._ask(llm, [], 100)) == ("answer", 5, 2)
+    assert sent["reasoning_effort"] == "medium"

@@ -39,7 +39,7 @@ checker's blind spots.
   read, about 80% less when cached; $4.88 per million written). Base and tuned, both rounds on
   all 30 items, cost at most about $9 by `--dry-run`'s bound, and about $6-7 by the three-item
   check ($0.29 for items shorter than the average).
-- **Muse Spark Open as a reference** (Baseten): about 25 x 15k tokens in, about $0.5-0.8.
+- **Muse Spark Open as a reference** (Baseten): about $1-2 with both rounds.
 
 ## Steps (Emil runs them; they use the Fireworks account)
 
@@ -100,7 +100,15 @@ If it stops partway, every epoch's adapter is saved and its path is in
 cd ~/wellpilot/backend && ../data/training/sft/venv/bin/python -m wellpilot.training_serverless --tuned-path <path>
 ```
 
-**5. The reference on Muse Spark Open (Baseten, about $0.5-0.8).**
+**5. The reference on Muse Spark Open (Baseten, about $1-2 with both rounds).** It runs at the
+agent's reasoning effort; left at Baseten's default, the reasoning used up `max_tokens` and most
+replies came back empty (Oct 31). Three items first, to see answers come back:
+
+```bash
+cd ~/wellpilot/backend && uv run python -m wellpilot.training eval --label muse-check --limit 3
+```
+
+Then all of them:
 
 ```bash
 cd ~/wellpilot/backend && uv run python -m wellpilot.training eval --label muse
