@@ -149,5 +149,6 @@ Training took 13 minutes (14 s a step) and the mean loss fell by epoch from 0.35
 - **Cost:** sampling at most $2.79 and $2.16 before the prefill discount, plus $1.73 for Muse on
   Baseten. The Fireworks balance had not moved when this was written; billing may lag.
 
-The adapter is saved as `wellpilot-glimmer-writer` and used nowhere. Scorecards:
+Training that keeps the reasoning was not tried, so whether it would help is open. The adapter
+is saved as `wellpilot-glimmer-writer` and used nowhere. Scorecards:
 `data/evals/writer-{muse,glimmer-base,glimmer-tuned}-20261031T18*.json`.
