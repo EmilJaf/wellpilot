@@ -81,6 +81,8 @@ cd ~/wellpilot/backend && ../data/training/sft/venv/bin/python -m wellpilot.trai
 **4. The run.** It scores base Glimmer, trains (3 epochs, 54 steps, a loss line per step), saves
 the adapter as the model `wellpilot-glimmer-writer` and scores the tuned one. How long a step
 takes on the shared pool is not known yet: the first lines will tell. Keep the terminal open.
+A refusal for too many runs (`RESOURCE_EXHAUSTED`, 429) means an earlier session still holds
+its slot: wait a few minutes and start again.
 After the first steps, check the billing page shows no training charge; if it does, stop with
 Ctrl-C and tell Claude.
 

@@ -188,7 +188,10 @@ def main(argv: list[str] | None = None) -> None:
     from fireworks.training.sdk import FiretitanServiceClient
     from training.renderer import TrainOnWhat, get_renderer, get_text_content
     from training.renderer.tokenizer import get_tokenizer
-    from training.utils.serverless import enable_serverless_supervised_409_retry
+    from training.utils.serverless import (
+        close_serverless_session,
+        enable_serverless_supervised_409_retry,
+    )
 
     tokenizer = get_tokenizer(TOKENIZER_MODEL)
     renderer = get_renderer(RENDERER_NAME, tokenizer)
@@ -245,7 +248,8 @@ def main(argv: list[str] | None = None) -> None:
 
         if not args.no_base:
             score("glimmer-base", checkpoint("wp-base"))  # an adapter of zeros: the base model
-        if not args.epochs:
+        if not args.epochs:  # nothing to keep: free the session's slot for the next run
+            close_serverless_session(service)
             return
         steps = train(client, datums(rendered, sdk), sdk, args, log, checkpoint)
         tuned = checkpoint("wp-final")
