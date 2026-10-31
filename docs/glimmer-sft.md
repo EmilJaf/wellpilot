@@ -132,7 +132,10 @@ Training took 13 minutes (14 s a step) and the mean loss fell by epoch from 0.35
 |---|---|---|---|---|---|---|
 | Muse Spark Open (medium reasoning) | 29 | 7 | 19 | 58 of 58 | 4,047 | 13 |
 | Base Glimmer (high reasoning, the renderer's default) | 27 | 8 | 25 | 54 of 54 | 6,979 | 134 |
-| Tuned Glimmer | 30 | 4 | 17 | 61 of 61 | 1,561 | 31 |
+| Tuned on answers alone | 30 | 4 | 17 | 61 of 61 | 1,561 | 31 |
+| Tuned with each answer's reasoning | 30 | 11 | 24 | 59 of 61 | 2,129 | 37 |
+
+**First try, answers alone (70 examples):**
 
 - **Training made it worse.** Within two tries, base beat tuned on 11 items and lost on 3
   (McNemar p = 0.057); at once, 7 against 3 (p = 0.34). Items of one question are not
@@ -149,6 +152,24 @@ Training took 13 minutes (14 s a step) and the mean loss fell by epoch from 0.35
 - **Cost:** sampling at most $2.79 and $2.16 before the prefill discount, plus $1.73 for Muse on
   Baseten. The Fireworks balance had not moved when this was written; billing may lag.
 
-Training that keeps the reasoning was not tried, so whether it would help is open. The adapter
-is saved as `wellpilot-glimmer-writer` and used nowhere. Scorecards:
-`data/evals/writer-{muse,glimmer-base,glimmer-tuned}-20261031T18*.json`.
+**Second try, the one variant named beforehand (Oct 31 night).** `WRITER_DIR=writer_reason`
+`build --with-reasoning` keeps the model's reasoning from the step that submitted each answer (68
+of 72 examples; the renderer trains on it as a `to=self` block before the answer, 117k trained
+tokens against 82k). Loss by epoch 0.58, 0.47, 0.35; 54 steps; sampling at most $1.98.
+
+- **The cause was right.** It beat the first tuned model on 9 items to 2 at once (p = 0.065) and
+  10 to 3 within two tries (p = 0.092).
+- **Level with base on acceptance:** 7 to 4 at once (p = 0.55), 4 to 5 within two tries (p = 1.0).
+- **Better than base:** every reply valid JSON (30 against 27), a third of the tokens, a quarter
+  of the time, 1.37 problems a first try against 1.57, 13 style flags against 17.
+- **Its reasoning is short:** on answers accepted at once, about 1,370 tokens written for about
+  800 of reply, so about 570 of reasoning.
+- **Worse than base, and the checker missed it:** on P-1, whose planted cause is the stopped
+  injector I-2, both answers fail the eval's regex; base, Muse and the first tuned model name
+  I-2. One of the two was accepted at once and reads the field's falling voidage as support
+  "remaining strong". Passing the checker is not the whole test, as this document warned.
+
+Choices are not made on this test: 30 runs of 6 questions, read twice now. A third variant
+(Glimmer's own accepted answers) would need a dev set first. No adapter is used in the product.
+Scorecards are in `data/evals/`; tell them apart by the `label` inside (`glimmer-tuned` also
+matches `glimmer-tuned-reason` as a file pattern).

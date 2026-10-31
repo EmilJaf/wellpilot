@@ -174,15 +174,22 @@ flowchart LR
 
 The checker labels every answer the model submits, with its reasons. That makes training data an open-weight model can learn from, which a closed model cannot: `python -m wellpilot.agent.corpus export` writes 79 preference pairs (an answer the checker sent back and the answer it accepted next, in the same run, with what it caught) and 84 accepted answers with the evidence they cite, also as chat examples ready for supervised fine-tuning (`sft.jsonl`), from 86 real runs on Muse Spark Open. Labels are the reviewed verdicts, so the checker's own false rejections, corrected in review, are not taught as wrong.
 
-We tried it once, on Oct 31, and it made the model worse. Muse Glimmer 30B (open weights, Apache 2.0) got a LoRA adapter trained on 70 accepted answers from 13 questions, 54 steps on Fireworks' Serverless Training API. The test is the last step of a run only: write the answer from that run's tool results, then get one more try after the checker's reply. It uses 30 runs of 6 questions the training never saw.
+We tried it twice, on Oct 31. Muse Glimmer 30B (open weights, Apache 2.0) got a LoRA adapter trained on about 70 accepted answers from 13 questions, 54 steps on Fireworks' Serverless Training API. The test is the last step of a run only: write the answer from that run's tool results, then get one more try after the checker's reply. It uses 30 runs of 6 questions the training never saw.
 
 | | Valid JSON | Accepted at once | Accepted within two tries | Must-say and must-not-say checks | Tokens written per item | Seconds per item |
 |---|---|---|---|---|---|---|
 | Muse Spark Open | 29 of 30 | 7 | 19 | 58 of 58 | 4,047 | 13 |
 | Muse Glimmer 30B | 27 of 30 | 8 | 25 | 54 of 54 | 6,979 | 134 |
-| Muse Glimmer 30B, tuned | 30 of 30 | 4 | 17 | 61 of 61 | 1,561 | 31 |
+| Tuned on answers alone | 30 of 30 | 4 | 17 | 61 of 61 | 1,561 | 31 |
+| Tuned on answers with their reasoning | 30 of 30 | 11 | 24 | 59 of 61 | 2,129 | 37 |
 
-Training gave a model that always answers in format and writes a fifth as much, and that the checker accepts less often. The training answers hold no reasoning, and it learned to answer without any: a rerun of six items kept the replies, and its tokens were the reply alone, about 770 an answer. Its slips are the kind that thinking first avoids (a digit swapped in 1,133,053, a change written backwards). It also took on Muse's longer answers (3.3 findings against 2.8), and each extra number is one more chance to be sent back. We did not try training that keeps the reasoning, so whether it would help is open. The adapter is not used anywhere in the product. Untrained Glimmer did better than we expected: it finished more answers than Muse Spark Open within two tries, though it ran at high reasoning against Muse's medium, took ten times as long, and 25 against 19 is not a settled difference (p = 0.11, and 30 runs of 6 questions are not independent). [docs/glimmer-sft.md](docs/glimmer-sft.md) has the steps and the scorecards' reading.
+The first try made the model worse. The training answers held no reasoning, and it learned to answer without any: a rerun of six items kept the replies, and its tokens were the reply alone, about 770 an answer. Its slips were the kind that thinking first avoids (a digit swapped in 1,133,053, a change written backwards).
+
+So the second try kept each answer's reasoning (68 of 72 examples) and changed nothing else that matters, and the damage went away: it beat the first tuned model on 9 items to 2 at once and 10 to 3 within two tries. Against untrained Glimmer it is level on what the checker accepts (7 to 4 at once, 4 to 5 within two tries; neither is a real difference), with three things better: every reply is valid JSON, it writes a third of the tokens, and it takes a quarter of the time. One thing is worse, and the checker did not see it. On the synthetic well whose planted cause is a stopped injector, both its answers missed I-2, which the other three models named, and one of those answers was accepted at once: the checker confirms sources, not whether an explanation is right.
+
+So training bought speed and format, not better answers. The adapter is not used anywhere in the product. The numbers are small: 30 runs of 6 questions are not independent, and this test has now been read twice.
+
+Untrained Glimmer did better than we expected: it finished more answers than Muse Spark Open within two tries, though it ran at high reasoning against Muse's medium, took ten times as long, and 25 against 19 is not a settled difference (p = 0.11). [docs/glimmer-sft.md](docs/glimmer-sft.md) has the steps and the scorecards' reading.
 
 ## Running it on another field
 
