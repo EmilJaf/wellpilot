@@ -177,6 +177,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--no-base", action="store_true", help="leave out the base model's score")
     parser.add_argument("--no-promote", action="store_true", help="do not save a LoRA model")
+    parser.add_argument("--tag", default="", help="a suffix on the scorecard labels, e.g. -reason")
     parser.add_argument("--tuned-path", help="score this saved checkpoint and do nothing else")
     return parser.parse_args(argv)
 
@@ -234,7 +235,7 @@ def main(argv: list[str] | None = None) -> None:
 
     try:
         if args.tuned_path:
-            score("glimmer-tuned", args.tuned_path)
+            score(f"glimmer-tuned{args.tag}", args.tuned_path)
             return
         client = service.create_lora_training_client(
             base_model=BASE_MODEL, rank=args.rank, alpha=LORA_ALPHA, **LORA_TARGETS
@@ -274,9 +275,9 @@ def run(args, checkpoint, learn, promote_to_model, score, release) -> None:
         if not args.no_promote:
             promote_to_model(tuned)
     if base:
-        score("glimmer-base", base)
+        score(f"glimmer-base{args.tag}", base)
     if tuned:
-        score("glimmer-tuned", tuned)
+        score(f"glimmer-tuned{args.tag}", tuned)
     if not args.epochs:
         release()
 

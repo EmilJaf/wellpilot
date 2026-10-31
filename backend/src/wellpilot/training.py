@@ -20,6 +20,7 @@ the model is taught, so the regexes and a read of the answers are the check on t
 import argparse
 import asyncio
 import json
+import os
 import re
 import time
 from collections import Counter
@@ -71,7 +72,9 @@ Ask = Callable[[list[dict], int], Awaitable[tuple[str, int, int]]]
 
 
 def _out() -> Path:
-    return get_settings().data_dir / "training" / "writer"
+    # WRITER_DIR picks a variant's directory (e.g. "writer_reason") beside the default.
+    name = os.environ.get("WRITER_DIR", "writer")
+    return get_settings().data_dir / "training" / name
 
 
 def _held_out(question: str) -> bool:
@@ -119,21 +122,45 @@ def _as_of(run: str) -> str | None:
     return None
 
 
-def _example(question: str, evidence: list[dict], answer: dict, as_of: str | None) -> dict:
+def _submit_reasoning(run: str, answer: dict) -> str:
+    """The model's own reasoning on the step that submitted this answer, so training keeps the
+    'think, then answer' shape (the first run of the tuned model dropped it and answered blind)."""
+    path = get_settings().runs_dir / f"{run}.json"
+    if not path.exists():
+        return ""
+    events = json.loads(path.read_text()).get("events", [])
+    for event in events:
+        if event.get("type") != "step":
+            continue
+        for call in event.get("tool_calls") or []:
+            same = (call.get("arguments") or {}).get("summary") == answer.get("summary")
+            if call.get("name") == "submit_findings" and same:
+                return event.get("reasoning") or ""
+    return ""
+
+
+def _example(
+    question: str, evidence: list[dict], answer: dict, as_of: str | None, reasoning: str = ""
+) -> dict:
+    assistant = {"role": "assistant", "content": json.dumps(answer, ensure_ascii=False)}
+    if reasoning:
+        # The renderer puts this in a to=self block before the answer, trained like the answer.
+        assistant["reasoning_content"] = reasoning
     return {
         "messages": [
             {"role": "system", "content": system_prompt(as_of)},
             {"role": "user", "content": user_message(question, evidence)},
-            {"role": "assistant", "content": json.dumps(answer, ensure_ascii=False)},
+            assistant,
         ]
     }
 
 
-def build(corpus: Path = CORPUS_DIR, out: Path | None = None) -> dict:
+def build(corpus: Path = CORPUS_DIR, out: Path | None = None, with_reasoning: bool = False) -> dict:
     """train.jsonl (chat examples), test.jsonl (inputs, with the run's accepted answer as
     gold where it has one), split by question, and validation.jsonl: the test's gold answers
     as chat examples, for a trainer's validation loss on questions it never trains on (a
-    monitor only: nothing is chosen by it)."""
+    monitor only: nothing is chosen by it). with_reasoning keeps each training answer's own
+    reasoning before it, so the model is taught to think before it writes."""
     out = out or _out()
     out.mkdir(parents=True, exist_ok=True)
     runs: dict[str, list[dict]] = {}
@@ -160,7 +187,8 @@ def build(corpus: Path = CORPUS_DIR, out: Path | None = None) -> dict:
         elif accepted:
             # The run's last accepted answer, with the evidence it was written from.
             case = accepted[-1]
-            train.append(_example(question, case["evidence"], case["submission"], as_of))
+            reasoning = _submit_reasoning(run, case["submission"]) if with_reasoning else ""
+            train.append(_example(question, case["evidence"], case["submission"], as_of, reasoning))
     validation = [
         _example(t["question"], t["evidence"], t["gold"], t["as_of"]) for t in test if t["gold"]
     ]
@@ -176,6 +204,7 @@ def build(corpus: Path = CORPUS_DIR, out: Path | None = None) -> dict:
         "test_questions": len({t["question"] for t in test}),
         "test_with_gold": sum(t["gold"] is not None for t in test),
         "validation_examples": len(validation),
+        "with_reasoning": sum("reasoning_content" in r["messages"][2] for r in train),
         "held_out": list(HOLDOUT),
         # About 1.85 characters a token on Glimmer's tokenizer: tool results are mostly digits.
         "train_tokens_estimate": round(sum(chars) / 1.85),
@@ -394,7 +423,12 @@ def save_card(label: str, model: str | None, results: list[dict]) -> tuple[dict,
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     sub = parser.add_subparsers(dest="command", required=True)
-    sub.add_parser("build", help="write train.jsonl and test.jsonl (free)")
+    make = sub.add_parser("build", help="write train.jsonl and test.jsonl (free)")
+    make.add_argument(
+        "--with-reasoning",
+        action="store_true",
+        help="keep each training answer's own reasoning before it (WRITER_DIR picks the dir)",
+    )
     run = sub.add_parser("eval", help="score a model's answers on the held-out questions")
     run.add_argument("--fake", choices=["gold", "broken"], help="score fixed answers (free)")
     run.add_argument("--label", default="", help="a name for the scorecard (e.g. base, tuned)")
@@ -405,7 +439,7 @@ def main() -> None:
     run.add_argument("--max-tokens", type=int, default=12000)
     args = parser.parse_args()
     if args.command == "build":
-        print(json.dumps(build(), indent=1))
+        print(json.dumps(build(with_reasoning=args.with_reasoning), indent=1))
         return
     path = _out() / "test.jsonl"
     if not path.exists():
