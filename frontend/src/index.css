@@ -8,7 +8,7 @@
   water blue (the industry's plotting convention); amber and red appear only when
   something is abnormal: a fit warning, a dead gauge, a rejected claim. Normal and verified
   states stay in ink: "verified" is a check mark and words, never green, which means oil.
-  One more colour, indigo, marks only what the reader can act on and where they are (the
+  One more colour, a dark blue-green, marks only what the reader can act on and where they are (the
   step, the tab, buttons, links); it sits far from water's blue in hue and lightness.
 
   Reading order is a story, told in five steps across the top: ask, watch the agent work,
@@ -27,11 +27,11 @@
   --shut-wash: #e3e6e9;
   --future-wash: rgba(31, 38, 45, 0.07); /* the time machine: data after the agent's date */
 
-  --brand: #3730a3; /* indigo: actions and "you are here", 9.5:1 on white */
-  --brand-strong: #312e81;
-  --brand-band: #1e1b4b;
-  --brand-wash: #eef0ff;
-  --brand-line: #c7caf7;
+  --brand: #0f5f66; /* dark blue-green: actions and "you are here", 7:1 on white */
+  --brand-strong: #0c4f55;
+  --brand-band: #0b2f36;
+  --brand-wash: #e6f4f4;
+  --brand-line: #bfe3e4;
 
   --oil: #008300;
   --water: #2a78d6;
