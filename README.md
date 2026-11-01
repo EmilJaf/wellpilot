@@ -9,6 +9,7 @@ Oil wells produce less over time, and engineers have to tell why (the reservoir 
 Why it matters: engineers spend up to 30% of their time searching for data and about as much again getting it into shape ([IPTC 12035](https://www.earthdoc.org/content/papers/10.3997/2214-4609-pdb.148.iptc12035)), and one large operator found spreadsheet work took as much as 70% of its production engineers' time ([Hart Energy](https://hartenergy.com/ep/exclusives/lets-give-production-engineers-break-21562)). A problem found late costs production: unplanned deferment at one Omani field was 3.7% of its potential against 1% for the industry's best ([SPE-214005-MS](https://squ.elsevierpure.com/ar/publications/excelling-in-subsurface-unscheduled-deferment-showcasing-best-in-)). And engineers check AI by hand: in a 2026 survey of over 400 engineering professionals and students, 86% used AI and 6% trusted its results without hesitation ([Omni Calculator](https://allwork.space/2026/02/86-of-u-s-engineers-use-ai-but-only-6-fully-trust-it-2026-survey-finds/)). WellPilot does the data work and the checking. Sources and caveats: [docs/impact-evidence.md](docs/impact-evidence.md).
 
 - Live demo: https://wellpilot.fly.dev (recorded answers open without a key; live questions are rate-limited)
+- Run it yourself, no key needed: [how](#run-it-yourself-with-no-api-key)
 - Demo video: _link added at submission_
 
 Built for the Meta Global AI Developer Hackathon (Oct 26 - Nov 4, 2026), Indie track, "Push the Frontier". The data is Equinor's open Volve field (Norwegian North Sea, 2008-2016).
@@ -215,21 +216,38 @@ cd backend
 uv sync
 uv run uvicorn wellpilot.main:app --reload   # API on :8000
 
+# in a second terminal, from the repository root
 cd frontend
 pnpm install
 pnpm dev                                     # UI on :5173, proxies /api to :8000
 ```
 
-**Without any API key.** The app runs with the keys in `.env` left empty: the recorded answers replay step by step with their checks, reveals and evidence, every data view works, and only a new question is refused (503) until a key is set. After fetching the data (below), copy the recorded runs in:
+### Run it yourself, with no API key
+
+The recorded answers replay step by step with their checks, reveals and evidence, every data view works, and only a new question is refused until a key is set. Both ways below were tested from a fresh clone with no keys.
+
+With Docker (about a minute to build), then open http://localhost:8080:
 
 ```bash
-mkdir -p data/runs && cp backend/tests/fixtures/runs/*.json data/runs/
+git clone https://github.com/EmilJaf/wellpilot && cd wellpilot
+scripts/fetch_data.sh
+docker build -t wellpilot .
+docker run --rm -p 8080:8080 -e FEATURED_RUNS="$(sed -n 's/.*FEATURED_RUNS = "\(.*\)"/\1/p' fly.toml)" wellpilot
 ```
 
-Or the image the live site runs, in Docker with no key, on http://localhost:8080 (the recorded runs are inside it; FEATURED_RUNS lists them on the first screen, as on the live site):
+Without Docker (needs uv, Node.js and pnpm), from the repository root:
 
 ```bash
-scripts/fetch_data.sh && docker build -t wellpilot . && docker run --rm -p 8080:8080 -e FEATURED_RUNS="$(sed -n 's/.*FEATURED_RUNS = "\(.*\)"/\1/p' fly.toml)" wellpilot
+git clone https://github.com/EmilJaf/wellpilot && cd wellpilot
+scripts/fetch_data.sh
+mkdir -p data/runs && cp backend/tests/fixtures/runs/*.json data/runs/
+cd backend && uv sync && uv run uvicorn wellpilot.main:app
+```
+
+The first start takes up to a minute; wait for "Application startup complete". Then, in a second terminal from the repository root, run this and open http://localhost:5173:
+
+```bash
+cd frontend && pnpm install && pnpm dev
 ```
 
 `scripts/smoke_image.sh wellpilot` checks such an image the way CI does (health, the page, the recorded runs replay, a new question refused without a key, a clean stop).
