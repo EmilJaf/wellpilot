@@ -24,13 +24,12 @@ FEATURED_RUNS lists them in this order):
   470,000, an inference, against 340k produced (+5.7%; the whole-history fit +102%).
   Verified on attempt 2; no second opinion (accepted at step 12). 12 steps, 23 tool calls,
   53 s, $0.43. Replaces 99d66f7a3adb (retired_runs/).
-- 9b7757a10976, what to do with F-12, as of 2014-10-31, re-recorded Oct 31 the same way: a
-  water shut-off in the 3,147-3,161 m blank-pipe gap, which cut 98% of the water and left a
-  14% water cut on the 2010 log; that log is 1,500 days old (water cut 63% then, 97% now),
-  so a new log first; the lower gaps are already isolated by the 2010 plug at 3,210 m. The
-  operator's plug three weeks later was in that gap, at 3,150 m. Verified on attempt 2,
-  second opinion sound. 7 steps, 13 tool calls, 40 s, $0.22. Replaces 21d18cc312ed
-  (retired_runs/).
+- 768338c0d2a1, what to do with F-12, as of 2014-10-31, recorded Nov 1 after a run read an
+  oil share as oil kept: a plug in the only open gap (3,147 to 3,161 m) would cut 81% of the
+  oil and keep 19% on the 2010 log, so keep the well flowing and run a new log before any
+  job. Its 33 to 44 Sm3/d for a plug alone is today's rate times that share, a rough
+  inference. Verified on attempt 3, no second opinion (accepted too late). 14 steps, 18
+  tool calls, $0.64. Replaces 9b7757a10976 (retired_runs/).
 - 43c53d5c1096, F-12's decline against the 2005 plan: oil averaged 72% lower after
   2010-07-18 than before, the choke about the same across that date; water cut averaged
   0.03 before 2010-02-14 and 0.51 after; breakthrough at about 2.4 million Sm3 against the
