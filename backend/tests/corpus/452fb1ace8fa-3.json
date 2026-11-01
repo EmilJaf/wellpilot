@@ -1,0 +1,4209 @@
+{
+ "source": {
+  "run": "452fb1ace8fa",
+  "submission": 3,
+  "model": "meta-models/muse-spark-open-1026",
+  "question": "Why did F-12's oil rate jump after the December 2014 shutdown?"
+ },
+ "to_review": false,
+ "note": "",
+ "expected": {
+  "accepted": true,
+  "flagged": []
+ },
+ "submission": {
+  "findings": [
+   {
+    "claim": "F-12 was shut in for 32 days from 2014-11-30 and restarted at about 860 Sm3/d, about 4.7 times its 185 Sm3/d before the shutdown.",
+    "detail": "detect_events shut_in 2014-11-30 to 2014-12-31, rate_before 184.54 -> rate_after 859.51 Sm3/d (+366%, 4.66x). production_daily shows zero production 2014-11-25 to 2014-12-31 and first flow 2015-01-01.",
+    "evidence_ids": [
+     "E2",
+     "E7",
+     "E8"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "32 days",
+      "value": 32,
+      "evidence_id": "E2"
+     },
+     {
+      "text": "860 Sm3/d",
+      "value": 859.51,
+      "evidence_id": "E2"
+     },
+     {
+      "text": "185 Sm3/d",
+      "value": 184.54,
+      "evidence_id": "E2"
+     },
+     {
+      "text": "4.7",
+      "value": 4.66,
+      "evidence_id": "E8"
+     }
+    ]
+   },
+   {
+    "claim": "During the shut-in the operator set a bridge plug at 3150 m and perforated a new interval from 3126.2 to 3130.7 m MD on 2014-11-26.",
+    "detail": "well_operations job 2014-11-22 to 2014-11-27: 2014-11-26 set plug with mid element at 3150 m and perforated new zone 3126.2-3139.7 mMD (job record 3126.2-3130.7 mMD); detailed operations show correlation and plug set at 3150 m then gun positioned top shot 3126.2 m bottom shot 3130.7 m.",
+    "evidence_ids": [
+     "E3",
+     "E6"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "3150 m",
+      "value": 3150,
+      "evidence_id": "E6"
+     },
+     {
+      "text": "3126.2",
+      "value": 3126.2,
+      "evidence_id": "E6"
+     },
+     {
+      "text": "3130.7",
+      "value": 3130.7,
+      "evidence_id": "E6"
+     }
+    ]
+   },
+   {
+    "claim": "After the work, F-12's water cut fell from about 96% in November 2014 to about 31% in January 2015 while oil rate per producing day rose to about 862 Sm3/d.",
+    "detail": "production_monthly: 2014-11 water_cut 0.9623 oil_rate 185.7 Sm3/d, 2014-12 0 days producing, 2015-01 water_cut 0.3107 oil_rate 862.38 Sm3/d. plugs_set 60-day window: before water_cut 0.965 oil 177 Sm3/d, after water_cut 0.338 oil 857 Sm3/d (28 days 2014-11-29 to 2015-01-28).",
+    "evidence_ids": [
+     "E5",
+     "E9"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "96%",
+      "value": 0.9623,
+      "evidence_id": "E5"
+     },
+     {
+      "text": "31%",
+      "value": 0.3107,
+      "evidence_id": "E5"
+     },
+     {
+      "text": "862 Sm3/d",
+      "value": 862.38,
+      "evidence_id": "E5"
+     }
+    ]
+   },
+   {
+    "claim": "The jump was most likely the plugged lower zones that the 2010 production log showed were making mainly water, replaced by a shallow oil zone.",
+    "detail": "PLT 2010-09: oil comes in 3132-3165 m, water 3165-3243 m; at blank pipe 3147-3161 m below_top water_share 0.981-1.0 oil_share 0.752-0.814, so plug at 3150-3210 m cuts mostly water. Before plug water_cut ~0.965, log water_cut 0.6307 with water from below 3165 m.",
+    "evidence_ids": [
+     "E9",
+     "E5"
+    ],
+    "confidence": "inference",
+    "numbers": []
+   }
+  ],
+  "summary": "F-12's oil rate jumped after the December 2014 shutdown most likely because the well was worked over during the shut-in: a plug isolated the watered-out lower perforations and a new oil zone was perforated above it. Oil rate rose from about 185 to about 860 Sm3/d and water cut fell from about 96% to about 31% on restart, before slowly rising again.",
+  "summary_numbers": [
+   {
+    "text": "185",
+    "value": 184.54,
+    "evidence_id": "E2"
+   },
+   {
+    "text": "860 Sm3/d",
+    "value": 859.51,
+    "evidence_id": "E2"
+   },
+   {
+    "text": "96%",
+    "value": 0.9623,
+    "evidence_id": "E5"
+   },
+   {
+    "text": "31%",
+    "value": 0.3107,
+    "evidence_id": "E5"
+   }
+  ]
+ },
+ "evidence": [
+  {
+   "id": "E1",
+   "tool": "list_wells",
+   "arguments": {},
+   "result": {
+    "columns": [
+     "well",
+     "well_types",
+     "first_oil",
+     "last_date",
+     "cum_oil_sm3",
+     "cum_water_sm3",
+     "cum_water_injected_sm3",
+     "producing_days"
+    ],
+    "rows": [
+     [
+      "F-1 C",
+      "OP/WI",
+      "2014-04-22",
+      "2016-04-21",
+      177709,
+      207302,
+      null,
+      438
+     ],
+     [
+      "F-11",
+      "OP",
+      "2013-07-24",
+      "2016-09-17",
+      1147849,
+      1090806,
+      0.0,
+      1122
+     ],
+     [
+      "F-12",
+      "OP",
+      "2008-02-12",
+      "2016-09-17",
+      4579610,
+      6817753,
+      0.0,
+      2838
+     ],
+     [
+      "F-14",
+      "OP",
+      "2008-07-13",
+      "2016-09-17",
+      3942233,
+      7121310,
+      0.0,
+      2724
+     ],
+     [
+      "F-15 D",
+      "OP",
+      "2014-01-16",
+      "2016-09-17",
+      148519,
+      52366,
+      0.0,
+      769
+     ],
+     [
+      "F-4",
+      "WI",
+      null,
+      "2016-12-01",
+      0.0,
+      0.0,
+      16240727,
+      0
+     ],
+     [
+      "F-5",
+      "OP/WI",
+      "2016-04-20",
+      "2016-09-18",
+      41161,
+      13533,
+      14089406,
+      129
+     ]
+    ]
+   },
+   "code": "wellpilot.agent.tools.list_wells@67bd47cfcdd1",
+   "created_at": "2026-11-01T07:48:21+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E2",
+   "tool": "detect_events",
+   "arguments": {
+    "well": "F-12"
+   },
+   "result": [
+    {
+     "kind": "threshold_crossing",
+     "signal": "water_cut",
+     "start": "2009-10-31",
+     "end": null,
+     "summary": "30-day median water_cut first goes above 0.05 on 2009-10-31, 21 months after first oil.",
+     "details": {
+      "threshold": 0.05,
+      "direction": "above",
+      "window_days": 30,
+      "median_at_crossing": 0.05795,
+      "first_oil": "2008-02-12",
+      "months_after_first_oil": 20.6
+     }
+    },
+    {
+     "kind": "regime_change",
+     "signal": "water_cut",
+     "start": "2010-02-14",
+     "end": null,
+     "summary": "water_cut shifts around 2010-02-14: weekly mean 0.0273 -> 0.513 (+0.49) from the period before to the period after; across the change itself, 4 weeks each side, 0.22 -> 0.31 (+0.08).",
+     "details": {
+      "before_mean": 0.02728,
+      "after_mean": 0.5134,
+      "change": 0.4862,
+      "across_before": 0.2205,
+      "across_after": 0.3052,
+      "change_across": 0.08473,
+      "before_from": "2008-02-17",
+      "after_to": "2010-10-17"
+     }
+    },
+    {
+     "kind": "threshold_crossing",
+     "signal": "water_cut",
+     "start": "2010-06-04",
+     "end": null,
+     "summary": "30-day median water_cut first goes above 0.5 on 2010-06-04, 28 months after first oil.",
+     "details": {
+      "threshold": 0.5,
+      "direction": "above",
+      "window_days": 30,
+      "median_at_crossing": 0.5011,
+      "first_oil": "2008-02-12",
+      "months_after_first_oil": 27.69
+     }
+    },
+    {
+     "kind": "regime_change",
+     "signal": "oil_rate",
+     "start": "2010-07-18",
+     "end": null,
+     "summary": "oil_rate shifts around 2010-07-18: weekly mean 4,050 -> 1,146 (-72%) from the period before to the period after; across the change itself, 4 weeks each side, 2,352 -> 1,838 (-22%); the choke stayed about the same (54 -> 51%).",
+     "details": {
+      "before_mean": 4050,
+      "after_mean": 1146,
+      "relative_change": -0.7171,
+      "across_before": 2352,
+      "across_after": 1838,
+      "change_across": -0.2185,
+      "choke_before_pct": 54.2,
+      "choke_after_pct": 51.18,
+      "choke_moved": false,
+      "before_from": "2008-02-17",
+      "after_to": "2012-12-02"
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2010-08-16",
+     "end": "2010-08-27",
+     "summary": "Shut in for 12 days from 2010-08-16. Oil rate 1,821 -> 2,000 Sm3/d (+10%) after restart. Same time as F-14 (field-wide).",
+     "details": {
+      "days": 12,
+      "rate_before": 1821,
+      "rate_after": 2000,
+      "relative_change": 0.09864,
+      "field_wide": true,
+      "also_shut_in": [
+       "F-14"
+      ],
+      "others_flowing": []
+     }
+    },
+    {
+     "kind": "gauge_failure",
+     "signal": "bhp_bar",
+     "start": "2010-10-12",
+     "end": "2016-09-17",
+     "summary": "bhp_bar reads 0 on 2095 days from 2010-10-12 to 2016-09-17 while the well kept flowing on 1830 days (1,133,053 Sm3 oil): a sensor failure, not a pressure collapse. Last good reading: 253.9 on 2010-10-11.",
+     "details": {
+      "zero_days": 2095,
+      "flowing_days": 1830,
+      "oil_sm3_during": 1133053,
+      "last_good_date": "2010-10-11",
+      "last_good_value": 253.85
+     }
+    },
+    {
+     "kind": "regime_change",
+     "signal": "water_cut",
+     "start": "2010-10-24",
+     "end": null,
+     "summary": "water_cut shifts around 2010-10-24: weekly mean 0.513 -> 0.814 (+0.30) from the period before to the period after; across the change itself, 4 weeks each side, 0.65 -> 0.69 (+0.04).",
+     "details": {
+      "before_mean": 0.5134,
+      "after_mean": 0.8141,
+      "change": 0.3006,
+      "across_before": 0.6455,
+      "across_after": 0.6867,
+      "change_across": 0.04121,
+      "before_from": "2010-02-14",
+      "after_to": "2016-08-14"
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2011-06-21",
+     "end": "2011-06-30",
+     "summary": "Shut in for 10 days from 2011-06-21. Oil rate 1,144 -> 1,364 Sm3/d (+19%) after restart. Same time as F-14 (field-wide).",
+     "details": {
+      "days": 10,
+      "rate_before": 1144,
+      "rate_after": 1364,
+      "relative_change": 0.192,
+      "field_wide": true,
+      "also_shut_in": [
+       "F-14"
+      ],
+      "others_flowing": []
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2011-10-16",
+     "end": "2011-11-04",
+     "summary": "Shut in for 20 days from 2011-10-16. Oil rate 955 -> 1,158 Sm3/d (+21%) after restart. Same time as F-14 (field-wide).",
+     "details": {
+      "days": 20,
+      "rate_before": 955.08,
+      "rate_after": 1158,
+      "relative_change": 0.212,
+      "field_wide": true,
+      "also_shut_in": [
+       "F-14"
+      ],
+      "others_flowing": []
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2012-01-03",
+     "end": "2012-01-13",
+     "summary": "Shut in for 11 days from 2012-01-03. Oil rate 1,063 -> 1,028 Sm3/d (-3%) after restart. Same time as F-14 (field-wide).",
+     "details": {
+      "days": 11,
+      "rate_before": 1063,
+      "rate_after": 1028,
+      "relative_change": -0.03307,
+      "field_wide": true,
+      "also_shut_in": [
+       "F-14"
+      ],
+      "others_flowing": []
+     }
+    },
+    {
+     "kind": "threshold_crossing",
+     "signal": "water_cut",
+     "start": "2012-02-14",
+     "end": null,
+     "summary": "30-day median water_cut first goes above 0.8 on 2012-02-14, 48 months after first oil.",
+     "details": {
+      "threshold": 0.8,
+      "direction": "above",
+      "window_days": 30,
+      "median_at_crossing": 0.8008,
+      "first_oil": "2008-02-12",
+      "months_after_first_oil": 48.06
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2012-08-14",
+     "end": "2012-09-28",
+     "summary": "Shut in for 46 days from 2012-08-14. Oil rate 691 -> 728 Sm3/d (+5%) after restart. Same time as F-14 (field-wide).",
+     "details": {
+      "days": 46,
+      "rate_before": 690.65,
+      "rate_after": 727.78,
+      "relative_change": 0.05376,
+      "field_wide": true,
+      "also_shut_in": [
+       "F-14"
+      ],
+      "others_flowing": []
+     }
+    },
+    {
+     "kind": "regime_change",
+     "signal": "oil_rate",
+     "start": "2012-12-09",
+     "end": null,
+     "summary": "oil_rate shifts around 2012-12-09: weekly mean 1,146 -> 384 (-66%) from the period before to the period after; across the change itself, 4 weeks each side, 628 -> 544 (-13%); the choke stayed about the same (99 -> 99%).",
+     "details": {
+      "before_mean": 1146,
+      "after_mean": 383.91,
+      "relative_change": -0.6649,
+      "across_before": 627.67,
+      "across_after": 543.9,
+      "change_across": -0.1335,
+      "choke_before_pct": 98.55,
+      "choke_after_pct": 98.82,
+      "choke_moved": false,
+      "before_from": "2010-07-18",
+      "after_to": "2016-08-14"
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2013-03-12",
+     "end": "2013-03-24",
+     "summary": "Shut in for 13 days from 2013-03-12. Oil rate 531 -> 572 Sm3/d (+8%) after restart.",
+     "details": {
+      "days": 13,
+      "rate_before": 531.21,
+      "rate_after": 571.67,
+      "relative_change": 0.07618,
+      "field_wide": false,
+      "also_shut_in": [],
+      "others_flowing": [
+       "F-14"
+      ]
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2014-05-16",
+     "end": "2014-05-24",
+     "summary": "Shut in for 9 days from 2014-05-16. Oil rate 194 -> 193 Sm3/d (-1%) after restart.",
+     "details": {
+      "days": 9,
+      "rate_before": 194.26,
+      "rate_after": 192.67,
+      "relative_change": -0.008185,
+      "field_wide": false,
+      "also_shut_in": [],
+      "others_flowing": [
+       "F-1 C",
+       "F-11",
+       "F-14",
+       "F-15 D"
+      ]
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2014-11-30",
+     "end": "2014-12-31",
+     "summary": "Shut in for 32 days from 2014-11-30. Oil rate 185 -> 860 Sm3/d (+366%) after restart. Same time as F-1 C, F-15 D; F-11, F-14 kept flowing.",
+     "details": {
+      "days": 32,
+      "rate_before": 184.54,
+      "rate_after": 859.51,
+      "relative_change": 3.66,
+      "field_wide": false,
+      "also_shut_in": [
+       "F-1 C",
+       "F-15 D"
+      ],
+      "others_flowing": [
+       "F-11",
+       "F-14"
+      ]
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2016-08-13",
+     "end": "2016-09-17",
+     "summary": "Shut in for 36 days from 2016-08-13. Same time as F-14, F-15 D, F-5; F-11 kept flowing.",
+     "details": {
+      "days": 36,
+      "rate_before": 128.63,
+      "rate_after": null,
+      "relative_change": null,
+      "field_wide": false,
+      "also_shut_in": [
+       "F-14",
+       "F-15 D",
+       "F-5"
+      ],
+      "others_flowing": [
+       "F-11"
+      ]
+     }
+    }
+   ],
+   "code": "wellpilot.agent.tools.detect_events@4bbf97783144",
+   "created_at": "2026-11-01T07:48:22+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E3",
+   "tool": "well_operations",
+   "arguments": {
+    "well": "F-12"
+   },
+   "result": {
+    "well": "F-12",
+    "jobs": [
+     {
+      "start": "2007-06-13",
+      "end": "2007-09-14",
+      "kind": "drilling",
+      "report_days": 94,
+      "contractor": "Mærsk Contractors",
+      "perforations": [],
+      "summaries": [
+       {
+        "date": "2007-06-13",
+        "summary": "Skidded rig to F-12. Made up 36\" hole opener BHA and RIH with same to 85 m MD."
+       },
+       {
+        "date": "2007-06-14",
+        "summary": "Made FG check of TDS. Serviced TDS. RIH with 36\" hole opener. Drilled 36\" hole section from 145 m to 250 m MD."
+       },
+       {
+        "date": "2007-06-15",
+        "summary": "Drilled 36\" hole section to TD at 258 m MD. Displaced well to 1,40 sg mud. POOH with 36\" hole opener BHA. Rigged up for running 30\" conductor. Ran 30\" conductor. Started running 4 3/4\" cement stinger inside conductor."
+       },
+       {
+        "date": "2007-09-12",
+        "summary": "Dismounted and mounted tension cylinders. RIH with production riser to 100 m MD."
+       },
+       {
+        "date": "2007-09-13",
+        "summary": "RIH with PR tensioner joint. MU PR landing stand, RIH and landed riser. Locked TBC connector. Waited on Simens rig ESD test. Pressure tested PR to 200 bar. Install centralizer and boat collision stool on centralizer deck."
+       },
+       {
+        "date": "2007-09-14",
+        "summary": "MU tensioner ring assembly. POOH and LD PR RT. Installed hatch on F-12 and suspended operation to F-7."
+       }
+      ]
+     },
+     {
+      "start": "2007-10-11",
+      "end": "2007-10-11",
+      "kind": "completion",
+      "report_days": 1,
+      "contractor": "Mærsk Contractors",
+      "perforations": [],
+      "summaries": [
+       {
+        "date": "2007-10-11",
+        "summary": "Skidded rig from F-12 to F-15. Changed wire on port aft crane big hook."
+       }
+      ]
+     },
+     {
+      "start": "2007-12-30",
+      "end": "2008-02-04",
+      "kind": "drilling",
+      "report_days": 37,
+      "contractor": "Mærsk Contractors",
+      "perforations": [],
+      "summaries": [
+       {
+        "date": "2007-12-30",
+        "summary": "Built scaffolding at the well head deck and in the moon pool. Installed surface riser, BOP and tension cylinders."
+       },
+       {
+        "date": "2007-12-31",
+        "summary": "Nippled up slick jnt, diverter and torqued up the BOP. RIH and installed the Bowl Protector at 20.9 m. Retrieved the Annulus Insert at 139.9 m. Retrieved the Bowl Protector."
+       },
+       {
+        "date": "2008-01-01",
+        "summary": "RIH with 10 3/4\" Tie Back and made up into sub sea well. Pressure tested Tie Back connector to 345 bars. Attempted to lock the Surface hanger, with the Adjustment sub."
+       },
+       {
+        "date": "2008-02-02",
+        "summary": "Retrieved landing string. Installed BPV. Nippled down BOP and Riser. Installed dart in BPV. Terminated control lines. Installed extension spool."
+       },
+       {
+        "date": "2008-02-03",
+        "summary": "Installed the WH extension spool, Xmas tree and the production Co-flex hose."
+       },
+       {
+        "date": "2008-02-04",
+        "summary": "Leak tested X-mas tree connections to 30/345 bars 5/10 min. Lined up and leak tested production line 50/180 bars 5/10 min. Inflow tested LMV and HMV against BPV."
+       }
+      ]
+     },
+     {
+      "start": "2008-02-11",
+      "end": "2008-02-11",
+      "kind": "completion",
+      "report_days": 1,
+      "contractor": "Mærsk Contractors",
+      "perforations": [
+       "3130-3281 mMD"
+      ],
+      "summaries": [
+       {
+        "date": "2008-02-11",
+        "summary": "Sent firing command to E-Fire firing head in TCP guns and perforated well from 3130 to 3281 mMDRT."
+       }
+      ]
+     },
+     {
+      "start": "2009-03-13",
+      "end": "2009-03-17",
+      "kind": "workover",
+      "report_days": 5,
+      "contractor": "Mærsk Contractors",
+      "perforations": [],
+      "summaries": [
+       {
+        "date": "2009-03-13",
+        "summary": "Handed well over from Production. RU HMV and DHSV to local control panel. Installed test and bleed manifold on to XMT KWV. Performed line test from KWV to cmt unit. Attempted to leak tested XMT cross to 30/200 bar for 5/10 min."
+       },
+       {
+        "date": "2009-03-14",
+        "summary": "Operated and greased up leaking PWV. Leak tested XMT cross to 30/200 bar for 5/10 min. Installed WL BOP and riser on XMT. Tested shear seals on WL BOP. Installed combination toolstring in riser. MU lubricator. Leak test WL riser, BOP and lubricator. Equalize and open HMV and DHSV. RIH with combination toolstring and tagged TCP guns at 3260.5 m. Performed correlation log in 7\" liner. POOH and prepared for inflow test of HMV."
+       },
+       {
+        "date": "2009-03-15",
+        "summary": "Inflow tested HMV to 81-5 bar/10 min. Broke lubricator and LD toolstring. Installed PLT toolstring in riser. MU lubricator and leak tested at in-situ sub. Equalized and opened HMV. RIH with PLT toolstring on 7/16\" EWL from surface to 2929 m. Performed stationary logging at DHPG depth. Continued RIH from 2929 m to 3030 m to perform shut-in station logs and 4 PLT tool calibration passes in the interval 3030 m to 3255 m MD. Bean up well to 4500 Sm3/day. Performed station logs and 4 high rate flowing PLT passes in the interval 3030 m to 3255 m MD. Choked back flow to 3000 Sm3/day. Performed station logs and 4 medium rate flowing PLT passes in the interval 3030 m to 3255 m MD."
+       },
+       {
+        "date": "2009-03-16",
+        "summary": "Choked back flow to 1500 Sm3/day. Performed station logs and 4 low rate flowing PLT passes in the interval 3030 m to 3255 m MD. Shut-in well. POOH with PLT toolstring. Inflow tested DHSV, HMV and MMV for handover. BO lubricator and LD toolstring. LD lubricator. RD and LD WL riser."
+       },
+       {
+        "date": "2009-03-17",
+        "summary": "RD BOP from XMT. Leak test XMT cross, KWV and tree cap. Hand well over to Mærsk Production. Cleared and cleaned rig floor of remaining WL equipment. Transferred operation to F-99 for PRS-and 5-yearly BOP classification."
+       }
+      ]
+     },
+     {
+      "start": "2010-09-20",
+      "end": "2010-09-23",
+      "kind": "workover",
+      "report_days": 4,
+      "contractor": "Aker Well Service",
+      "perforations": [],
+      "summaries": [
+       {
+        "date": "2010-09-20",
+        "summary": "Waited on access to well. Took over well. Rigged up WL riser and BOP."
+       },
+       {
+        "date": "2010-09-21",
+        "summary": "RU WL equipment. Installed BHA into lubricator. RIH with PLT. Performed spinner calibration. Performed depth correlation with GR/CCL. Took stationary reading at 2929 m. Ran PLT shut in pass. Took stationary readings. Beaned up well. Waited for stable flow."
+       },
+       {
+        "date": "2010-09-22",
+        "summary": "Waited for stable flow aprox. 5050 Sm3/d with PLT at 3080 m. Attempted to RIH at various speed. No-go. Reduced flow rate to 3000 Sm3/d. Took stationary readings at 3080, 3155, 3200 and 3250 m. Logged flowing passes between 3030 and 3250 m, down at 40 m/min and up at 10/20/30/40 m/min. Reduced flow rate to 1500 Sm3/d. Logged flowing passes between 3000 and 3250 m, down at 40 m/min and up at 10/20/30/40 m/min. Unable to log down on both flowing rates at 10/20/30 m/min. POOH with PLT. Changed tool string. RIH with 5,72\" EVO bridge plug at 800 m."
+       },
+       {
+        "date": "2010-09-23",
+        "summary": "Installed 5,72\" EVO bridge plug at 3210 m mid element. RD wireline pressure control equipment and handed well over to production department."
+       }
+      ]
+     },
+     {
+      "start": "2014-11-22",
+      "end": "2014-11-27",
+      "kind": "workover",
+      "report_days": 6,
+      "contractor": "Altus Intervention",
+      "perforations": [
+       "3126.2-3130.7 mMD"
+      ],
+      "summaries": [
+       {
+        "date": "2014-11-22",
+        "summary": "Spotted some equpment. Waited on weather, wind above 40 knots."
+       },
+       {
+        "date": "2014-11-23",
+        "summary": "Spotted WL equipment. Checked equipment together with rig electrician."
+       },
+       {
+        "date": "2014-11-24",
+        "summary": "Spotted equipment. Well handed over from Production dept. to D&W. Started to rig up on wellhead."
+       },
+       {
+        "date": "2014-11-25",
+        "summary": "Completed rigging up wireline equipment. Leak tested rig up to 20/345 bar. Run in hole with Halliburton EVO plug. Pulled out of hole after tool failure at 1400 m. Started to prepare back up toolstring."
+       },
+       {
+        "date": "2014-11-26",
+        "summary": "Installed 7\" EV0 plug with mid element at 3150 m. Perforated new zone from 3126,2 -3139,7 mMD. POOH with perforating gun."
+       },
+       {
+        "date": "2014-11-27",
+        "summary": "POOH with perfoartion gun. Inflow tested well barriers. Rigged down WL equipment. Operation completed."
+       }
+      ]
+     },
+     {
+      "start": "2016-08-14",
+      "end": "2016-08-28",
+      "kind": "abandonment",
+      "report_days": 15,
+      "contractor": "Maersk Drilling",
+      "perforations": [],
+      "summaries": [
+       {
+        "date": "2016-08-14",
+        "summary": "- Skid rig from F-14 to F-12 - Started rigging up WL pressure control equipment"
+       },
+       {
+        "date": "2016-08-15",
+        "summary": "- Rig up WL well control equipment, pressure tested same - Bullheaded washpill and sea water into the well - Set and pressure tested deepset plug"
+       },
+       {
+        "date": "2016-08-16",
+        "summary": "- Pressure tested and inflow tested deepset plug - Set and pressure tested from above shallow set plug - N/D Xtree and spacer spool - Installed HP riser - Started to N/U BOP"
+       },
+       {
+        "date": "2016-08-17",
+        "summary": "- Finished N/U BOP. Performed connector test - RIH w/ THRT, locked to TH - Open shallow set barrier plug - Troubleshoot communication w/ DHSV"
+       },
+       {
+        "date": "2016-08-18",
+        "summary": "- Pulled TH to surface - Pulled 500m of tubing and L/D DHSV - RIH and performed CBL log - R/D WL"
+       },
+       {
+        "date": "2016-08-19",
+        "summary": "- Circulated well to clean sea water - Set balance cement plug in 9 5/8in csg - Pulled and L/D 600m of 7in tubing - RIH w/ tubing on spear and tagged cement plug - Released spear from tubing and POOH"
+       },
+       {
+        "date": "2016-08-20",
+        "summary": "- Tagged cement plug - Left tubing in hole - Pulled MS-T seal - Cut 10 3/4in tie-back csg - Pull 10 3/4in surface csg hanger and tie-back above the cut - Attempted to release tie-back adapter"
+       },
+       {
+        "date": "2016-08-21",
+        "summary": "- Attempted to release tieback adapter several times w/ no success - Perforated below 10 3/4in subsea csg hanger - Circulated gas out"
+       },
+       {
+        "date": "2016-08-22",
+        "summary": "- POOH w/ guns - Cut 10 3/4in csg at 887m - Attempted to release tieback adapter w/ left hand string. No success - P/U cutter BHA"
+       },
+       {
+        "date": "2016-08-23",
+        "summary": "- Cut in the middle of tieback adapter - Attempted to fish top part of tieback adapter - Cut tieback adapter, second attempt - Fished top part of tieback adapter - Started milling tieback adapter"
+       },
+       {
+        "date": "2016-08-24",
+        "summary": "- Milled through tieback adapter and 10 3/4in subsea csg hanger - Dressed off csg stump - RIH w/ spear BHA to pull 10 3/4in csg fish"
+       },
+       {
+        "date": "2016-08-25",
+        "summary": "- Pulled 10 3/4in csg fish on spear - Pulled 750m of 10 3/4in csg and L/D same - Cut 14in csg and set EZSV in 14in csg - RIH w/ perforating assembly"
+       },
+       {
+        "date": "2016-08-26",
+        "summary": "- Perforated 14\" casing below CH - Installed 14\" EZSV at 854 mMD - Attempted to RIH with RTTS and PT EZSV - Displaced annulus between 14\" and 20\" casing to clean SW - Pumped and displaced cement in annulus between 14\" and 20\" casing - Displaced well to SW - WOC. Meanwhile: Performed maintenance"
+       },
+       {
+        "date": "2016-08-27",
+        "summary": "- WOC. Meanwhile: Performed maintenance - Pressure tested cement in annulus between 14\" and 20\" csg - Placed cement plug inside 14\" casing"
+       },
+       {
+        "date": "2016-08-28",
+        "summary": "- N/D BOP and diverter - Pulled HP riser - Installed hatch on well F-12"
+       }
+      ]
+     },
+     {
+      "start": "2016-10-19",
+      "end": "2016-10-20",
+      "kind": "abandonment",
+      "report_days": 2,
+      "contractor": "Maersk Drilling",
+      "perforations": [],
+      "summaries": [
+       {
+        "date": "2016-10-19",
+        "summary": "- Skidded cantilever to well F-12 - Cut riser at 134,9 m - Cut and L/O Multibowl and tensioner joint - Cut and pulled riser"
+       },
+       {
+        "date": "2016-10-20",
+        "summary": "- Cut and pulled riser - Installed hatches - Skidded rig to well F-11 B"
+       }
+      ]
+     }
+    ],
+    "note": "Daily reports exist for drilling and for work on the well (wireline, plugs, perforations, production logs), not for days of normal production. A job's date is the day the work was done; kind is drilling, completion, workover (work on a producing or injecting well) or abandonment. Ask for one day to see every operation line."
+   },
+   "code": "wellpilot.agent.tools.well_operations@691598c6cb8c",
+   "created_at": "2026-11-01T07:48:22+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E4",
+   "tool": "waterflood",
+   "arguments": {
+    "well": "F-12"
+   },
+   "result": {
+    "well": "F-12",
+    "monthly": {
+     "columns": [
+      "month",
+      "cum_oil_sm3",
+      "wor",
+      "water_cut",
+      "liquid_rate_sm3_per_day",
+      "choke_pct"
+     ],
+     "rows": [
+      [
+       "2008-02",
+       49091,
+       0.008405,
+       0.008335,
+       2922,
+       30.31
+      ],
+      [
+       "2008-03",
+       132452,
+       0.0003289,
+       0.0003288,
+       3055,
+       31.37
+      ],
+      [
+       "2008-04",
+       206985,
+       0.006658,
+       0.006614,
+       2934,
+       31.62
+      ],
+      [
+       "2008-05",
+       332463,
+       0.001918,
+       0.001914,
+       4213,
+       39.7
+      ],
+      [
+       "2008-06",
+       476250,
+       0.003299,
+       0.003288,
+       5122,
+       43.41
+      ],
+      [
+       "2008-07",
+       591245,
+       0.002522,
+       0.002516,
+       3893,
+       42.46
+      ],
+      [
+       "2008-08",
+       689067,
+       0.003621,
+       0.003608,
+       3502,
+       40.23
+      ],
+      [
+       "2008-09",
+       766734,
+       0.002426,
+       0.00242,
+       3290,
+       45.03
+      ],
+      [
+       "2008-10",
+       861091,
+       0.006614,
+       0.00657,
+       3091,
+       41.85
+      ],
+      [
+       "2008-11",
+       1007007,
+       0.01638,
+       0.01612,
+       4994,
+       67.77
+      ],
+      [
+       "2008-12",
+       1173447,
+       0.006028,
+       0.005992,
+       5401,
+       63.25
+      ],
+      [
+       "2009-01",
+       1327124,
+       0.002536,
+       0.00253,
+       4991,
+       51.99
+      ],
+      [
+       "2009-02",
+       1449029,
+       0.0,
+       0.0,
+       4458,
+       50.27
+      ],
+      [
+       "2009-03",
+       1541988,
+       0.0,
+       0.0,
+       4406,
+       50.71
+      ],
+      [
+       "2009-04",
+       1692943,
+       0.008256,
+       0.008188,
+       5079,
+       66.1
+      ],
+      [
+       "2009-05",
+       1833982,
+       0.02203,
+       0.02155,
+       4976,
+       62.84
+      ],
+      [
+       "2009-06",
+       1966412,
+       0.02008,
+       0.01968,
+       4532,
+       69.08
+      ],
+      [
+       "2009-07",
+       2072517,
+       0.031,
+       0.03007,
+       3538,
+       50.82
+      ],
+      [
+       "2009-08",
+       2184931,
+       0.04469,
+       0.04278,
+       4785,
+       67.53
+      ],
+      [
+       "2009-09",
+       2275030,
+       0.02481,
+       0.02421,
+       4493,
+       58.67
+      ],
+      [
+       "2009-10",
+       2401970,
+       0.05367,
+       0.05094,
+       4695,
+       54.01
+      ],
+      [
+       "2009-11",
+       2537986,
+       0.08298,
+       0.07662,
+       5009,
+       61.08
+      ],
+      [
+       "2009-12",
+       2695987,
+       0.1096,
+       0.0988,
+       5776,
+       72.08
+      ],
+      [
+       "2010-01",
+       2845646,
+       0.202,
+       0.168,
+       5817,
+       75.14
+      ],
+      [
+       "2010-02",
+       2948672,
+       0.4195,
+       0.2955,
+       5766,
+       72.3
+      ],
+      [
+       "2010-03",
+       3050244,
+       0.5316,
+       0.3471,
+       5765,
+       77.99
+      ],
+      [
+       "2010-04",
+       3136497,
+       0.7883,
+       0.4408,
+       5244,
+       79.24
+      ],
+      [
+       "2010-05",
+       3213611,
+       0.9653,
+       0.4912,
+       4961,
+       57.92
+      ],
+      [
+       "2010-06",
+       3283228,
+       1.2,
+       0.5446,
+       5116,
+       51.48
+      ],
+      [
+       "2010-07",
+       3347268,
+       1.48,
+       0.5975,
+       5144,
+       51.27
+      ],
+      [
+       "2010-08",
+       3377385,
+       1.82,
+       0.6453,
+       4767,
+       51.01
+      ],
+      [
+       "2010-09",
+       3428698,
+       1.74,
+       0.6354,
+       5239,
+       51.51
+      ],
+      [
+       "2010-10",
+       3480129,
+       1.94,
+       0.6593,
+       4877,
+       53.12
+      ],
+      [
+       "2010-11",
+       3524597,
+       2.3,
+       0.6969,
+       5100,
+       53.23
+      ],
+      [
+       "2010-12",
+       3569815,
+       2.46,
+       0.7112,
+       5068,
+       50.92
+      ],
+      [
+       "2011-01",
+       3614562,
+       2.61,
+       0.7232,
+       5217,
+       50.81
+      ],
+      [
+       "2011-02",
+       3643719,
+       2.92,
+       0.7452,
+       4928,
+       54.0
+      ],
+      [
+       "2011-03",
+       3681114,
+       3.03,
+       0.7517,
+       4953,
+       60.79
+      ],
+      [
+       "2011-04",
+       3718934,
+       3.07,
+       0.7544,
+       5149,
+       83.94
+      ],
+      [
+       "2011-05",
+       3756139,
+       3.21,
+       0.7627,
+       5112,
+       86.3
+      ],
+      [
+       "2011-06",
+       3778165,
+       3.39,
+       0.772,
+       5004,
+       89.94
+      ],
+      [
+       "2011-07",
+       3790627,
+       2.56,
+       0.719,
+       4340,
+       78.07
+      ],
+      [
+       "2011-08",
+       3827007,
+       2.72,
+       0.7313,
+       4987,
+       94.83
+      ],
+      [
+       "2011-09",
+       3857006,
+       3.68,
+       0.7864,
+       4768,
+       76.15
+      ],
+      [
+       "2011-10",
+       3869654,
+       4.18,
+       0.807,
+       4829,
+       70.04
+      ],
+      [
+       "2011-11",
+       3891443,
+       3.48,
+       0.7767,
+       5098,
+       78.32
+      ],
+      [
+       "2011-12",
+       3909533,
+       3.58,
+       0.7814,
+       4676,
+       59.19
+      ],
+      [
+       "2012-01",
+       3927751,
+       3.51,
+       0.778,
+       4929,
+       66.26
+      ],
+      [
+       "2012-02",
+       3955113,
+       4.9,
+       0.8304,
+       5621,
+       100.0
+      ],
+      [
+       "2012-03",
+       3981793,
+       5.33,
+       0.842,
+       5474,
+       100.0
+      ],
+      [
+       "2012-04",
+       4005882,
+       5.73,
+       0.8515,
+       5481,
+       100.0
+      ],
+      [
+       "2012-05",
+       4028297,
+       6.25,
+       0.8622,
+       5291,
+       100.0
+      ],
+      [
+       "2012-06",
+       4049184,
+       6.42,
+       0.8652,
+       5229,
+       100.0
+      ],
+      [
+       "2012-07",
+       4070391,
+       6.61,
+       0.8686,
+       5206,
+       100.0
+      ],
+      [
+       "2012-08",
+       4079389,
+       6.14,
+       0.8599,
+       5342,
+       100.0
+      ],
+      [
+       "2012-09",
+       4080403,
+       4.45,
+       0.8165,
+       4914,
+       98.36
+      ],
+      [
+       "2012-10",
+       4100016,
+       6.19,
+       0.8608,
+       5543,
+       98.4
+      ],
+      [
+       "2012-11",
+       4119035,
+       7.09,
+       0.8764,
+       5131,
+       98.72
+      ],
+      [
+       "2012-12",
+       4135356,
+       8.07,
+       0.8897,
+       5072,
+       98.84
+      ],
+      [
+       "2013-01",
+       4152764,
+       8.03,
+       0.8893,
+       5071,
+       99.16
+      ],
+      [
+       "2013-02",
+       4167852,
+       8.37,
+       0.8933,
+       5050,
+       99.2
+      ],
+      [
+       "2013-03",
+       4174157,
+       9.06,
+       0.9006,
+       4946,
+       98.26
+      ],
+      [
+       "2013-04",
+       4186509,
+       8.33,
+       0.8929,
+       5389,
+       99.73
+      ],
+      [
+       "2013-05",
+       4202822,
+       9.02,
+       0.9002,
+       5360,
+       99.76
+      ],
+      [
+       "2013-06",
+       4214722,
+       9.46,
+       0.9044,
+       5271,
+       100.0
+      ],
+      [
+       "2013-07",
+       4226583,
+       9.46,
+       0.9044,
+       5121,
+       99.97
+      ],
+      [
+       "2013-08",
+       4241730,
+       10.1,
+       0.9099,
+       5866,
+       100.0
+      ],
+      [
+       "2013-09",
+       4250954,
+       11.35,
+       0.919,
+       4633,
+       93.84
+      ],
+      [
+       "2013-10",
+       4259259,
+       16.56,
+       0.9431,
+       5147,
+       99.51
+      ],
+      [
+       "2013-11",
+       4266430,
+       17.15,
+       0.9449,
+       4816,
+       99.62
+      ],
+      [
+       "2013-12",
+       4273509,
+       17.78,
+       0.9467,
+       5037,
+       99.6
+      ],
+      [
+       "2014-01",
+       4278506,
+       17.42,
+       0.9457,
+       4543,
+       99.04
+      ],
+      [
+       "2014-02",
+       4284608,
+       18.08,
+       0.9476,
+       4972,
+       100.0
+      ],
+      [
+       "2014-03",
+       4291443,
+       18.63,
+       0.9491,
+       4904,
+       100.0
+      ],
+      [
+       "2014-04",
+       4297335,
+       23.96,
+       0.9599,
+       5092,
+       99.89
+      ],
+      [
+       "2014-05",
+       4300573,
+       27.41,
+       0.9648,
+       5166,
+       99.84
+      ],
+      [
+       "2014-06",
+       4306324,
+       26.44,
+       0.9636,
+       5354,
+       100.0
+      ],
+      [
+       "2014-07",
+       4312116,
+       26.3,
+       0.9634,
+       5106,
+       100.0
+      ],
+      [
+       "2014-08",
+       4316565,
+       28.47,
+       0.9661,
+       5302,
+       100.0
+      ],
+      [
+       "2014-09",
+       4321627,
+       29.51,
+       0.9672,
+       5404,
+       100.0
+      ],
+      [
+       "2014-10",
+       4327013,
+       28.85,
+       0.9665,
+       5179,
+       100.0
+      ],
+      [
+       "2014-11",
+       4331508,
+       25.51,
+       0.9623,
+       4923,
+       100.0
+      ],
+      [
+       "2015-01",
+       4357220,
+       0.4507,
+       0.3107,
+       1251,
+       30.28
+      ],
+      [
+       "2015-02",
+       4376799,
+       0.772,
+       0.4357,
+       1337,
+       33.2
+      ],
+      [
+       "2015-03",
+       4396140,
+       0.9956,
+       0.4989,
+       1393,
+       34.88
+      ],
+      [
+       "2015-04",
+       4415937,
+       1.05,
+       0.5125,
+       1353,
+       35.19
+      ],
+      [
+       "2015-05",
+       4432933,
+       1.48,
+       0.5972,
+       1361,
+       35.19
+      ],
+      [
+       "2015-06",
+       4452470,
+       1.68,
+       0.6274,
+       1774,
+       100.0
+      ],
+      [
+       "2015-07",
+       4471627,
+       1.9,
+       0.6557,
+       1795,
+       100.0
+      ],
+      [
+       "2015-08",
+       4485100,
+       2.35,
+       0.7013,
+       1700,
+       100.0
+      ],
+      [
+       "2015-09",
+       4497595,
+       2.81,
+       0.7373,
+       1587,
+       100.0
+      ],
+      [
+       "2015-10",
+       4509484,
+       3.21,
+       0.7624,
+       1626,
+       100.0
+      ],
+      [
+       "2015-11",
+       4520853,
+       3.31,
+       0.7681,
+       1636,
+       100.0
+      ],
+      [
+       "2015-12",
+       4531709,
+       3.43,
+       0.7745,
+       1580,
+       100.0
+      ],
+      [
+       "2016-01",
+       4541204,
+       4.1,
+       0.8041,
+       1579,
+       100.0
+      ],
+      [
+       "2016-02",
+       4548848,
+       4.61,
+       0.8218,
+       1480,
+       100.0
+      ],
+      [
+       "2016-03",
+       4556208,
+       5.5,
+       0.8462,
+       1546,
+       100.0
+      ],
+      [
+       "2016-04",
+       4562360,
+       6.03,
+       0.8578,
+       1445,
+       100.0
+      ],
+      [
+       "2016-05",
+       4568225,
+       6.16,
+       0.8604,
+       1362,
+       100.0
+      ],
+      [
+       "2016-06",
+       4573634,
+       6.4,
+       0.8648,
+       1366,
+       100.0
+      ],
+      [
+       "2016-07",
+       4578168,
+       6.6,
+       0.8685,
+       1176,
+       40.29
+      ],
+      [
+       "2016-08",
+       4579610,
+       7.58,
+       0.8835,
+       1039,
+       30.26
+      ]
+     ]
+    },
+    "wor_fit": null,
+    "no_trend": "WOR is not rising with cumulative oil on 2013-05 to 2016-08: no limit can be projected",
+    "by_year": {
+     "columns": [
+      "year",
+      "liquid_rate_sm3_per_day",
+      "choke_pct",
+      "water_cut",
+      "oil_sm3"
+     ],
+     "rows": [
+      [
+       2008,
+       3502,
+       41.85,
+       0.003608,
+       1173447
+      ],
+      [
+       2009,
+       4740,
+       59.88,
+       0.02288,
+       1522541
+      ],
+      [
+       2010,
+       5130,
+       53.17,
+       0.5711,
+       873828
+      ],
+      [
+       2011,
+       4970,
+       77.11,
+       0.7586,
+       339718
+      ],
+      [
+       2012,
+       5260,
+       100.0,
+       0.8604,
+       225822
+      ],
+      [
+       2013,
+       5096,
+       99.61,
+       0.9044,
+       138154
+      ],
+      [
+       2014,
+       5106,
+       100.0,
+       0.9634,
+       57999
+      ],
+      [
+       2015,
+       1583,
+       100.0,
+       0.6416,
+       200201
+      ],
+      [
+       2016,
+       1405,
+       100.0,
+       0.8591,
+       47900
+      ]
+     ]
+    },
+    "field_voidage": {
+     "columns": [
+      "year",
+      "injected_sm3",
+      "oil_sm3",
+      "water_sm3",
+      "replacement_ratio",
+      "replacement_ratio_low",
+      "replacement_ratio_high",
+      "surface_ratio"
+     ],
+     "rows": [
+      [
+       2008,
+       2417770,
+       1764375,
+       7484,
+       0.9864,
+       0.911,
+       1.08,
+       1.36
+      ],
+      [
+       2009,
+       4392198,
+       2684392,
+       232105,
+       1.11,
+       1.03,
+       1.21,
+       1.51
+      ],
+      [
+       2010,
+       4569394,
+       1689903,
+       1887595,
+       1.08,
+       1.03,
+       1.13,
+       1.28
+      ],
+      [
+       2011,
+       3442446,
+       847965,
+       2190640,
+       1.02,
+       0.9942,
+       1.05,
+       1.13
+      ],
+      [
+       2012,
+       2975214,
+       574206,
+       2110119,
+       1.02,
+       1.0,
+       1.05,
+       1.11
+      ],
+      [
+       2013,
+       3453761,
+       558013,
+       2576366,
+       1.03,
+       1.01,
+       1.05,
+       1.1
+      ],
+      [
+       2014,
+       3825493,
+       743107,
+       2716071,
+       1.02,
+       0.9986,
+       1.05,
+       1.11
+      ],
+      [
+       2015,
+       3201627,
+       861749,
+       2009826,
+       0.9995,
+       0.9695,
+       1.03,
+       1.11
+      ],
+      [
+       2016,
+       2052229,
+       313370,
+       1572866,
+       1.02,
+       1.0,
+       1.04,
+       1.09
+      ]
+     ]
+    },
+    "notes": "WOR = water/oil by month; the trend is log10(WOR) against cumulative oil, fitted on up to 36 recent months with WOR >= 1. The water cuts in to_limits are reference points, not an economic limit: the data holds no costs or prices, so remaining_oil_sm3 says how much oil is left before each, not whether it pays. field_voidage: replacement_ratio is injection over voidage at reservoir conditions (Bo 1.385 m3/Sm3 from PUD p.20, low/high with Bo 1.5/1.27; Bw 1; above the bubble point, so no free gas); surface_ratio is the same in surface volumes, which overstates replacement."
+   },
+   "code": "wellpilot.agent.tools.waterflood_tool@97841fa4170b",
+   "created_at": "2026-11-01T07:48:22+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E5",
+   "tool": "production_monthly",
+   "arguments": {
+    "well": "F-12",
+    "start": "2014-01-01",
+    "end": "2015-12-31"
+   },
+   "result": {
+    "columns": [
+     "month",
+     "days",
+     "producing_days",
+     "oil_sm3",
+     "water_sm3",
+     "gas_sm3",
+     "water_injected_sm3",
+     "water_cut",
+     "uptime",
+     "oil_rate_per_producing_day",
+     "bhp_bar",
+     "whp_bar",
+     "choke_pct"
+    ],
+    "rows": [
+     [
+      "2014-01",
+      31,
+      25,
+      4997,
+      87030,
+      766196,
+      0.0,
+      0.9457,
+      0.6534,
+      246.71,
+      null,
+      35.8,
+      81.59
+     ],
+     [
+      "2014-02",
+      28,
+      26,
+      6101,
+      110298,
+      921967,
+      0.0,
+      0.9476,
+      0.8362,
+      260.6,
+      null,
+      33.19,
+      95.88
+     ],
+     [
+      "2014-03",
+      31,
+      31,
+      6836,
+      127351,
+      1036071,
+      null,
+      0.9491,
+      0.8827,
+      249.81,
+      null,
+      33.1,
+      94.44
+     ],
+     [
+      "2014-04",
+      30,
+      30,
+      5892,
+      141145,
+      883605,
+      null,
+      0.9599,
+      0.9625,
+      204.05,
+      null,
+      34.74,
+      87.87
+     ],
+     [
+      "2014-05",
+      31,
+      20,
+      3238,
+      88748,
+      469664,
+      null,
+      0.9648,
+      0.5744,
+      181.84,
+      null,
+      32.58,
+      92.52
+     ],
+     [
+      "2014-06",
+      30,
+      30,
+      5751,
+      152035,
+      846734,
+      null,
+      0.9636,
+      0.9824,
+      195.14,
+      null,
+      32.4,
+      97.02
+     ],
+     [
+      "2014-07",
+      31,
+      31,
+      5792,
+      152314,
+      864046,
+      null,
+      0.9634,
+      0.9989,
+      187.04,
+      null,
+      32.62,
+      98.13
+     ],
+     [
+      "2014-08",
+      31,
+      26,
+      4448,
+      126629,
+      704538,
+      null,
+      0.9661,
+      0.7975,
+      179.93,
+      null,
+      32.38,
+      98.28
+     ],
+     [
+      "2014-09",
+      30,
+      30,
+      5063,
+      149376,
+      803971,
+      null,
+      0.9672,
+      0.9525,
+      177.16,
+      null,
+      32.55,
+      97.1
+     ],
+     [
+      "2014-10",
+      31,
+      31,
+      5386,
+      155366,
+      833121,
+      null,
+      0.9665,
+      1.0,
+      173.5,
+      null,
+      32.71,
+      99.16
+     ],
+     [
+      "2014-11",
+      30,
+      26,
+      4495,
+      114661,
+      700998,
+      null,
+      0.9623,
+      0.8069,
+      185.7,
+      null,
+      34.61,
+      96.52
+     ],
+     [
+      "2014-12",
+      31,
+      0,
+      0.0,
+      0.0,
+      0.0,
+      null,
+      null,
+      0.0,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2015-01",
+      31,
+      31,
+      25713,
+      11588,
+      3780459,
+      null,
+      0.3107,
+      0.9618,
+      862.38,
+      null,
+      70.96,
+      30.33
+     ],
+     [
+      "2015-02",
+      28,
+      28,
+      19579,
+      15115,
+      2960674,
+      null,
+      0.4357,
+      0.9268,
+      754.48,
+      null,
+      56.02,
+      33.78
+     ],
+     [
+      "2015-03",
+      31,
+      29,
+      19341,
+      19256,
+      2853433,
+      null,
+      0.4989,
+      0.894,
+      697.91,
+      null,
+      52.16,
+      34.64
+     ],
+     [
+      "2015-04",
+      30,
+      30,
+      19797,
+      20808,
+      2889395,
+      null,
+      0.5125,
+      1.0,
+      659.89,
+      null,
+      48.19,
+      35.13
+     ],
+     [
+      "2015-05",
+      31,
+      31,
+      16996,
+      25201,
+      2479620,
+      null,
+      0.5972,
+      1.0,
+      548.27,
+      null,
+      46.3,
+      35.12
+     ],
+     [
+      "2015-06",
+      30,
+      30,
+      19536,
+      32903,
+      2859707,
+      null,
+      0.6274,
+      0.9852,
+      661.02,
+      null,
+      32.22,
+      81.03
+     ],
+     [
+      "2015-07",
+      31,
+      31,
+      19157,
+      36481,
+      2846821,
+      null,
+      0.6557,
+      1.0,
+      617.98,
+      null,
+      29.52,
+      99.87
+     ],
+     [
+      "2015-08",
+      31,
+      27,
+      13473,
+      31629,
+      2047121,
+      null,
+      0.7013,
+      0.8558,
+      507.88,
+      null,
+      29.42,
+      97.93
+     ],
+     [
+      "2015-09",
+      30,
+      30,
+      12495,
+      35065,
+      1888049,
+      null,
+      0.7373,
+      0.9991,
+      416.87,
+      null,
+      29.63,
+      98.82
+     ],
+     [
+      "2015-10",
+      31,
+      31,
+      11889,
+      38151,
+      1821328,
+      null,
+      0.7624,
+      0.9928,
+      386.27,
+      null,
+      27.09,
+      98.58
+     ],
+     [
+      "2015-11",
+      30,
+      30,
+      11369,
+      37662,
+      1748311,
+      null,
+      0.7681,
+      0.9993,
+      379.25,
+      null,
+      27.41,
+      99.73
+     ],
+     [
+      "2015-12",
+      31,
+      31,
+      10856,
+      37288,
+      1662453,
+      null,
+      0.7745,
+      0.983,
+      356.26,
+      null,
+      27.05,
+      99.86
+     ]
+    ]
+   },
+   "code": "wellpilot.agent.tools.production_monthly@c841520578bb",
+   "created_at": "2026-11-01T07:48:25+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E6",
+   "tool": "well_operations",
+   "arguments": {
+    "well": "F-12",
+    "day": "2014-11-26"
+   },
+   "result": {
+    "well": "F-12",
+    "day": "2014-11-26",
+    "summary": "Installed 7\" EV0 plug with mid element at 3150 m. Perforated new zone from 3126,2 -3139,7 mMD. POOH with perforating gun.",
+    "planned": "Rig down WL equipment, Skid rig to F-1C and rig up WL equipment.",
+    "perforations": "3126.2-3130.7 mMD",
+    "operations": {
+     "columns": [
+      "start",
+      "end",
+      "depth_mmd",
+      "activity",
+      "sub_activity",
+      "remark"
+     ],
+     "rows": [
+      [
+       "00:00",
+       "01:45",
+       0.0,
+       "interruption",
+       "other",
+       "Continued to re-build cable head. Time consuming to build due to stiff cords on 7/16\" cable together with narrow holes in cablehead cone."
+      ],
+      [
+       "01:45",
+       "02:20",
+       0.0,
+       "interruption",
+       "other",
+       "Lifted tools to rig floor for testing of toolstring through cablehead. Meanwhile held toolbox talk for installing the BHA into lubricator."
+      ],
+      [
+       "02:20",
+       "03:30",
+       0.0,
+       "interruption",
+       "other",
+       "Installed toollstring into lubricator and Leak tested QTS to 20/345 bar for 5/10 min. Meanwhile held toolbox talk for the plug run."
+      ],
+      [
+       "03:30",
+       "04:00",
+       0.0,
+       "interruption",
+       "other",
+       "Opened HMV and equalized acoss swab using well pressure."
+      ],
+      [
+       "04:00",
+       "05:40",
+       1400,
+       "interruption",
+       "other",
+       "RIH w/BHA #2 7\" EVO plug from surface to 1400 m. WHP 51 bar. Performed well control drill: Leakage in grease injection head. Stopped each 300 meters to perform P/U weight."
+      ],
+      [
+       "05:40",
+       "07:45",
+       3135,
+       "workover",
+       "other",
+       "Continued to RIH from 1400 meter to 3135 m. Stopped each 300 meters to perform P/U weight."
+      ],
+      [
+       "07:45",
+       "08:40",
+       3150,
+       "workover",
+       "other",
+       "Correlated BHA across interval 3135 - 3050 m . Set plug with mid packer element at 3150 m. Observed 400 lbs drop in tension. WHP 47 bar."
+      ],
+      [
+       "08:40",
+       "10:45",
+       0.0,
+       "workover",
+       "other",
+       "POOH with BHA#2 from 3150 m to surface. Hung slightly up in the packer area. Continued to POOH."
+      ],
+      [
+       "10:45",
+       "11:30",
+       0.0,
+       "interruption",
+       "wait",
+       "Closed SV. Had to wait on production department for bleeding of, due to problems with a gas compressor."
+      ],
+      [
+       "11:30",
+       "12:45",
+       0.0,
+       "workover",
+       "other",
+       "Bled of lubricator and inflow tested SV & HMV. Purged lubricator with N2."
+      ],
+      [
+       "12:45",
+       "12:55",
+       0.0,
+       "workover",
+       "wire line",
+       "Held toolbox talk prior to L/D toolstring."
+      ],
+      [
+       "12:55",
+       "13:10",
+       0.0,
+       "workover",
+       "other",
+       "Broke lubricator and L/D BHA #2."
+      ],
+      [
+       "13:10",
+       "15:00",
+       0.0,
+       "workover",
+       "perforate",
+       "Lifted Halliburton perforating toolstring to drill floor and started to prepare guns."
+      ],
+      [
+       "15:00",
+       "15:20",
+       0.0,
+       "workover",
+       "perforate",
+       "Held toolbox talk prior to arm the perforating guns."
+      ],
+      [
+       "15:20",
+       "16:55",
+       0.0,
+       "workover",
+       "perforate",
+       "Installed BHA #3 (4 5/8\" Perforating gun) into lubricator. Stabbed lubricator and tested QTS to 20/345 bar for 5/10 min. Equalized and opened SV and HMV. WHP 46 bar."
+      ],
+      [
+       "16:55",
+       "20:30",
+       3135,
+       "workover",
+       "perforate",
+       "RIH w/BHA #3 (4 5/8\" Perforating gun) from surface to 3135 meters. WHP 46 bar. Stopped each 500 meters and pulled up 50 meters. Depth P/U weight 500 m 1410 lbs 1000 m 2130 lbs 1500 m 2950 lbs 2000 m 3650 lbs 2500 m 4400 lbs 3000 m 4900 lbs"
+      ],
+      [
+       "20:30",
+       "21:05",
+       3135,
+       "workover",
+       "perforate",
+       "Performed three correlation passes across interval 3135 - 3050 m. Positioned gun with top shot at 3126,2 m & bottom shot at 3130,7 mMD. WHP 45 bar."
+      ],
+      [
+       "21:05",
+       "21:25",
+       3131,
+       "workover",
+       "wire line",
+       "Activated perforation guns. Observed current increase and drop in tension of 200 lbs. No change in WHP at 45 bar. Started POOH."
+      ],
+      [
+       "21:25",
+       "23:30",
+       480.0,
+       "workover",
+       "perforate",
+       "POOH with BHA #3 from 3131 m to 480 m. WHP 45 bar."
+      ],
+      [
+       "23:30",
+       "00:00",
+       480.0,
+       "workover",
+       "perforate",
+       "Held toolbox talk prior to take guns out of hole. Included toolbox talk for rigging down WL equipment."
+      ]
+     ]
+    }
+   },
+   "code": "wellpilot.agent.tools.well_operations@691598c6cb8c",
+   "created_at": "2026-11-01T07:48:25+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E7",
+   "tool": "run_sql",
+   "arguments": {
+    "sql": "SELECT date, oil_sm3, water_sm3, water_cut, choke_pct, on_stream_hrs FROM production_daily WHERE well='F-12' AND date BETWEEN '2014-11-01' AND '2015-02-28' ORDER BY date"
+   },
+   "result": {
+    "columns": [
+     "date",
+     "oil_sm3",
+     "water_sm3",
+     "water_cut",
+     "choke_pct",
+     "on_stream_hrs"
+    ],
+    "rows": [
+     [
+      "2014-11-01",
+      177.31,
+      4803,
+      0.9644,
+      100.0,
+      24.0
+     ],
+     [
+      "2014-11-02",
+      180.04,
+      4895,
+      0.9645,
+      100.0,
+      24.0
+     ],
+     [
+      "2014-11-03",
+      190.44,
+      4758,
+      0.9615,
+      100.0,
+      24.0
+     ],
+     [
+      "2014-11-04",
+      187.73,
+      4786,
+      0.9623,
+      100.0,
+      24.0
+     ],
+     [
+      "2014-11-05",
+      185.04,
+      4786,
+      0.9628,
+      100.0,
+      24.0
+     ],
+     [
+      "2014-11-06",
+      185.14,
+      4783,
+      0.9627,
+      100.0,
+      24.0
+     ],
+     [
+      "2014-11-07",
+      189.55,
+      4772,
+      0.9618,
+      100.0,
+      24.0
+     ],
+     [
+      "2014-11-08",
+      189.18,
+      5064,
+      0.964,
+      100.0,
+      24.0
+     ],
+     [
+      "2014-11-09",
+      187.68,
+      5127,
+      0.9647,
+      100.0,
+      24.0
+     ],
+     [
+      "2014-11-10",
+      179.26,
+      4988,
+      0.9653,
+      100.0,
+      24.0
+     ],
+     [
+      "2014-11-11",
+      186.41,
+      5103,
+      0.9648,
+      100.0,
+      24.0
+     ],
+     [
+      "2014-11-12",
+      187.16,
+      4901,
+      0.9632,
+      100.0,
+      24.0
+     ],
+     [
+      "2014-11-13",
+      184.54,
+      4812,
+      0.9631,
+      100.0,
+      24.0
+     ],
+     [
+      "2014-11-14",
+      184.34,
+      4812,
+      0.9631,
+      100.0,
+      24.0
+     ],
+     [
+      "2014-11-15",
+      186.2,
+      4795,
+      0.9626,
+      100.0,
+      24.0
+     ],
+     [
+      "2014-11-16",
+      183.7,
+      4869,
+      0.9636,
+      100.0,
+      24.0
+     ],
+     [
+      "2014-11-17",
+      181.31,
+      4966,
+      0.9648,
+      100.0,
+      24.0
+     ],
+     [
+      "2014-11-18",
+      186.42,
+      4912,
+      0.9634,
+      100.0,
+      24.0
+     ],
+     [
+      "2014-11-19",
+      181.77,
+      4799,
+      0.9635,
+      100.0,
+      24.0
+     ],
+     [
+      "2014-11-20",
+      184.03,
+      4746,
+      0.9627,
+      100.0,
+      24.0
+     ],
+     [
+      "2014-11-21",
+      183.0,
+      4719,
+      0.9627,
+      100.0,
+      24.0
+     ],
+     [
+      "2014-11-22",
+      182.72,
+      4716,
+      0.9627,
+      100.0,
+      24.0
+     ],
+     [
+      "2014-11-23",
+      176.44,
+      4710,
+      0.9639,
+      100.0,
+      24.0
+     ],
+     [
+      "2014-11-24",
+      50.87,
+      1376,
+      0.9644,
+      36.98,
+      8.94
+     ],
+     [
+      "2014-11-25",
+      0.0,
+      0.0,
+      null,
+      1.21,
+      0.0
+     ],
+     [
+      "2014-11-26",
+      0.0,
+      0.0,
+      null,
+      0.9631,
+      0.0
+     ],
+     [
+      "2014-11-27",
+      0.0,
+      0.0,
+      null,
+      0.7393,
+      0.0
+     ],
+     [
+      "2014-11-28",
+      58.69,
+      836.01,
+      0.9344,
+      30.87,
+      5.78
+     ],
+     [
+      "2014-11-29",
+      146.09,
+      828.47,
+      0.8501,
+      16.58,
+      14.22
+     ],
+     [
+      "2014-11-30",
+      0.0,
+      0.0,
+      null,
+      1.01,
+      0.0
+     ],
+     [
+      "2014-12-01",
+      0.0,
+      0.0,
+      null,
+      0.9958,
+      0.0
+     ],
+     [
+      "2014-12-02",
+      0.0,
+      0.0,
+      null,
+      0.9881,
+      0.0
+     ],
+     [
+      "2014-12-03",
+      0.0,
+      0.0,
+      null,
+      0.9938,
+      0.0
+     ],
+     [
+      "2014-12-04",
+      0.0,
+      0.0,
+      null,
+      1.06,
+      0.0
+     ],
+     [
+      "2014-12-05",
+      0.0,
+      0.0,
+      null,
+      1.18,
+      0.0
+     ],
+     [
+      "2014-12-06",
+      0.0,
+      0.0,
+      null,
+      1.24,
+      0.0
+     ],
+     [
+      "2014-12-07",
+      0.0,
+      0.0,
+      null,
+      1.27,
+      0.0
+     ],
+     [
+      "2014-12-08",
+      0.0,
+      0.0,
+      null,
+      1.34,
+      0.0
+     ],
+     [
+      "2014-12-09",
+      0.0,
+      0.0,
+      null,
+      1.32,
+      0.0
+     ],
+     [
+      "2014-12-10",
+      0.0,
+      0.0,
+      null,
+      1.3,
+      0.0
+     ],
+     [
+      "2014-12-11",
+      0.0,
+      0.0,
+      null,
+      1.3,
+      0.0
+     ],
+     [
+      "2014-12-12",
+      0.0,
+      0.0,
+      null,
+      1.26,
+      0.0
+     ],
+     [
+      "2014-12-13",
+      0.0,
+      0.0,
+      null,
+      1.29,
+      0.0
+     ],
+     [
+      "2014-12-14",
+      0.0,
+      0.0,
+      null,
+      1.27,
+      0.0
+     ],
+     [
+      "2014-12-15",
+      0.0,
+      0.0,
+      null,
+      1.29,
+      0.0
+     ],
+     [
+      "2014-12-16",
+      0.0,
+      0.0,
+      null,
+      0.0,
+      0.0
+     ],
+     [
+      "2014-12-17",
+      0.0,
+      0.0,
+      null,
+      0.0,
+      0.0
+     ],
+     [
+      "2014-12-18",
+      0.0,
+      0.0,
+      null,
+      0.0,
+      0.0
+     ],
+     [
+      "2014-12-19",
+      0.0,
+      0.0,
+      null,
+      0.0,
+      0.0
+     ],
+     [
+      "2014-12-20",
+      0.0,
+      0.0,
+      null,
+      0.0,
+      0.0
+     ],
+     [
+      "2014-12-21",
+      0.0,
+      0.0,
+      null,
+      0.0,
+      0.0
+     ],
+     [
+      "2014-12-22",
+      0.0,
+      0.0,
+      null,
+      0.0,
+      0.0
+     ],
+     [
+      "2014-12-23",
+      0.0,
+      0.0,
+      null,
+      1.25,
+      0.0
+     ],
+     [
+      "2014-12-24",
+      0.0,
+      0.0,
+      null,
+      1.33,
+      0.0
+     ],
+     [
+      "2014-12-25",
+      0.0,
+      0.0,
+      null,
+      1.19,
+      0.0
+     ],
+     [
+      "2014-12-26",
+      0.0,
+      0.0,
+      null,
+      1.15,
+      0.0
+     ],
+     [
+      "2014-12-27",
+      0.0,
+      0.0,
+      null,
+      1.17,
+      0.0
+     ],
+     [
+      "2014-12-28",
+      0.0,
+      0.0,
+      null,
+      1.15,
+      0.0
+     ],
+     [
+      "2014-12-29",
+      0.0,
+      0.0,
+      null,
+      1.15,
+      0.0
+     ],
+     [
+      "2014-12-30",
+      0.0,
+      0.0,
+      null,
+      1.15,
+      0.0
+     ],
+     [
+      "2014-12-31",
+      0.0,
+      0.0,
+      null,
+      1.14,
+      0.0
+     ],
+     [
+      "2015-01-01",
+      14.94,
+      251.95,
+      0.944,
+      7.94,
+      9.5
+     ],
+     [
+      "2015-01-02",
+      782.75,
+      226.18,
+      0.2242,
+      26.5,
+      24.0
+     ],
+     [
+      "2015-01-03",
+      871.14,
+      237.97,
+      0.2146,
+      27.87,
+      24.0
+     ],
+     [
+      "2015-01-04",
+      855.13,
+      237.93,
+      0.2177,
+      27.86,
+      24.0
+     ],
+     [
+      "2015-01-05",
+      838.83,
+      235.74,
+      0.2194,
+      27.84,
+      24.0
+     ],
+     [
+      "2015-01-06",
+      834.13,
+      239.98,
+      0.2234,
+      28.28,
+      24.0
+     ],
+     [
+      "2015-01-07",
+      859.23,
+      238.0,
+      0.2169,
+      28.31,
+      24.0
+     ],
+     [
+      "2015-01-08",
+      829.95,
+      234.26,
+      0.2201,
+      28.32,
+      24.0
+     ],
+     [
+      "2015-01-09",
+      532.53,
+      179.11,
+      0.2517,
+      20.46,
+      15.67
+     ],
+     [
+      "2015-01-10",
+      786.25,
+      245.21,
+      0.2377,
+      25.64,
+      20.42
+     ],
+     [
+      "2015-01-11",
+      1070,
+      340.95,
+      0.2417,
+      36.2,
+      24.0
+     ],
+     [
+      "2015-01-12",
+      859.51,
+      254.88,
+      0.2287,
+      30.26,
+      24.0
+     ],
+     [
+      "2015-01-13",
+      865.58,
+      255.41,
+      0.2278,
+      30.19,
+      24.0
+     ],
+     [
+      "2015-01-14",
+      775.25,
+      247.41,
+      0.2419,
+      30.25,
+      24.0
+     ],
+     [
+      "2015-01-15",
+      827.2,
+      457.43,
+      0.3561,
+      30.25,
+      24.0
+     ],
+     [
+      "2015-01-16",
+      839.36,
+      439.91,
+      0.3439,
+      30.27,
+      24.0
+     ],
+     [
+      "2015-01-17",
+      776.66,
+      419.25,
+      0.3506,
+      30.29,
+      24.0
+     ],
+     [
+      "2015-01-18",
+      819.66,
+      419.38,
+      0.3385,
+      30.29,
+      24.0
+     ],
+     [
+      "2015-01-19",
+      829.23,
+      423.32,
+      0.338,
+      30.29,
+      24.0
+     ],
+     [
+      "2015-01-20",
+      767.76,
+      472.87,
+      0.3812,
+      28.22,
+      22.0
+     ],
+     [
+      "2015-01-21",
+      948.12,
+      538.49,
+      0.3622,
+      32.55,
+      24.0
+     ],
+     [
+      "2015-01-22",
+      944.39,
+      510.55,
+      0.3509,
+      33.33,
+      24.0
+     ],
+     [
+      "2015-01-23",
+      924.64,
+      493.6,
+      0.348,
+      33.08,
+      24.0
+     ],
+     [
+      "2015-01-24",
+      902.12,
+      478.8,
+      0.3467,
+      32.4,
+      24.0
+     ],
+     [
+      "2015-01-25",
+      890.65,
+      479.03,
+      0.3497,
+      32.44,
+      24.0
+     ],
+     [
+      "2015-01-26",
+      886.77,
+      474.38,
+      0.3485,
+      32.43,
+      24.0
+     ],
+     [
+      "2015-01-27",
+      943.93,
+      637.54,
+      0.4031,
+      33.17,
+      24.0
+     ],
+     [
+      "2015-01-28",
+      927.74,
+      475.45,
+      0.3388,
+      33.2,
+      24.0
+     ],
+     [
+      "2015-01-29",
+      925.05,
+      472.87,
+      0.3383,
+      33.2,
+      24.0
+     ],
+     [
+      "2015-01-30",
+      898.87,
+      452.6,
+      0.3349,
+      33.19,
+      24.0
+     ],
+     [
+      "2015-01-31",
+      885.57,
+      517.77,
+      0.369,
+      33.19,
+      24.0
+     ],
+     [
+      "2015-02-01",
+      913.75,
+      532.07,
+      0.368,
+      33.22,
+      24.0
+     ],
+     [
+      "2015-02-02",
+      875.95,
+      449.13,
+      0.3389,
+      33.22,
+      24.0
+     ],
+     [
+      "2015-02-03",
+      873.07,
+      764.48,
+      0.4668,
+      33.23,
+      24.0
+     ],
+     [
+      "2015-02-04",
+      554.0,
+      479.84,
+      0.4641,
+      35.01,
+      16.11
+     ],
+     [
+      "2015-02-05",
+      89.29,
+      36.34,
+      0.2893,
+      28.97,
+      2.23
+     ],
+     [
+      "2015-02-06",
+      1162,
+      746.56,
+      0.3911,
+      59.62,
+      24.0
+     ],
+     [
+      "2015-02-07",
+      810.62,
+      451.09,
+      0.3575,
+      33.34,
+      24.0
+     ],
+     [
+      "2015-02-08",
+      433.41,
+      239.72,
+      0.3561,
+      24.18,
+      17.11
+     ],
+     [
+      "2015-02-09",
+      381.15,
+      184.76,
+      0.3265,
+      26.44,
+      11.97
+     ],
+     [
+      "2015-02-10",
+      812.31,
+      524.67,
+      0.3924,
+      33.18,
+      24.0
+     ],
+     [
+      "2015-02-11",
+      708.94,
+      604.37,
+      0.4602,
+      33.22,
+      24.0
+     ],
+     [
+      "2015-02-12",
+      697.18,
+      597.27,
+      0.4614,
+      33.22,
+      24.0
+     ],
+     [
+      "2015-02-13",
+      710.02,
+      600.36,
+      0.4582,
+      32.8,
+      24.0
+     ],
+     [
+      "2015-02-14",
+      706.05,
+      610.41,
+      0.4637,
+      33.32,
+      24.0
+     ],
+     [
+      "2015-02-15",
+      704.3,
+      606.41,
+      0.4627,
+      32.56,
+      24.0
+     ],
+     [
+      "2015-02-16",
+      702.34,
+      568.78,
+      0.4475,
+      33.27,
+      24.0
+     ],
+     [
+      "2015-02-17",
+      683.84,
+      574.13,
+      0.4564,
+      31.14,
+      24.0
+     ],
+     [
+      "2015-02-18",
+      716.3,
+      551.18,
+      0.4349,
+      33.29,
+      24.0
+     ],
+     [
+      "2015-02-19",
+      724.37,
+      561.76,
+      0.4368,
+      33.28,
+      24.0
+     ],
+     [
+      "2015-02-20",
+      706.94,
+      636.68,
+      0.4739,
+      33.25,
+      24.0
+     ],
+     [
+      "2015-02-21",
+      689.52,
+      607.17,
+      0.4682,
+      33.14,
+      24.0
+     ],
+     [
+      "2015-02-22",
+      717.38,
+      596.07,
+      0.4538,
+      33.19,
+      24.0
+     ],
+     [
+      "2015-02-23",
+      716.15,
+      560.52,
+      0.439,
+      33.18,
+      24.0
+     ],
+     [
+      "2015-02-24",
+      699.15,
+      572.94,
+      0.4504,
+      33.09,
+      24.0
+     ],
+     [
+      "2015-02-25",
+      705.72,
+      578.13,
+      0.4503,
+      33.08,
+      24.0
+     ],
+     [
+      "2015-02-26",
+      704.86,
+      526.68,
+      0.4277,
+      33.08,
+      24.0
+     ],
+     [
+      "2015-02-27",
+      709.02,
+      694.76,
+      0.4949,
+      33.11,
+      24.0
+     ],
+     [
+      "2015-02-28",
+      670.85,
+      659.22,
+      0.4956,
+      32.11,
+      23.38
+     ]
+    ],
+    "row_count": 120,
+    "truncated": false
+   },
+   "code": "wellpilot.agent.tools.run_sql@50068378f8ca",
+   "created_at": "2026-11-01T07:48:25+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E8",
+   "tool": "calculate",
+   "arguments": {
+    "expressions": [
+     "859.51 - 184.54",
+     "859.51 / 184.54",
+     "0.9623 - 0.3107"
+    ]
+   },
+   "result": {
+    "results": [
+     {
+      "expression": "859.51 - 184.54",
+      "value": 674.97
+     },
+     {
+      "expression": "859.51 / 184.54",
+      "value": 4.66
+     },
+     {
+      "expression": "0.9623 - 0.3107",
+      "value": 0.6516
+     }
+    ]
+   },
+   "code": "wellpilot.agent.tools.calculate@5c1d806d8f4d",
+   "created_at": "2026-11-01T07:48:33+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E9",
+   "tool": "production_log",
+   "arguments": {
+    "well": "F-12"
+   },
+   "result": {
+    "well": "F-12",
+    "surveys": [
+     {
+      "survey": "PLT 2009-03",
+      "date": "2009-03-14",
+      "read_from": "plots in Volve 15/9-F-12 Production Logging Interpretation Results, March 2009 (pages 14, 15, 16), pictures with no data behind them, read by sam-3.1 from the prompt 'green area'",
+      "rate_unit": "m3/d downhole",
+      "check": {
+       "agreement_with_colour_trace_median_share_gap": {
+        "high rate": 0.0,
+        "medium rate": 0.0,
+        "low rate": 0.0
+       },
+       "upper_two_zones_share": {
+        "high rate": 0.829,
+        "medium rate": 0.854,
+        "low rate": 0.904
+       },
+       "report_says": {
+        "quote": "~83% of oil produced from the upper 2 completions, the rest from the lower 3",
+        "share": 0.83,
+        "page": 4
+       },
+       "perforated_zones_m": [
+        [
+         3131,
+         3147
+        ],
+        [
+         3161,
+         3180
+        ],
+        [
+         3220,
+         3231
+        ],
+        [
+         3236,
+         3243
+        ],
+        [
+         3250,
+         3257
+        ]
+       ]
+      },
+      "passes": [
+       {
+        "pass": "low rate",
+        "surface_oil_sm3_per_day": 1400,
+        "top_depth_m": 3077,
+        "oil_comes_in": {
+         "comes_in_from_m": 3135,
+         "to_m": 3221,
+         "half_below_m": 3163
+        },
+        "below": [],
+        "rate_vs_well": 0.32,
+        "at_blank_pipe": [
+         {
+          "blank_pipe_m": [
+           3147,
+           3161
+          ],
+          "below_top": {
+           "oil_share": 0.842
+          },
+          "below_bottom": {
+           "oil_share": 0.785
+          },
+          "already_isolated": false,
+          "of_flow_left_below_top": {
+           "oil_share": 0.825
+          },
+          "oil_kept_above": 0.175
+         },
+         {
+          "blank_pipe_m": [
+           3180,
+           3220
+          ],
+          "below_top": {
+           "oil_share": 0.109
+          },
+          "below_bottom": {
+           "oil_share": 0.083
+          },
+          "already_isolated": true,
+          "of_flow_left_below_top": {
+           "oil_share": 0.014
+          }
+         }
+        ]
+       },
+       {
+        "pass": "medium rate",
+        "surface_oil_sm3_per_day": 2800,
+        "top_depth_m": 3071,
+        "oil_comes_in": {
+         "comes_in_from_m": 3136,
+         "to_m": 3224,
+         "half_below_m": 3164
+        },
+        "below": [],
+        "rate_vs_well": 0.63,
+        "at_blank_pipe": [
+         {
+          "blank_pipe_m": [
+           3147,
+           3161
+          ],
+          "below_top": {
+           "oil_share": 0.851
+          },
+          "below_bottom": {
+           "oil_share": 0.843
+          },
+          "already_isolated": false,
+          "of_flow_left_below_top": {
+           "oil_share": 0.826
+          },
+          "oil_kept_above": 0.174
+         },
+         {
+          "blank_pipe_m": [
+           3180,
+           3220
+          ],
+          "below_top": {
+           "oil_share": 0.153
+          },
+          "below_bottom": {
+           "oil_share": 0.139
+          },
+          "already_isolated": true,
+          "of_flow_left_below_top": {
+           "oil_share": 0.008
+          }
+         }
+        ]
+       },
+       {
+        "pass": "high rate",
+        "surface_oil_sm3_per_day": 3700,
+        "top_depth_m": 3070,
+        "oil_comes_in": {
+         "comes_in_from_m": 3135,
+         "to_m": 3236,
+         "half_below_m": 3164
+        },
+        "below": [],
+        "rate_vs_well": 0.83,
+        "at_blank_pipe": [
+         {
+          "blank_pipe_m": [
+           3147,
+           3161
+          ],
+          "below_top": {
+           "oil_share": 0.828
+          },
+          "below_bottom": {
+           "oil_share": 0.828
+          },
+          "already_isolated": false,
+          "of_flow_left_below_top": {
+           "oil_share": 0.793
+          },
+          "oil_kept_above": 0.207
+         },
+         {
+          "blank_pipe_m": [
+           3180,
+           3220
+          ],
+          "below_top": {
+           "oil_share": 0.177
+          },
+          "below_bottom": {
+           "oil_share": 0.164
+          },
+          "already_isolated": true,
+          "of_flow_left_below_top": {
+           "oil_share": 0.007
+          }
+         },
+         {
+          "blank_pipe_m": [
+           3231,
+           3236
+          ],
+          "below_top": {
+           "oil_share": 0.054
+          },
+          "below_bottom": {
+           "oil_share": 0.054
+          },
+          "already_isolated": true,
+          "of_flow_left_below_top": {
+           "oil_share": 0.0
+          }
+         }
+        ]
+       }
+      ],
+      "profile_from_below": {
+       "columns": [
+        "depth_m",
+        "low_oil_share",
+        "medium_oil_share",
+        "high_oil_share"
+       ],
+       "rows": [
+        [
+         3080,
+         1.0,
+         1.0,
+         1.0
+        ],
+        [
+         3090,
+         1.0,
+         1.0,
+         1.0
+        ],
+        [
+         3100,
+         1.0,
+         1.0,
+         1.0
+        ],
+        [
+         3110,
+         1.0,
+         1.0,
+         1.0
+        ],
+        [
+         3120,
+         1.0,
+         1.0,
+         1.0
+        ],
+        [
+         3130,
+         1.0,
+         1.0,
+         1.0
+        ],
+        [
+         3140,
+         0.911,
+         0.915,
+         0.902
+        ],
+        [
+         3150,
+         0.836,
+         0.843,
+         0.828
+        ],
+        [
+         3160,
+         0.842,
+         0.843,
+         0.828
+        ],
+        [
+         3170,
+         0.26,
+         0.288,
+         0.3
+        ],
+        [
+         3180,
+         0.109,
+         0.153,
+         0.177
+        ],
+        [
+         3190,
+         0.096,
+         0.146,
+         0.171
+        ],
+        [
+         3200,
+         0.096,
+         0.146,
+         0.171
+        ],
+        [
+         3210,
+         0.096,
+         0.146,
+         0.171
+        ],
+        [
+         3220,
+         0.083,
+         0.139,
+         0.164
+        ]
+       ]
+      },
+      "production_30_days_before": {
+       "water_cut": 0.0,
+       "oil_sm3_per_producing_day": 4436
+      },
+      "plugs_set_since": [
+       {
+        "date": "2010-09-23",
+        "depth_m": 3210
+       },
+       {
+        "date": "2014-11-26",
+        "depth_m": 3150
+       }
+      ]
+     },
+     {
+      "survey": "PLT 2010-09",
+      "date": "2010-09-22",
+      "read_from": "LAS files of the interpreted log (Well_logs_pr_WELL/15_9-F-12/10.PRODUCTION LOGS/PLT Sept 2010)",
+      "check": {
+       "its_plot_read_by": "sam-3.1",
+       "plot_against_files_median_share_gap": {
+        "low rate": {
+         "oil": 0.013,
+         "water": 0.008
+        },
+        "medium rate": {
+         "oil": 0.012,
+         "water": 0.003
+        }
+       }
+      },
+      "passes": [
+       {
+        "pass": "low rate",
+        "surface_liquid_sm3_per_day": 1500,
+        "top_depth_m": 3071,
+        "water_cut_at_top": 0.608,
+        "oil_comes_in": {
+         "comes_in_from_m": 3132,
+         "to_m": 3165,
+         "half_below_m": 3162
+        },
+        "water_comes_in": {
+         "comes_in_from_m": 3165,
+         "to_m": 3243,
+         "half_below_m": 3169
+        },
+        "below": [],
+        "rate_vs_well": 0.28,
+        "at_blank_pipe": [
+         {
+          "blank_pipe_m": [
+           3147,
+           3161
+          ],
+          "below_top": {
+           "oil_share": 0.814,
+           "water_share": 0.981
+          },
+          "below_bottom": {
+           "oil_share": 0.768,
+           "water_share": 0.925
+          },
+          "water_cut_left_above": 0.137,
+          "already_isolated": false,
+          "of_flow_left_below_top": {
+           "oil_share": 0.812,
+           "water_share": 0.972
+          },
+          "oil_kept_above": 0.188
+         },
+         {
+          "blank_pipe_m": [
+           3180,
+           3220
+          ],
+          "below_top": {
+           "oil_share": 0.01,
+           "water_share": 0.333
+          },
+          "below_bottom": {
+           "oil_share": 0.013,
+           "water_share": 0.313
+          },
+          "water_cut_left_above": 0.511,
+          "already_isolated": true,
+          "of_flow_left_below_top": {
+           "oil_share": 0.0,
+           "water_share": 0.012
+          }
+         },
+         {
+          "blank_pipe_m": [
+           3231,
+           3236
+          ],
+          "below_top": {
+           "oil_share": 0.004,
+           "water_share": 0.128
+          },
+          "below_bottom": {
+           "oil_share": 0.004,
+           "water_share": 0.116
+          },
+          "water_cut_left_above": 0.576,
+          "already_isolated": true,
+          "of_flow_left_below_top": {
+           "oil_share": 0.0,
+           "water_share": 0.0
+          }
+         }
+        ]
+       },
+       {
+        "pass": "medium rate",
+        "surface_liquid_sm3_per_day": 3000,
+        "top_depth_m": 3074,
+        "water_cut_at_top": 0.628,
+        "oil_comes_in": {
+         "comes_in_from_m": 3132,
+         "to_m": 3165,
+         "half_below_m": 3162
+        },
+        "water_comes_in": {
+         "comes_in_from_m": 3165,
+         "to_m": 3243,
+         "half_below_m": 3173
+        },
+        "below": [],
+        "rate_vs_well": 0.55,
+        "at_blank_pipe": [
+         {
+          "blank_pipe_m": [
+           3147,
+           3161
+          ],
+          "below_top": {
+           "oil_share": 0.752,
+           "water_share": 1.0
+          },
+          "below_bottom": {
+           "oil_share": 0.634,
+           "water_share": 1.0
+          },
+          "water_cut_left_above": 0.0,
+          "already_isolated": false,
+          "of_flow_left_below_top": {
+           "oil_share": 0.748,
+           "water_share": 1.0
+          },
+          "oil_kept_above": 0.252
+         },
+         {
+          "blank_pipe_m": [
+           3180,
+           3220
+          ],
+          "below_top": {
+           "oil_share": 0.015,
+           "water_share": 0.379
+          },
+          "below_bottom": {
+           "oil_share": 0.014,
+           "water_share": 0.36
+          },
+          "water_cut_left_above": 0.516,
+          "already_isolated": true,
+          "of_flow_left_below_top": {
+           "oil_share": 0.0,
+           "water_share": 0.005
+          }
+         },
+         {
+          "blank_pipe_m": [
+           3231,
+           3236
+          ],
+          "below_top": {
+           "oil_share": 0.003,
+           "water_share": 0.183
+          },
+          "below_bottom": {
+           "oil_share": 0.005,
+           "water_share": 0.167
+          },
+          "water_cut_left_above": 0.58,
+          "already_isolated": true,
+          "of_flow_left_below_top": {
+           "oil_share": 0.0,
+           "water_share": 0.0
+          }
+         }
+        ]
+       }
+      ],
+      "profile_from_below": {
+       "columns": [
+        "depth_m",
+        "low_oil_share",
+        "low_water_share",
+        "medium_oil_share",
+        "medium_water_share"
+       ],
+       "rows": [
+        [
+         3080,
+         1.0,
+         0.984,
+         1.0,
+         1.0
+        ],
+        [
+         3090,
+         0.95,
+         1.0,
+         0.973,
+         1.0
+        ],
+        [
+         3100,
+         0.972,
+         1.0,
+         0.969,
+         1.0
+        ],
+        [
+         3110,
+         0.959,
+         1.0,
+         0.987,
+         1.0
+        ],
+        [
+         3120,
+         0.966,
+         1.0,
+         0.994,
+         0.985
+        ],
+        [
+         3130,
+         1.0,
+         0.975,
+         0.976,
+         0.999
+        ],
+        [
+         3140,
+         0.844,
+         0.975,
+         0.838,
+         0.961
+        ],
+        [
+         3150,
+         0.808,
+         0.971,
+         0.734,
+         1.0
+        ],
+        [
+         3160,
+         0.768,
+         0.925,
+         0.651,
+         0.993
+        ],
+        [
+         3170,
+         0.019,
+         0.488,
+         0.005,
+         0.587
+        ],
+        [
+         3180,
+         0.009,
+         0.333,
+         0.016,
+         0.379
+        ],
+        [
+         3190,
+         0.007,
+         0.309,
+         0.012,
+         0.373
+        ],
+        [
+         3200,
+         0.011,
+         0.313,
+         0.015,
+         0.388
+        ],
+        [
+         3210,
+         0.011,
+         0.325,
+         0.015,
+         0.376
+        ],
+        [
+         3220,
+         0.013,
+         0.313,
+         0.014,
+         0.36
+        ],
+        [
+         3230,
+         0.005,
+         0.146,
+         0.003,
+         0.184
+        ],
+        [
+         3240,
+         0.0,
+         0.114,
+         0.0,
+         0.164
+        ]
+       ]
+      },
+      "production_30_days_before": {
+       "water_cut": 0.6307,
+       "oil_sm3_per_producing_day": 2000
+      },
+      "plugs_set_since": [
+       {
+        "date": "2010-09-23",
+        "depth_m": 3210
+       },
+       {
+        "date": "2014-11-26",
+        "depth_m": 3150
+       }
+      ]
+     }
+    ],
+    "perforated_m": [
+     [
+      3126,
+      3131
+     ],
+     [
+      3131,
+      3147
+     ],
+     [
+      3161,
+      3180
+     ],
+     [
+      3220,
+      3231
+     ],
+     [
+      3236,
+      3243
+     ],
+     [
+      3250,
+      3257
+     ]
+    ],
+    "blank_pipe_m": [
+     [
+      3147,
+      3161
+     ],
+     [
+      3180,
+      3220
+     ],
+     [
+      3231,
+      3236
+     ],
+     [
+      3243,
+      3250
+     ]
+    ],
+    "plugs_set": [
+     {
+      "date": "2010-09-23",
+      "depth_m": 3210,
+      "window_days": 60,
+      "before": {
+       "water_cut": 0.638,
+       "oil_sm3_per_day": 1850,
+       "days": 48,
+       "from": "2010-07-22",
+       "to": "2010-09-20"
+      },
+      "after": {
+       "water_cut": 0.676,
+       "oil_sm3_per_day": 1612,
+       "days": 59,
+       "from": "2010-09-24",
+       "to": "2010-11-23"
+      }
+     },
+     {
+      "date": "2014-11-26",
+      "depth_m": 3150,
+      "window_days": 60,
+      "before": {
+       "water_cut": 0.965,
+       "oil_sm3_per_day": 177,
+       "days": 60,
+       "from": "2014-09-23",
+       "to": "2014-11-22"
+      },
+      "after": {
+       "water_cut": 0.338,
+       "oil_sm3_per_day": 857,
+       "days": 28,
+       "from": "2014-11-29",
+       "to": "2015-01-28"
+      }
+     }
+    ],
+    "since_survey": {
+     "latest_survey": "2010-09-22",
+     "days": 2151,
+     "water_cut_then": 0.6307,
+     "water_cut_now": 0.8779,
+     "as_of": "2016-08-12"
+    },
+    "note": "A production log measures the flow passing each depth while the well flows; going up, it grows past each zone that produces. A share at a depth is the part of the pass's oil or water entering below that depth (1 at the bottom of the well's inflow, 0 above the top zone). comes_in_from_m to to_m holds 90% of each phase's inflow. Only shares are given: the files' rates have no units, and the plots' are downhole volumes. A plug set at a depth shuts off what enters below it: the shares below say what it could remove, not what it did, and never what it keeps (an oil_share of 0.7 is 70% of the oil cut off and 30% left; oil_kept_above is what stays); plugs_set gives what each plug already set did to the well (water cut and oil before and after). A bridge plug is set in blank pipe, never inside a perforated interval (inside_perforation_m names the interval a depth falls in; blank_pipe_m lists the gaps, and each pass's at_blank_pipe gives the shares below the top and the bottom of every gap: the depths a plug can actually be set at). A plug set after a survey (its plugs_set_since) already shut off what entered below it: on that log a depth or gap at or below it is already_isolated (a plug there cuts nothing new), and of_flow_left gives what a shallower plug would cut as a share of the flow left above the old plug. water_cut_left_above is the water cut of the flow entering above a depth on that pass, what a plug there would leave flowing (for a gap, a plug anywhere in it): compare it with the well's water cut now to say what a plug would change. rate_vs_well is the pass's surface rate over the well's own in the month before: a pass run far below it may weight the zones differently. since_survey says how old the latest log is and how far the water cut has moved since: an old log may no longer show where the water enters, and a new one would settle it. Each survey's passes were run at several surface rates. A survey read off pictures carries the checks of that reading."
+   },
+   "code": "wellpilot.agent.tools.production_log@6defd6a2a3f2",
+   "created_at": "2026-11-01T07:48:36+00:00",
+   "warnings": []
+  }
+ ]
+}

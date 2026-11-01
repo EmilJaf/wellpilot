@@ -49,3 +49,11 @@ def test_water_handling_with_a_hyphen_names_its_limit():
 def test_same_time_wells_own_no_number():
     text = "F-12 was shut in 32 days (+366% same time F-1 C F-15 D)."
     assert C._named(text, text.index("32")) == {C._well_key("F-12")}
+
+
+def test_a_worst_day_is_a_rate_not_a_count_of_days():
+    """Eval of Nov 1 (run 39a70f886711): "max day 18020 Sm3/d" ended the run unverified."""
+    assert C._key_dim("max_day") == "rate"
+    assert C._key_dim("max_day_water_sm3") == "rate"
+    assert C._key_dim("days_at_or_above") == "days"
+    assert C._key_dim("zero_days") == "days"

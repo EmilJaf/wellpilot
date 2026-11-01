@@ -1143,7 +1143,7 @@ def _key_dim(name: str, cell: bool = False) -> str | None:
         return "per_month"
     if re.search(
         r"(?:^|_)rates?(?:_|$)|per_(?:producing_)?day|_per_d$|sm3_d$|(?:^|_)daily(?:_|$)|"
-        r"(?:^|_)max_day_",
+        r"(?:^|_)max_day(?:_|$)",  # field_vs_design's "max_day": its worst day's rate, no count
         n,
     ):
         return "rate"
