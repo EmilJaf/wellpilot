@@ -3159,10 +3159,13 @@ def _unpaired(label, blanked, declared, unused, log: EvidenceLog, leaves_of) -> 
         def first_day(leaf: _Leaf) -> str:
             return min(leaf.record_days, default="")
 
+        # A query's rows are a table even when its dates are text ("2016" from strftime).
+        table = isinstance(item.result, dict) and {"columns", "rows"} <= set(item.result)
         if not any(
             _family(x) == _family(y)
             and (
-                (x.row_day is not None and y.row_day is not None)
+                table
+                or (x.row_day is not None and y.row_day is not None)
                 or x.record == y.record
                 # across a series of events: the first one's before, a later one's after
                 or (
@@ -4695,8 +4698,19 @@ def _detail_attribution(
         readings = _readings(written)
         if not readings or all(_free(*n, _Pool(cited), free) for n in _numbers_in_text(written)):
             continue
+        # This occurrence only: "F-1 C 0.5 ..., F-11 0.5 ...", each from its own cited result.
+        at = match.start() + match.group(0).index(written)
         verdicts = [
-            _attribution(text, blanked, written, readings, item, leaves_of(item), own_part=True)
+            _attribution(
+                text,
+                blanked,
+                written,
+                readings,
+                item,
+                leaves_of(item),
+                own_part=True,
+                spans=[(at, at + len(written))],
+            )
             for item in cited
             if any(_reads_as((n, 2 * u, sc), _Pool([item]).numbers) for n, u, sc in readings)
         ]

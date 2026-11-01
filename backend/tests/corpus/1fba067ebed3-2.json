@@ -1,0 +1,2952 @@
+{
+ "source": {
+  "run": "1fba067ebed3",
+  "submission": 2,
+  "model": "meta-models/muse-spark-open-1026",
+  "question": "how much did it cost to drill F-1 C and when did it pay for itself"
+ },
+ "to_review": false,
+ "note": "",
+ "expected": {
+  "accepted": true,
+  "flagged": []
+ },
+ "submission": {
+  "summary": "No drilling cost record for well F-1 C was found in the searched reports, so its cost and payback date cannot be calculated from the available evidence. The well produced about 178,000 Sm3 of oil from 2014-04-22 during 438 producing days before abandonment in 2016.",
+  "findings": [
+   {
+    "claim": "No drilling cost for well F-1 C is recorded in the available reports searched, which only show platform-scale investments and example well costs under different designations.",
+    "detail": "Searches for F-1 C drilling cost and cost to drill well returned no facts for F-1 C; Table 6.2 costs are for I5, I10, I15, P5, P9, P2, UP1, UP2, not F-1 C. Without a well-specific cost and without an oil price history for payback, payback cannot be calculated.",
+    "evidence_ids": [
+     "E2",
+     "E3",
+     "E12"
+    ],
+    "confidence": "fact",
+    "numbers": []
+   },
+   {
+    "claim": "Well F-1 C first produced oil on 2014-04-22 and produced a total of about 178,000 Sm3 of oil over 438 producing days until 2016-04-21.",
+    "detail": "list_wells shows first_oil 2014-04-22, cum_oil 177709 Sm3, producing_days 438; well_operations confirms drilling 2014-02-21 to 2014-04-21 (60 report days) and handover 2014-04-21.",
+    "evidence_ids": [
+     "E1",
+     "E6",
+     "E14",
+     "E15"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "178,000",
+      "value": 177709,
+      "evidence_id": "E14"
+     },
+     {
+      "text": "438",
+      "value": 438,
+      "evidence_id": "E1"
+     }
+    ]
+   },
+   {
+    "claim": "Because the tools provide no costs, prices or revenues, the oil volume remaining before a water cut or the time to repay the investment cannot be derived for F-1 C.",
+    "detail": "No price, tariff or operating-cost history is available per well in the evidence; PUD economics are field-scale NPV at 22 USD/bbl (18.70 USD/bbl for Volve) and cannot be applied to a single well payback.",
+    "evidence_ids": [
+     "E8",
+     "E10"
+    ],
+    "confidence": "inference",
+    "numbers": []
+   }
+  ],
+  "summary_numbers": [
+   {
+    "text": "178,000",
+    "value": 177709,
+    "evidence_id": "E14"
+   },
+   {
+    "text": "438",
+    "value": 438,
+    "evidence_id": "E1"
+   }
+  ]
+ },
+ "evidence": [
+  {
+   "id": "E1",
+   "tool": "list_wells",
+   "arguments": {},
+   "result": {
+    "columns": [
+     "well",
+     "well_types",
+     "first_oil",
+     "last_date",
+     "cum_oil_sm3",
+     "cum_water_sm3",
+     "cum_water_injected_sm3",
+     "producing_days"
+    ],
+    "rows": [
+     [
+      "F-1 C",
+      "OP/WI",
+      "2014-04-22",
+      "2016-04-21",
+      177709,
+      207302,
+      null,
+      438
+     ],
+     [
+      "F-11",
+      "OP",
+      "2013-07-24",
+      "2016-09-17",
+      1147849,
+      1090806,
+      0.0,
+      1122
+     ],
+     [
+      "F-12",
+      "OP",
+      "2008-02-12",
+      "2016-09-17",
+      4579610,
+      6817753,
+      0.0,
+      2838
+     ],
+     [
+      "F-14",
+      "OP",
+      "2008-07-13",
+      "2016-09-17",
+      3942233,
+      7121310,
+      0.0,
+      2724
+     ],
+     [
+      "F-15 D",
+      "OP",
+      "2014-01-16",
+      "2016-09-17",
+      148519,
+      52366,
+      0.0,
+      769
+     ],
+     [
+      "F-4",
+      "WI",
+      null,
+      "2016-12-01",
+      0.0,
+      0.0,
+      16240727,
+      0
+     ],
+     [
+      "F-5",
+      "OP/WI",
+      "2016-04-20",
+      "2016-09-18",
+      41161,
+      13533,
+      14089406,
+      129
+     ]
+    ]
+   },
+   "code": "wellpilot.agent.tools.list_wells@67bd47cfcdd1",
+   "created_at": "2026-11-01T11:48:11+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E2",
+   "tool": "search_reports",
+   "arguments": {
+    "query": "F-1 C drilling cost",
+    "well": "F-1 C",
+    "limit": 20
+   },
+   "result": {
+    "documents": {},
+    "facts": {
+     "columns": [
+      "doc_id",
+      "page",
+      "topic",
+      "source",
+      "statement_en",
+      "quote",
+      "quote_check",
+      "wells"
+     ],
+     "rows": []
+    }
+   },
+   "code": "wellpilot.agent.tools.search_reports@5907b6347b0e",
+   "created_at": "2026-11-01T11:48:11+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E3",
+   "tool": "search_reports",
+   "arguments": {
+    "query": "cost to drill well",
+    "limit": 20
+   },
+   "result": {
+    "documents": {
+     "f11b_completion": {
+      "title": "Final Well Report, Completion, 15/9-F-11 B",
+      "issued": "2013-09-04"
+     }
+    },
+    "facts": {
+     "columns": [
+      "doc_id",
+      "page",
+      "topic",
+      "source",
+      "statement_en",
+      "quote",
+      "quote_check",
+      "wells"
+     ],
+     "rows": [
+      [
+       "f11b_completion",
+       8,
+       "other",
+       "figure",
+       "Figure Downtime by company shows downtime for completion of well 15/9-F-11 B distributed as Aker Well Service WIR 71.3 hrs, Maersk Drilling RIG 55.0 hrs, Aker Well Service TRAC 36.8 hrs, Operator OPR 5.3 hrs, and Vetco Gray XMAS 2.0 hrs.",
+       null,
+       "tokens",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       8,
+       "other",
+       "table",
+       "For well 15/9-F-11 B, service company Operator OPR had an incident starting 24.jun.2013 with failure code RIG-E20 Riser system causing 5.3 total downtime hrs with 100% comp share and 5.3 comp share hrs and 0 NOK quality cost.",
+       "24.jun.2013 RIG-E20 Riser system 5,3 100 5,3 Total 0 5,3",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       9,
+       "injection",
+       "table",
+       "On 01.jul.2013 RIG-E342 Drillfloor tub handl system incident no 1366882 HTS belt sensor defect had Quality cost 41206 NOK and 1977888 NOK/d with Total hrs 0,5 Comp share 100% Comp share hrs 0,5.",
+       "01.jul.2013 RIG-E342 Drillfloor tub handl system 1366882 HTS belt sensor defect. 41206 1977888 0,5 100 0,5",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       9,
+       "injection",
+       "table",
+       "RIG total for WELLBORE NO 15/9-F-11 B is Quality cost 3878481 NOK and Comp share hrs 55,0.",
+       "Total 3878481 55,0",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       9,
+       "injection",
+       "table",
+       "XMAS total for WELLBORE NO 15/9-F-11 B is Quality cost 164812 NOK and Comp share hrs 2,0.",
+       "Total 164812 2,0",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       9,
+       "injection",
+       "table",
+       "On 10.jul.2013 TRAC-E03 Electronic tractor failure Synergi no 1368443 Wireline Tractor Failure had Quality cost 3000 NOK and 3692 NOK/d with Total hrs 19,5 Comp share 100% Comp share hrs 19,5 for SERVICE COMPANY Tractor TRAC Aker Well Service.",
+       "10.jul.2013 TRAC-E03 Electronic tractor failure 1368443 Wireline Tractor Failure 3000 3692 19,5 100 19,5",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       9,
+       "injection",
+       "table",
+       "TRAC total for WELLBORE NO 15/9-F-11 B is Quality cost 6000 NOK and Comp share hrs 36,8.",
+       "Total 6000 36,8",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       10,
+       "wells",
+       "table",
+       "On 11.jul.2013 wellbore NO 15/9-F-11 B had incident WIR-E02 Weakpoint Synergi no 1368191 Wire Line Cable Disconnected from Tool String with Quality cost 453530 NOK, 2721180 NOK/d, Total hrs 4,0, Comp share 100% and Comp share hrs 4,0.",
+       "11.jul.2013 WIR-E02 Weakpoint 1368191 Wire Line Cable Disconnected from Tool String. 453530 2721180 4,0 100 4,0",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       10,
+       "wells",
+       "table",
+       "On 15.jul.2013 wellbore NO 15/9-F-11 B had incident WIR-E02 Weakpoint Synergi no 1368632 Lost Communication to Perforation BHA with Quality cost 3000 NOK, 1083 NOK/d, Total hrs 66,5, Comp share 100% and Comp share hrs 66,5.",
+       "15.jul.2013 WIR-E02 Weakpoint 1368632 Lost Communication to Perforation BHA 3000 1083 66,5 100 66,5",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       10,
+       "wells",
+       "table",
+       "For wellbore NO 15/9-F-11 B the total Quality cost is 456530 NOK and total Comp share hrs is 71,3 hrs.",
+       "Total 456530 71,3",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       15,
+       "wells",
+       "text",
+       "A wearbushing retrieval tool and jet sub were run on 5 1/2\" heavy weight drill pipe to jet the wellhead area and retrieve the wearbushing per GE (VETCO) procedure.",
+       "Picked up and ran in hole with wearbushing retrieval tool and jet sub on 5 1/2\" heavy weight drill pipe. Jetted wellhead area and retrieve the wearbushing according GE (VETCO) procedure.",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       16,
+       "wells",
+       "text",
+       "For well F-11 B, the adjustable sub setting tool was RIH with drill pipe to 28,3 meter.",
+       "RIH with drill pipe to 28,3 meter .",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       41,
+       "schedule",
+       "table",
+       "On 24.Jun.2013 guide wires were run and attached in wellhead template, riser connector disconnected and high pressure drilling riser pulled out of hole on well F-11 B.",
+       "24.Jun.2013 Ran guide wires and attached same in wellhead template. Disconnected riser connector. Pulled out of hole with high pressure drilling riser.",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       41,
+       "schedule",
+       "table",
+       "On 25.Jun.2013 the high pressure drilling riser was pulled and laid out to cantilever and production riser was run on well F-11 B.",
+       "25.Jun.2013 Pulled high pressure drilling riser and laid out to cantilever. Ran production riser.",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       50,
+       "wells",
+       "text",
+       "License NO PL046BS final well report valid from 2013-09-04 covers drilling and completion of Well NO 15/9-F-11 B.",
+       "License: NO PL046BS Well: NO 15/9-F-11 B",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       52,
+       "wells",
+       "text",
+       "The document is the Final Well Report Drilling and Completion for license NO PL046BS well NO 15/9-F-11 B, valid from 2013-09-04, page 52 of 64.",
+       "FINAL WELL REPORT Drilling and Completion License: NO PL046BS Well: NO 15/9-F-11 B Doc. No. xxx Valid from Rev. no. 2013-09-04 xxx Classification: Internal Status: Final Expiry date: Page 52 of 64",
+       "exact",
+       "F-11"
+      ],
+      [
+       "f11b_completion",
+       61,
+       "wells",
+       "text",
+       "The report is the Final Well Report Drilling and Completion for License NO PL046BS Well NO 15/9-F-11 B valid from 2013-09-04.",
+       "FINAL WELL REPORT Drilling and Completion License no: NO PL046BS Well: NO 15/9-F-11 B",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       63,
+       "wells",
+       "table",
+       "The Drilling Fluids service for well F-11 B was provided by Halliburton under Contract no SAP4600007720.",
+       "Drilling Fluids SAP4600007720 Halliburton",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       63,
+       "wells",
+       "table",
+       "The Directional Drilling service for well F-11 B was provided by Baker Hughes Norge AS under Contract no SAP4600017565.",
+       "Directional Drilling SAP4600017565 Baker Hughes Norge AS",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       63,
+       "wells",
+       "table",
+       "The Measurement While Drilling service for well F-11 B was provided by Baker Hughes Norge AS under Contract no SAP4600017565.",
+       "Measurement While Drilling SAP4600017565 Baker Hughes Norge AS",
+       "exact",
+       "F-11 B"
+      ]
+     ]
+    }
+   },
+   "code": "wellpilot.agent.tools.search_reports@5907b6347b0e",
+   "created_at": "2026-11-01T11:48:11+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E4",
+   "tool": "search_reports",
+   "arguments": {
+    "query": "drilling cost",
+    "limit": 20
+   },
+   "result": {
+    "documents": {
+     "f11b_completion": {
+      "title": "Final Well Report, Completion, 15/9-F-11 B",
+      "issued": "2013-09-04"
+     },
+     "volve_pud": {
+      "title": "Plan for utbygging og drift av Volve (PUD, plan for development and operation)",
+      "issued": "2005-02-01"
+     }
+    },
+    "facts": {
+     "columns": [
+      "doc_id",
+      "page",
+      "topic",
+      "source",
+      "statement_en",
+      "quote",
+      "quote_check",
+      "wells"
+     ],
+     "rows": [
+      [
+       "f11b_completion",
+       9,
+       "injection",
+       "table",
+       "On 01.jul.2013 RIG-E342 Drillfloor tub handl system incident no 1366882 HTS belt sensor defect had Quality cost 41206 NOK and 1977888 NOK/d with Total hrs 0,5 Comp share 100% Comp share hrs 0,5.",
+       "01.jul.2013 RIG-E342 Drillfloor tub handl system 1366882 HTS belt sensor defect. 41206 1977888 0,5 100 0,5",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "volve_pud",
+       33,
+       "schedule",
+       "text",
+       "Time and cost estimates are based on previous drilling operations in the area and other relevant field experience and on contract prices for hire of Mærsk Inspirer in drilling mode and drilling-and-production mode respectively, and include expected downtime, technical tolerance and waiting on weather.",
+       "Tids- og kostnadsestimat baseres på tidligere boreoperasjoner i området og øvrig relevant felterfaring. Kostnadsestimatene er basert på kontraktspriser for leie av Mærsk Inspirer i henholdsvis boremodus og bore- og produksjonsmodus.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       48,
+       "economics",
+       "table",
+       "Operation and maintenance costs for the platform are 95 313 USD 2004/day (drilling phase) / 109 638 USD 2004/day (drilling & production phase) / 72 467 USD 2004/day (production phase).",
+       "Drift- og vedlikeholdskostnader plattform | 95 313 USD 2004/dag(borefase) / 109 638 USD 2004/dag (bore & prod. fasen) 72 467 USD 2004/dag (produksjonsfase)",
+       "exact",
+       ""
+      ],
+      [
+       "f11b_completion",
+       8,
+       "other",
+       "figure",
+       "Figure Downtime by company shows downtime for completion of well 15/9-F-11 B distributed as Aker Well Service WIR 71.3 hrs, Maersk Drilling RIG 55.0 hrs, Aker Well Service TRAC 36.8 hrs, Operator OPR 5.3 hrs, and Vetco Gray XMAS 2.0 hrs.",
+       null,
+       "tokens",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       8,
+       "other",
+       "table",
+       "For well 15/9-F-11 B, service company Operator OPR had an incident starting 24.jun.2013 with failure code RIG-E20 Riser system causing 5.3 total downtime hrs with 100% comp share and 5.3 comp share hrs and 0 NOK quality cost.",
+       "24.jun.2013 RIG-E20 Riser system 5,3 100 5,3 Total 0 5,3",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       9,
+       "injection",
+       "table",
+       "On 16.jun.2013 RIG-E07 Top drive incident no 1365331 Broke release failure on top drive had Quality cost 2989175 NOK and 1568092 NOK/d with Total hrs 45,8 Comp share 100% Comp share hrs 45,8.",
+       "16.jun.2013 RIG-E07 Top drive 1365331 Broke release failure on top drive 2989175 1568092 45,8 100 45,8",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       9,
+       "injection",
+       "table",
+       "On 20.jun.2013 RIG-E341 Vert pipe handling system incident no 1365335 Top drive collided with stand in the pipe racking machine and bent top joint had Quality cost 824600 NOK and 0 NOK/d with Total hrs 0,0 Comp share 100% Comp share hrs 0,0.",
+       "20.jun.2013 RIG-E341 Vert pipe handling system 1365335 Top drive collided with stand in the pipe racking machine and bent top joint. 824600 0 0,0 100 0,0",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       9,
+       "injection",
+       "table",
+       "On 27.jun.2013 RIG-E03 BOP stack/valves incident no 1366412 Attempted to pressure test annular BOP on stump had Quality cost 3000 NOK and 8471 NOK/d with Total hrs 8,5 Comp share 100% Comp share hrs 8,5.",
+       "27.jun.2013 RIG-E03 BOP stack/valves 1366412 Attempted to pressure test annular BOP on stump. 3000 8471 8,5 100 8,5",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       9,
+       "injection",
+       "table",
+       "On 02.jul.2013 RIG-E345 Elevator incident no 1366883 Observed hydraulic leak from elevator fitting, replaced same had Quality cost 20500 NOK and 1968000 NOK/d with Total hrs 0,3 Comp share 100% Comp share hrs 0,3.",
+       "02.jul.2013 RIG-E345 Elevator 1366883 Observed hydraulic leak from elevator fitting, replaced same 20500 1968000 0,3 100 0,3",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       9,
+       "injection",
+       "table",
+       "RIG total for WELLBORE NO 15/9-F-11 B is Quality cost 3878481 NOK and Comp share hrs 55,0.",
+       "Total 3878481 55,0",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       9,
+       "injection",
+       "table",
+       "On 29.jun.2013 XMAS-E01 Hanger pack off Synergi no 1367522 Not able to lock RT into riser due to internal hydraulic leak i RT had Quality cost 164812 NOK and 1977744 NOK/d with Total hrs 2,0 Comp share 100% Comp share hrs 2,0 for SERVICE COMPANY Surf. WH/X-mas tree XMAS Vetco Gray.",
+       "29.jun.2013 XMAS-E01 Hanger pack off 1367522 Not able to lock RT into riser due to internal hydraulic leak i RT. 164812 1977744 2,0 100 2,0",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       9,
+       "injection",
+       "table",
+       "XMAS total for WELLBORE NO 15/9-F-11 B is Quality cost 164812 NOK and Comp share hrs 2,0.",
+       "Total 164812 2,0",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       9,
+       "injection",
+       "table",
+       "On 10.jul.2013 TRAC-E03 Electronic tractor failure Synergi no 1368443 Wireline Tractor Failure had Quality cost 3000 NOK and 3692 NOK/d with Total hrs 19,5 Comp share 100% Comp share hrs 19,5 for SERVICE COMPANY Tractor TRAC Aker Well Service.",
+       "10.jul.2013 TRAC-E03 Electronic tractor failure 1368443 Wireline Tractor Failure 3000 3692 19,5 100 19,5",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       9,
+       "injection",
+       "table",
+       "On 13.jul.2013 TRAC-E01 Cable head Synergi no 1368445 Lost Communication with Perforation assembly had Quality cost 3000 NOK and 4174 NOK/d with Total hrs 17,3 Comp share 100% Comp share hrs 17,3.",
+       "13.jul.2013 TRAC-E01 Cable head 1368445 Lost Communication with Perforation assembly 3000 4174 17,3 100 17,3",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       9,
+       "injection",
+       "table",
+       "TRAC total for WELLBORE NO 15/9-F-11 B is Quality cost 6000 NOK and Comp share hrs 36,8.",
+       "Total 6000 36,8",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       10,
+       "wells",
+       "table",
+       "On 11.jul.2013 wellbore NO 15/9-F-11 B had incident WIR-E02 Weakpoint Synergi no 1368191 Wire Line Cable Disconnected from Tool String with Quality cost 453530 NOK, 2721180 NOK/d, Total hrs 4,0, Comp share 100% and Comp share hrs 4,0.",
+       "11.jul.2013 WIR-E02 Weakpoint 1368191 Wire Line Cable Disconnected from Tool String. 453530 2721180 4,0 100 4,0",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       10,
+       "wells",
+       "table",
+       "On 15.jul.2013 wellbore NO 15/9-F-11 B had incident WIR-E02 Weakpoint Synergi no 1368632 Lost Communication to Perforation BHA with Quality cost 3000 NOK, 1083 NOK/d, Total hrs 66,5, Comp share 100% and Comp share hrs 66,5.",
+       "15.jul.2013 WIR-E02 Weakpoint 1368632 Lost Communication to Perforation BHA 3000 1083 66,5 100 66,5",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       10,
+       "wells",
+       "table",
+       "For wellbore NO 15/9-F-11 B the total Quality cost is 456530 NOK and total Comp share hrs is 71,3 hrs.",
+       "Total 456530 71,3",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       15,
+       "wells",
+       "text",
+       "The SAFELOCK plug was run on 5 1/2\" heavy weight drill pipe down to 607 mMD with circulation established at 1100 lpm to wash the setting area.",
+       "Ran in hole with SAFELOCK plug on 5 1/2\" heavy weight drill pipe down to 607 mMD. Established circulation with 1100 lpm and washed setting area.",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       15,
+       "wells",
+       "text",
+       "A wearbushing retrieval tool and jet sub were run on 5 1/2\" heavy weight drill pipe to jet the wellhead area and retrieve the wearbushing per GE (VETCO) procedure.",
+       "Picked up and ran in hole with wearbushing retrieval tool and jet sub on 5 1/2\" heavy weight drill pipe. Jetted wellhead area and retrieve the wearbushing according GE (VETCO) procedure.",
+       "exact",
+       "F-11 B"
+      ]
+     ]
+    }
+   },
+   "code": "wellpilot.agent.tools.search_reports@5907b6347b0e",
+   "created_at": "2026-11-01T11:48:13+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E5",
+   "tool": "search_reports",
+   "arguments": {
+    "query": "economics",
+    "topic": "economics",
+    "limit": 20
+   },
+   "result": {
+    "documents": {
+     "volve_pud": {
+      "title": "Plan for utbygging og drift av Volve (PUD, plan for development and operation)",
+      "issued": "2005-02-01"
+     }
+    },
+    "facts": {
+     "columns": [
+      "doc_id",
+      "page",
+      "topic",
+      "source",
+      "statement_en",
+      "quote",
+      "quote_check",
+      "wells"
+     ],
+     "rows": [
+      [
+       "volve_pud",
+       10,
+       "economics",
+       "text",
+       "Leasing a jack-up platform with associated storage ship gives positive economy at low reserves (P90).",
+       "med leie av oppjekkbar plattform med tilhørende lagerskip gir positiv økonomi ved lave reserver (P90).",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       50,
+       "economics",
+       "text",
+       "For the base case the economic production time is 63 months given an oil price of 18.70 2004USD/bbl in 2012.",
+       "For basistilfellet resulterer det i en økonomisk produksjonstid på 63 måneder (gitt oljepris på 18,70 2004USD/fat i 2012).",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       51,
+       "economics",
+       "text",
+       "Reservoir uncertainty is illustrated by using the p90 and p10 production profiles in the economic calculations.",
+       "Reservoarusikkerhet er belyst med å benytte p90 og p10 produksjonsprofilene i økonomiberegningene.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       51,
+       "economics",
+       "text",
+       "Cost estimate uncertainty is included in the economic calculations with an upside/downside of ±300 MNOK.",
+       "Usikkerhet i kostnadsestimat er inkludert i økonomiberegningene med oppside/nedside på ± 300 MNOK.",
+       "exact",
+       ""
+      ]
+     ]
+    }
+   },
+   "code": "wellpilot.agent.tools.search_reports@5907b6347b0e",
+   "created_at": "2026-11-01T11:48:13+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E6",
+   "tool": "well_operations",
+   "arguments": {
+    "well": "F-1 C"
+   },
+   "result": {
+    "well": "F-1 C",
+    "jobs": [
+     {
+      "start": "2014-02-21",
+      "end": "2014-04-21",
+      "kind": "drilling",
+      "report_days": 60,
+      "contractor": "Maersk Drilling",
+      "perforations": [
+       "3973-3991 mMD; 3936-3954 mMD; 3918-3936 mMD; 3888-3906 mMD; 3870-3888 mMD; 3852-3870 mMD; 3817-3835 mMD",
+       "3786-3804 mMD",
+       "3768-3786 mMD",
+       "3640-3658 mMD; 3600-3609 mMD",
+       "3579-3588 mMD",
+       "3545-3554 mMD"
+      ],
+      "summaries": [
+       {
+        "date": "2014-02-21",
+        "summary": "Drilled 17 1/2\" hole from 1364 m to 1482 m. Circulated bottoms up. Perform check trip to 10 m inside 20\" shoe. Drilled 17 1/2\" hole to 1502 m."
+       },
+       {
+        "date": "2014-02-22",
+        "summary": "Drilled 17 1/2\" hole from 1502 m to 1540 m. WOW circulated well clean. POOH with 17 1/2\" BHA to inside 20\" shoe. Performed general service on drilling equipment while WOW. RIH with 17 1/2\" BHA to 1540 m. Drilled 17 1/2\" hole to 1660 m."
+       },
+       {
+        "date": "2014-02-23",
+        "summary": "Drilled 17 1/2\" hole from 1660 m to 1684 m. Waited one weather, not able to discharge cuttings to vessel due to bad weather. Circulated well clean. POOH with 17 1/2\" BHA on 5 1/2\" DP to inside 20\" shoe. Performed general rig service and PM on drilling equipment."
+       },
+       {
+        "date": "2014-04-19",
+        "summary": "Correlated and perforated interval #12 (3579 - 3588 m). POOH, inflow tested HMV and SV. L/D tool string #12. M/U perforation assy #13 (3545 - 3554 m). RIH, correlated and perforated interval #13. POOH, inflow tested HMV and SV. L/D tool string #13."
+       },
+       {
+        "date": "2014-04-20",
+        "summary": "R/D wireline lubricator, riser and BOP. Installed permanent hatch on F-1 slot. Installed XMT cap and R/U for pressure and inflow testing. P/T tree cap, SV, KWV to 35/345 bar. Inflow tested DHSV, HMV, MMV. R/D hose and manifold from KWV. Installed KWV cap."
+       },
+       {
+        "date": "2014-04-21",
+        "summary": "P/T kill wing cap to 35/345 bar 5/15 min. Well F-1 C handed over to production at 01:30 hrs."
+       }
+      ]
+     },
+     {
+      "start": "2014-11-27",
+      "end": "2014-12-06",
+      "kind": "workover",
+      "report_days": 10,
+      "contractor": "Altus Intervention",
+      "perforations": [
+       "3733-3742.6 mMD",
+       "3715-3724.6 mMD"
+      ],
+      "summaries": [
+       {
+        "date": "2014-11-27",
+        "summary": "Well handed over from production department to D&W. Started to rig up WL equipment on well."
+       },
+       {
+        "date": "2014-11-28",
+        "summary": "Completetd rigging up WL equipment. Installed tractor & PLT/RST toolstring. Performed Sigma pass from 3949-3480 m. Logged IC pass from 3785 to 3660 m."
+       },
+       {
+        "date": "2014-11-29",
+        "summary": "Logged three IC passes and started additional PLT shut in passes."
+       },
+       {
+        "date": "2014-11-30",
+        "summary": "Completed additional PLT shut in passes. Attempted to bean up well without success. Waiting for well to flow."
+       },
+       {
+        "date": "2014-12-01",
+        "summary": "Waited for well to flow. Decided to POOH with PLT/RST. Made up perforation BHA and installed same into lubricator."
+       },
+       {
+        "date": "2014-12-02",
+        "summary": "Installed long perfoartion guns. Had to POOH with long perforation guns due to tension above 50% of cable strength 150 above shooting depth. Decision made to split the perforation guns. RIH with shorter perforation gun."
+       },
+       {
+        "date": "2014-12-03",
+        "summary": "RIH with short perforation guns and perforated zone from 3733 to 3742,6 m. POOH with BHA#3. RIH with second short perforation gun."
+       },
+       {
+        "date": "2014-12-04",
+        "summary": "RIH with tractor and perforated . POOH to surface and L/D BHA#4. All shots fired. Observed Bird nest of cable on top of cable head, and wire strands inside tool catcher. Started to flow well. Got production shut down and well was closed in. Started to flow well, seams to stabilize at high rate."
+       },
+       {
+        "date": "2014-12-05",
+        "summary": "Flowed well to stabilize pressure and rate. Decided to R/D WL equipment. Production closed in well. Inflow tested HMV and DHSV. R/D WL equipment."
+       },
+       {
+        "date": "2014-12-06",
+        "summary": "R/D WL equipment. Leak tested XT-tree valves. Handed well over OM. Prepared WL equipment for backload. Finished demobilize. End of operation"
+       }
+      ]
+     },
+     {
+      "start": "2016-06-15",
+      "end": "2016-07-08",
+      "kind": "abandonment",
+      "report_days": 24,
+      "contractor": "Maersk Drilling",
+      "perforations": [],
+      "summaries": [
+       {
+        "date": "2016-06-15",
+        "summary": "- Rigged up bleed-off manifold on KWV and installed bleed-off line. - Hooked up Altus pump for local control of HMV and DHSV. - Leak tested bleed-off manifold. Experienced issues with leaking check valve. - Opened HMV and MMV. 29 bar trapped above DHSV. Bled down pressure to 0,3 bar. - Removed tree cap and installed cement spool onto XT. - Attempted to pressure tested cement spool"
+       },
+       {
+        "date": "2016-06-16",
+        "summary": "- Pressure tested cement spool - Bullheaded 50/50 MEG/SW and wash pill - Bullheaded SW until well was free for gas - Bullheaded cement and displaced same - Pressure tested BOP while WOC."
+       },
+       {
+        "date": "2016-06-17",
+        "summary": "- WOC while monitoring pressure in XT cross. - Pressure tested BOP - Inflow tested and pressure tested cement plug in 7\" liner - Attempted to inflow test DHSV - Rigged down cement spool - Installed tree cap on XT"
+       },
+       {
+        "date": "2016-06-18",
+        "summary": "- Rigged down cement spool - Rigged up WL pressure control equipment - Installed return lines and manifold WH to choke manifold - M/U cutter toolstring and RIH - Attempted to cut tubing at 2400 m - POOH w cutter toolstring"
+       },
+       {
+        "date": "2016-06-19",
+        "summary": "- RIH w/ WL cutter run#2 - Cut tubing at 2400 mMD - Displaced A-annulus to SW by pumping 2 x B/U. - Installed ME 572-700 ME plug at 249m - R/D WL equipment - Prepared to N/D XT"
+       },
+       {
+        "date": "2016-06-20",
+        "summary": "- N/D XT and spacer spool - Installed surface riser joint - Pressure tested BOP and TDS - Prepared to skid BOP over well center"
+       },
+       {
+        "date": "2016-06-21",
+        "summary": "- N/U BOP - Installed diverter - Performed connector test - R/U equipment for pulling tubing - RIH w/ THRT"
+       },
+       {
+        "date": "2016-06-22",
+        "summary": "- RIH with 7\" spear and retrieved TH - Equalized pressure under ME plug - Performed extended flow check - POOH with 7\" tubing. L/D joint w/ME plug and DHSV"
+       },
+       {
+        "date": "2016-06-23",
+        "summary": "-Pulled 7\" tubing from 2400 mMD to 374 mMD"
+       },
+       {
+        "date": "2016-06-24",
+        "summary": "- POOH with 7\" tubing from 811 mMD to surface - RIH with combined EZSV and cutter BHA from surface to 1393 mMD"
+       },
+       {
+        "date": "2016-06-25",
+        "summary": "Set EZSV in 9 5/8csg at 2390m, tested to 20/165 bar Cut csg, POOH Retrieved MST seal RIH and cut surface tieback csg, POOH, engaged spear and pull csg hanger to surface Started rigging up handling equipment"
+       },
+       {
+        "date": "2016-06-26",
+        "summary": "- Pulled MST seal - Cut 10 3/4 surface tieback csg, pulled same - Released tieback adaptor, pulled same - RIH w/ perforation gun, perforated below 10 3/4 subsea csg hanger"
+       },
+       {
+        "date": "2016-06-27",
+        "summary": "- Perforated below 10 3/4in subsea csg hanger, circulate possible gas, flow checked - M/U and RIH w/ milling BHA, started milling 10 3/4 subsea csg hanger - Milled approximately 20 cm. Due to slow progress POOH to inspect mill"
+       },
+       {
+        "date": "2016-06-28",
+        "summary": "- Milled 10 3/4 in subsea casing hanger - RIH w/ spear BHA, attempted to catch 10 3/4 x 9 5/8 csg fish"
+       },
+       {
+        "date": "2016-06-29",
+        "summary": "- Attempted to fish and pull 10 3/4 x 9 5/8 csg. Engaged fish on spear but not able to pull csg OOH. - Released spear, POOH - RIH w/ 9 5/8 csg cutter, cut csg @ 2361m - Attempted to POOH, got stuck w/ cutter BHA @ 2362m"
+       },
+       {
+        "date": "2016-06-30",
+        "summary": "- Waited for WL cutting equipment to be mobilized. Meanwhile worked on repairing forward PRS - Prepared BHAs for upcoming dressing and fishing runs - R/U WL equipment"
+       },
+       {
+        "date": "2016-07-01",
+        "summary": "None"
+       },
+       {
+        "date": "2016-07-02",
+        "summary": "- Dressed off top of 10 3/4 csg stump - RIH w/ spear and fished 10 3/4 x 9 5/8 csg - Pulled 10 3/4 x 9 5/8 csg to 550m"
+       },
+       {
+        "date": "2016-07-03",
+        "summary": "- Finished pulling 9 5/8 csg - RIH and set 13 3/8 EZSV, placed cement plug on top of EZSV - POOH, waited for cement to set up"
+       },
+       {
+        "date": "2016-07-04",
+        "summary": "- Circulated out excess cement - RIH w/ tagging BHA, milled through restrictions - Tagged top of cement, POOH"
+       },
+       {
+        "date": "2016-07-05",
+        "summary": "- POOH w/ tagging BHA - M/U and RIH w/ 13 3/8in csg cutting tool. Cut 13 3/8in csg at 850m. POOH - P/U and RIH w/ 13 3/8 EZSV. Set plug at 840m, POOH, tested plug to 40bar from above - M/U and RIH w/ TCP BHA, perforated below 13 3/8in csg hanger. POOH"
+       },
+       {
+        "date": "2016-07-06",
+        "summary": "- RIH w/ 13 3/8 EZSV setting tool, circulated to sea water annulus behind 13 3/8 csg - Pumped cement plug in annulus behind 13 3/8 csg - Pumped cement plug on top of 13 3/8 EZSV - Circulated well above cement plug to sea water - WOC while performing BOP test/mainterance/laying out tubing from set back"
+       },
+       {
+        "date": "2016-07-07",
+        "summary": "- WOC, meanwhile performed maintenance on DW, TDS, prepared for N/D BOP, started L/D 7in tbg from derrick - Attempted to pressure test surface cement plug with no success - Continued to L/D 7in tbg from derrick - RIH RTTS BHA, set RTTS in production riser. Attempted to test surface cement plug under RTTS, no success. Released RTTS and POOH - Started N/D BOP"
+       },
+       {
+        "date": "2016-07-08",
+        "summary": "- Pulled diverter - N/D BOP - Pulled HP surface riser - Installed hatch over F-1 slot - Continued reporting on 15/9-F-15D"
+       }
+      ]
+     },
+     {
+      "start": "2016-09-16",
+      "end": "2016-09-18",
+      "kind": "abandonment",
+      "report_days": 3,
+      "contractor": "Maersk Drilling",
+      "perforations": [],
+      "summaries": [
+       {
+        "date": "2016-09-16",
+        "summary": "- Skidded cantilever onto F-1 slot"
+       },
+       {
+        "date": "2016-09-17",
+        "summary": "- N/U BOP and HP riser - Cut 13 3/8in csg - Installed 13 3/8 in EZSV above cut and pressure tested annulus cement plug - Set balanced cement plug on top of EZSV - Started to N/D BOP"
+       },
+       {
+        "date": "2016-09-18",
+        "summary": "- N/D BOP CONTINUE REPORTING ON F-11B"
+       }
+      ]
+     },
+     {
+      "start": "2016-10-21",
+      "end": "2016-10-21",
+      "kind": "abandonment",
+      "report_days": 1,
+      "contractor": "Maersk Drilling",
+      "perforations": [],
+      "summaries": [
+       {
+        "date": "2016-10-21",
+        "summary": "- Skidded to well F-1 C - RIH with inner string - Cut production riser at 134,9 m - Pulled production riser - Installed hatches and prepared to skid rig to F-7."
+       }
+      ]
+     }
+    ],
+    "note": "Daily reports exist for drilling and for work on the well (wireline, plugs, perforations, production logs), not for days of normal production. A job's date is the day the work was done; kind is drilling, completion, workover (work on a producing or injecting well) or abandonment. Ask for one day to see every operation line."
+   },
+   "code": "wellpilot.agent.tools.well_operations@691598c6cb8c",
+   "created_at": "2026-11-01T11:48:13+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E7",
+   "tool": "search_reports",
+   "arguments": {
+    "query": "cost",
+    "limit": 30
+   },
+   "result": {
+    "documents": {
+     "f11b_completion": {
+      "title": "Final Well Report, Completion, 15/9-F-11 B",
+      "issued": "2013-09-04"
+     },
+     "volve_pud": {
+      "title": "Plan for utbygging og drift av Volve (PUD, plan for development and operation)",
+      "issued": "2005-02-01"
+     }
+    },
+    "facts": {
+     "columns": [
+      "doc_id",
+      "page",
+      "topic",
+      "source",
+      "statement_en",
+      "quote",
+      "quote_check",
+      "wells"
+     ],
+     "rows": [
+      [
+       "f11b_completion",
+       8,
+       "other",
+       "table",
+       "For well 15/9-F-11 B, service company Operator OPR had an incident starting 24.jun.2013 with failure code RIG-E20 Riser system causing 5.3 total downtime hrs with 100% comp share and 5.3 comp share hrs and 0 NOK quality cost.",
+       "24.jun.2013 RIG-E20 Riser system 5,3 100 5,3 Total 0 5,3",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       9,
+       "injection",
+       "table",
+       "On 16.jun.2013 RIG-E07 Top drive incident no 1365331 Broke release failure on top drive had Quality cost 2989175 NOK and 1568092 NOK/d with Total hrs 45,8 Comp share 100% Comp share hrs 45,8.",
+       "16.jun.2013 RIG-E07 Top drive 1365331 Broke release failure on top drive 2989175 1568092 45,8 100 45,8",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       9,
+       "injection",
+       "table",
+       "On 20.jun.2013 RIG-E341 Vert pipe handling system incident no 1365335 Top drive collided with stand in the pipe racking machine and bent top joint had Quality cost 824600 NOK and 0 NOK/d with Total hrs 0,0 Comp share 100% Comp share hrs 0,0.",
+       "20.jun.2013 RIG-E341 Vert pipe handling system 1365335 Top drive collided with stand in the pipe racking machine and bent top joint. 824600 0 0,0 100 0,0",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       9,
+       "injection",
+       "table",
+       "On 27.jun.2013 RIG-E03 BOP stack/valves incident no 1366412 Attempted to pressure test annular BOP on stump had Quality cost 3000 NOK and 8471 NOK/d with Total hrs 8,5 Comp share 100% Comp share hrs 8,5.",
+       "27.jun.2013 RIG-E03 BOP stack/valves 1366412 Attempted to pressure test annular BOP on stump. 3000 8471 8,5 100 8,5",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       9,
+       "injection",
+       "table",
+       "On 01.jul.2013 RIG-E342 Drillfloor tub handl system incident no 1366882 HTS belt sensor defect had Quality cost 41206 NOK and 1977888 NOK/d with Total hrs 0,5 Comp share 100% Comp share hrs 0,5.",
+       "01.jul.2013 RIG-E342 Drillfloor tub handl system 1366882 HTS belt sensor defect. 41206 1977888 0,5 100 0,5",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       9,
+       "injection",
+       "table",
+       "On 02.jul.2013 RIG-E345 Elevator incident no 1366883 Observed hydraulic leak from elevator fitting, replaced same had Quality cost 20500 NOK and 1968000 NOK/d with Total hrs 0,3 Comp share 100% Comp share hrs 0,3.",
+       "02.jul.2013 RIG-E345 Elevator 1366883 Observed hydraulic leak from elevator fitting, replaced same 20500 1968000 0,3 100 0,3",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       9,
+       "injection",
+       "table",
+       "RIG total for WELLBORE NO 15/9-F-11 B is Quality cost 3878481 NOK and Comp share hrs 55,0.",
+       "Total 3878481 55,0",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       9,
+       "injection",
+       "table",
+       "On 29.jun.2013 XMAS-E01 Hanger pack off Synergi no 1367522 Not able to lock RT into riser due to internal hydraulic leak i RT had Quality cost 164812 NOK and 1977744 NOK/d with Total hrs 2,0 Comp share 100% Comp share hrs 2,0 for SERVICE COMPANY Surf. WH/X-mas tree XMAS Vetco Gray.",
+       "29.jun.2013 XMAS-E01 Hanger pack off 1367522 Not able to lock RT into riser due to internal hydraulic leak i RT. 164812 1977744 2,0 100 2,0",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       9,
+       "injection",
+       "table",
+       "XMAS total for WELLBORE NO 15/9-F-11 B is Quality cost 164812 NOK and Comp share hrs 2,0.",
+       "Total 164812 2,0",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       9,
+       "injection",
+       "table",
+       "On 10.jul.2013 TRAC-E03 Electronic tractor failure Synergi no 1368443 Wireline Tractor Failure had Quality cost 3000 NOK and 3692 NOK/d with Total hrs 19,5 Comp share 100% Comp share hrs 19,5 for SERVICE COMPANY Tractor TRAC Aker Well Service.",
+       "10.jul.2013 TRAC-E03 Electronic tractor failure 1368443 Wireline Tractor Failure 3000 3692 19,5 100 19,5",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       9,
+       "injection",
+       "table",
+       "On 13.jul.2013 TRAC-E01 Cable head Synergi no 1368445 Lost Communication with Perforation assembly had Quality cost 3000 NOK and 4174 NOK/d with Total hrs 17,3 Comp share 100% Comp share hrs 17,3.",
+       "13.jul.2013 TRAC-E01 Cable head 1368445 Lost Communication with Perforation assembly 3000 4174 17,3 100 17,3",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       9,
+       "injection",
+       "table",
+       "TRAC total for WELLBORE NO 15/9-F-11 B is Quality cost 6000 NOK and Comp share hrs 36,8.",
+       "Total 6000 36,8",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       10,
+       "wells",
+       "table",
+       "On 11.jul.2013 wellbore NO 15/9-F-11 B had incident WIR-E02 Weakpoint Synergi no 1368191 Wire Line Cable Disconnected from Tool String with Quality cost 453530 NOK, 2721180 NOK/d, Total hrs 4,0, Comp share 100% and Comp share hrs 4,0.",
+       "11.jul.2013 WIR-E02 Weakpoint 1368191 Wire Line Cable Disconnected from Tool String. 453530 2721180 4,0 100 4,0",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       10,
+       "wells",
+       "table",
+       "On 15.jul.2013 wellbore NO 15/9-F-11 B had incident WIR-E02 Weakpoint Synergi no 1368632 Lost Communication to Perforation BHA with Quality cost 3000 NOK, 1083 NOK/d, Total hrs 66,5, Comp share 100% and Comp share hrs 66,5.",
+       "15.jul.2013 WIR-E02 Weakpoint 1368632 Lost Communication to Perforation BHA 3000 1083 66,5 100 66,5",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       10,
+       "wells",
+       "table",
+       "For wellbore NO 15/9-F-11 B the total Quality cost is 456530 NOK and total Comp share hrs is 71,3 hrs.",
+       "Total 456530 71,3",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "volve_pud",
+       10,
+       "economics",
+       "text",
+       "The risk of cost overruns is significantly reduced because large parts of the concept are already built.",
+       "I tillegg reduseres risikoen for kostnadsoverskridelser betydelig pga at store deler av konseptet allerede er bygget.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       33,
+       "schedule",
+       "text",
+       "Time and cost estimates are based on previous drilling operations in the area and other relevant field experience and on contract prices for hire of Mærsk Inspirer in drilling mode and drilling-and-production mode respectively, and include expected downtime, technical tolerance and waiting on weather.",
+       "Tids- og kostnadsestimat baseres på tidligere boreoperasjoner i området og øvrig relevant felterfaring. Kostnadsestimatene er basert på kontraktspriser for leie av Mærsk Inspirer i henholdsvis boremodus og bore- og produksjonsmodus.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       33,
+       "economics",
+       "text",
+       "Technical tolerance in the form of geological or technical sidetrack is included with 99 MNOK 2005 and these costs are transferred to unforeseen costs in table 12.1.1.",
+       "Teknisk toleranse i form av geologisk eller teknisk sidesteg er inkludert med 99 MNOK 2005. Disse kostnadene er overført til uforutsette kostnader i tabell 12.1.1.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       33,
+       "economics",
+       "table",
+       "Figure/Table 6.2 shows Installasjon av template has no cost for individual wells and 6 MNOK Total.",
+       "Installasjon av template | - | - | - | - | - | - | - | - | - | 6",
+       "exact",
+       "I5, I10, I15, P5, P9, P2, UP1, UP2"
+      ],
+      [
+       "volve_pud",
+       47,
+       "economics",
+       "text",
+       "The total costs for plugging of wells is 93 Mill. NOK2005.",
+       "De totale kostnadene for plugging av brønner er 93 Mill. NOK2005.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       48,
+       "economics",
+       "table",
+       "Mobilization of platform costs 291 Mill. NOK2005.",
+       "Mobilisering plattform | 291",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       48,
+       "economics",
+       "table",
+       "Export system including storage vessel costs 391 Mill. NOK2005.",
+       "Eksport system inklusiv lagerskip | 391",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       48,
+       "economics",
+       "table",
+       "Project management costs including project reserve are 349 Mill. NOK2005.",
+       "Prosjektledelses-kostnader inklusiv prosjektreserve | 349",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       48,
+       "economics",
+       "table",
+       "Operation and maintenance costs for the platform are 95 313 USD 2004/day (drilling phase) / 109 638 USD 2004/day (drilling & production phase) / 72 467 USD 2004/day (production phase).",
+       "Drift- og vedlikeholdskostnader plattform | 95 313 USD 2004/dag(borefase) / 109 638 USD 2004/dag (bore & prod. fasen) 72 467 USD 2004/dag (produksjonsfase)",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       48,
+       "economics",
+       "table",
+       "Operation and maintenance costs for the storage vessel are 22 444 USD 2004 per day.",
+       "Drift- og vedlikeholdskostnader lagerskip | 22 444 USD 2004/dag",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       49,
+       "facility_limits",
+       "table",
+       "The operator's annual operating cost at plateau rate for Logistics (helicopter, supply etc.) is 31 million NOK 2005 per 12 months production.",
+       "Logistikk (helikopter, forsyning etc.) | 31",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       49,
+       "facility_limits",
+       "table",
+       "The operator's annual operating cost at plateau rate for the operator's operating organization is 37 million NOK 2005 per 12 months production.",
+       "Operatørens driftsorganisasjon | 37",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       49,
+       "facility_limits",
+       "table",
+       "The operator's annual operating cost at plateau rate for production chemicals is 12 million NOK 2005 per 12 months production.",
+       "Produksjonskjemikalier | 12",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       49,
+       "facility_limits",
+       "table",
+       "The operator's annual operating cost at plateau rate for well intervention costs is 27 million NOK 2005 per 12 months production.",
+       "Brønn intervensjonskostnader | 27",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       49,
+       "facility_limits",
+       "table",
+       "The operator's annual operating cost at plateau rate for Co2-fee / Nox fee is 19 million NOK 2005 per 12 months production.",
+       "Co2 – avgift / Nox avgift | 19",
+       "exact",
+       ""
+      ]
+     ]
+    }
+   },
+   "code": "wellpilot.agent.tools.search_reports@5907b6347b0e",
+   "created_at": "2026-11-01T11:48:15+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E8",
+   "tool": "search_reports",
+   "arguments": {
+    "query": "price",
+    "limit": 20
+   },
+   "result": {
+    "documents": {
+     "volve_pud": {
+      "title": "Plan for utbygging og drift av Volve (PUD, plan for development and operation)",
+      "issued": "2005-02-01"
+     }
+    },
+    "facts": {
+     "columns": [
+      "doc_id",
+      "page",
+      "topic",
+      "source",
+      "statement_en",
+      "quote",
+      "quote_check",
+      "wells"
+     ],
+     "rows": [
+      [
+       "volve_pud",
+       9,
+       "economics",
+       "text",
+       "Profitability analyses based on 22 USD/bbl Brent Blend oil price (estimated 18.70 USD/bbl for Volve oil) give an NPV of 2350 MNOK 2005 at 7% before tax and 443 MNOK 2005 at 8% after tax.",
+       "Lønnsomhetsanalyser basert på 22 USD/fat oljepris Brent Blend (estimert 18,70 USD/fat for Volve olje) gir en nåverdi på 2350 MNOK 2005 ved 7% før skatt og 443 MNOK 2005 ved 8% etter skatt.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       9,
+       "economics",
+       "text",
+       "Assuming a forward oil price of on average 35 USD/bbl Brent Blend, the profitability analysis shows an NPV of 1190 MNOK 2005 at 8% after tax.",
+       "Dersom en legger til grunn en \"forward\" oljepris på gjennomsnittlig 35 USD/fat Brent blend, viser lønnsomhetsanalysen en nåverdi på 1190 MNOK 2005 ved 8% etter skatt.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       9,
+       "economics",
+       "text",
+       "The project is not robust with low prices and gives negative NPV at an oil price of 15 USD/bbl Brent Blend.",
+       "Prosjektet er ikke robust med lave priser og gir negativ nåverdi ved en oljepris på 15 USD/fat Brent Blend.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       9,
+       "economics",
+       "text",
+       "The break-even price at 8% after tax is 17.50 USD/bbl.",
+       "Nullpunktsprisen ved 8% etter skatt er 17,50 USD/fat.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       23,
+       "production_forecast",
+       "text",
+       "Cumulative oil production until the minimum economic rate of 2.100 Sm3/d at a Volve oil price of 18,7 USD/fat is 11,4 MSm3.",
+       "Kumulativ oljeproduksjon inntil minimum økonomisk rate på 2.100 Sm3 /d (gitt Volve oljepris på 18,7 USD/fat) nås er 11,4 MSm3",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       33,
+       "schedule",
+       "text",
+       "Time and cost estimates are based on previous drilling operations in the area and other relevant field experience and on contract prices for hire of Mærsk Inspirer in drilling mode and drilling-and-production mode respectively, and include expected downtime, technical tolerance and waiting on weather.",
+       "Tids- og kostnadsestimat baseres på tidligere boreoperasjoner i området og øvrig relevant felterfaring. Kostnadsestimatene er basert på kontraktspriser for leie av Mærsk Inspirer i henholdsvis boremodus og bore- og produksjonsmodus.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       47,
+       "facility_limits",
+       "text",
+       "Based on expected prices and estimated production profile, shutdown of Volve production will occur after ca. 5 years of production.",
+       "Basert på forventningspriser og estimert produksjonsprofil vil dette skje etter ca. 5 års produksjon.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       50,
+       "economics",
+       "table",
+       "Table 12.7 shows the expected oil price Brent blend is 22 USD/bbl.",
+       "Forventet oljepris Brent blend\tUSD/fat\t22",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       50,
+       "economics",
+       "table",
+       "Table 12.7 shows the low price scenario is 15 USD/bbl in 2004 terms.",
+       "Lav prisbane\tUSD/fat 2004\t15",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       50,
+       "economics",
+       "table",
+       "Table 12.7 shows the \"Forward\" price scenario is 35 USD/bbl nominal as of 15.12.04 on average.",
+       "\"Forward\" prisbane\tUSD/fat nom. pr. 15.12.04\t35 gjennomsnitt",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       50,
+       "economics",
+       "table",
+       "Table 12.7 shows the price penalty for Volve oil is 3.3 USD/bbl in 2004 terms.",
+       "Pris-straff for Volve olje\tUSD/fat 2004\t3,3",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       50,
+       "economics",
+       "text",
+       "For the base case the economic production time is 63 months given an oil price of 18.70 2004USD/bbl in 2012.",
+       "For basistilfellet resulterer det i en økonomisk produksjonstid på 63 måneder (gitt oljepris på 18,70 2004USD/fat i 2012).",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       50,
+       "economics",
+       "table",
+       "Table 12.8 shows for the expected oil price of 18.7 USD/bbl the NPV before tax at 7% is 2534 Mill. NOK 2005, NPV after tax at 8% is 443 Mill. NOK 2005 and the IRR is 18.3 %.",
+       "Forventet olje pris 18,7 USD/fat\t2534\t443\t18,3",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       50,
+       "economics",
+       "table",
+       "Table 12.8 shows for the \"Forward\" price as of 15.12.04 the NPV before tax at 7% is 5565 Mill. NOK 2005, NPV after tax at 8% is 1196 Mill. NOK 2005 and the IRR is 38.7 %.",
+       "\"Forward\" pris 15.12.04\t5565\t1196\t38,7",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       50,
+       "economics",
+       "text",
+       "The break-even price (NPP) both before tax at 7% and after tax at 8% is calculated at 17.50 USD/bbl 2004 for Brent Blend quality.",
+       "Nullpunktsprisen (NPP) både 7% før skatt og 8% etter skatt er beregnet til 17,50 USD/fat 2004 for Brent Blend kvalitet.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       51,
+       "economics",
+       "text",
+       "Market uncertainty is illustrated with a high price scenario of 35 USD/fat Brent blend and a low price scenario of 15.0 USD/fat Brent blend.",
+       "Usikkerhet i markedet er belyst med å vise økonomiske resultatet med høy prisbane på 35 USD/fat Brent blend og lav prisbane 15,0 USD/fat Brent blend.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       51,
+       "economics",
+       "table",
+       "Volve with expected oil price of 18.7 USD/fat gives NPV of 2534 Mill. NOK2005 before tax at 7% and 443 Mill. NOK2005 after tax at 8%.",
+       "Volve med forventet oljepris på 18,7 USD/fat 2534 443",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       51,
+       "economics",
+       "table",
+       "Market sensitivity with price scenario 15 USD/fat brent blend gives NPV of -211 Mill. NOK2005 before tax at 7% and -233 Mill. NOK2005 after tax at 8%.",
+       "Prisbane 15 USD/fat brent blend -211 -233",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       51,
+       "economics",
+       "table",
+       "Market sensitivity with price scenario 35 USD/fat Brent blend average forward 15.12.04 gives NPV of 5565 Mill. NOK2005 before tax at 7% and 1196 Mill. NOK2005 after tax at 8%.",
+       "Prisbane 35 USD/fat Brent blend gj. snitt ”forward” 15.12.04 5565 1196",
+       "exact",
+       ""
+      ]
+     ]
+    }
+   },
+   "code": "wellpilot.agent.tools.search_reports@5907b6347b0e",
+   "created_at": "2026-11-01T11:48:15+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E9",
+   "tool": "search_reports",
+   "arguments": {
+    "query": "F-1 C",
+    "limit": 30
+   },
+   "result": {
+    "documents": {
+     "f11b_completion": {
+      "title": "Final Well Report, Completion, 15/9-F-11 B",
+      "issued": "2013-09-04"
+     }
+    },
+    "facts": {
+     "columns": [
+      "doc_id",
+      "page",
+      "topic",
+      "source",
+      "statement_en",
+      "quote",
+      "quote_check",
+      "wells"
+     ],
+     "rows": [
+      [
+       "f11b_completion",
+       3,
+       "schedule",
+       "text",
+       "For well F-11 B the Liner IOR activity occurred on 12.06.2013 20:15.",
+       "15/9 F-11B IOR, Liner (12.06.2013 20:15)",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       3,
+       "schedule",
+       "text",
+       "For well F-11 B the Well bore preparation IOR activity occurred on 16.06.2013 13:30.",
+       "15/9 F-11B IOR, Well bore preparation (16.06.2013 13:30)",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       3,
+       "schedule",
+       "text",
+       "For well F-11 B the Temporary abandonment with SAFELOCK plug occurred on 21.06.2013 07:00.",
+       "15/9 F-11B IOR, Temporary abandonment (SAFELOCK plug) (21.06.2013 07:00)",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       3,
+       "schedule",
+       "text",
+       "For well F-11 B the Other activity Retrieve HPDR and install PR and surface WH occurred on 21.06.2013 21:00.",
+       "NO 15/9-F-11 B, Other (Retrieve HPDR and install PR and surface WH) (21.06.2013 21:00)",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       3,
+       "schedule",
+       "text",
+       "For well F-11 B the Install 10 ¾” tie 11 B, Tie-back IOR activity occurred on 28.06.2013 01:00.",
+       "NO 15/9 -F-11B IOR, Install 10 ¾” tie 11 B, Tie-back (28.06.2013 01:00)",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       3,
+       "schedule",
+       "text",
+       "For well F-11 B the Retrieve SAFELOCK plug 11 B, Other activity occurred on 30.06.2013 07:15.",
+       "NO 15/9 -F-11B IOR, Retrieve SAFELOCK plug11 B, Other (30.06.2013 07:15)",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       3,
+       "schedule",
+       "text",
+       "For well F-11 B the Run completion, Completion IOR activity occurred on 30.06.2013 14:15.",
+       "NO 15/9 -F-11B IOR11 B, Run completion, Completion (30.06.2013 14:15)",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       3,
+       "schedule",
+       "text",
+       "For well F-11 B the Install tubing hanger, Tubing Hanger IOR activity occurred on 04.07.2013 20:00.",
+       "NO 15/9 -F-11B IOR11 B, Install tubing hanger, Tubing Hanger (04.07.2013 20:00)",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       3,
+       "schedule",
+       "text",
+       "For well F-11 B the Install X-mas tree Tree IOR activity occurred on 06.07.2013 12:30.",
+       "NO 15/9 -F-11B IOR11 B, Install X-mas treeTree (06.07.2013 12:30)",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       3,
+       "schedule",
+       "text",
+       "For well F-11 B the Perforation IOR activity occurred on 09.07.2013 00:45.",
+       "NO 15/9 -F-11B IOR11 B, Perforation (09.07.2013 00:45)",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       3,
+       "schedule",
+       "text",
+       "For well F-11 B the Handover offline activity occurred on 22.07.2013 14:00.",
+       "15/9 F-11B IOR, Handover (22.07.2013 14:00) (Offline activity)",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       4,
+       "wells",
+       "text",
+       "Well NO 15/9-F-11 B is an oil producer on slot F11 with licence NO PL046BS",
+       "Licence number: NO PL046BS Well name: NO 15/9-F-11 B Slot: F11 Type of well: Oil producer",
+       "exact",
+       "F-11"
+      ],
+      [
+       "f11b_completion",
+       4,
+       "wells",
+       "text",
+       "Well F-11 B has a water depth / airgap of 91.0 m MSL / 54.9 m RT",
+       "Water depth / airgap: 91,0 m MSL / 54.9 m RT",
+       "exact",
+       "F-11"
+      ],
+      [
+       "f11b_completion",
+       4,
+       "wells",
+       "text",
+       "Well F-11 B primary objective is oil production from Hugin formation and completion type is 7” monobore",
+       "Primary objective: Oil production from Hugin formation Completion type: 7” monobore",
+       "exact",
+       "F-11"
+      ],
+      [
+       "f11b_completion",
+       4,
+       "wells",
+       "text",
+       "Well F-11 B objective is to provide for production of oil from the Hugin reservoir",
+       "The completion is to provide for production of oil from the Hugin reservoir.",
+       "exact",
+       "F-11"
+      ],
+      [
+       "f11b_completion",
+       4,
+       "wells",
+       "text",
+       "Well F-11 B planned well life is 10 years",
+       "Planned well life is 10 years.",
+       "exact",
+       "F-11"
+      ],
+      [
+       "f11b_completion",
+       4,
+       "wells",
+       "text",
+       "Well F-11 B was brought on production after being perforated using tractor conveyed orientated guns",
+       "The well has been brought on production after being perforated using tractor conveyed orientated guns.",
+       "exact",
+       "F-11"
+      ],
+      [
+       "f11b_completion",
+       4,
+       "wells",
+       "text",
+       "Well F-11 B IOR completion is a 7” monobore design with 7” production tubing and 7” cemented liner",
+       "The F-11B IOR completion is a 7” monobore design with 7” production tubing and 7” cemented liner.",
+       "exact",
+       "F-11"
+      ],
+      [
+       "f11b_completion",
+       4,
+       "wells",
+       "text",
+       "Well F-11 B completion incorporates a 7” x 9 5/8” production packer, single DHG for reservoir pressure and temperature monitoring and a TRSCSSV down hole safety valve",
+       "The completion incorporates: 7” x 9 5/8” production packer, single DHG for reservoir pressure and temperature monitoring and a TRSCSSV down hole safety valve.",
+       "exact",
+       "F-11"
+      ],
+      [
+       "f11b_completion",
+       4,
+       "wells",
+       "text",
+       "Well F-11 B 7” liner is placed in the high permeable Hugin sand-reservoir in the main Volve field",
+       "The 7” liner is placed in the high permeable Hugin sand-reservoir in the main Volve field.",
+       "exact",
+       "F-11"
+      ],
+      [
+       "f11b_completion",
+       4,
+       "wells",
+       "text",
+       "Well F-11 B has been perforated using wirelinetractor conveyed oriented guns",
+       "The well has been perforated using wirelinetractor conveyed oriented guns.",
+       "exact",
+       "F-11"
+      ],
+      [
+       "f11b_completion",
+       4,
+       "wells",
+       "text",
+       "Well F-11 B is tied into the platform with 14” Production Risers from subsea WH to surface WH",
+       "The wells are tied into the platform with 14” Production Risers from subsea WH to surface WH.",
+       "exact",
+       "F-11"
+      ],
+      [
+       "f11b_completion",
+       4,
+       "wells",
+       "text",
+       "Well F-11 B has a 10 ¾” surface tieback casing installed from the subsea WH to the surface WH inside the 14” Production Riser",
+       "Prior to the completion a 10 ¾” surface tieback casing is installed from the subsea WH to the surface WH inside the 14” Production Riser, connecting the subsea and surface WH.",
+       "exact",
+       "F-11"
+      ],
+      [
+       "f11b_completion",
+       4,
+       "wells",
+       "text",
+       "Well F-11 B entire riser system is set in app. 150 ton tension provided by the hydraulic tension system",
+       "The entire riser system is set in app. 150 ton tension provided by the hydraulic tension system.",
+       "exact",
+       "F-11"
+      ],
+      [
+       "f11b_completion",
+       4,
+       "wells",
+       "table",
+       "At Wellhead Level as installed 27.06.07 the UTM coordinates are Structure Centre N 6 478 563.52 E 435 050.02 and Slot Centre F-11B N 6 478 568,18 E 435 049,10",
+       "UTM: 6 478 563.52 435 050.02 6 478 568,18 435 049,10",
+       "exact",
+       "F-11"
+      ],
+      [
+       "f11b_completion",
+       4,
+       "wells",
+       "table",
+       "At Wellhead Level as installed 27.06.07 the Geographic coordinates are Structure Centre 58° 26' 29.807\" 1° 53' 14.929\" and Slot Centre F-11B 58° 26' 29.957\" 1° 53' 14.867\"",
+       "Geographic 58° 26' 29.807\" 1° 53' 14.929\" 58° 26' 29.957\" 1° 53' 14.867\"",
+       "exact",
+       "F-11"
+      ],
+      [
+       "f11b_completion",
+       4,
+       "wells",
+       "table",
+       "At Wellhead Level as installed 27.06.07 the Rectangular coordinates from structure centre are Structure Centre 0 0 and Slot Centre F-11B 4,66 -0,92",
+       "Rectangular (from structure centre) 0 0 4,66 -0,92",
+       "exact",
+       "F-11"
+      ],
+      [
+       "f11b_completion",
+       5,
+       "wells",
+       "text",
+       "Well F-11 B was perforated using oriented guns on wire-line tractor with an estimated perforated interval in 7’’ liner of 8 runs, approximately 12,5 meter pr. run.",
+       "The well has been perforated using oriented guns on wire-line tractor. Estimated perforated interval in 7’’ liner is 8 runs, approximately 12,5 meter pr. run.",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       5,
+       "wells",
+       "text",
+       "The perforation guns for F-11 B were 4 ½’’ OrientXact, PowerPlus Low debris Charges, phasing 10, with 4 shots per foot.",
+       "The perforation guns were 4 ½’’ OrientXact, PowerPlus Low debris Charges, phasing 10, with 4 shots per foot.",
+       "exact",
+       "F-11 B"
+      ],
+      [
+       "f11b_completion",
+       5,
+       "schedule",
+       "table",
+       "F-11 B Wellbore preparation operation on MÆRSK INSPIRER started 16.Jun.2013 13:30 and ended 21.Jun.2013 07:00.",
+       "NO 15/9-F-11 B Wellbore preparation 16.Jun.2013 13:30 21.Jun.2013 07:00 MÆRSK INSPIRER",
+       "exact",
+       "F-11 B"
+      ]
+     ]
+    }
+   },
+   "code": "wellpilot.agent.tools.search_reports@5907b6347b0e",
+   "created_at": "2026-11-01T11:48:18+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E10",
+   "tool": "read_report_page",
+   "arguments": {
+    "doc_id": "volve_pud",
+    "page": 48
+   },
+   "result": {
+    "document": {
+     "title": "Plan for utbygging og drift av Volve (PUD, plan for development and operation)",
+     "issued": "2005-02-01"
+    },
+    "page": 48,
+    "pages": 53,
+    "text": "Plan for utbygging og drift av Volve Februar 2005 Side 48 12 Økonomiske analyser og vurderinger 12.1 Kostnader ved utbygging og drift Utbyggingskostnadene er utarbeidet i henhold til Statoils retningslinjer og baserer seg på erfaringer fra tidligere prosjekter og tilbuds/kontraktpriser fra kontraktørene/ leverandørene. 12.1.1 Investeringer Volve leiernes investeringer er hovedsakelig knyttet til brønnkostnader (boring og komplettering) samt innkjøp av rørledninger, marine installasjoner og mobilisering av bore-, produksjonsplattform og lagerskipet. Tabell 12.1 viser en oversikt over alle kostnadene. Tabell 12.1 - Investeringer Investeringer i Mill. NOK2005 Brønner 937 Mobilisering plattform 291 Eksport system inklusiv lagerskip 391 Prosjektledelses-kostnader inklusiv prosjektreserve 349 Totalt 1968 12.1.2 Leiekostnader for produksjonsfasiliteter Leiekostnader for Mærsk Inspirer med tilhørende utstyr og drift av anlegget er basert på kontraktspris fra Mærsk i form av fast dag rate kompensasjon og tariff for produsert olje og gass samt avtalt mobilisering og demobiliserings sum. Kostnadene er delt opp i fire elementer: • investeringselement for oppjekkbar plattform • driftskostnader som dekker kontraktors mannskap samt drift og vedlikehold • investeringselement for lagerskip • driftskostnader for lagerskip Kontrakten baseres på 3 års leietid med 6 måneders varsel om oppsigelse av kontrakt. Begge investeringselementene er oppgitt i nominelle USD, dvs. de vil ikke bli inflasjonsjustert. Prosess anlegget på Mærsk Inspirer vil bli betalt via en enhetstariff gitt i forskjellige valutaer (NOK, EUR, USD/fat olje ekvivalent.) Driftskostnadene i kontraktene er gitt i respektive NOK, EUR, USD2004 og vil være gjenstand for lønns-/indeksregulering. I tillegg er det forutsatt at lagerskipet leies inn av eierne i Volve. Lagerskipets leiekostnader er gitt i kontrakten med Teekay Norway. Leiekostnader til kontraktor omregnet til USD/d er vist i tabell 12.2. Tabell 12.2 - Leiekostnader til kontraktor pr. dag i bore/produksjons periode (ikke inflasjonsjustert) Leie av oppjekkbare plattformen Mærsk Inspirer / lagerskipet Navion Saga Investeringselement plattform 92 500 USD NOM/dag Investeringselement lagerskip 38 590 USD NOM /dag i 3 år, deretter 18.076 USD NOM Drift- og vedlikeholdskostnader plattform 95 313 USD 2004/dag(borefase) / 109 638 USD 2004/dag (bore & prod. fasen) 72 467 USD 2004/dag (produksjonsfase) Drift- og vedlikeholdskostnader lagerskip 22 444 USD 2004/dag Tabell 12.3 - Leiekostnader til kontraktor pr. fat oljeekvivalenter (ikke inflasjonsjustert) Leie av prosessanlegg 55 millioner fat oe 55 -65 millioner fat oe 65 -75 millioner fat oe 75 -85 millioner fat oe deretter 2,75 USD nom/fat oe 2,25 USD nom/fat oe 2,0 USD nom/fat oe 1,75 USD nom/fat oe 1,50 USD nom/fat oe",
+    "image": "reports/volve_pud/p048.png",
+    "summary_en": "Page 48 covers economic analyses for Volve development: total investments of 1968 Mill. NOK2005 broken down by wells, platform mobilization, export system and project management, and lease costs for the Maersk Inspirer jack-up platform and Navion Saga storage vessel per day and per barrel of oil equivalent.",
+    "facts": {
+     "columns": [
+      "topic",
+      "source",
+      "statement_en",
+      "quote",
+      "quote_check",
+      "wells"
+     ],
+     "rows": [
+      [
+       "economics",
+       "table",
+       "Total investments for Volve development are 1968 Mill. NOK2005.",
+       "Totalt | 1968",
+       "exact",
+       ""
+      ],
+      [
+       "economics",
+       "table",
+       "Investment for wells is 937 Mill. NOK2005.",
+       "Brønner | 937",
+       "exact",
+       ""
+      ],
+      [
+       "economics",
+       "table",
+       "Mobilization of platform costs 291 Mill. NOK2005.",
+       "Mobilisering plattform | 291",
+       "exact",
+       ""
+      ],
+      [
+       "economics",
+       "table",
+       "Export system including storage vessel costs 391 Mill. NOK2005.",
+       "Eksport system inklusiv lagerskip | 391",
+       "exact",
+       ""
+      ],
+      [
+       "economics",
+       "table",
+       "Project management costs including project reserve are 349 Mill. NOK2005.",
+       "Prosjektledelses-kostnader inklusiv prosjektreserve | 349",
+       "exact",
+       ""
+      ],
+      [
+       "economics",
+       "table",
+       "The investment element for the Maersk Inspirer platform is 92 500 USD NOM per day.",
+       "Investeringselement plattform | 92 500 USD NOM/dag",
+       "exact",
+       ""
+      ],
+      [
+       "economics",
+       "table",
+       "The investment element for the storage vessel is 38 590 USD NOM per day for 3 years, thereafter 18,076 USD NOM per day.",
+       "Investeringselement lagerskip | 38 590 USD NOM /dag i 3 år, deretter 18.076 USD NOM",
+       "exact",
+       ""
+      ],
+      [
+       "economics",
+       "table",
+       "Operation and maintenance costs for the platform are 95 313 USD 2004/day (drilling phase) / 109 638 USD 2004/day (drilling & production phase) / 72 467 USD 2004/day (production phase).",
+       "Drift- og vedlikeholdskostnader plattform | 95 313 USD 2004/dag(borefase) / 109 638 USD 2004/dag (bore & prod. fasen) 72 467 USD 2004/dag (produksjonsfase)",
+       "exact",
+       ""
+      ],
+      [
+       "economics",
+       "table",
+       "Operation and maintenance costs for the storage vessel are 22 444 USD 2004 per day.",
+       "Drift- og vedlikeholdskostnader lagerskip | 22 444 USD 2004/dag",
+       "exact",
+       ""
+      ],
+      [
+       "economics",
+       "table",
+       "Lease of the process plant is 2.75 USD nom per barrel oil equivalent for <55 million barrels oe, 2.25 USD nom/fat oe for 55-65 million, 2.0 USD nom/fat oe for 65-75 million, 1.75 USD nom/fat oe for 75-85 million, and 1.50 USD nom/fat oe thereafter.",
+       "Leie av prosessanlegg | 55 millioner fat oe | 55 -65 millioner fat oe | 65 -75 millioner fat oe | 75 -85 millioner fat oe | deretter",
+       "exact",
+       ""
+      ],
+      [
+       "economics",
+       "text",
+       "The contract is based on 3 years lease with 6 months notice of termination.",
+       "Kontrakten baseres på 3 års leietid med 6 måneders varsel om oppsigelse av kontrakt.",
+       "exact",
+       ""
+      ]
+     ]
+    }
+   },
+   "code": "wellpilot.agent.tools.read_report_page@8ae9de5b3707",
+   "created_at": "2026-11-01T11:48:18+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E11",
+   "tool": "production_monthly",
+   "arguments": {
+    "well": "F-1 C"
+   },
+   "result": {
+    "columns": [
+     "month",
+     "days",
+     "producing_days",
+     "oil_sm3",
+     "water_sm3",
+     "gas_sm3",
+     "water_injected_sm3",
+     "water_cut",
+     "uptime",
+     "oil_rate_per_producing_day",
+     "bhp_bar",
+     "whp_bar",
+     "choke_pct"
+    ],
+    "rows": [
+     [
+      "2014-04",
+      24,
+      10,
+      11142,
+      0.0,
+      1597937,
+      null,
+      0.0,
+      0.395,
+      1175,
+      251.89,
+      87.35,
+      48.52
+     ],
+     [
+      "2014-05",
+      31,
+      31,
+      24902,
+      783.48,
+      3496230,
+      null,
+      0.0305,
+      0.9863,
+      814.42,
+      223.97,
+      67.99,
+      46.42
+     ],
+     [
+      "2014-06",
+      30,
+      30,
+      19618,
+      2068,
+      2886662,
+      null,
+      0.09538,
+      0.9804,
+      666.97,
+      217.46,
+      59.9,
+      46.62
+     ],
+     [
+      "2014-07",
+      31,
+      31,
+      15086,
+      6244,
+      2249366,
+      null,
+      0.2927,
+      0.9979,
+      487.67,
+      215.31,
+      48.85,
+      47.27
+     ],
+     [
+      "2014-08",
+      31,
+      19,
+      6970,
+      4530,
+      1048191,
+      null,
+      0.3939,
+      0.582,
+      386.36,
+      213.57,
+      40.63,
+      49.15
+     ],
+     [
+      "2014-09",
+      30,
+      28,
+      9168,
+      8318,
+      1414100,
+      null,
+      0.4757,
+      0.8754,
+      349.11,
+      224.64,
+      42.06,
+      49.32
+     ],
+     [
+      "2014-10",
+      31,
+      31,
+      9468,
+      10365,
+      1462064,
+      null,
+      0.5226,
+      1.0,
+      305.01,
+      220.3,
+      36.03,
+      51.01
+     ],
+     [
+      "2014-11",
+      30,
+      25,
+      6710,
+      7234,
+      1044188,
+      null,
+      0.5188,
+      0.8052,
+      277.78,
+      222.04,
+      35.48,
+      49.62
+     ],
+     [
+      "2014-12",
+      31,
+      2,
+      120.29,
+      183.44,
+      25857,
+      null,
+      0.604,
+      0.03696,
+      104.98,
+      256.43,
+      40.16,
+      41.84
+     ],
+     [
+      "2015-01",
+      31,
+      23,
+      10876,
+      6851,
+      1604935,
+      null,
+      0.3865,
+      0.645,
+      543.87,
+      247.73,
+      61.25,
+      45.4
+     ],
+     [
+      "2015-02",
+      28,
+      19,
+      9587,
+      10745,
+      1439454,
+      null,
+      0.5285,
+      0.6509,
+      526.0,
+      234.02,
+      47.87,
+      51.61
+     ],
+     [
+      "2015-03",
+      31,
+      14,
+      5879,
+      11607,
+      856681,
+      null,
+      0.6638,
+      0.4304,
+      440.65,
+      231.14,
+      38.8,
+      56.63
+     ],
+     [
+      "2015-04",
+      30,
+      12,
+      3924,
+      9815,
+      566710,
+      null,
+      0.7144,
+      0.365,
+      358.33,
+      244.16,
+      37.57,
+      52.88
+     ],
+     [
+      "2015-05",
+      31,
+      9,
+      3833,
+      6167,
+      559060,
+      null,
+      0.6167,
+      0.2434,
+      507.97,
+      229.6,
+      33.37,
+      63.72
+     ],
+     [
+      "2015-06",
+      30,
+      20,
+      6345,
+      14549,
+      925337,
+      null,
+      0.6963,
+      0.6478,
+      326.44,
+      236.05,
+      35.24,
+      56.73
+     ],
+     [
+      "2015-07",
+      31,
+      11,
+      2094,
+      8454,
+      315179,
+      null,
+      0.8015,
+      0.3248,
+      207.95,
+      247.36,
+      32.42,
+      57.23
+     ],
+     [
+      "2015-08",
+      31,
+      7,
+      2871,
+      5334,
+      427693,
+      null,
+      0.6501,
+      0.1986,
+      466.23,
+      221.45,
+      31.71,
+      64.58
+     ],
+     [
+      "2015-09",
+      30,
+      17,
+      6460,
+      14767,
+      961548,
+      null,
+      0.6957,
+      0.534,
+      403.28,
+      240.59,
+      33.43,
+      59.41
+     ],
+     [
+      "2015-10",
+      31,
+      17,
+      4086,
+      13539,
+      631373,
+      null,
+      0.7682,
+      0.4944,
+      266.61,
+      239.96,
+      31.27,
+      55.92
+     ],
+     [
+      "2015-11",
+      30,
+      13,
+      3332,
+      11682,
+      508384,
+      null,
+      0.7781,
+      0.4184,
+      265.45,
+      241.71,
+      30.58,
+      56.81
+     ],
+     [
+      "2015-12",
+      31,
+      9,
+      2949,
+      6232,
+      454911,
+      null,
+      0.6787,
+      0.2657,
+      358.12,
+      213.33,
+      25.4,
+      57.02
+     ],
+     [
+      "2016-01",
+      31,
+      17,
+      2981,
+      14036,
+      471676,
+      null,
+      0.8248,
+      0.5211,
+      184.57,
+      245.69,
+      28.76,
+      50.36
+     ],
+     [
+      "2016-02",
+      29,
+      22,
+      4718,
+      15946,
+      742340,
+      null,
+      0.7717,
+      0.6961,
+      233.72,
+      240.29,
+      28.98,
+      52.74
+     ],
+     [
+      "2016-03",
+      31,
+      15,
+      2917,
+      13411,
+      476830,
+      null,
+      0.8213,
+      0.4795,
+      196.27,
+      253.11,
+      31.82,
+      51.92
+     ],
+     [
+      "2016-04",
+      21,
+      6,
+      1672,
+      4441,
+      274213,
+      null,
+      0.7265,
+      0.2794,
+      284.9,
+      221.23,
+      25.86,
+      53.4
+     ]
+    ]
+   },
+   "code": "wellpilot.agent.tools.production_monthly@c841520578bb",
+   "created_at": "2026-11-01T11:48:22+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E12",
+   "tool": "read_report_page",
+   "arguments": {
+    "doc_id": "volve_pud",
+    "page": 33
+   },
+   "result": {
+    "document": {
+     "title": "Plan for utbygging og drift av Volve (PUD, plan for development and operation)",
+     "issued": "2005-02-01"
+    },
+    "page": 33,
+    "pages": 53,
+    "text": "Plan for utbygging og drift av Volve Februar 2005 33 Største hulldiameter vil være 37\u0001” for boring av øverste seksjon. Riggen er utstyrt med ett toppdrev og tre regulære slampumper og er bygget for å kunne håndtere oljebasert boreslam for injeksjon. 6.4.5 Brønnkontroll og beredskap Boring, komplettering og øvrig brønnvedlikehold vil bli utført i henhold til Statoils etablerte prosedyrer og rutiner og i overensstemmelse med myndighetskrav. Alle bore- og kompletteringsoperasjoner vil foregå med to uavhengige barrierer mot hydrokarbonførende formasjoner. 6.5 Tids- og kostnadsestimat Tids- og kostnadsestimat baseres på tidligere boreoperasjoner i området og øvrig relevant felterfaring. Kostnadsestimatene er basert på kontraktspriser for leie av Mærsk Inspirer i henholdsvis boremodus og bore- og produksjonsmodus. I bore- og kompletteringskostnadene er det inkludert både forventet nedetid, teknisk toleranse og venting på vær. Tids- og kostnadsestimat er vist i tabell 6.2. Tabell 6.2 - Tids og kostnadsestimat for boring og komplettering, kostnader i MNOK 2005 I5 I10 I15 P5 P9 P2 UP1 UP2 Tekn toleranse Total Dager Boring 38 36 36 40 40 53 12,5 12,5 39 307 Dager komplettering 19 19 19 22 24 23 10 10 19 165 Installasjon av bunnramme - - - - - - - - - 3 Totalt antall dager 57 55 55 62 64 76 22,5 22,5 58 475 Kostnad Boring [MNOK] 88 66 65 132 91 113 25 25 69 674 Kostnad Komplettering[MNOK] 33 33 33 70 52 56 24 24 31 356 Installasjon av template - - - - - - - - - 6 Total Kostnad* 121 99 98 202 143 169 49 49 100 1036 Dersom endringer i brønnmål identifiseres basert på revidert reservoarmodell som inkluderer re-prosessert seismikk, kan kostnadene for brønnene endres. Teknisk toleranse i form av geologisk eller teknisk sidesteg er inkludert med 99 MNOK 2005. Disse kostnadene er overført til uforutsette kostnader i tabell 12.1.1.",
+    "image": "reports/volve_pud/p033.png",
+    "summary_en": "Page details well-control principles and presents Table 6.2 with time and cost estimates for drilling and completion of injectors I5/I10/I15, producers P5/P9/P2 and unscheduled UP1/UP2, including rig description and total duration/cost including technical tolerance.",
+    "facts": {
+     "columns": [
+      "topic",
+      "source",
+      "statement_en",
+      "quote",
+      "quote_check",
+      "wells"
+     ],
+     "rows": [
+      [
+       "wells",
+       "text",
+       "The largest hole diameter will be 37 1/4\" for drilling of the uppermost section.",
+       "Største hulldiameter vil være 37¼” for boring av øverste seksjon.",
+       "exact",
+       ""
+      ],
+      [
+       "wells",
+       "text",
+       "The rig is equipped with one top drive and three regular mud pumps and is built to be able to handle oil-based drilling mud for injection.",
+       "Riggen er utstyrt med ett toppdrev og tre regulære slampumper og er bygget for å kunne håndtere oljebasert boreslam for injeksjon.",
+       "exact",
+       ""
+      ],
+      [
+       "wells",
+       "text",
+       "All drilling and completion operations will be performed with two independent barriers against hydrocarbon-bearing formations.",
+       "Alle bore- og kompletteringsoperasjoner vil foregå med to uavhengige barrierer mot hydrokarbonførende formasjoner.",
+       "exact",
+       ""
+      ],
+      [
+       "schedule",
+       "text",
+       "Time and cost estimates are based on previous drilling operations in the area and other relevant field experience and on contract prices for hire of Mærsk Inspirer in drilling mode and drilling-and-production mode respectively, and include expected downtime, technical tolerance and waiting on weather.",
+       "Tids- og kostnadsestimat baseres på tidligere boreoperasjoner i området og øvrig relevant felterfaring. Kostnadsestimatene er basert på kontraktspriser for leie av Mærsk Inspirer i henholdsvis boremodus og bore- og produksjonsmodus.",
+       "exact",
+       ""
+      ],
+      [
+       "economics",
+       "text",
+       "Technical tolerance in the form of geological or technical sidetrack is included with 99 MNOK 2005 and these costs are transferred to unforeseen costs in table 12.1.1.",
+       "Teknisk toleranse i form av geologisk eller teknisk sidesteg er inkludert med 99 MNOK 2005. Disse kostnadene er overført til uforutsette kostnader i tabell 12.1.1.",
+       "exact",
+       ""
+      ],
+      [
+       "schedule",
+       "table",
+       "Figure/Table 6.2 shows Dager Boring is 38 days for I5, 36 days for I10, 36 days for I15, 40 days for P5, 40 days for P9, 53 days for P2, 12.5 days for UP1, 12.5 days for UP2, 39 days for Tekn toleranse, and 307 days Total.",
+       "Dager Boring | 38 | 36 | 36 | 40 | 40 | 53 | 12,5 | 12,5 | 39 | 307",
+       "exact",
+       "I5, I10, I15, P5, P9, P2, UP1, UP2"
+      ],
+      [
+       "schedule",
+       "table",
+       "Figure/Table 6.2 shows Dager komplettering is 19 days for I5, 19 days for I10, 19 days for I15, 22 days for P5, 24 days for P9, 23 days for P2, 10 days for UP1, 10 days for UP2, 19 days for Tekn toleranse, and 165 days Total.",
+       "Dager komplettering | 19 | 19 | 19 | 22 | 24 | 23 | 10 | 10 | 19 | 165",
+       "exact",
+       "I5, I10, I15, P5, P9, P2, UP1, UP2"
+      ],
+      [
+       "schedule",
+       "table",
+       "Figure/Table 6.2 shows Installasjon av bunnramme has no days for individual wells and 3 days Total.",
+       "Installasjon av bunnramme | - | - | - | - | - | - | - | - | - | 3",
+       "exact",
+       "I5, I10, I15, P5, P9, P2, UP1, UP2"
+      ],
+      [
+       "schedule",
+       "table",
+       "Figure/Table 6.2 shows Totalt antall dager is 57 days for I5, 55 days for I10, 55 days for I15, 62 days for P5, 64 days for P9, 76 days for P2, 22.5 days for UP1, 22.5 days for UP2, 58 days for Tekn toleranse, and 475 days Total.",
+       "Totalt antall dager | 57 | 55 | 55 | 62 | 64 | 76 | 22,5 | 22,5 | 58 | 475",
+       "exact",
+       "I5, I10, I15, P5, P9, P2, UP1, UP2"
+      ],
+      [
+       "economics",
+       "table",
+       "Figure/Table 6.2 shows Kostnad Boring [MNOK] is 88 MNOK for I5, 66 MNOK for I10, 65 MNOK for I15, 132 MNOK for P5, 91 MNOK for P9, 113 MNOK for P2, 25 MNOK for UP1, 25 MNOK for UP2, 69 MNOK for Tekn toleranse, and 674 MNOK Total.",
+       "Kostnad Boring [MNOK] | 88 | 66 | 65 | 132 | 91 | 113 | 25 | 25 | 69 | 674",
+       "exact",
+       "I5, I10, I15, P5, P9, P2, UP1, UP2"
+      ],
+      [
+       "economics",
+       "table",
+       "Figure/Table 6.2 shows Kostnad Komplettering [MNOK] is 33 MNOK for I5, 33 MNOK for I10, 33 MNOK for I15, 70 MNOK for P5, 52 MNOK for P9, 56 MNOK for P2, 24 MNOK for UP1, 24 MNOK for UP2, 31 MNOK for Tekn toleranse, and 356 MNOK Total.",
+       "Kostnad Komplettering[MNOK] | 33 | 33 | 33 | 70 | 52 | 56 | 24 | 24 | 31 | 356",
+       "exact",
+       "I5, I10, I15, P5, P9, P2, UP1, UP2"
+      ],
+      [
+       "economics",
+       "table",
+       "Figure/Table 6.2 shows Installasjon av template has no cost for individual wells and 6 MNOK Total.",
+       "Installasjon av template | - | - | - | - | - | - | - | - | - | 6",
+       "exact",
+       "I5, I10, I15, P5, P9, P2, UP1, UP2"
+      ],
+      [
+       "economics",
+       "table",
+       "Figure/Table 6.2 shows Total Kostnad* is 121 MNOK for I5, 99 MNOK for I10, 98 MNOK for I15, 202 MNOK for P5, 143 MNOK for P9, 169 MNOK for P2, 49 MNOK for UP1, 49 MNOK for UP2, 100 MNOK for Tekn toleranse, and 1036 MNOK Total.",
+       "Total Kostnad* | 121 | 99 | 98 | 202 | 143 | 169 | 49 | 49 | 100 | 1036",
+       "exact",
+       "I5, I10, I15, P5, P9, P2, UP1, UP2"
+      ]
+     ]
+    }
+   },
+   "code": "wellpilot.agent.tools.read_report_page@8ae9de5b3707",
+   "created_at": "2026-11-01T11:48:22+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E13",
+   "tool": "search_reports",
+   "arguments": {
+    "query": "F-1 C",
+    "topic": "economics",
+    "limit": 30
+   },
+   "result": {
+    "documents": {
+     "volve_pud": {
+      "title": "Plan for utbygging og drift av Volve (PUD, plan for development and operation)",
+      "issued": "2005-02-01"
+     }
+    },
+    "facts": {
+     "columns": [
+      "doc_id",
+      "page",
+      "topic",
+      "source",
+      "statement_en",
+      "quote",
+      "quote_check",
+      "wells"
+     ],
+     "rows": [
+      [
+       "volve_pud",
+       5,
+       "economics",
+       "table",
+       "Section 12.1.2 Leiekostnader for produksjonsfasiliteter is on page 48.",
+       "12.1.2 Leiekostnader for produksjonsfasiliteter....................................................................................48",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       5,
+       "economics",
+       "table",
+       "Section 12.1.3 Operatørens driftskostnader is on page 49.",
+       "12.1.3 Operatørens driftskostnader ........................................................................................................49",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       5,
+       "economics",
+       "table",
+       "Section 12.1.4 Fjernings - og pluggekostnader is on page 49.",
+       "12.1.4 Fjernings - og pluggekostnader...................................................................................................49",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       5,
+       "economics",
+       "table",
+       "Section 12.1.5 Kostnadsprofil til de økonomiske beregninger is on page 49.",
+       "12.1.5 Kostnadsprofil til de økonomiske beregninger..........................................................................49",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       5,
+       "economics",
+       "table",
+       "Section 12.2 Økonomiske analyser is on page 50.",
+       "12.2 Økonomiske analyser ..................................................................................................................50",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       5,
+       "economics",
+       "table",
+       "Section 12.2.1 Økonomiske forutsetninger is on page 50.",
+       "12.2.1 Økonomiske forutsetninger.........................................................................................................50",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       5,
+       "economics",
+       "table",
+       "Section 12.2.2 Lønnsomhet is on page 50.",
+       "12.2.2 Lønnsomhet..................................................................................................................................50",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       5,
+       "economics",
+       "table",
+       "Section 12.2.3 Nullpunktsprisen is on page 50.",
+       "12.2.3 Nullpunktsprisen..........................................................................................................................50",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       5,
+       "economics",
+       "table",
+       "Section 12.2.4 Kontantstrømsprofil is on page 50.",
+       "12.2.4 Kontantstrømsprofil.....................................................................................................................50",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       5,
+       "economics",
+       "table",
+       "Section 12.3 Prosjektusikkerhet is on page 51.",
+       "12.3 Prosjektusikkerhet........................................................................................................................51",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       5,
+       "economics",
+       "table",
+       "Section 12.3.1 Usikkerhet i de økonomiske analyser is on page 51.",
+       "12.3.1 Usikkerhet i de økonomiske analyser.........................................................................................51",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       5,
+       "economics",
+       "table",
+       "Section 12.3.2 Sensitivitet is on page 51.",
+       "12.3.2 Sensitivitet....................................................................................................................................51",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       5,
+       "economics",
+       "table",
+       "Section 13 Områdevurdering is on page 52.",
+       "13 Områdevurdering ......................................................................................................................52",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       5,
+       "economics",
+       "table",
+       "Section 13.1 Innledning is on page 52.",
+       "13.1 Innledning.....................................................................................................................................52",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       5,
+       "economics",
+       "table",
+       "Section 13.2 Tilleggsvolumer og avgrensningsstrategi is on page 52.",
+       "13.2 Tilleggsvolumer og avgrensningsstrategi...................................................................................52",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       9,
+       "economics",
+       "text",
+       "Profitability analyses based on 22 USD/bbl Brent Blend oil price (estimated 18.70 USD/bbl for Volve oil) give an NPV of 2350 MNOK 2005 at 7% before tax and 443 MNOK 2005 at 8% after tax.",
+       "Lønnsomhetsanalyser basert på 22 USD/fat oljepris Brent Blend (estimert 18,70 USD/fat for Volve olje) gir en nåverdi på 2350 MNOK 2005 ved 7% før skatt og 443 MNOK 2005 ved 8% etter skatt.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       9,
+       "economics",
+       "text",
+       "Assuming a forward oil price of on average 35 USD/bbl Brent Blend, the profitability analysis shows an NPV of 1190 MNOK 2005 at 8% after tax.",
+       "Dersom en legger til grunn en \"forward\" oljepris på gjennomsnittlig 35 USD/fat Brent blend, viser lønnsomhetsanalysen en nåverdi på 1190 MNOK 2005 ved 8% etter skatt.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       9,
+       "economics",
+       "text",
+       "The project is not robust with low prices and gives negative NPV at an oil price of 15 USD/bbl Brent Blend.",
+       "Prosjektet er ikke robust med lave priser og gir negativ nåverdi ved en oljepris på 15 USD/fat Brent Blend.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       9,
+       "economics",
+       "text",
+       "The break-even price at 8% after tax is 17.50 USD/bbl.",
+       "Nullpunktsprisen ved 8% etter skatt er 17,50 USD/fat.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       10,
+       "economics",
+       "text",
+       "Leasing a jack-up platform with associated storage ship gives positive economy at low reserves (P90).",
+       "med leie av oppjekkbar plattform med tilhørende lagerskip gir positiv økonomi ved lave reserver (P90).",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       10,
+       "economics",
+       "text",
+       "The risk of cost overruns is significantly reduced because large parts of the concept are already built.",
+       "I tillegg reduseres risikoen for kostnadsoverskridelser betydelig pga at store deler av konseptet allerede er bygget.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       33,
+       "economics",
+       "text",
+       "Technical tolerance in the form of geological or technical sidetrack is included with 99 MNOK 2005 and these costs are transferred to unforeseen costs in table 12.1.1.",
+       "Teknisk toleranse i form av geologisk eller teknisk sidesteg er inkludert med 99 MNOK 2005. Disse kostnadene er overført til uforutsette kostnader i tabell 12.1.1.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       33,
+       "economics",
+       "table",
+       "Figure/Table 6.2 shows Kostnad Boring [MNOK] is 88 MNOK for I5, 66 MNOK for I10, 65 MNOK for I15, 132 MNOK for P5, 91 MNOK for P9, 113 MNOK for P2, 25 MNOK for UP1, 25 MNOK for UP2, 69 MNOK for Tekn toleranse, and 674 MNOK Total.",
+       "Kostnad Boring [MNOK] | 88 | 66 | 65 | 132 | 91 | 113 | 25 | 25 | 69 | 674",
+       "exact",
+       "I5, I10, I15, P5, P9, P2, UP1, UP2"
+      ],
+      [
+       "volve_pud",
+       33,
+       "economics",
+       "table",
+       "Figure/Table 6.2 shows Kostnad Komplettering [MNOK] is 33 MNOK for I5, 33 MNOK for I10, 33 MNOK for I15, 70 MNOK for P5, 52 MNOK for P9, 56 MNOK for P2, 24 MNOK for UP1, 24 MNOK for UP2, 31 MNOK for Tekn toleranse, and 356 MNOK Total.",
+       "Kostnad Komplettering[MNOK] | 33 | 33 | 33 | 70 | 52 | 56 | 24 | 24 | 31 | 356",
+       "exact",
+       "I5, I10, I15, P5, P9, P2, UP1, UP2"
+      ],
+      [
+       "volve_pud",
+       33,
+       "economics",
+       "table",
+       "Figure/Table 6.2 shows Installasjon av template has no cost for individual wells and 6 MNOK Total.",
+       "Installasjon av template | - | - | - | - | - | - | - | - | - | 6",
+       "exact",
+       "I5, I10, I15, P5, P9, P2, UP1, UP2"
+      ],
+      [
+       "volve_pud",
+       33,
+       "economics",
+       "table",
+       "Figure/Table 6.2 shows Total Kostnad* is 121 MNOK for I5, 99 MNOK for I10, 98 MNOK for I15, 202 MNOK for P5, 143 MNOK for P9, 169 MNOK for P2, 49 MNOK for UP1, 49 MNOK for UP2, 100 MNOK for Tekn toleranse, and 1036 MNOK Total.",
+       "Total Kostnad* | 121 | 99 | 98 | 202 | 143 | 169 | 49 | 49 | 100 | 1036",
+       "exact",
+       "I5, I10, I15, P5, P9, P2, UP1, UP2"
+      ],
+      [
+       "volve_pud",
+       46,
+       "economics",
+       "text",
+       "Procurement of the production facilities for Volve is carried out as a lease concept of partly existing facilities and new acquisitions through a main supplier.",
+       "Fremskaffelse av produksjonsfasilitetene til Volve utføres som et leiekonsept av delvis eksisterende fasiliteter og nyanskaffelser gjennom en hovedleverandør.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       47,
+       "economics",
+       "text",
+       "The total costs for plugging of wells is 93 Mill. NOK2005.",
+       "De totale kostnadene for plugging av brønner er 93 Mill. NOK2005.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       47,
+       "economics",
+       "text",
+       "Removal of the jack-up platform, risers, pipelines and anchors is estimated to 51 Mill. NOK2005, based on today's rate level for the various vessels expected to be used.",
+       "Fjerning av oppjekkbar plattform, stigerør, rørledninger og ankere er estimert til 51 Mill. NOK2005, basert på dagens ratenivå for de ulike fartøy som forventes benyttet.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       48,
+       "economics",
+       "table",
+       "Total investments for Volve development are 1968 Mill. NOK2005.",
+       "Totalt | 1968",
+       "exact",
+       ""
+      ]
+     ]
+    }
+   },
+   "code": "wellpilot.agent.tools.search_reports@5907b6347b0e",
+   "created_at": "2026-11-01T11:48:25+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E14",
+   "tool": "run_sql",
+   "arguments": {
+    "sql": "SELECT well, SUM(oil_sm3) as total_oil FROM production_daily WHERE well='F-1 C' AND flow_kind='production' GROUP BY well"
+   },
+   "result": {
+    "columns": [
+     "well",
+     "total_oil"
+    ],
+    "rows": [
+     [
+      "F-1 C",
+      177709
+     ]
+    ],
+    "row_count": 1,
+    "truncated": false
+   },
+   "code": "wellpilot.agent.tools.run_sql@50068378f8ca",
+   "created_at": "2026-11-01T11:48:30+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E15",
+   "tool": "run_sql",
+   "arguments": {
+    "sql": "SELECT well, first_oil FROM (SELECT DISTINCT well, first_oil FROM (SELECT well, MIN(date) as first_oil FROM production_daily WHERE oil_sm3>0 GROUP BY well)) WHERE well='F-1 C'"
+   },
+   "result": {
+    "columns": [
+     "well",
+     "first_oil"
+    ],
+    "rows": [
+     [
+      "F-1 C",
+      "2014-04-22"
+     ]
+    ],
+    "row_count": 1,
+    "truncated": false
+   },
+   "code": "wellpilot.agent.tools.run_sql@50068378f8ca",
+   "created_at": "2026-11-01T11:48:34+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E16",
+   "tool": "calculate",
+   "arguments": {
+    "expressions": [
+     "177709/1000"
+    ]
+   },
+   "result": {
+    "results": [
+     {
+      "expression": "177709/1000",
+      "value": 177.71
+     }
+    ]
+   },
+   "code": "wellpilot.agent.tools.calculate@5c1d806d8f4d",
+   "created_at": "2026-11-01T11:48:40+00:00",
+   "warnings": []
+  }
+ ]
+}

@@ -1,6 +1,8 @@
 """False rejections from the eval of Oct 31 (the corpus pins the real cases; these pin each
 rule beside what it must still stop)."""
 
+from pathlib import Path
+
 from wellpilot.agent import checker as C
 
 
@@ -57,3 +59,11 @@ def test_a_worst_day_is_a_rate_not_a_count_of_days():
     assert C._key_dim("max_day_water_sm3") == "rate"
     assert C._key_dim("days_at_or_above") == "days"
     assert C._key_dim("zero_days") == "days"
+
+
+def test_a_query_with_a_trend_says_its_months():
+    """Run ff23c8fa2aa1 wrote the tool's "8" as "8 months", which held no unit to match."""
+    from wellpilot.analysis import waterflood
+
+    source = Path(waterflood.__file__).read_text()
+    assert "{len(window)} months, need" in source

@@ -36,6 +36,8 @@ DRIFT = {
     # Its production_log too: the 2014 plug no longer isolates its own gap on all the data,
     # and the 0.3 m "gap" between the 2014 perforation and the zone is gone.
     "83a3114d185f": {"E3": "detect_events", "E8": "production_log"},
+    # Nov 1: waterflood's no_trend now says "8 months", so the checker can read the unit.
+    "f4a331708d2a": {"E6": "waterflood", "E7": "waterflood"},
 }
 
 

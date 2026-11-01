@@ -1,0 +1,4431 @@
+{
+ "source": {
+  "run": "12d01e41e482",
+  "submission": 1,
+  "model": "meta-models/muse-spark-open-1026",
+  "question": "why did they turn F-5 into a producer in 2016 and was it worth it"
+ },
+ "to_review": false,
+ "note": "Reviewed (Nov 1, new questions and synthetic field): fair, or strict at the cost of a round, not of the run.",
+ "expected": {
+  "accepted": false,
+  "flagged": [
+   "Finding 1",
+   "Finding 2",
+   "Finding 3",
+   "Finding 4"
+  ]
+ },
+ "submission": {
+  "summary": "F-5 was a flank water injector for 8 years that was recompleted as a producer in April 2016 by plugging its deep injector perforations and perforating two shallower intervals higher on the structure. It then produced about 41,200 Sm3 in 129 days at a low water cut of about 21% before the field shut down in September 2016, adding about 13% of the field's oil in 2016 — a modest but clean tail-end barrel before abandonment.",
+  "findings": [
+   {
+    "claim": "F-5 was only an injector from October 2008 until April 2016, injecting about 14.1 million Sm3 of water and making no oil.",
+    "detail": "list_wells: F-5 OP/WI cum_water_injected 14,089,406 Sm3, cum_oil 41,161 Sm3; production_monthly shows injection every month 2008-08 to 2016-03 and 0 oil months, first injection 2008-10 122,254 Sm3.",
+    "evidence_ids": [
+     "E1",
+     "E5"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "14.1 million",
+      "value": 14089406,
+      "evidence_id": "E1"
+     }
+    ]
+   },
+   {
+    "claim": "In 3 days in April 2016 the well was converted: a plug was set at 3,592 mMD to isolate the deep injector perforations and two new intervals higher up were perforated (3,501 to 3,510 mMD and 3,474 to 3,492 mMD).",
+    "detail": "well_operations job 2016-04-18 to 2016-04-20: 2016-04-18 Installed plug @ 3592 mMD; 2016-04-19 Perforated two new intervals; perforations 3501-3510 mMD; 3474-3492 mMD. Earlier perforations were deeper at 3605-3712 mMD.",
+    "evidence_ids": [
+     "E2"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "3,592",
+      "value": 3592,
+      "evidence_id": "E2"
+     }
+    ]
+   },
+   {
+    "claim": "As a producer from 20 April to 27 August 2016 it made about 41,200 Sm3 of oil in 129 producing days, averaging about 319 Sm3/d.",
+    "detail": "list_wells cum_oil 41,161 Sm3, producing_days 129, first_oil 2016-04-20 last 2016-09-18; monthly sum 3,401+9,724+9,121+9,985+8,929 = 41,161 Sm3; 41,161/129 = 319.08 Sm3/d.",
+    "evidence_ids": [
+     "E1",
+     "E5",
+     "E10"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "41,200",
+      "value": 41161,
+      "evidence_id": "E1"
+     },
+     {
+      "text": "129",
+      "value": 129,
+      "evidence_id": "E1"
+     },
+     {
+      "text": "319",
+      "value": 319.08,
+      "evidence_id": "E10"
+     }
+    ]
+   },
+   {
+    "claim": "Its water cut stayed low at about 21% while the other producers were at 85 to 97% and the field had been above its 80% design water cut since June 2012.",
+    "detail": "production_monthly 2016-04 water cut 0.4118 then 0.2889, 0.2067, 0.1973, 0.2099; field_screen F-5 water cut 0.2056 on 2016-09-17; field_vs_design maximum water cut 0.80, field first at or above 2012-06 max 0.8606 in 2016-04; F-11 0.8459, F-12 0.8694, F-14 0.9667 at same date.",
+    "evidence_ids": [
+     "E3",
+     "E5",
+     "E9"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "21%",
+      "value": 0.2056,
+      "evidence_id": "E3"
+     },
+     {
+      "text": "80%",
+      "value": 0.8,
+      "evidence_id": "E9"
+     }
+    ]
+   },
+   {
+    "claim": "It was worth a short tail gain: about 13% of the field's oil in 2016 and 0.41% of the field's life total, with the field abandoned 3 weeks after it stopped.",
+    "detail": "2016 field oil 313,370 Sm3 (plan_vs_actual), F-5 41,161/313,370 = 13.1%; field total 10,037,081 Sm3, F-5 share 0.004101; shut-in 2016-08-27 to 2016-09-17 then abandonment job 2016-08-28 to 2016-09-11 bullheaded cement in 7\" liner and pulled tubing.",
+    "evidence_ids": [
+     "E1",
+     "E2",
+     "E6",
+     "E8",
+     "E10"
+    ],
+    "confidence": "fact",
+    "numbers": [
+     {
+      "text": "13%",
+      "value": 0.1313,
+      "evidence_id": "E10"
+     },
+     {
+      "text": "0.41%",
+      "value": 0.004101,
+      "evidence_id": "E10"
+     }
+    ]
+   }
+  ],
+  "summary_numbers": [
+   {
+    "text": "41,200",
+    "value": 41161,
+    "evidence_id": "E1"
+   },
+   {
+    "text": "129",
+    "value": 129,
+    "evidence_id": "E1"
+   },
+   {
+    "text": "21%",
+    "value": 0.2056,
+    "evidence_id": "E3"
+   },
+   {
+    "text": "13%",
+    "value": 0.1313,
+    "evidence_id": "E10"
+   }
+  ]
+ },
+ "evidence": [
+  {
+   "id": "E1",
+   "tool": "list_wells",
+   "arguments": {},
+   "result": {
+    "columns": [
+     "well",
+     "well_types",
+     "first_oil",
+     "last_date",
+     "cum_oil_sm3",
+     "cum_water_sm3",
+     "cum_water_injected_sm3",
+     "producing_days"
+    ],
+    "rows": [
+     [
+      "F-1 C",
+      "OP/WI",
+      "2014-04-22",
+      "2016-04-21",
+      177709,
+      207302,
+      null,
+      438
+     ],
+     [
+      "F-11",
+      "OP",
+      "2013-07-24",
+      "2016-09-17",
+      1147849,
+      1090806,
+      0.0,
+      1122
+     ],
+     [
+      "F-12",
+      "OP",
+      "2008-02-12",
+      "2016-09-17",
+      4579610,
+      6817753,
+      0.0,
+      2838
+     ],
+     [
+      "F-14",
+      "OP",
+      "2008-07-13",
+      "2016-09-17",
+      3942233,
+      7121310,
+      0.0,
+      2724
+     ],
+     [
+      "F-15 D",
+      "OP",
+      "2014-01-16",
+      "2016-09-17",
+      148519,
+      52366,
+      0.0,
+      769
+     ],
+     [
+      "F-4",
+      "WI",
+      null,
+      "2016-12-01",
+      0.0,
+      0.0,
+      16240727,
+      0
+     ],
+     [
+      "F-5",
+      "OP/WI",
+      "2016-04-20",
+      "2016-09-18",
+      41161,
+      13533,
+      14089406,
+      129
+     ]
+    ]
+   },
+   "code": "wellpilot.agent.tools.list_wells@67bd47cfcdd1",
+   "created_at": "2026-11-01T11:43:08+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E2",
+   "tool": "well_operations",
+   "arguments": {
+    "well": "F-5"
+   },
+   "result": {
+    "well": "F-5",
+    "jobs": [
+     {
+      "start": "2007-11-14",
+      "end": "2007-11-18",
+      "kind": "drilling",
+      "report_days": 5,
+      "contractor": "Mærsk Contractors",
+      "perforations": [],
+      "summaries": [
+       {
+        "date": "2007-11-14",
+        "summary": "Held tool box talk prior to skidding of the cantilever from F-14 to F-5. Skidded the catilever from F-14 to F-5."
+       },
+       {
+        "date": "2007-11-15",
+        "summary": "Installed the rotating link adapter to TDS. Picked up and made up the 36\" BHA assembly. Drilled 36\" hole from 144 m to 165 m MD."
+       },
+       {
+        "date": "2007-11-16",
+        "summary": "Drilled 36\" hole from 164 m to 226 m MD. Survey at 225 m 0.26 inc. Tight spot at 213m, reamed hole clear. POOH with 36\" BHA from 226m to surface. L/O 36\" HO. R/U for running of 30\" conductor. Started to RIH with 30\" conductor."
+       },
+       {
+        "date": "2007-11-17",
+        "summary": "RIH with 30\" conductor from surface to 220.8m. Cemented 30\" conductor. Wait for cement to set."
+       },
+       {
+        "date": "2007-11-18",
+        "summary": "Waited on cement to set. Released CART tool. Pulled same and rack back CART tool in derrick. Prepared for skidding and skid cantilever to F-15"
+       }
+      ]
+     },
+     {
+      "start": "2007-12-17",
+      "end": "2007-12-22",
+      "kind": "drilling",
+      "report_days": 6,
+      "contractor": "Mærsk Contractors",
+      "perforations": [],
+      "summaries": [
+       {
+        "date": "2007-12-17",
+        "summary": "MU and RIH with 17 1/2\" BHA. Performed slip & cut. Drilled out 30\" shoe. Drilled 17 1/2\" section to 233 m MD. RU and ran single shot gyro survey."
+       },
+       {
+        "date": "2007-12-18",
+        "summary": "Drilled 17 1/2\" section from 233 m to 273 m MD. POOH to change gMWD. Drilled 17 1/2\" section from 273 m to 280 m MD. Pulled back into 30\" conductor shoe to wait for ESD pre-testing. Drilled 17 1/2\" section from 280 m to 475 m MD."
+       },
+       {
+        "date": "2007-12-19",
+        "summary": "Drilled 17 1/2\" section from 475 m to 1101 m MD."
+       },
+       {
+        "date": "2007-12-20",
+        "summary": "Drilled 17 1/2\" section from 1101 m to 1415 m MD. Circulated well clean. Displaced well to 1.40 SG mud. POOH with 17½\" BHA. Had tight spot at 1123 m, rotated through. Tight spots at 796, 775, 519 and 481m, pulled through with 10-15 MT overpull. Rack back BHA."
+       },
+       {
+        "date": "2007-12-21",
+        "summary": "Racked back the 17½\" BHA. Rigged up the 13 3/8\" casing handling equipment and FAC tool. RIH with 13 3/8\" casing from to 1250 m, filling every casing joint. Started changing to 5½\" handling equipment."
+       },
+       {
+        "date": "2007-12-22",
+        "summary": "RIH with 13 3/8\" casing to 1404,7 m. Installed 18 3/8\" WH. Cemented casing. Laid out landing string."
+       }
+      ]
+     },
+     {
+      "start": "2008-07-10",
+      "end": "2008-08-26",
+      "kind": "drilling",
+      "report_days": 47,
+      "contractor": "Mærsk Contractors",
+      "perforations": [
+       "3704-3712 mMD; 3682-3700.5 mMD",
+       "3651.5-3670 mMD"
+      ],
+      "summaries": [
+       {
+        "date": "2008-07-10",
+        "summary": "Skidded rig from F-14 to F-5. RU to run HPDR. PU TBC and stress joint."
+       },
+       {
+        "date": "2008-07-11",
+        "summary": "Flushed and function tested TBC on rig floor. Waited for production to bean up F-14. Stop production on F-14 and F-12 for heavy lift. Ran HPDR until tensioner joint."
+       },
+       {
+        "date": "2008-07-12",
+        "summary": "PU landing string, landed TBC, locked and confirmed with overpull. Started production on F-12. Installed centralizers, tensioner ring and boat collision stool. Transfered tension from TDS to tension cylinders. Installed half-moon hatch on F-5. Erected scaffolding tower around Claxton tool. Integrity tested HPDR 20/195 bar for 5/10 min. Ok. Disconnected and LD Claxton tool and landing string. Started to NU BOP/diverter."
+       },
+       {
+        "date": "2008-08-24",
+        "summary": "RIH and perforated run #1. POOH. LD gun. RIH and perforated run #2. POOH."
+       },
+       {
+        "date": "2008-08-25",
+        "summary": "LD guns. RIH and perforate run #3. POOH. Spotted 3 m3 100% MEG on top of DHSV. Inflow tested A-annulus gate valve to 380-5 bar for 30 min. RD WL lubricator, risers and BOP's."
+       },
+       {
+        "date": "2008-08-26",
+        "summary": "Continued RD WL equipment. Tested XMT tree cap and KWV to 35/380 bar for 5/10 min. Handed over well to production at 12:00."
+       }
+      ]
+     },
+     {
+      "start": "2008-10-05",
+      "end": "2008-10-19",
+      "kind": "drilling",
+      "report_days": 15,
+      "contractor": "Mærsk Contractors",
+      "perforations": [
+       "3619-3622 mMD",
+       "3605-3608 mMD"
+      ],
+      "summaries": [
+       {
+        "date": "2008-10-05",
+        "summary": "Waited for supply boat to arrive with frac equipment."
+       },
+       {
+        "date": "2008-10-06",
+        "summary": "Waited for equipment to arrive with supply boat. Westcon climbers installed ropes and equipment in derrick to be able to erect fwd PRS back in vertical position. RU external pumps and chicksan for frac job."
+       },
+       {
+        "date": "2008-10-07",
+        "summary": "Continued RU external pumps and chicksan for frac job. Pressure tested 9 5/8\" csg on well F-15 to 290 bar/15 min. Lowered 9 1/2\" riser and 3\" chicksan into moonpool. Production closed in F-5 and handed over well to drilling. Installed safety valve on XMT kill side."
+       },
+       {
+        "date": "2008-10-17",
+        "summary": "Laid out 3 3/8\" guns. All shots fired. Started water injection."
+       },
+       {
+        "date": "2008-10-18",
+        "summary": "Continued water injection F-5 to satisfactory result. Started to RD WL. Hand F-5 back to production."
+       },
+       {
+        "date": "2008-10-19",
+        "summary": "RD WL surface equipment. Changed drum in WL winch. Cleared and cleaned area. Removed scaffolding from Moon Pool. RD Schlumberger cable on cantilever."
+       }
+      ]
+     },
+     {
+      "start": "2012-09-15",
+      "end": "2012-09-18",
+      "kind": "workover",
+      "report_days": 4,
+      "contractor": "Aker Well Service",
+      "perforations": [],
+      "summaries": [
+       {
+        "date": "2012-09-15",
+        "summary": "Well handed over from production department. Leak tested XMT cross. Skidded rig in position."
+       },
+       {
+        "date": "2012-09-16",
+        "summary": "R/U wireline equipment on well. Installed RST toolstring in lubricator. Tested R/U. Opened well and RIH. Logged RST-D in sigma mode and RST-D in IC mode."
+       },
+       {
+        "date": "2012-09-17",
+        "summary": "Logged RST-D in IC mode pass 2 and 3. POOH. Inflow tested HMV,SV and DHSV. L/D BHA#1, RST toolstring. R/D upper lubricator and GIH."
+       },
+       {
+        "date": "2012-09-18",
+        "summary": "R/D wireline equipment and back loaded equipment."
+       }
+      ]
+     },
+     {
+      "start": "2015-11-02",
+      "end": "2015-11-05",
+      "kind": "workover",
+      "report_days": 4,
+      "contractor": "Altus Intervention",
+      "perforations": [],
+      "summaries": [
+       {
+        "date": "2015-11-02",
+        "summary": "Skidded rig from F-11B to F-5. Received well from production."
+       },
+       {
+        "date": "2015-11-03",
+        "summary": "Rigged up WL equipment in F-5. Installed BHA #1 and RIH. Logged RST- D Sigma pass across 3625 - 3450 m. Started to log RST-D IC pass across 3525 - 3470 m."
+       },
+       {
+        "date": "2015-11-04",
+        "summary": "Logged RST-D IC pass across interval 3525 - 3470 m. Rigged down WL equipment. Tested XMT valves and DHSV. Handed well back to production. Started to rig down for demobilization."
+       },
+       {
+        "date": "2015-11-05",
+        "summary": "Packed wireline equipment ready for backload. Cleaned and tidy area."
+       }
+      ]
+     },
+     {
+      "start": "2016-04-18",
+      "end": "2016-04-20",
+      "kind": "workover",
+      "report_days": 3,
+      "contractor": "Altus Intervention",
+      "perforations": [
+       "3501-3510 mMD; 3474-3492 mMD"
+      ],
+      "summaries": [
+       {
+        "date": "2016-04-18",
+        "summary": "R/U WL equipment. Installed plug @ 3592 mMD."
+       },
+       {
+        "date": "2016-04-19",
+        "summary": "Perforated two new intervals in well."
+       },
+       {
+        "date": "2016-04-20",
+        "summary": "Rigged down WL equipment"
+       }
+      ]
+     },
+     {
+      "start": "2016-08-28",
+      "end": "2016-09-11",
+      "kind": "abandonment",
+      "report_days": 15,
+      "contractor": "Maersk Drilling",
+      "perforations": [],
+      "summaries": [
+       {
+        "date": "2016-08-28",
+        "summary": "- Skidded cantilever to F-5 - Removed hatch - Installed cement spool - Rigged up chiksan hoses on cmt spool and XT."
+       },
+       {
+        "date": "2016-08-29",
+        "summary": "- R/U cement spool - Built scaffolding around cement spool and BOP stump - Pressure tested cement spool and kill wing - Bullheaded hydrocarbons back into well - Bullheaded cement in 7\" liner - WOC. Meanwhile: Prepare and perform BOP test"
+       },
+       {
+        "date": "2016-08-30",
+        "summary": "- WOC. Meanwhile: Performed BOP test - Pressure tested and inflow tested cement plug - Performed low and high pressure inflow test of DHSV - R/D cement spool - Installed BPV plug - N/D X-mas tree"
+       },
+       {
+        "date": "2016-08-31",
+        "summary": "- N/D XT - N/D XT spacer spool - N/U BOP and diverter - Performed connector test - Retrieved BPV - RIH with THRT - Opened DHSV"
+       },
+       {
+        "date": "2016-09-01",
+        "summary": "- RIH and latched THRT onto TH - Pressured up DHSV - R/U WL equipment - Cut tubing at 2774 mMD - Displaced A-annulus to SW - Attempted to pull TH - POOH with THRT - Attempted to pull TH w/ spear"
+       },
+       {
+        "date": "2016-09-02",
+        "summary": "- Discussed situation with onshore organization - Waited for equipment to free TH"
+       },
+       {
+        "date": "2016-09-03",
+        "summary": "- Waited for equipment to free TH - Pumped killpill and displaced well to heavy brine - Installed trip tank setup on WH - Performed extended flow check"
+       },
+       {
+        "date": "2016-09-04",
+        "summary": "- Drained riser - Performed exteded flow check on modified TT on WH - Installed BPV plug - N/D BOP and diverter - Inspected TH - Observed u-tube out of well - N/U BOP - Observed well on TT and modified TT on WH. Gained slightly more in TT than on WH. - Performed BOP connector test to 20/345 bar"
+       },
+       {
+        "date": "2016-09-05",
+        "summary": "- Performed BOP connector test to 20/345 bar for 5/10min - Retrieved BPV plug - Circulated well to even brine weight 1,19sg in/out. - Monitored well on TT - N/D Diverter and BOP - Performed remedial work on TH"
+       },
+       {
+        "date": "2016-09-06",
+        "summary": "- Performed remedial work on TH - N/U BOP - Retrieved TH with spear - Pulled tubing"
+       },
+       {
+        "date": "2016-09-07",
+        "summary": "- POOH w/ 7\" tubing from 2774 m to 2186 m - Displaced well to SW - Placed balanced cement plug in 9 5/8\" casing - WOC"
+       },
+       {
+        "date": "2016-09-08",
+        "summary": "- WOC - Attempted to tag TOC - WOC additional 2 hours - Tagged TOC w/10 ton. Released spear and POOH w/ 5 1/2\" DP. - Washed 10 3/4\" MS-T seal area - Retrieved MS-T seal assy - Cut 10 3/4\" surface tie-back - Retrieved 10 3/4\" surface tie-back"
+       },
+       {
+        "date": "2016-09-09",
+        "summary": "- Pulled tie-back casing - Released tie-back adapter - Retrieved tie-back adatper - Perforated below 10 3/4\" CH - Cut 10 3/4\" casing at 317m - Milled 10 3/4\" casing hanger ID to 12 1/4\""
+       },
+       {
+        "date": "2016-09-10",
+        "summary": "- Milled 10 3/4\" casing hanger ID to 12 1/4\" - Pulled 10 3/4\" casing - Installed 13 3/8\" EZSV plug at 303m - Displaced well to clean SW - Placed balanced cement plug in 13 3/8\" casing - Cleaned BOP - Started to N/D diverter and BOP"
+       },
+       {
+        "date": "2016-09-11",
+        "summary": "- Washed BOP and function tested rams after cementing - Drained riser - N/D BOP - Skidded to F-14"
+       }
+      ]
+     },
+     {
+      "start": "2016-10-13",
+      "end": "2016-10-16",
+      "kind": "abandonment",
+      "report_days": 4,
+      "contractor": "Maersk Drilling",
+      "perforations": [],
+      "summaries": [
+       {
+        "date": "2016-10-13",
+        "summary": "- Skidded cantilever to F-5. Removed hatches and hole covers - RIH with innerstring / BHA. - Removed tension cylinders, boat collision stool and deck centralizers - Cut riser at 134,9m - Pulled, cut and L/D tensioner joint - Cut and pulled riser joints (3 out of 7)"
+       },
+       {
+        "date": "2016-10-14",
+        "summary": "- Pulled production riser - WOW; Meanwhile: L/O DP and HWDP; R/D tension cylinders; Cleaned pits and shakers; Moved equipment from WH deck"
+       },
+       {
+        "date": "2016-10-15",
+        "summary": "WOW for skidding cantilever (too stong wind) and pulling production risers Meanwhile: Lifted equipment from WH deck to drill floor Cleaned pits and shakers Assisted removal of pit sensors Inspected BOP Inspected dry silos"
+       },
+       {
+        "date": "2016-10-16",
+        "summary": "Waited on weather for skidding to F-9 Meanwhile: Cleaned shakers and pits Inspected BOP Inspected dry bulk silos Assembled annular preventer"
+       }
+      ]
+     }
+    ],
+    "note": "Daily reports exist for drilling and for work on the well (wireline, plugs, perforations, production logs), not for days of normal production. A job's date is the day the work was done; kind is drilling, completion, workover (work on a producing or injecting well) or abandonment. Ask for one day to see every operation line."
+   },
+   "code": "wellpilot.agent.tools.well_operations@691598c6cb8c",
+   "created_at": "2026-11-01T11:43:08+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E3",
+   "tool": "field_screen",
+   "arguments": {},
+   "result": {
+    "as_of": "2016-09-17",
+    "window_days": 90,
+    "field_oil_sm3": 10037081,
+    "wells": [
+     {
+      "well": "F-11",
+      "role": "producer",
+      "first_oil": "2013-07-24",
+      "cum_oil_sm3": 1147849,
+      "share_of_field_oil": 0.1144,
+      "cum_water_injected_sm3": 0.0,
+      "oil_rate_sm3_per_day": 481.56,
+      "water_cut": 0.8459,
+      "uptime": 0.9907,
+      "oil_rate_change_90d": -0.03297,
+      "level": "caution",
+      "issues": [
+       {
+        "level": "caution",
+        "kind": "water_cut",
+        "since": "2016-05-02",
+        "text": "water cut above 0.80 (now 0.85)"
+       },
+       {
+        "level": "caution",
+        "kind": "shift_down",
+        "since": "2016-03-27",
+        "text": "oil rate 60% lower in the period after than before (weekly mean 1,259 -> 509 Sm3/d), a gradual change: 23% across it"
+       }
+      ]
+     },
+     {
+      "well": "F-5",
+      "role": "producer",
+      "first_oil": "2016-04-20",
+      "cum_oil_sm3": 41161,
+      "share_of_field_oil": 0.004101,
+      "cum_water_injected_sm3": 14089406,
+      "oil_rate_sm3_per_day": 334.41,
+      "water_cut": 0.2056,
+      "uptime": 0.7135,
+      "oil_rate_change_90d": 0.08348,
+      "level": "caution",
+      "issues": [
+       {
+        "level": "caution",
+        "kind": "shut_in",
+        "since": null,
+        "text": "31 days shut in over the last 180"
+       }
+      ]
+     },
+     {
+      "well": "F-12",
+      "role": "producer",
+      "first_oil": "2008-02-12",
+      "cum_oil_sm3": 4579610,
+      "share_of_field_oil": 0.4563,
+      "cum_water_injected_sm3": 0.0,
+      "oil_rate_sm3_per_day": 143.87,
+      "water_cut": 0.8694,
+      "uptime": 0.5804,
+      "oil_rate_change_90d": -0.27,
+      "level": "note",
+      "issues": [
+       {
+        "level": "note",
+        "kind": "stopped",
+        "since": "2016-08-12",
+        "text": "no oil since then"
+       }
+      ]
+     },
+     {
+      "well": "F-14",
+      "role": "producer",
+      "first_oil": "2008-07-13",
+      "cum_oil_sm3": 3942233,
+      "share_of_field_oil": 0.3928,
+      "cum_water_injected_sm3": 0.0,
+      "oil_rate_sm3_per_day": 103.05,
+      "water_cut": 0.9667,
+      "uptime": 0.2617,
+      "oil_rate_change_90d": -0.005645,
+      "level": "note",
+      "issues": [
+       {
+        "level": "note",
+        "kind": "stopped",
+        "since": "2016-07-13",
+        "text": "no oil since then"
+       }
+      ]
+     },
+     {
+      "well": "F-1 C",
+      "role": "producer",
+      "first_oil": "2014-04-22",
+      "cum_oil_sm3": 177709,
+      "share_of_field_oil": 0.01771,
+      "cum_water_injected_sm3": 0.0,
+      "oil_rate_sm3_per_day": null,
+      "water_cut": null,
+      "uptime": null,
+      "oil_rate_change_90d": null,
+      "level": "note",
+      "issues": [
+       {
+        "level": "note",
+        "kind": "stopped",
+        "since": "2016-04-06",
+        "text": "no oil since then"
+       }
+      ]
+     },
+     {
+      "well": "F-15 D",
+      "role": "producer",
+      "first_oil": "2014-01-16",
+      "cum_oil_sm3": 148519,
+      "share_of_field_oil": 0.0148,
+      "cum_water_injected_sm3": 0.0,
+      "oil_rate_sm3_per_day": 144.95,
+      "water_cut": 0.5851,
+      "uptime": 0.1863,
+      "oil_rate_change_90d": -0.1216,
+      "level": "note",
+      "issues": [
+       {
+        "level": "note",
+        "kind": "stopped",
+        "since": "2016-07-06",
+        "text": "no oil since then"
+       }
+      ]
+     },
+     {
+      "well": "F-4",
+      "role": "injector",
+      "first_oil": null,
+      "cum_oil_sm3": 0.0,
+      "share_of_field_oil": 0.0,
+      "cum_water_injected_sm3": 16240727,
+      "water_inj_sm3_per_day": 2957,
+      "level": null,
+      "issues": []
+     }
+    ],
+    "levels": "alarm: act now; caution: watch; note: for the record"
+   },
+   "code": "wellpilot.agent.tools.field_screen@cbaccbde5c02",
+   "created_at": "2026-11-01T11:43:08+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E4",
+   "tool": "search_reports",
+   "arguments": {
+    "query": "F-5 producer injector conversion"
+   },
+   "result": {
+    "documents": {
+     "f11b_completion": {
+      "title": "Final Well Report, Completion, 15/9-F-11 B",
+      "issued": "2013-09-04"
+     },
+     "volve_pud": {
+      "title": "Plan for utbygging og drift av Volve (PUD, plan for development and operation)",
+      "issued": "2005-02-01"
+     }
+    },
+    "facts": {
+     "columns": [
+      "doc_id",
+      "page",
+      "topic",
+      "source",
+      "statement_en",
+      "quote",
+      "quote_check",
+      "wells"
+     ],
+     "rows": [
+      [
+       "f11b_completion",
+       4,
+       "wells",
+       "text",
+       "Well F-11 B was brought on production after being perforated using tractor conveyed orientated guns",
+       "The well has been brought on production after being perforated using tractor conveyed orientated guns.",
+       "exact",
+       "F-11"
+      ],
+      [
+       "volve_pud",
+       8,
+       "production_forecast",
+       "text",
+       "The development concept is down-flank water injection with production wells placed high on the structure.",
+       "nedflanks vanninjeksjon med produksjonsbrønner plassert høyt på strukturen.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       8,
+       "facility_limits",
+       "text",
+       "The process plant on the jack-up platform is designed for the following capacities: oil production 9,000 Sm3/d, rich gas 1.5 MSm3/d, water treatment 10,400 m3/d, gas lift 0.45 MSm3/d, total liquid treatment 13,000 m3/d and water injection 16,000 m3/d.",
+       "Prosessanlegget på den oppjekkbare plattformen er designet for følgende kapasiteter.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       8,
+       "wells",
+       "text",
+       "The Volve field is planned to be developed with three oil production wells and three water injection wells, plus two water production wells to the Utsira formation for production of injection water.",
+       "Volvefeltet er planlagt utbygd med tre oljeproduksjonsbrønner og tre vanninjeksjonsbrønner. I tillegg er det planlagt å bore to vannproduksjonsbrønner til Utsira-formasjonen for produksjon av injeksjonsvann.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       22,
+       "production_forecast",
+       "text",
+       "Volve is planned to be produced from three producers high on the structure together with three water injectors placed on the flanks.",
+       "Volve planlegges å bli produsert fra tre produsenter høyt på strukturen sammen med tre vanninjektorer som plasseres på flankene.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       22,
+       "injection",
+       "text",
+       "Throughout the entire production period the reservoir pressure is expected to be higher than the oil's bubble point because pressure support is supplied through water injection.",
+       "Gjennom hele produksjonsperioden forventes det at reservoartrykket vil være høyere enn oljens kokepunkt fordi trykkstøtte tilføres gjennom vanninjeksjon.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       22,
+       "reserves",
+       "text",
+       "The two non-communicating segments will be developed with dedicated production and injection wells.",
+       "De to ikkekommuniserende segmentene vil bli utviklet med dedikerte produksjons og injeksjonsbrønner.",
+       "exact",
+       ""
+      ],
+      [
+       "volve_pud",
+       22,
+       "injection",
+       "text",
+       "The model shows good communication in north-south direction so that the water injector can provide good displacement of oil toward the horizontal producer.",
+       "I tillegg viser modellen god kommunikasjon i nord-sør retning slik at vanninjektoren kan gi god fortrenging av olje mot den horisontale produsenten.",
+       "exact",
+       ""
+      ]
+     ]
+    }
+   },
+   "code": "wellpilot.agent.tools.search_reports@5907b6347b0e",
+   "created_at": "2026-11-01T11:43:08+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E5",
+   "tool": "production_monthly",
+   "arguments": {
+    "well": "F-5"
+   },
+   "result": {
+    "columns": [
+     "month",
+     "days",
+     "producing_days",
+     "oil_sm3",
+     "water_sm3",
+     "gas_sm3",
+     "water_injected_sm3",
+     "water_cut",
+     "uptime",
+     "oil_rate_per_producing_day",
+     "bhp_bar",
+     "whp_bar",
+     "choke_pct"
+    ],
+    "rows": [
+     [
+      "2007-09",
+      30,
+      0,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2007-10",
+      31,
+      0,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2007-11",
+      30,
+      0,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2007-12",
+      31,
+      0,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2008-01",
+      31,
+      0,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2008-02",
+      29,
+      0,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2008-03",
+      31,
+      0,
+      null,
+      null,
+      null,
+      0.0,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2008-04",
+      30,
+      0,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2008-05",
+      31,
+      0,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2008-06",
+      30,
+      0,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2008-07",
+      31,
+      0,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2008-08",
+      31,
+      0,
+      null,
+      null,
+      null,
+      14481,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2008-09",
+      30,
+      0,
+      null,
+      null,
+      null,
+      64814,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2008-10",
+      31,
+      0,
+      null,
+      null,
+      null,
+      122254,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2008-11",
+      30,
+      0,
+      null,
+      null,
+      null,
+      219780,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2008-12",
+      31,
+      0,
+      null,
+      null,
+      null,
+      270199,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2009-01",
+      31,
+      0,
+      null,
+      null,
+      null,
+      253655,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2009-02",
+      28,
+      0,
+      null,
+      null,
+      null,
+      226102,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2009-03",
+      31,
+      0,
+      null,
+      null,
+      null,
+      81674,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2009-04",
+      30,
+      0,
+      null,
+      null,
+      null,
+      104819,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2009-05",
+      31,
+      0,
+      null,
+      null,
+      null,
+      232335,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2009-06",
+      30,
+      0,
+      null,
+      null,
+      null,
+      133204,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2009-07",
+      31,
+      0,
+      null,
+      null,
+      null,
+      205447,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2009-08",
+      31,
+      0,
+      null,
+      null,
+      null,
+      198474,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2009-09",
+      30,
+      0,
+      null,
+      null,
+      null,
+      171773,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2009-10",
+      31,
+      0,
+      null,
+      null,
+      null,
+      200847,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2009-11",
+      30,
+      0,
+      null,
+      null,
+      null,
+      208934,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2009-12",
+      31,
+      0,
+      null,
+      null,
+      null,
+      225455,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2010-01",
+      31,
+      0,
+      null,
+      null,
+      null,
+      251555,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2010-02",
+      28,
+      0,
+      null,
+      null,
+      null,
+      199239,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2010-03",
+      31,
+      0,
+      null,
+      null,
+      null,
+      159955,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2010-04",
+      30,
+      0,
+      null,
+      null,
+      null,
+      143182,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2010-05",
+      31,
+      0,
+      null,
+      null,
+      null,
+      252212,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2010-06",
+      30,
+      0,
+      null,
+      null,
+      null,
+      217996,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2010-07",
+      31,
+      0,
+      null,
+      null,
+      null,
+      213817,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2010-08",
+      31,
+      0,
+      null,
+      null,
+      null,
+      120306,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2010-09",
+      30,
+      0,
+      null,
+      null,
+      null,
+      163185,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2010-10",
+      31,
+      0,
+      null,
+      null,
+      null,
+      200667,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2010-11",
+      30,
+      0,
+      null,
+      null,
+      null,
+      188436,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2010-12",
+      31,
+      0,
+      null,
+      null,
+      null,
+      193373,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2011-01",
+      31,
+      0,
+      null,
+      null,
+      null,
+      189041,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2011-02",
+      28,
+      0,
+      null,
+      null,
+      null,
+      139467,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2011-03",
+      31,
+      0,
+      null,
+      null,
+      null,
+      184592,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2011-04",
+      30,
+      0,
+      null,
+      null,
+      null,
+      188899,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2011-05",
+      31,
+      0,
+      null,
+      null,
+      null,
+      191438,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2011-06",
+      30,
+      0,
+      null,
+      null,
+      null,
+      115811,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2011-07",
+      31,
+      0,
+      null,
+      null,
+      null,
+      60235,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2011-08",
+      31,
+      0,
+      null,
+      null,
+      null,
+      161569,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2011-09",
+      30,
+      0,
+      null,
+      null,
+      null,
+      185636,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2011-10",
+      31,
+      0,
+      null,
+      null,
+      null,
+      86121,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2011-11",
+      30,
+      0,
+      null,
+      null,
+      null,
+      111727,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2011-12",
+      31,
+      0,
+      null,
+      null,
+      null,
+      106760,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2012-01",
+      31,
+      0,
+      null,
+      null,
+      null,
+      96145,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2012-02",
+      29,
+      0,
+      null,
+      null,
+      null,
+      144177,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2012-03",
+      31,
+      0,
+      null,
+      null,
+      null,
+      144901,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2012-04",
+      30,
+      0,
+      null,
+      null,
+      null,
+      152914,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2012-05",
+      31,
+      0,
+      null,
+      null,
+      null,
+      157759,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2012-06",
+      30,
+      0,
+      null,
+      null,
+      null,
+      147175,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2012-07",
+      31,
+      0,
+      null,
+      null,
+      null,
+      155142,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2012-08",
+      31,
+      0,
+      null,
+      null,
+      null,
+      65974,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2012-09",
+      30,
+      0,
+      null,
+      null,
+      null,
+      8067,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2012-10",
+      31,
+      0,
+      null,
+      null,
+      null,
+      118485,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2012-11",
+      30,
+      0,
+      null,
+      null,
+      null,
+      168630,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2012-12",
+      31,
+      0,
+      null,
+      null,
+      null,
+      154926,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2013-01",
+      31,
+      0,
+      null,
+      null,
+      null,
+      159940,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2013-02",
+      28,
+      0,
+      null,
+      null,
+      null,
+      147798,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2013-03",
+      31,
+      0,
+      null,
+      null,
+      null,
+      85998,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2013-04",
+      30,
+      0,
+      null,
+      null,
+      null,
+      121657,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2013-05",
+      31,
+      0,
+      null,
+      null,
+      null,
+      170935,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2013-06",
+      30,
+      0,
+      null,
+      null,
+      null,
+      138629,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2013-07",
+      31,
+      0,
+      null,
+      null,
+      null,
+      131249,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2013-08",
+      31,
+      0,
+      null,
+      null,
+      null,
+      185792,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2013-09",
+      30,
+      0,
+      null,
+      null,
+      null,
+      141323,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2013-10",
+      31,
+      0,
+      null,
+      null,
+      null,
+      167622,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2013-11",
+      30,
+      0,
+      null,
+      null,
+      null,
+      167983,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2013-12",
+      31,
+      0,
+      null,
+      null,
+      null,
+      169674,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2014-01",
+      31,
+      0,
+      null,
+      null,
+      null,
+      139162,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2014-02",
+      28,
+      0,
+      null,
+      null,
+      null,
+      139875,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2014-03",
+      31,
+      0,
+      null,
+      null,
+      null,
+      168354,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2014-04",
+      30,
+      0,
+      null,
+      null,
+      null,
+      170366,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2014-05",
+      31,
+      0,
+      null,
+      null,
+      null,
+      155444,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2014-06",
+      30,
+      0,
+      null,
+      null,
+      null,
+      170548,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2014-07",
+      31,
+      0,
+      null,
+      null,
+      null,
+      149634,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2014-08",
+      31,
+      0,
+      null,
+      null,
+      null,
+      122110,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2014-09",
+      30,
+      0,
+      null,
+      null,
+      null,
+      160662,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2014-10",
+      31,
+      0,
+      null,
+      null,
+      null,
+      166833,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2014-11",
+      30,
+      0,
+      null,
+      null,
+      null,
+      146407,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2014-12",
+      31,
+      0,
+      null,
+      null,
+      null,
+      95714,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2015-01",
+      31,
+      0,
+      null,
+      null,
+      null,
+      116852,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2015-02",
+      28,
+      0,
+      null,
+      null,
+      null,
+      122958,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2015-03",
+      31,
+      0,
+      null,
+      null,
+      null,
+      127804,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2015-04",
+      30,
+      0,
+      null,
+      null,
+      null,
+      146997,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2015-05",
+      31,
+      0,
+      null,
+      null,
+      null,
+      135254,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2015-06",
+      30,
+      0,
+      null,
+      null,
+      null,
+      146026,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2015-07",
+      31,
+      0,
+      null,
+      null,
+      null,
+      117660,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2015-08",
+      31,
+      0,
+      null,
+      null,
+      null,
+      113141,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2015-09",
+      30,
+      0,
+      null,
+      null,
+      null,
+      128261,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2015-10",
+      31,
+      0,
+      null,
+      null,
+      null,
+      134375,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2015-11",
+      30,
+      0,
+      null,
+      null,
+      null,
+      134603,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2015-12",
+      31,
+      0,
+      null,
+      null,
+      null,
+      145383,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2016-01",
+      31,
+      0,
+      null,
+      null,
+      null,
+      148395,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2016-02",
+      29,
+      0,
+      null,
+      null,
+      null,
+      164189,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2016-03",
+      31,
+      0,
+      null,
+      null,
+      null,
+      139811,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+     ],
+     [
+      "2016-04",
+      30,
+      11,
+      3401,
+      2381,
+      538639,
+      20227,
+      0.4118,
+      0.5122,
+      331.98,
+      null,
+      25.9,
+      79.56
+     ],
+     [
+      "2016-05",
+      31,
+      31,
+      9724,
+      3950,
+      1534677,
+      0.0,
+      0.2889,
+      0.9839,
+      318.83,
+      null,
+      25.76,
+      79.47
+     ],
+     [
+      "2016-06",
+      30,
+      30,
+      9121,
+      2377,
+      1468557,
+      null,
+      0.2067,
+      0.9978,
+      304.72,
+      null,
+      25.8,
+      76.69
+     ],
+     [
+      "2016-07",
+      31,
+      31,
+      9985,
+      2454,
+      1602674,
+      0.0,
+      0.1973,
+      0.8987,
+      358.41,
+      null,
+      22.86,
+      90.57
+     ],
+     [
+      "2016-08",
+      31,
+      26,
+      8929,
+      2372,
+      1417279,
+      0.0,
+      0.2099,
+      0.8178,
+      352.21,
+      null,
+      23.56,
+      99.15
+     ],
+     [
+      "2016-09",
+      18,
+      0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      null,
+      0.0,
+      null,
+      null,
+      null,
+      null
+     ]
+    ]
+   },
+   "code": "wellpilot.agent.tools.production_monthly@c841520578bb",
+   "created_at": "2026-11-01T11:43:11+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E6",
+   "tool": "detect_events",
+   "arguments": {
+    "well": "F-5"
+   },
+   "result": [
+    {
+     "kind": "threshold_crossing",
+     "signal": "water_cut",
+     "start": "2016-05-05",
+     "end": null,
+     "summary": "30-day median water_cut first goes above 0.05 on 2016-05-05, 0 months after first oil.",
+     "details": {
+      "threshold": 0.05,
+      "direction": "above",
+      "window_days": 30,
+      "median_at_crossing": 0.3719,
+      "first_oil": "2016-04-20",
+      "months_after_first_oil": 0.4928
+     }
+    },
+    {
+     "kind": "shut_in",
+     "signal": "on_stream_hrs",
+     "start": "2016-08-27",
+     "end": "2016-09-17",
+     "summary": "Shut in for 22 days from 2016-08-27. Same time as F-12, F-14, F-15 D; F-11 kept flowing.",
+     "details": {
+      "days": 22,
+      "rate_before": 356.63,
+      "rate_after": null,
+      "relative_change": null,
+      "field_wide": false,
+      "also_shut_in": [
+       "F-12",
+       "F-14",
+       "F-15 D"
+      ],
+      "others_flowing": [
+       "F-11"
+      ]
+     }
+    }
+   ],
+   "code": "wellpilot.agent.tools.detect_events@4bbf97783144",
+   "created_at": "2026-11-01T11:43:11+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E7",
+   "tool": "waterflood",
+   "arguments": {
+    "well": "F-5"
+   },
+   "result": {
+    "well": "F-5",
+    "monthly": {
+     "columns": [
+      "month",
+      "cum_oil_sm3",
+      "wor",
+      "water_cut",
+      "liquid_rate_sm3_per_day",
+      "choke_pct"
+     ],
+     "rows": [
+      [
+       "2016-04",
+       3401,
+       0.7001,
+       0.4118,
+       564.4,
+       79.46
+      ],
+      [
+       "2016-05",
+       13125,
+       0.4062,
+       0.2889,
+       448.34,
+       79.47
+      ],
+      [
+       "2016-06",
+       22246,
+       0.2606,
+       0.2067,
+       384.13,
+       80.28
+      ],
+      [
+       "2016-07",
+       32232,
+       0.2457,
+       0.1973,
+       446.48,
+       97.92
+      ],
+      [
+       "2016-08",
+       41161,
+       0.2656,
+       0.2099,
+       445.77,
+       100.0
+      ]
+     ]
+    },
+    "wor_fit": null,
+    "no_trend": "too few months with WOR >= 1 (water cut 0.5) to fit a trend: 0, need 12",
+    "by_year": {
+     "columns": [
+      "year",
+      "liquid_rate_sm3_per_day",
+      "choke_pct",
+      "water_cut",
+      "oil_sm3"
+     ],
+     "rows": [
+      [
+       2016,
+       446.48,
+       80.28,
+       0.2099,
+       41161
+      ]
+     ]
+    },
+    "field_voidage": {
+     "columns": [
+      "year",
+      "injected_sm3",
+      "oil_sm3",
+      "water_sm3",
+      "replacement_ratio",
+      "replacement_ratio_low",
+      "replacement_ratio_high",
+      "surface_ratio"
+     ],
+     "rows": [
+      [
+       2008,
+       2417770,
+       1764375,
+       7484,
+       0.9864,
+       0.911,
+       1.08,
+       1.36
+      ],
+      [
+       2009,
+       4392198,
+       2684392,
+       232105,
+       1.11,
+       1.03,
+       1.21,
+       1.51
+      ],
+      [
+       2010,
+       4569394,
+       1689903,
+       1887595,
+       1.08,
+       1.03,
+       1.13,
+       1.28
+      ],
+      [
+       2011,
+       3442446,
+       847965,
+       2190640,
+       1.02,
+       0.9942,
+       1.05,
+       1.13
+      ],
+      [
+       2012,
+       2975214,
+       574206,
+       2110119,
+       1.02,
+       1.0,
+       1.05,
+       1.11
+      ],
+      [
+       2013,
+       3453761,
+       558013,
+       2576366,
+       1.03,
+       1.01,
+       1.05,
+       1.1
+      ],
+      [
+       2014,
+       3825493,
+       743107,
+       2716071,
+       1.02,
+       0.9986,
+       1.05,
+       1.11
+      ],
+      [
+       2015,
+       3201627,
+       861749,
+       2009826,
+       0.9995,
+       0.9695,
+       1.03,
+       1.11
+      ],
+      [
+       2016,
+       2052229,
+       313370,
+       1572866,
+       1.02,
+       1.0,
+       1.04,
+       1.09
+      ]
+     ]
+    },
+    "notes": "WOR = water/oil by month; the trend is log10(WOR) against cumulative oil, fitted on up to 36 recent months with WOR >= 1. The water cuts in to_limits are reference points, not an economic limit: the data holds no costs or prices, so remaining_oil_sm3 says how much oil is left before each, not whether it pays. field_voidage: replacement_ratio is injection over voidage at reservoir conditions (Bo 1.385 m3/Sm3 from PUD p.20, low/high with Bo 1.5/1.27; Bw 1; above the bubble point, so no free gas); surface_ratio is the same in surface volumes, which overstates replacement."
+   },
+   "code": "wellpilot.agent.tools.waterflood_tool@97841fa4170b",
+   "created_at": "2026-11-01T11:43:11+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E8",
+   "tool": "plan_vs_actual",
+   "arguments": {},
+   "result": {
+    "unit": "million Sm3 (MSm3) of oil per calendar year, whole field",
+    "plan_source": "Plan for utbygging og drift av Volve (PUD, plan for development and operation), page 25, Table 4.5",
+    "plan_rows_quoted": [
+     "mars 2007 1,53 1,44 1,53 1,54",
+     "2008 3,10 3,10 3,10 3,10",
+     "2009 2,96 2,83 2,96 3,15",
+     "2010 2,14 1,49 2,13 2,82",
+     "2011 1,25 0,10 1,22 1,82",
+     "2012 0,40 - 0,40 1,25",
+     "2013 - - - 0,88",
+     "2014 - - - 0,75"
+    ],
+    "years": {
+     "columns": [
+      "year",
+      "actual_oil_msm3",
+      "plan_p90_msm3",
+      "plan_p50_msm3",
+      "plan_p10_msm3"
+     ],
+     "rows": [
+      [
+       2007,
+       null,
+       1.44,
+       1.53,
+       1.54
+      ],
+      [
+       2008,
+       1.76,
+       3.1,
+       3.1,
+       3.1
+      ],
+      [
+       2009,
+       2.68,
+       2.83,
+       2.96,
+       3.15
+      ],
+      [
+       2010,
+       1.69,
+       1.49,
+       2.13,
+       2.82
+      ],
+      [
+       2011,
+       0.848,
+       0.1,
+       1.22,
+       1.82
+      ],
+      [
+       2012,
+       0.5742,
+       0.0,
+       0.4,
+       1.25
+      ],
+      [
+       2013,
+       0.558,
+       0.0,
+       0.0,
+       0.88
+      ],
+      [
+       2014,
+       0.7431,
+       0.0,
+       0.0,
+       0.75
+      ],
+      [
+       2015,
+       0.8617,
+       null,
+       null,
+       null
+      ],
+      [
+       2016,
+       0.3134,
+       null,
+       null,
+       null
+      ]
+     ]
+    },
+    "by_production_year": {
+     "columns": [
+      "production_year",
+      "plan_year",
+      "plan_p50_msm3",
+      "actual_year",
+      "actual_oil_msm3"
+     ],
+     "rows": [
+      [
+       1,
+       2007,
+       1.53,
+       2008,
+       1.76
+      ],
+      [
+       2,
+       2008,
+       3.1,
+       2009,
+       2.68
+      ],
+      [
+       3,
+       2009,
+       2.96,
+       2010,
+       1.69
+      ],
+      [
+       4,
+       2010,
+       2.13,
+       2011,
+       0.848
+      ],
+      [
+       5,
+       2011,
+       1.22,
+       2012,
+       0.5742
+      ],
+      [
+       6,
+       2012,
+       0.4,
+       2013,
+       0.558
+      ],
+      [
+       7,
+       2013,
+       0.0,
+       2014,
+       0.7431
+      ],
+      [
+       8,
+       2014,
+       0.0,
+       2015,
+       0.8617
+      ],
+      [
+       9,
+       2015,
+       null,
+       2016,
+       0.3134
+      ]
+     ]
+    },
+    "totals_msm3": {
+     "actual": 10.04,
+     "plan_p90": 8.96,
+     "plan_p50": 11.34,
+     "plan_p10": 15.31
+    },
+    "plan_p50_last_year": 2012,
+    "actual_last_year": 2016,
+    "actual_data_ends": "2016-12-01",
+    "actual_after_plan_p50_ends_msm3": 2.48,
+    "wells_first_oil_after_plan_p50_ends": {
+     "columns": [
+      "well",
+      "first_oil"
+     ],
+     "rows": [
+      [
+       "F-11",
+       "2013-07-24"
+      ],
+      [
+       "F-15 D",
+       "2014-01-16"
+      ],
+      [
+       "F-1 C",
+       "2014-04-22"
+      ],
+      [
+       "F-5",
+       "2016-04-20"
+      ]
+     ]
+    },
+    "note": "years: calendar years. The plan assumed first oil in March 2007 and the field started in February 2008, so by_production_year compares each year of production with the plan's year of the same number (plan 2007 with field 2008)."
+   },
+   "code": "wellpilot.agent.tools.plan_vs_actual@35745b0e000f",
+   "created_at": "2026-11-01T11:43:11+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E9",
+   "tool": "field_vs_design",
+   "arguments": {},
+   "result": {
+    "scope": "whole field, all producers and injectors summed per day, then per month",
+    "plan_source": "Plan for utbygging og drift av Volve (PUD, plan for development and operation), page 23, Table 4.3",
+    "design_limits": {
+     "liquid_sm3_per_day": {
+      "limit": "field liquid capacity",
+      "value": 13000,
+      "quote": "Væskekapasitet 13000 Sm3 /d"
+     },
+     "oil_sm3_per_day": {
+      "limit": "field oil capacity",
+      "value": 9000,
+      "quote": "Oljekapasitet 9000 Sm3 /d"
+     },
+     "water_cut": {
+      "limit": "maximum water cut",
+      "value": 0.8,
+      "quote": "Maksimum vannkutt 0,80"
+     },
+     "water_inj_sm3_per_day": {
+      "limit": "field water injection capacity",
+      "value": 16000,
+      "quote": "Vanninjeksjons kapasitet 16000 Sm3 /d"
+     },
+     "water_sm3_per_day": {
+      "limit": "field water handling (derived: liquid capacity x maximum water cut)",
+      "value": 10400,
+      "quote": null
+     }
+    },
+    "field_against_limits": {
+     "liquid_sm3_per_day": {
+      "first_month_at_or_above": null,
+      "months_at_or_above": 0,
+      "max": 11438,
+      "max_month": "2014-06",
+      "max_day": 12756,
+      "max_day_date": "2014-04-27",
+      "days_at_or_above": 0
+     },
+     "oil_sm3_per_day": {
+      "first_month_at_or_above": null,
+      "months_at_or_above": 0,
+      "max": 8924,
+      "max_month": "2008-12",
+      "max_day": 9437,
+      "max_day_date": "2009-08-10",
+      "days_at_or_above": 49
+     },
+     "water_cut": {
+      "first_month_at_or_above": "2012-06",
+      "months_at_or_above": 27,
+      "max": 0.8606,
+      "max_month": "2016-04"
+     },
+     "water_inj_sm3_per_day": {
+      "first_month_at_or_above": "2008-12",
+      "months_at_or_above": 3,
+      "max": 17206,
+      "max_month": "2008-12",
+      "max_day": 18020,
+      "max_day_date": "2010-04-27",
+      "days_at_or_above": 231
+     },
+     "water_sm3_per_day": {
+      "first_month_at_or_above": null,
+      "months_at_or_above": 0,
+      "max": 9070,
+      "max_month": "2014-10",
+      "max_day_month": "2013-10",
+      "max_day": 10240,
+      "max_day_date": "2013-10-01",
+      "days_at_or_above": 0
+     }
+    },
+    "months": {
+     "columns": [
+      "month",
+      "days",
+      "oil_sm3_per_day",
+      "liquid_sm3_per_day",
+      "water_cut",
+      "water_sm3_per_day",
+      "water_inj_sm3_per_day",
+      "max_day_liquid_sm3",
+      "max_day_water_sm3"
+     ],
+     "rows": [
+      [
+       "2008-02",
+       29,
+       1693,
+       1707,
+       0.008335,
+       14.23,
+       0.0,
+       3127,
+       385.01
+      ],
+      [
+       "2008-03",
+       31,
+       2689,
+       2690,
+       0.0003288,
+       0.8845,
+       0.0,
+       3193,
+       3.39
+      ],
+      [
+       "2008-04",
+       30,
+       2484,
+       2501,
+       0.006614,
+       16.54,
+       991.76,
+       3306,
+       153.36
+      ],
+      [
+       "2008-05",
+       31,
+       4048,
+       4055,
+       0.001914,
+       7.76,
+       7140,
+       5096,
+       29.8
+      ],
+      [
+       "2008-06",
+       30,
+       4793,
+       4809,
+       0.003288,
+       15.81,
+       7060,
+       5242,
+       184.78
+      ],
+      [
+       "2008-07",
+       31,
+       5364,
+       5377,
+       0.002497,
+       13.43,
+       7485,
+       6853,
+       36.05
+      ],
+      [
+       "2008-08",
+       31,
+       5337,
+       5355,
+       0.003474,
+       18.6,
+       7368,
+       9258,
+       90.81
+      ],
+      [
+       "2008-09",
+       30,
+       6409,
+       6424,
+       0.002408,
+       15.47,
+       5447,
+       9078,
+       74.97
+      ],
+      [
+       "2008-10",
+       31,
+       7651,
+       7674,
+       0.003049,
+       23.4,
+       11476,
+       9017,
+       40.42
+      ],
+      [
+       "2008-11",
+       30,
+       8344,
+       8430,
+       0.0102,
+       86.01,
+       14730,
+       9346,
+       804.33
+      ],
+      [
+       "2008-12",
+       31,
+       8924,
+       8958,
+       0.003852,
+       34.51,
+       17206,
+       9076,
+       71.83
+      ],
+      [
+       "2009-01",
+       31,
+       8685,
+       8730,
+       0.005053,
+       44.11,
+       16139,
+       9232,
+       298.19
+      ],
+      [
+       "2009-02",
+       28,
+       8421,
+       8511,
+       0.01061,
+       90.33,
+       15973,
+       9102,
+       152.76
+      ],
+      [
+       "2009-03",
+       31,
+       5923,
+       5977,
+       0.009062,
+       54.17,
+       4608,
+       9137,
+       207.66
+      ],
+      [
+       "2009-04",
+       30,
+       7930,
+       7980,
+       0.006236,
+       49.76,
+       7046,
+       9031,
+       124.94
+      ],
+      [
+       "2009-05",
+       31,
+       8297,
+       8508,
+       0.02482,
+       211.18,
+       14963,
+       9429,
+       456.62
+      ],
+      [
+       "2009-06",
+       30,
+       7303,
+       7582,
+       0.03688,
+       279.66,
+       8773,
+       9372,
+       620.77
+      ],
+      [
+       "2009-07",
+       31,
+       5515,
+       5840,
+       0.05558,
+       324.59,
+       12796,
+       6571,
+       507.3
+      ],
+      [
+       "2009-08",
+       31,
+       7255,
+       8088,
+       0.103,
+       832.83,
+       12593,
+       10519,
+       1623
+      ],
+      [
+       "2009-09",
+       30,
+       6015,
+       6599,
+       0.08845,
+       583.66,
+       11185,
+       10363,
+       1361
+      ],
+      [
+       "2009-10",
+       31,
+       7214,
+       8276,
+       0.1283,
+       1062,
+       12353,
+       10182,
+       2994
+      ],
+      [
+       "2009-11",
+       30,
+       7802,
+       9479,
+       0.1769,
+       1677,
+       13760,
+       10430,
+       2121
+      ],
+      [
+       "2009-12",
+       31,
+       7984,
+       10355,
+       0.2289,
+       2371,
+       14354,
+       11620,
+       3250
+      ],
+      [
+       "2010-01",
+       31,
+       7480,
+       10713,
+       0.3018,
+       3233,
+       15298,
+       11704,
+       3920
+      ],
+      [
+       "2010-02",
+       28,
+       5897,
+       9655,
+       0.3892,
+       3758,
+       13751,
+       11350,
+       4915
+      ],
+      [
+       "2010-03",
+       31,
+       5437,
+       9262,
+       0.4129,
+       3824,
+       10609,
+       11732,
+       5518
+      ],
+      [
+       "2010-04",
+       30,
+       5310,
+       9905,
+       0.4639,
+       4595,
+       12194,
+       11636,
+       5515
+      ],
+      [
+       "2010-05",
+       31,
+       5320,
+       10473,
+       0.492,
+       5153,
+       16282,
+       11430,
+       6002
+      ],
+      [
+       "2010-06",
+       30,
+       4831,
+       10826,
+       0.5538,
+       5995,
+       14279,
+       11645,
+       6560
+      ],
+      [
+       "2010-07",
+       31,
+       4311,
+       10642,
+       0.5949,
+       6331,
+       13286,
+       11074,
+       6664
+      ],
+      [
+       "2010-08",
+       31,
+       2211,
+       5799,
+       0.6188,
+       3588,
+       7385,
+       11173,
+       7038
+      ],
+      [
+       "2010-09",
+       30,
+       3557,
+       8755,
+       0.5937,
+       5198,
+       10281,
+       11026,
+       6793
+      ],
+      [
+       "2010-10",
+       31,
+       4200,
+       10667,
+       0.6063,
+       6467,
+       12755,
+       11406,
+       7232
+      ],
+      [
+       "2010-11",
+       30,
+       3567,
+       10208,
+       0.6505,
+       6640,
+       11863,
+       11198,
+       7500
+      ],
+      [
+       "2010-12",
+       31,
+       3519,
+       10712,
+       0.6715,
+       7193,
+       12316,
+       10927,
+       7349
+      ],
+      [
+       "2011-01",
+       31,
+       3422,
+       10778,
+       0.6825,
+       7357,
+       12198,
+       10972,
+       7481
+      ],
+      [
+       "2011-02",
+       28,
+       2615,
+       8500,
+       0.6923,
+       5885,
+       9816,
+       10970,
+       7669
+      ],
+      [
+       "2011-03",
+       31,
+       3036,
+       10479,
+       0.7103,
+       7443,
+       11917,
+       11111,
+       7981
+      ],
+      [
+       "2011-04",
+       30,
+       2988,
+       10929,
+       0.7266,
+       7942,
+       12314,
+       11104,
+       8277
+      ],
+      [
+       "2011-05",
+       31,
+       2849,
+       10878,
+       0.7381,
+       8029,
+       12246,
+       11093,
+       8206
+      ],
+      [
+       "2011-06",
+       30,
+       1774,
+       6968,
+       0.7454,
+       5194,
+       7868,
+       10990,
+       8239
+      ],
+      [
+       "2011-07",
+       31,
+       1054,
+       3438,
+       0.6934,
+       2384,
+       4046,
+       10959,
+       7414
+      ],
+      [
+       "2011-08",
+       31,
+       2778,
+       9485,
+       0.7072,
+       6708,
+       10806,
+       11863,
+       8491
+      ],
+      [
+       "2011-09",
+       30,
+       2702,
+       10849,
+       0.751,
+       8148,
+       12020,
+       12592,
+       9959
+      ],
+      [
+       "2011-10",
+       31,
+       1111,
+       4639,
+       0.7604,
+       3528,
+       5289,
+       10784,
+       8259
+      ],
+      [
+       "2011-11",
+       30,
+       1894,
+       6873,
+       0.7244,
+       4979,
+       7778,
+       10931,
+       8020
+      ],
+      [
+       "2011-12",
+       31,
+       1686,
+       6173,
+       0.7269,
+       4488,
+       6989,
+       10967,
+       7964
+      ],
+      [
+       "2012-01",
+       31,
+       1469,
+       5384,
+       0.7272,
+       3915,
+       6045,
+       11518,
+       8386
+      ],
+      [
+       "2012-02",
+       29,
+       2212,
+       8738,
+       0.7468,
+       6525,
+       10045,
+       11227,
+       9182
+      ],
+      [
+       "2012-03",
+       31,
+       1981,
+       8511,
+       0.7672,
+       6529,
+       9486,
+       9033,
+       6896
+      ],
+      [
+       "2012-04",
+       30,
+       2020,
+       9051,
+       0.7768,
+       7031,
+       10009,
+       9254,
+       7259
+      ],
+      [
+       "2012-05",
+       31,
+       1854,
+       9050,
+       0.7952,
+       7196,
+       9900,
+       10140,
+       8248
+      ],
+      [
+       "2012-06",
+       30,
+       1752,
+       8894,
+       0.803,
+       7142,
+       9731,
+       9274,
+       7687
+      ],
+      [
+       "2012-07",
+       31,
+       1747,
+       8977,
+       0.8054,
+       7230,
+       9857,
+       9195,
+       7442
+      ],
+      [
+       "2012-08",
+       31,
+       699.62,
+       3556,
+       0.8033,
+       2857,
+       4005,
+       9291,
+       7550
+      ],
+      [
+       "2012-09",
+       30,
+       88.97,
+       336.68,
+       0.7357,
+       247.71,
+       469.75,
+       8296,
+       6238
+      ],
+      [
+       "2012-10",
+       31,
+       1728,
+       7579,
+       0.772,
+       5851,
+       7385,
+       9875,
+       7791
+      ],
+      [
+       "2012-11",
+       30,
+       1798,
+       9203,
+       0.8046,
+       7405,
+       11037,
+       9354,
+       7602
+      ],
+      [
+       "2012-12",
+       31,
+       1498,
+       8762,
+       0.829,
+       7264,
+       9661,
+       9526,
+       7874
+      ],
+      [
+       "2013-01",
+       31,
+       1535,
+       9263,
+       0.8343,
+       7728,
+       10180,
+       10037,
+       8517
+      ],
+      [
+       "2013-02",
+       28,
+       1489,
+       9290,
+       0.8398,
+       7802,
+       10239,
+       9488,
+       7975
+      ],
+      [
+       "2013-03",
+       31,
+       810.4,
+       4931,
+       0.8357,
+       4121,
+       5892,
+       9817,
+       8306
+      ],
+      [
+       "2013-04",
+       30,
+       1174,
+       7254,
+       0.8381,
+       6080,
+       7923,
+       10088,
+       8460
+      ],
+      [
+       "2013-05",
+       31,
+       1419,
+       9700,
+       0.8538,
+       8281,
+       10564,
+       11576,
+       10140
+      ],
+      [
+       "2013-06",
+       30,
+       1140,
+       8006,
+       0.8576,
+       6866,
+       9026,
+       10017,
+       8584
+      ],
+      [
+       "2013-07",
+       31,
+       1238,
+       7908,
+       0.8434,
+       6670,
+       8542,
+       10764,
+       9337
+      ],
+      [
+       "2013-08",
+       31,
+       2010,
+       9912,
+       0.7972,
+       7902,
+       11028,
+       11090,
+       8908
+      ],
+      [
+       "2013-09",
+       30,
+       1696,
+       8327,
+       0.7964,
+       6631,
+       9055,
+       10963,
+       8771
+      ],
+      [
+       "2013-10",
+       31,
+       1963,
+       9583,
+       0.7951,
+       7620,
+       10076,
+       12493,
+       10240
+      ],
+      [
+       "2013-11",
+       30,
+       2060,
+       9744,
+       0.7886,
+       7684,
+       10799,
+       11071,
+       8895
+      ],
+      [
+       "2013-12",
+       31,
+       1806,
+       9165,
+       0.803,
+       7359,
+       10267,
+       11391,
+       9139
+      ],
+      [
+       "2014-01",
+       31,
+       1997,
+       8387,
+       0.7619,
+       6390,
+       9257,
+       11120,
+       8874
+      ],
+      [
+       "2014-02",
+       28,
+       2034,
+       9519,
+       0.7863,
+       7485,
+       9675,
+       11677,
+       9262
+      ],
+      [
+       "2014-03",
+       31,
+       2005,
+       9507,
+       0.7891,
+       7501,
+       10402,
+       11788,
+       9415
+      ],
+      [
+       "2014-04",
+       30,
+       2540,
+       10878,
+       0.7665,
+       8338,
+       11856,
+       12756,
+       9099
+      ],
+      [
+       "2014-05",
+       31,
+       2704,
+       8943,
+       0.6976,
+       6239,
+       10053,
+       12585,
+       9186
+      ],
+      [
+       "2014-06",
+       30,
+       2651,
+       11438,
+       0.7682,
+       8787,
+       12426,
+       12106,
+       9308
+      ],
+      [
+       "2014-07",
+       31,
+       2419,
+       10971,
+       0.7795,
+       8552,
+       12136,
+       12596,
+       10120
+      ],
+      [
+       "2014-08",
+       31,
+       1593,
+       8691,
+       0.8167,
+       7098,
+       9878,
+       11742,
+       9362
+      ],
+      [
+       "2014-09",
+       30,
+       2080,
+       10879,
+       0.8088,
+       8799,
+       12018,
+       11907,
+       9677
+      ],
+      [
+       "2014-10",
+       31,
+       2081,
+       11151,
+       0.8134,
+       9070,
+       12466,
+       11677,
+       9544
+      ],
+      [
+       "2014-11",
+       30,
+       1764,
+       9593,
+       0.8161,
+       7829,
+       10442,
+       11853,
+       9797
+      ],
+      [
+       "2014-12",
+       31,
+       591.4,
+       3931,
+       0.8495,
+       3339,
+       5238,
+       4315,
+       3645
+      ],
+      [
+       "2015-01",
+       31,
+       2621,
+       6735,
+       0.6108,
+       4114,
+       6388,
+       7752,
+       4554
+      ],
+      [
+       "2015-02",
+       28,
+       2367,
+       7082,
+       0.6658,
+       4715,
+       8905,
+       8724,
+       5919
+      ],
+      [
+       "2015-03",
+       31,
+       2637,
+       7734,
+       0.6591,
+       5097,
+       8544,
+       9858,
+       6439
+      ],
+      [
+       "2015-04",
+       30,
+       3007,
+       8210,
+       0.6337,
+       5203,
+       9689,
+       9352,
+       6208
+      ],
+      [
+       "2015-05",
+       31,
+       2809,
+       7938,
+       0.6462,
+       5130,
+       8513,
+       9432,
+       6246
+      ],
+      [
+       "2015-06",
+       30,
+       2795,
+       8495,
+       0.671,
+       5700,
+       10244,
+       9682,
+       6453
+      ],
+      [
+       "2015-07",
+       31,
+       2387,
+       8114,
+       0.7058,
+       5727,
+       8838,
+       9207,
+       6890
+      ],
+      [
+       "2015-08",
+       31,
+       1816,
+       6664,
+       0.7275,
+       4848,
+       7351,
+       9409,
+       6670
+      ],
+      [
+       "2015-09",
+       30,
+       2103,
+       7961,
+       0.7358,
+       5858,
+       8734,
+       9364,
+       7089
+      ],
+      [
+       "2015-10",
+       31,
+       1861,
+       8029,
+       0.7682,
+       6168,
+       8717,
+       9622,
+       7590
+      ],
+      [
+       "2015-11",
+       30,
+       2016,
+       8856,
+       0.7724,
+       6840,
+       9837,
+       10114,
+       7909
+      ],
+      [
+       "2015-12",
+       31,
+       1930,
+       8580,
+       0.7751,
+       6651,
+       9623,
+       9587,
+       7425
+      ],
+      [
+       "2016-01",
+       31,
+       1664,
+       8818,
+       0.8113,
+       7154,
+       9694,
+       10168,
+       8551
+      ],
+      [
+       "2016-02",
+       29,
+       1633,
+       8877,
+       0.816,
+       7243,
+       10768,
+       9490,
+       7836
+      ],
+      [
+       "2016-03",
+       31,
+       1381,
+       8920,
+       0.8452,
+       7539,
+       9065,
+       9567,
+       8203
+      ],
+      [
+       "2016-04",
+       30,
+       1077,
+       7727,
+       0.8606,
+       6650,
+       8010,
+       9126,
+       7865
+      ],
+      [
+       "2016-05",
+       31,
+       1259,
+       8000,
+       0.8426,
+       6741,
+       8686,
+       10416,
+       9106
+      ],
+      [
+       "2016-06",
+       30,
+       1189,
+       7937,
+       0.8502,
+       6749,
+       8576,
+       8223,
+       6993
+      ],
+      [
+       "2016-07",
+       31,
+       1002,
+       5794,
+       0.8271,
+       4792,
+       6386,
+       8118,
+       6936
+      ],
+      [
+       "2016-08",
+       31,
+       804.99,
+       4065,
+       0.802,
+       3260,
+       4270,
+       5776,
+       4879
+      ],
+      [
+       "2016-09",
+       30,
+       286.97,
+       1846,
+       0.8446,
+       1559,
+       2040,
+       3581,
+       3037
+      ]
+     ]
+    },
+    "plan_end_quote": "Kumulativ oljeproduksjon inntil minimum økonomisk rate på 2.100 Sm3 /d (gitt Volve oljepris på 18,7 USD/fat) nås er 11,4 MSm3",
+    "note": "These are field and platform limits (PUD p.35 lists the same platform capacities); compare them with field totals, never one well. The maximum water cut is a share at full liquid rate: the water the platform can handle is liquid capacity x maximum water cut (water_sm3_per_day). The field reaching that share at a lower liquid rate means it ran at the design water cut, not over its water capacity. The months' rates are per calendar day of each month; max_day and days_at_or_above give single days, which can pass a capacity the monthly average stays under."
+   },
+   "code": "wellpilot.agent.tools.field_vs_design@836ca868be6c",
+   "created_at": "2026-11-01T11:43:11+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E10",
+   "tool": "calculate",
+   "arguments": {
+    "expressions": [
+     "41161 / 313370",
+     "41161 / 10037081",
+     "41161 / 129",
+     "129 / 31"
+    ]
+   },
+   "result": {
+    "results": [
+     {
+      "expression": "41161 / 313370",
+      "value": 0.1313
+     },
+     {
+      "expression": "41161 / 10037081",
+      "value": 0.004101
+     },
+     {
+      "expression": "41161 / 129",
+      "value": 319.08
+     },
+     {
+      "expression": "129 / 31",
+      "value": 4.16
+     }
+    ]
+   },
+   "code": "wellpilot.agent.tools.calculate@5c1d806d8f4d",
+   "created_at": "2026-11-01T11:43:16+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E11",
+   "tool": "production_monthly",
+   "arguments": {
+    "well": "F-12",
+    "start": "2016-01-01",
+    "end": "2016-09-30"
+   },
+   "result": {
+    "columns": [
+     "month",
+     "days",
+     "producing_days",
+     "oil_sm3",
+     "water_sm3",
+     "gas_sm3",
+     "water_injected_sm3",
+     "water_cut",
+     "uptime",
+     "oil_rate_per_producing_day",
+     "bhp_bar",
+     "whp_bar",
+     "choke_pct"
+    ],
+    "rows": [
+     [
+      "2016-01",
+      31,
+      31,
+      9495,
+      38970,
+      1487340,
+      null,
+      0.8041,
+      0.9899,
+      309.41,
+      null,
+      27.71,
+      96.09
+     ],
+     [
+      "2016-02",
+      29,
+      29,
+      7644,
+      35253,
+      1205549,
+      null,
+      0.8218,
+      0.9994,
+      263.75,
+      null,
+      27.27,
+      99.42
+     ],
+     [
+      "2016-03",
+      31,
+      31,
+      7360,
+      40507,
+      1185894,
+      null,
+      0.8462,
+      0.9987,
+      237.74,
+      null,
+      26.87,
+      100.0
+     ],
+     [
+      "2016-04",
+      30,
+      30,
+      6152,
+      37126,
+      1015034,
+      null,
+      0.8578,
+      0.9984,
+      205.41,
+      null,
+      26.55,
+      99.55
+     ],
+     [
+      "2016-05",
+      31,
+      31,
+      5865,
+      36148,
+      925514,
+      null,
+      0.8604,
+      0.9953,
+      190.09,
+      null,
+      26.27,
+      99.01
+     ],
+     [
+      "2016-06",
+      30,
+      30,
+      5408,
+      34608,
+      870533,
+      null,
+      0.8648,
+      0.9767,
+      184.57,
+      null,
+      26.31,
+      97.22
+     ],
+     [
+      "2016-07",
+      31,
+      31,
+      4534,
+      29940,
+      729319,
+      null,
+      0.8685,
+      0.9459,
+      154.62,
+      null,
+      29.09,
+      59.93
+     ],
+     [
+      "2016-08",
+      31,
+      12,
+      1442,
+      10937,
+      232558,
+      null,
+      0.8835,
+      0.3843,
+      121.06,
+      null,
+      32.25,
+      30.34
+     ],
+     [
+      "2016-09",
+      17,
+      0,
+      0.0,
+      0.0,
+      0.0,
+      null,
+      null,
+      0.0,
+      null,
+      null,
+      null,
+      null
+     ]
+    ]
+   },
+   "code": "wellpilot.agent.tools.production_monthly@c841520578bb",
+   "created_at": "2026-11-01T11:43:16+00:00",
+   "warnings": []
+  },
+  {
+   "id": "E12",
+   "tool": "calculate",
+   "arguments": {
+    "expressions": [
+     "3401 + 9724 + 9121 + 9985 + 8929",
+     "9724+9121+9985+8929"
+    ]
+   },
+   "result": {
+    "results": [
+     {
+      "expression": "3401 + 9724 + 9121 + 9985 + 8929",
+      "value": 41160
+     },
+     {
+      "expression": "9724+9121+9985+8929",
+      "value": 37759
+     }
+    ]
+   },
+   "code": "wellpilot.agent.tools.calculate@5c1d806d8f4d",
+   "created_at": "2026-11-01T11:43:20+00:00",
+   "warnings": []
+  }
+ ]
+}

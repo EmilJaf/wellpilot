@@ -687,6 +687,12 @@ def plan_vs_actual(store: ProductionStore, _: NoArgs) -> dict:
         "GROUP BY well HAVING year(min(date)) > ? ORDER BY 2",
         [plan_end],
     ).rows
+    # The oil after the plan's last year is the whole field's: the older wells made much of it.
+    after_by_well = store.query(
+        "SELECT well, sum(oil_sm3) / 1e6 AS oil_msm3 FROM production_daily "
+        "WHERE year(date) > ? AND oil_sm3 > 0 GROUP BY well ORDER BY 2 DESC",
+        [plan_end],
+    ).rows
     return to_jsonable(
         {
             "unit": "million Sm3 (MSm3) of oil per calendar year, whole field",
@@ -707,8 +713,11 @@ def plan_vs_actual(store: ProductionStore, _: NoArgs) -> dict:
                 0, "d"
             ],
             "actual_after_plan_p50_ends_msm3": sum(after.values()),
+            "after_plan_by_well_msm3": table(after_by_well),
             "wells_first_oil_after_plan_p50_ends": table(late_wells),
-            "note": "years: calendar years. The plan assumed first oil in March 2007 and the "
+            "note": "actual_after_plan_p50_ends_msm3 is the whole field's oil after the plan's "
+            "last year, from older wells too (after_plan_by_well_msm3 splits it). "
+            "years: calendar years. The plan assumed first oil in March 2007 and the "
             "field started in February 2008, so by_production_year compares each year of "
             "production with the plan's year of the same number (plan 2007 with field 2008).",
         }

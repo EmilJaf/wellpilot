@@ -70,7 +70,7 @@ def _wor_fit(monthly: pd.DataFrame, start=None, end=None) -> tuple[dict | None, 
     if len(window) < MIN_FIT_MONTHS:
         return None, (
             f"too few months with WOR >= {MIN_WOR:g} (water cut 0.5) to fit a trend: "
-            f"{len(window)}, need {MIN_FIT_MONTHS}"
+            f"{len(window)} months, need {MIN_FIT_MONTHS}"
         )
     x = window["cum_oil_sm3"].to_numpy()
     y = np.log10(window["wor"].to_numpy())
