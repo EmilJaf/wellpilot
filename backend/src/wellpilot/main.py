@@ -13,6 +13,7 @@ from wellpilot import __version__
 from wellpilot.agent.sandbox import modal_pool
 from wellpilot.api import data, redteam, runs, voice
 from wellpilot.api.bodylimit import BodyLimit
+from wellpilot.api.headers import SecurityHeaders
 from wellpilot.config import Settings, get_settings
 from wellpilot.llm import LLM, is_down, make_llm, provider_key
 
@@ -39,7 +40,10 @@ def create_app(
 
     sandboxes = modal_pool(settings.processed_dir) if settings.python_sandbox else None
     public = settings.public or on_fly
-    app = FastAPI(title="WellPilot", version=__version__, lifespan=lifespan)
+    # The interactive API pages stay local: the public site serves the app and its API only.
+    hidden = {"docs_url": None, "redoc_url": None, "openapi_url": None} if public else {}
+    app = FastAPI(title="WellPilot", version=__version__, lifespan=lifespan, **hidden)
+    app.add_middleware(SecurityHeaders)
     # Every body is small (a question, a reader's edit) but a voice clip.
     app.add_middleware(
         BodyLimit,
@@ -126,6 +130,7 @@ def _serve_frontend(app: FastAPI, dist: Path, https: bool = False) -> None:
             found = bool(path) and file.is_file() and root in file.parents  # never ../
         except (OSError, ValueError):  # a NUL byte, a name too long: no such file
             found = False
+        found = found and file.name != "index.html"  # it needs the site's address too
         if found:  # favicon.svg
             return FileResponse(file)
         scheme = "https" if https else request.url.scheme

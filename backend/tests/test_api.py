@@ -547,6 +547,37 @@ async def test_link_previews_get_the_sites_own_address(settings, tmp_path) -> No
     assert 'content="https://wellpilot.fly.dev/og.png"' in await page(public=True)
     assert 'content="http://wellpilot.fly.dev/og.png"' in await page(public=False)
 
+    app = create_app(settings.model_copy(update={"frontend_dir": dist}), llm_factory=fake_llm)
+    async with client_for(app) as client:
+        by_name = await client.get("/index.html", headers={"host": "wellpilot.fly.dev"})
+    assert "__ORIGIN__" not in by_name.text and "wellpilot.fly.dev/og.png" in by_name.text
+
+
+async def test_security_headers_and_no_api_pages_in_public(settings, tmp_path) -> None:
+    dist = tmp_path / "dist"
+    dist.mkdir()
+    (dist / "index.html").write_text("<!doctype html><title>WellPilot</title>")
+
+    async def get(public: bool, *paths: str) -> list:
+        app = create_app(
+            settings.model_copy(update={"frontend_dir": dist, "public": public}),
+            llm_factory=fake_llm,
+        )
+        async with client_for(app) as client:
+            return [await client.get(p) for p in paths]
+
+    page, api, docs, schema = await get(True, "/", "/api/wells", "/docs", "/openapi.json")
+    for r in (page, api):
+        assert "script-src 'self'" in r.headers["content-security-policy"]
+        assert r.headers["x-content-type-options"] == "nosniff"
+        assert "microphone=(self)" in r.headers["permissions-policy"]
+    # The API pages are gone from the public site: the paths fall to the app's own page.
+    assert "swagger" not in docs.text.lower() and "<title>WellPilot" in docs.text
+    assert '"openapi"' not in schema.text
+
+    (local_schema,) = await get(False, "/openapi.json")
+    assert local_schema.json()["info"]["title"] == "WellPilot"
+
 
 async def test_hindsight_only_for_a_run_with_an_as_of_date(settings) -> None:
     async with client_for(create_app(settings, llm_factory=fake_llm)) as client:
