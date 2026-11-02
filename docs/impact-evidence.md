@@ -41,8 +41,7 @@ The time studies found on Oct 28 are in `docs/by-hand-vs-agent.md`.
   field is about 900 bbl/d, about $16M a year at $50/bbl.
 - A ten-year study of three North Sea assets found 83% of deferred volume unplanned, with
   well equipment failure the largest cause (40%) (University of Stavanger thesis,
-  [record](https://uis.brage.unit.no/uis-xmlui/handle/11250/2411627); abstract seen through
-  search only).
+  [record](https://hdl.handle.net/11250/2411627), 2016; the numbers are from its abstract).
 - Our own case: the job on F-12 in November 2014 made 125,000-145,000 Sm3 more than the
   well's trend (the reveal's 3-, 6- and 12-month Arps fits), about $39-46M gross at $50/bbl.
 
