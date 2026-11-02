@@ -10,7 +10,7 @@ Why it matters: engineers spend up to 30% of their time searching for data and a
 
 - Live demo: https://wellpilot.fly.dev (recorded answers open without a key; live questions are rate-limited)
 - Run it yourself, no key needed: [how](#run-it-yourself-with-no-api-key)
-- Demo video: _link added at submission_
+- Demo video (3 min): https://youtu.be/sfALFx8DpYM
 
 Built for the Meta Global AI Developer Hackathon (Oct 26 - Nov 4, 2026), Indie track, "Push the Frontier". The data is Equinor's open Volve field (Norwegian North Sea, 2008-2016).
 
