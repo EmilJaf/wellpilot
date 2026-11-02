@@ -91,10 +91,11 @@ function bySpans(
       const oil = quoted ? null : volumeAt(written, text.slice(at, to))
       if (oil) {
         const low = first ? volumeAt(first, text.slice(at, to)) : null
-        parts.push(text.slice(at, at + oil.length))
+        // The space before the note stays outside it: a phone may break the line there, not
+        // before the unit.
+        parts.push(text.slice(at, at + oil.length), ' ')
         parts.push(
           <span key={`b${n.start}`} className="bbl" title={BARRELS_NOTE}>
-            {' '}
             (about {low && barrels(low.sm3) !== barrels(oil.sm3) ? `${barrels(low.sm3)} to ` : ''}
             {barrels(oil.sm3)} {oil.perDay ? 'barrels a day' : 'barrels'})
           </span>,
